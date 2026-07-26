@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <style>
+    .bg { fill: #f4f4f5 }
+    .slime { fill: #18181b }
+    .eye { fill: #f4f4f5 }
+    .pupil { fill: #18181b }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0a0a09 }
+      .slime { fill: #e4e4e7 }
+      .eye { fill: #0a0a09 }
+      .pupil { fill: #e4e4e7 }
+    }
+  </style>
+
+  <!-- Background -->
+  <rect width="180" height="180" rx="36" class="bg"/>
+
+  <!-- Slime body — blob dengan drip bawah -->
+  <path class="slime" d="
+    M 90 28
+    C 120 28, 148 50, 148 82
+    C 148 105, 138 118, 130 128
+    C 124 136, 118 145, 118 152
+    C 118 158, 113 162, 108 160
+    C 104 158, 103 152, 103 148
+    C 103 144, 100 141, 90 141
+    C 80 141, 77 144, 77 148
+    C 77 152, 76 158, 72 160
+    C 67 162, 62 158, 62 152
+    C 62 145, 56 136, 50 128
+    C 42 118, 32 105, 32 82
+    C 32 50, 60 28, 90 28
+    Z
+  "/>
+
+  <!-- Mata kiri — deadpan flat -->
+  <rect class="eye" x="62" y="74" width="20" height="8" rx="2"/>
+  <!-- Mata kanan -->
+  <rect class="eye" x="98" y="74" width="20" height="8" rx="2"/>
+</svg>

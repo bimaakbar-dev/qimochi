@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <style>
+    .brand-bg { 
+      fill: #f4f4f5; 
+      transition: fill 0.3s ease; 
+    }
+    .brand-icon { 
+      stroke: #18181b; 
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke 0.3s ease; 
+    }
+
+    @media (prefers-color-scheme: dark) { 
+      .brand-bg { fill: #0a0a09; }
+      .brand-icon { stroke: #ffffff; } 
+    }
+  </style>
+  
+  <rect width="180" height="180" rx="99999" class="brand-bg"/>
+  
+  <g transform="translate(36, 36) scale(4.5)" class="brand-icon">
+    <path d="M6 5h14v12l-2 2h-12l-2 -2v-10z" />
+    <path d="M7 10h2" />
+    <path d="M7 12.5v.01" />
+    <path d="M12 10h2" />
+    <path d="M12 12.5v.01" />
+  </g>
+</svg>
