@@ -1,0 +1,112 @@
+---
+// src/pages/anime/genres/[...page].astro
+
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+import { buildMeta } from "@/consts";
+
+import Layout from '@/layouts/Layout.astro';
+import Section from "@/components/ui/Section.astro";
+import Container from '@/components/ui/Container.astro';
+import Pagination from "@/components/Pagination.astro";
+import AnimeCard from '@/components/anime/AnimeCard.astro';
+
+type AnimeEntry = CollectionEntry<'anime'>;
+
+export async function getStaticPaths() {
+  const allAnime: AnimeEntry[] = await getCollection('anime');
+  const genres: string[] = [...new Set(allAnime.flatMap((a: AnimeEntry) => a.data.genres ?? []))];
+  const PER_PAGE = 20;
+  const paths = [];
+
+  for (const genre of genres) {
+    const filtered = allAnime
+      .filter((a: AnimeEntry) => a.data.genres?.includes(genre))
+      .sort((a: AnimeEntry, b: AnimeEntry) => {
+        const dateA = a.data.pubDate ?? a.data.releaseDate ?? new Date(0);
+        const dateB = b.data.pubDate ?? b.data.releaseDate ?? new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+    const slugGenre = genre.toLowerCase().replace(/\s+/g, '-');
+
+    for (let i = 1; i <= totalPages; i++) {
+      paths.push({
+        params: {
+          page: i === 1 ? slugGenre : `${slugGenre}/${i}`
+        },
+        props: {
+          genre,
+          slugGenre,
+          anime: filtered.slice((i - 1) * PER_PAGE, i * PER_PAGE),
+          currentPage: i,
+          totalPages
+        }
+      });
+    }
+  }
+
+  return paths;
+}
+
+type Props = {
+  genre: string;
+  slugGenre: string;
+  anime: AnimeEntry[];
+  currentPage: number;
+  totalPages: number;
+};
+
+const { 
+  genre, 
+  slugGenre, 
+  anime, 
+  currentPage, 
+  totalPages 
+} = Astro.props;
+
+const currentPath = Astro.url.pathname;
+
+const meta = buildMeta({
+  title: `Anime Genre ${genre} - Halaman ${currentPage}`,
+  description: `Daftar anime genre ${genre} halaman ${currentPage}`,
+  canonical: currentPath,
+  ogType: "website",
+  keywords: [],
+});
+
+const getPageUrl = (page: number) => {
+  return page === 1 
+    ? `/anime/genres/${slugGenre}` 
+    : `/anime/genres/${slugGenre}/${page}`;
+};
+---
+
+<Layout {meta}>
+  <Section size="md">
+    <Container size="lg">
+      <Section size="sm">
+        <a href="/anime/genres" class="text-sm text-zinc-400 hover:text-white">← Semua Genre</a>
+      </Section>
+      <Section size="sm">
+        <h1 class="text-2xl font-bold mb-6">Genre: {genre}</h1>
+      </Section>
+      <Section size="sm">
+        {anime.length === 0 ? (
+          <p>Tidak ada anime di genre {genre}</p>
+        ) : (
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {anime.map((entry: AnimeEntry) => <AnimeCard entry={entry} />)}
+          </div>
+        )}
+
+        <Pagination 
+          currentPage={currentPage} 
+          totalPages={totalPages} 
+          href={getPageUrl} 
+        />
+      </Section>
+    </Container>
+  </Section>
+</Layout>

@@ -1,0 +1,123 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import { buildMeta } from "@/consts";
+
+import Layout from '@/layouts/Layout.astro';
+import Section from "@/components/ui/Section.astro";
+import Container from '@/components/ui/Container.astro';
+
+type BlogEntry = CollectionEntry<'blog'>;
+
+const allPosts: BlogEntry[] = await getCollection('blog', ({ data }) => !data.draft);
+
+const sortedPosts = allPosts.sort((a, b) => {
+  const dateA = a.data.pubDate ?? new Date(0);
+  const dateB = b.data.pubDate ?? new Date(0);
+  return dateB.getTime() - dateA.getTime();
+});
+
+const formatMonthName = (monthIndex: number) => {
+  return new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(new Date(2000, monthIndex, 1));
+};
+
+const formatDate = (date?: Date) => {
+  if (!date) return '';
+  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(date);
+};
+
+type GroupedArchive = Record<number, Record<number, BlogEntry[]>>;
+
+const archive = sortedPosts.reduce<GroupedArchive>((acc, post) => {
+  const date = post.data.pubDate ?? new Date(0);
+  const year = date.getFullYear();
+  const month = date.getMonth();
+
+  if (!acc[year]) acc[year] = {};
+  if (!acc[year][month]) acc[year][month] = [];
+
+  acc[year][month].push(post);
+  return acc;
+}, {});
+
+const years = Object.keys(archive).map(Number).sort((a, b) => b - a);
+
+const currentPath = Astro.url.pathname;
+
+const meta = buildMeta({
+  title: "Arsip Blog",
+  description: "Arsip lengkap seluruh artikel blog berdasarkan tahun dan bulan terbit.",
+  canonical: currentPath,
+  ogType: "website",
+  keywords: ["arsip blog", "blog archive"],
+});
+---
+
+<Layout {meta}>
+  <Section size="md">
+    <Container size="lg">
+      <Section size="sm">
+        <a href="/blog" class="text-sm text-zinc-400 hover:text-white">← Kembali ke Blog</a>
+        <h1 class="text-2xl font-bold mt-2 mb-2">Arsip Artikel</h1>
+        <p class="text-sm text-zinc-400 mb-8">Total {allPosts.length} artikel telah diterbitkan</p>
+      </Section>
+
+      <Section size="sm">
+        <div class="flex flex-wrap gap-2 p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg mb-10">
+          <span class="text-xs font-medium text-zinc-500 self-center mr-2">Pilih Tahun:</span>
+          {years.map((year) => (
+            <a
+              href={`#year-${year}`}
+              class="px-3 py-1 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white rounded border border-zinc-700 transition"
+            >
+              {year}
+            </a>
+          ))}
+        </div>
+      </Section>
+
+      <Section size="sm">
+        <div class="space-y-12">
+          {years.map((year) => (
+            <div id={`year-${year}`} class="scroll-mt-20">
+              <h2 class="text-2xl font-bold text-blue-500 border-b border-zinc-800 pb-2 mb-6">
+                {year}
+              </h2>
+
+              <div class="space-y-6">
+                {Object.keys(archive[year])
+                  .map(Number)
+                  .sort((a, b) => b - a)
+                  .map((month) => (
+                    <div class="pl-2 border-l-2 border-zinc-800">
+                      <h3 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">
+                        {formatMonthName(month)} ({archive[year][month].length})
+                      </h3>
+
+                      <ul class="space-y-2">
+                        {archive[year][month].map((post) => {
+                          const slug = post.data.slug ?? post.id;
+                          return (
+                            <li class="flex items-center justify-between group p-1.5 hover:bg-zinc-900 rounded transition">
+                              <a
+                                href={`/blog/${slug}`}
+                                class="text-sm text-zinc-300 group-hover:text-white transition line-clamp-1 pr-4"
+                              >
+                                {post.data.title}
+                              </a>
+                              <time class="text-xs text-zinc-500 whitespace-nowrap shrink-0">
+                                {formatDate(post.data.pubDate)}
+                              </time>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+    </Container>
+  </Section>
+</Layout>

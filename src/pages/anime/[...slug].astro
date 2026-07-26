@@ -1,0 +1,138 @@
+---
+import { 
+  getCollection, 
+  render,
+  type CollectionEntry 
+} from 'astro:content';
+
+import {
+  buildMeta,
+  IMAGE,
+  ROUTES,
+} from "@/consts";
+
+import Layout from '@/layouts/Layout.astro';
+import Section from "@/components/ui/Section.astro";
+import Container from '@/components/ui/Container.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import { components } from "@components/mdx/MDXComponents";
+import Button from '@/components/ui/Button.astro';
+
+export async function getStaticPaths() {
+  const animeEntries = await getCollection('anime');
+  return animeEntries.map((entry) => ({
+    params: { slug: entry.data.slug?? entry.id },
+    props: { entry },
+  }));
+}
+
+type Props = { entry: CollectionEntry<'anime'> };
+const { entry } = Astro.props;
+
+if (!entry) {
+  return new Response(null, { status: 404, statusText: "Not Found" });
+}
+
+const { Content } = await render(entry);
+const { data } = entry;
+
+const poster = data.poster?.src?? '/placeholder-poster.jpg';
+const currentPath = Astro.url.pathname;
+
+const breadcrumbItems = [
+  { label: "Beranda", href: '/' },
+  { label: "Anime", href: ROUTES.anime },
+  { label: entry.data.title, href: currentPath }
+];
+
+const meta = buildMeta({
+  title: data.seo?.title?? data.title,
+  description: data.seo?.description,
+  canonical: currentPath,
+  ogType: "website",
+  keywords: [],
+});
+
+const $ = {
+  cover: "rounded-xl w-full",
+  title: "text-heading-32 md:text-heading-40 font-semibold tracking-tight leading-tight text-balance text-(--fg-strong)",
+
+}
+---
+
+<Layout {meta} isHome>
+  <Section size="md">
+    <Container size="md">
+      <Section size="sm">
+        <Breadcrumb separator='chevron' items={breadcrumbItems} />
+      </Section>
+      <div class="grid md:grid-cols-[300px_1fr] gap-6">
+        <Section size="sm">
+          <img 
+            src={poster} 
+            alt={data.poster?.alt?? data.title}
+            width={IMAGE.thumbnail.width}
+            height={IMAGE.thumbnail.height}
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            onerror={`this.onerror=null; this.src='${IMAGE.thumbnail.placeholder}'`}
+            class={$.cover}
+          />
+        </Section>
+        <div>
+          <Section size="sm">
+            <div>
+              <h1 class={$.title}>{data.title}</h1>
+              {data.altTItle && data.altTItle.length > 0 && (
+                <p class="text-zinc-400 text-sm mt-1">{data.altTItle.join(', ')}</p>
+              )}
+              <div class="mt-4 flex flex-wrap gap-2 text-sm">
+                {data.status && <span class="px-3 py-1 rounded bg-zinc-800">{data.status}</span>}
+                {data.types && <span class="px-3 py-1 rounded bg-zinc-800">{data.types}</span>}
+                {data.totalEpisode!== undefined && <span class="px-3 py-1 rounded bg-zinc-800">{data.totalEpisode} Episode</span>}
+                {data.rating && <span class="px-3 py-1 rounded bg-yellow-500/20 text-yellow-300">★ {data.rating}/10</span>}
+              </div>
+              {data.genres && (
+                <div class="mt-3 flex flex-wrap gap-2">
+                  {data.genres.map((g) => (
+                    <a href={`/anime/genres/${g.toLowerCase()}`} class="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-sm">
+                      {g}
+                    </a>
+                  ))}
+                </div>
+              )}
+              {data.studios && (
+                <p class="mt-3 text-sm text-zinc-400">Studio: {data.studios.join(', ')}</p>
+              )}
+            </div>
+          </Section>
+          <Section size="sm">
+            <div class="prose">
+              <Content components={components} />
+            </div>
+          </Section>
+          <Section size="sm">
+            {data.download && data.download.length > 0 && (
+              <div class="mt-6">
+                <h2 class="text-xl font-semibold mb-3">Download</h2>
+                <div class="space-y-2">
+                  {data.download.map((dl) => (
+                    <div class="flex justify-between items-center bg-zinc-900 p-3 rounded">
+                      <span>{dl.quality} {dl.server && ` - ${dl.server}`}</span>
+                      {dl.url && 
+                        <Button size='md' variant='accent' href={dl.url}>
+                          Download
+                        </Button>
+                      }
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Section>
+        </div>
+      </div>
+    </Container>
+  </Section>
+</Layout>

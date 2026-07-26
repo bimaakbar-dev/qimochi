@@ -1,0 +1,110 @@
+/* src/styles/prose/components/file-tree.css */
+
+.prose .file-tree,
+.prose .file-tree-list,
+.prose .file-tree-list ul,
+.prose .file-tree-list ol,
+.prose .file-tree-list li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.prose .file-tree {
+  min-width: max-content;
+}
+
+.prose .file-tree-list *:last-child {
+  margin-bottom: 0 !important;
+}
+
+.prose .file-tree-list li::marker,
+.prose .file-tree-list li::before,
+.prose .file-tree-list li::after {
+  display: none;
+  content: none;
+}
+
+.prose .file-tree-list li + li {
+  margin-top: 0.55rem;
+}
+
+.prose .file-tree-children {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s var(--ease-out);
+  margin-left: 0.45rem;
+  border-left: 1px solid
+    color-mix(in srgb, var(--border) 90%, transparent);
+  padding-left: 0.85rem;
+}
+
+.prose .file-tree-folder.open > .file-tree-children {
+  grid-template-rows: 1fr;
+}
+
+.prose .file-tree-children > ul,
+.prose .file-tree-children > ol {
+  overflow: hidden;
+}
+
+.prose .file-tree-label {
+  @apply text-code-14;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color var(--prose-duration) var(--ease-out);
+  padding: 0.15rem 0;
+  color: var(--fg-muted);
+  user-select: none;
+  white-space: nowrap;
+  margin-block-start: 4px;
+  margin-block-end: 4px;
+}
+
+.prose .file-tree-folder > .file-tree-label {
+  cursor: pointer;
+  font-weight: 500;
+}
+.prose .file-tree-label:active
+.prose .file-tree-label:hover,
+.prose .file-tree-folder.open > .file-tree-label {
+  color: var(--fg-strong);
+}
+
+.prose .file-tree-label .icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  transition: color var(--duration) var(--ease-out);
+  color: var(--fg-subtle);
+}
+
+.prose .file-tree-folder.open > .file-tree-label .icon {
+  color: var(--fg-strong);
+}
+
+.prose .file-tree-label.is-marked {
+  background-color: rgb(from var(--accent) r g b / 0.6) !important;
+  border-radius: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
+  color: var(--fg-strong) !important;
+  gap: 0.25rem;
+}
+
+.prose .file-tree-label.is-marked .file-name mark {
+  background-color: transparent !important;
+  color: inherit;
+  font-weight: 600;
+}
+
+.prose .file-tree-label.is-marked .icon {
+  color: var(--fg-strong) !important;
+}
+
+@media (min-width: 768px) {
+  .prose .file-tree-label {
+    @apply text-code-14;
+  }
+}

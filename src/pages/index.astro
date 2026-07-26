@@ -1,0 +1,112 @@
+---
+// src/pages/index.astro
+import { getCollection } from 'astro:content';
+import {
+  buildMeta,
+  SITE,
+} from "@/consts";
+
+import Layout from "@/layouts/Layout.astro";
+import Container from "@/components/ui/Container.astro";
+import Section from "@/components/ui/Section.astro";
+import HeroSection from "@/components/anime/Hero.astro";
+import LatestAnime from '@/components/anime/LatestAnime.astro';
+import GenreList from '@/components/anime/GenreList.astro';
+import LatestBlog from '@/components/blog/LatestBlog.astro';
+import Button from '@/components/ui/Button.astro';
+import Icons from '@/components/ui/Icons.astro';
+
+
+const allAnime = await getCollection('anime');
+const latestAnime = allAnime
+  .sort((a, b) => {
+    const dateA = a.data.pubDate || new Date(0);
+    const dateB = b.data.pubDate || new Date(0);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+const heroAnime = latestAnime.slice(0, 3);
+const gridAnime = latestAnime.slice(0, 8);
+
+const genres = [...new Set(allAnime.flatMap(item => item.data.genres || []))];
+
+const allBlog = await getCollection('blog');
+const latestBlog = allBlog
+  .sort((a, b) => {
+    const dateA = a.data.pubDate || new Date(0);
+    const dateB = b.data.pubDate || new Date(0);
+    return dateB.getTime() - dateA.getTime();
+  })
+  .slice(0, 4);
+
+const meta = buildMeta({
+  description: SITE.description,
+  canonical: SITE.url,
+  ogType: "website",
+  keywords: [],
+});
+---
+
+<Layout {meta} isHome>
+  <div class="relative flex w-full flex-1 flex-col items-center pb-(--safe-bottom)">
+    <Container size="xl">
+      <Section size="sm">
+        <HeroSection latestAnime={heroAnime} />
+      </Section>
+    </Container>
+    <Container size="lg">
+      <Section size="sm">
+         <div class="flex items-center justify-between border-l-4 border-(--accent) pl-4 mb-6">
+            <h2 class="text-heading-24 font-semibold text-(--fg-strong)">
+              Update Terbaru
+            </h2>
+            <Button
+              href="/anime"
+              variant='ghost'
+              size='md'
+              suffix={<Icons name="arrow-right" class='size-4.5'/>}
+              class="text-sm"
+            >
+              Lihat Semua
+            </Button>
+          </div>
+        <LatestAnime items={gridAnime} />
+      </Section>
+      <Section size="sm">
+        <div class="flex items-center justify-between border-l-4 border-(--accent) pl-4 mb-6">
+          <h2 class="text-heading-24 font-semibold text-(--fg-strong)">
+            Genre
+          </h2>
+          <Button
+            href="/genres"
+            variant='ghost'
+            size='md'
+            suffix={<Icons name="arrow-right" class='size-4.5'/>}
+            class="text-sm"
+          >
+          Lihat Semua
+          </Button>
+        </div>
+        <GenreList genres={genres} limit={12} />
+      </Section>
+
+      <Section size="sm">
+        <div class="flex items-center justify-between border-l-4 border-(--accent) pl-4 mb-6">
+          <h2 class="text-heading-24 font-semibold text-(--fg-strong)">
+            Artikel
+          </h2>
+          <Button
+            href="/blog"
+            variant='ghost'
+            size='md'
+            suffix={<Icons name="arrow-right" class='size-4.5'/>}
+            class="text-sm"
+          >
+            Lihat Semua
+          </Button>
+        </div>
+        <LatestBlog items={latestBlog} />
+      </Section>
+    </Container>
+  </div>
+</Layout>

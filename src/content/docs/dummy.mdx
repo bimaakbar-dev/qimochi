@@ -1,0 +1,845 @@
+---
+title: Typhography
+slug: "ini-judul"
+description: Ini deskripsi postingan
+tags:
+  - tag1
+  - tag2
+  - tag3
+  - tag4
+  - tag5
+pubDate: 2026-05-19T10:28
+lastUpdate: 2026-05-19T10:28
+draft: false
+seo:
+  title: Ini Judul untuk seo
+  description: Ini deskripsi untuk seo
+  ogImage: /org/c0desk1-og.webp
+  noIndex: true
+order: 10
+---
+# Heading level 1
+## Heading level 2
+### Heading level 3
+#### Heading level 4
+##### Heading level 5
+###### Heading level 6
+
+## Paragraf biasa.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Integer facilisis, nisl sed tincidunt varius, ligula erat fermentum nisi, non pretium velit magna nec lectus. Curabitur ut sem vel augue pulvinar volutpat sit amet sed risus.
+
+Ini paragraf kedua dengan **teks tebal**, *teks miring*, dan ***teks tebal miring***. Juga ada ~~coret~~ dan `inline code`. Selain itu terdapat kombinasi elemen inline lain untuk membantu testing typography, spacing antar paragraf, line-height, wrapping text, serta rendering markdown pada berbagai ukuran layar dan mode tema..
+
+## Blockquote
+:::quote
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere, nibh sed commodo tristique, augue lacus facilisis nisl, sed vulputate velit nunc eget erat. Quote ini dibuat lebih panjang untuk membantu proses testing typography, spacing, wrapping text, dan rendering multiline pada component admonition quote.
+:author[bima-akbar]
+:::
+
+:::quote
+Suspendisse potenti. Curabitur convallis, sapien sit amet faucibus tempus, ligula tortor dignissim erat, vel vulputate elit sem sed neque. Bagian ini berguna untuk memastikan inline link, hover state, dan external source rendering tetap konsisten pada berbagai ukuran layar.
+:cite[c0desk1 | https://c0desk1.my.id/]
+:::
+
+:::quote
+Praesent feugiat, purus vel luctus elementum, lorem arcu tincidunt nisl, vitae pulvinar libero turpis nec justo. Konten diperpanjang untuk membantu debugging alignment author, overflow content, serta vertical rhythm pada layout quote custom.
+:cite[Seseorang]
+:::
+
+:::quote
+Donec faucibus, risus vel luctus tincidunt, justo sapien placerat nibh, sed gravida lorem lectus non sapien. Variasi tanpa metadata seperti ini penting untuk memastikan renderer tetap stabil meskipun tidak memiliki source maupun author tambahan.
+:::
+
+> Donec faucibus, risus vel luctus tincidunt, justo sapien placerat nibh, sed gravida lorem lectus non sapien. Variasi tanpa metadata seperti ini penting untuk memastikan renderer tetap stabil meskipun tidak memiliki source maupun author tambahan.
+> <cite>Ini cite</cite>
+
+## Daftar (List)
+
+### Daftar tak berurutan (unordered)
+- Item pertama dengan deskripsi yang sedikit lebih panjang untuk membantu testing spacing, wrapping text, dan alignment marker pada daftar unordered.
+- Item kedua yang juga memiliki isi lebih panjang agar rendering multiline dapat terlihat dengan lebih jelas pada berbagai ukuran layar.
+  - Sub item A dengan tambahan teks untuk memastikan nested list tetap memiliki indentation dan vertical rhythm yang konsisten.
+  - Sub item B yang digunakan untuk menguji tampilan marker, spacing antar item, dan line-height pada nested unordered list.
+- Item ketiga dengan kombinasi teks yang lebih panjang untuk membantu debugging typography dan layout pada prose content custom.
+
+### Daftar berurutan (ordered)
+1. Langkah satu dengan penjelasan tambahan yang dibuat lebih panjang untuk membantu testing alignment angka, spacing antar item, dan wrapping text pada ordered list custom.
+2. Langkah dua dengan isi yang sedikit lebih kompleks agar rendering multiline dan vertical rhythm pada daftar berurutan dapat terlihat lebih jelas.
+  1. Sub langkah 2.1 dengan tambahan konten untuk memastikan nested ordered list tetap memiliki indentation dan numbering yang konsisten.
+  2. Sub langkah 2.2 yang digunakan untuk menguji tampilan marker angka, line-height, serta spacing antar nested item.
+3. Langkah tiga dengan paragraf yang lebih panjang untuk membantu debugging typography, numbering style, dan keseluruhan layout prose pada berbagai ukuran layar.
+
+### Task list
+- [x] Selesai dan sudah diuji untuk memastikan styling checkbox aktif, alignment icon, serta typography pada task list berjalan dengan baik di dalam prose custom.
+- [ ] Belum selesai karena masih digunakan untuk testing spacing, wrapping text, dan interaksi visual antara checkbox dengan konten multiline yang lebih panjang.
+- [ ] Sedang dikerjakan sambil melakukan debugging terhadap vertical rhythm, nested spacing, serta konsistensi rendering task list pada berbagai ukuran layar dan mode tema.
+
+## Tabel
+| Header 1 | Header 2 | Header 3 |
+| ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Baris 1 kolom 1 dengan isi yang lebih panjang untuk membantu testing wrapping text dan alignment pada tabel custom | Baris 1 kolom 2 digunakan untuk menguji spacing horizontal serta vertical rhythm antar cell | Baris 1 kolom 3 berfungsi untuk memastikan typography dan overflow content tetap stabil |
+| Baris 2 kolom 1 memiliki konten tambahan agar rendering multiline di dalam tabel dapat terlihat lebih jelas | Baris 2 kolom 2 digunakan untuk debugging border, padding, dan line-height pada berbagai ukuran layar | Baris 2 kolom 3 membantu memastikan seluruh layout tabel tetap konsisten saat konten lebih panjang |
+| Baris 3 kolom 1 digunakan untuk testing kombinasi teks panjang dengan responsive table wrapper | Baris 3 kolom 2 membantu memeriksa alignment vertikal antar cell dan konsistensi ukuran typography | Baris 3 kolom 3 dipakai untuk validasi overflow, scroll horizontal, dan rendering akhir pada prose custom |
+
+## Tabs
+::::tabs
+:::tab[Tab 1]
+Konten pertama. **Bold** dan *italic*.
+:::
+:::tab[Tab 2]
+```js
+console.log("line 1") // [!code --]
+console.log("line 2") // [!code ++]
+console.log("line 3") // [!code ++]
+console.log("line 4")
+console.log("line 5") // [!code highlight]
+```
+:::
+::::
+
+## Kode
+:::code
+:title[markdown.astro]
+```astro
+---
+// Astro component example // [!code highlight]
+const title = "Markdown Testing"; // [!code ++]
+---
+
+<section class="space-y-4">
+  <h2>{title}</h2>
+
+  <p> <!--[!code --]-->
+    Semua syntax markdown dan prose sedang diuji.
+  </p>
+</section>
+```
+:::
+
+:::code 
+:title[console.log]
+```js
+console.log("line 1") // [!code --]
+console.log("line 2") // [!code ++]
+console.log("line 3") // [!code ++]
+console.log("line 4")
+console.log("line 5") // [!code highlight]
+```
+:::
+
+:::code
+:title[src/styles/prose/code.css]
+```css
+/* src/styles/prose/code.css */
+
+.prose code:not(pre code) {
+  @apply text-code-14;
+  padding: 0.2em 0.45em;
+  font-weight: 500;
+  background-color: var(--prose-code-bg);
+  color: var(--prose-code-text);
+  border: 1px solid var(--prose-code-border);
+  border-radius: var(--prose-radius-md);
+  white-space: break-spaces;
+  
+}
+
+.prose h1 code,
+.prose h2 code,
+.prose h3 code,
+.prose h4 code,
+.prose summary code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+
+.prose a code {
+  color: inherit;
+}
+
+.prose pre {
+  padding: 1.25rem 1.5rem;
+  margin: 0 !important;
+  position: relative;
+  overflow-x: auto;
+  background: var(--prose-code-bg) !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--prose-border-strong) transparent;
+}
+
+.prose pre::-webkit-scrollbar { height: 4px; }
+.prose pre::-webkit-scrollbar-track { background: transparent; }
+.prose pre::-webkit-scrollbar-thumb { background: var(--prose-border-strong); border-radius: var(--prose-radius-full);}
+
+.prose pre[data-lang]::before {
+  content:        attr(data-lang);
+  position:       absolute;
+  top:            10px;
+  right:          14px;
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select:    none;
+  color:          var(--prose-fg-dim);
+}
+
+.prose pre code {
+  @apply text-code-14;
+}
+
+.prose .code-block-wrapper {
+  margin: 2.5rem 0;
+  overflow-x: auto;
+  overflow:       hidden;
+  border-radius: var(--prose-radius-lg);
+  border: 1px solid var(--prose-code-border);
+  background: var(--prose-code-bg) !important;
+}
+
+.prose .code-block-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             0.5rem;
+  padding:         0.25rem 0.65rem;
+  border-bottom:   1px solid var(--prose-code-border);
+  background:      var(--prose-code-header-bg) !important;
+}
+
+.prose .mac-controls {
+  padding-right: 0.5rem;
+}
+
+.prose .mac-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15); 
+}
+
+.prose .mac-dot.close {
+  background-color: #ff5f56;
+}
+
+.prose .mac-dot.minimize {
+  background-color: #ffbd2e;
+}
+
+.prose .mac-dot.maximize {
+  background-color: #27c93f;
+}
+
+.dark .prose .mac-dot {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.prose .code-block-title {
+  @apply text-label-14;
+  color:          var(--prose-fg-strong);
+  white-space:    nowrap;
+  overflow:       hidden;
+  text-overflow:  ellipsis;
+  min-width:      0;
+}
+
+.prose .code-diff-legend {
+  display:     flex;
+  align-items: center;
+  gap:         0.25rem;
+}
+
+.prose .diff-tag {
+  @apply text-label-14;
+  padding:        0.3rem;
+  border-radius:  var(--prose-radius-sm);
+}
+
+.prose .diff-tag.add    { 
+  color: var(--prose-code-diff-add-text) !important; 
+  background: var(--prose-code-diff-add-bg) !important; 
+}
+.prose .diff-tag.remove { 
+  color: var(--prose-code-diff-remove-text) !important; 
+  background: var(--prose-code-diff-remove-bg) !important; 
+}
+
+.prose .copy-button {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  flex-shrink:     0;
+  border-radius:   var(--prose-radius-md);
+  cursor:          pointer;
+  transition:      all var(--prose-duration) var(--prose-ease-out);
+  opacity:         0;
+  color:           var(--prose-fg-muted);
+}
+
+.prose pre:hover .copy-button,
+.prose .code-block-wrapper:hover .copy-button,
+.prose .copy-button:focus-visible { 
+  opacity: 1; 
+}
+
+.prose .copy-button:hover {
+  color: var(--prose-fg-strong);
+}
+
+@media (hover: none) {
+  .prose .copy-button { opacity: 1; }
+}
+
+.prose .code-content {
+  margin: 0;
+  overflow-x: auto;
+  border-radius: 0;
+  border-style: none;
+  background: var(--prose-code-bg) !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--prose-border-strong) transparent;
+}
+
+.prose .code-content::-webkit-scrollbar        { height: 4px; }
+.prose .code-content::-webkit-scrollbar-track  { background: transparent; }
+.prose .code-content::-webkit-scrollbar-thumb  { background: var(--prose-border-strong); border-radius: 2px; }
+
+.prose .code-content pre {
+  @apply text-code-14;
+  border: none;
+  margin: 0;
+  border-radius: 0;
+  background-color: transparent !important;
+  overflow-x: visible;
+  white-space: pre;
+  word-break: normal;
+  word-wrap: normal;
+  padding:          1.125rem 1.25rem;
+}
+
+.prose .code-content pre code {
+  white-space: pre !important;
+}
+
+.prose pre.line-numbers {
+  counter-reset:  line;
+  padding-left:   3.5rem;
+}
+
+.prose pre.line-numbers .line {
+  position:       relative;
+  counter-increment: line;
+}
+
+.prose pre.line-numbers .line::before {
+  @apply text-code-14;
+  content:        counter(line);
+  position:       absolute;
+  top:            0;
+  bottom:         0;
+  height:         100%;
+  left:           -3.5rem;
+  width:          2.75rem;
+  text-align:     right;
+  color:          var(--prose-code-number); 
+  user-select:    none;
+  pointer-events: none;
+  padding-right:  0.75rem;
+  border-right:   1px solid var(--prose-code-border); 
+}
+
+.prose pre.line-numbers .line.diff-add::before,
+.prose pre.line-numbers .line.diff-remove::before {
+  left: -3.5rem; 
+}
+
+.prose pre .line.highlighted,
+.prose pre .line.diff-add,
+.prose pre .line.diff-remove {
+  display: block;
+  @apply text-code-14;
+  margin-inline: -1.25rem;
+  padding-inline: 1.25rem;
+}
+
+.prose pre .line.highlighted {
+  background: var(--prose-code-line-highlighted-bg) !important; 
+  border-left: 3px solid var(--prose-code-line-highlighted-border) !important; 
+}
+
+.prose pre .line.diff-add {
+  background: var(--prose-code-line-add-bg) !important;
+  border-left: 3px solid var(--prose-code-line-add-border) !important; 
+}
+
+.prose pre .line.diff-remove {
+  background: var(--prose-code-line-remove-bg) !important;
+  border-left: 3px solid var(--prose-code-line-remove-border) !important; 
+}
+
+.prose pre .line.diff-add::before {
+  @apply text-label-14;
+  content: "+";
+  position: absolute;
+  left: 0.35rem;
+  color: var(--prose-code-diff-add-text) !important;
+  user-select: none;
+}
+
+.prose pre .line.diff-remove::before {
+  @apply text-label-14;
+  content: "−";
+  position: absolute;
+  left: 0.35rem;
+  color: var(--prose-code-diff-remove-text) !important;
+  user-select: none;
+}
+
+.prose pre.line-numbers .line.highlighted,
+.prose pre.line-numbers .line.diff-add,
+.prose pre.line-numbers .line.diff-remove {
+  margin-left: -3.5rem; 
+  padding-left: 3.5rem; 
+}
+
+.prose pre.line-numbers .line.highlighted::before,
+.prose pre.line-numbers .line.diff-add::before,
+.prose pre.line-numbers .line.diff-remove::before {
+  left: 0 !important;
+  z-index: 2;
+}
+
+.dark .astro-code {
+  background-color: var(--prose-code-bg) !important;
+  overflow-x: auto;
+}
+
+.dark .astro-code span {
+  background-color: transparent !important;
+  color: var(--shiki-dark) !important;
+  white-space: pre;
+  word-break: normal;
+  word-wrap: normal;
+}
+
+@media (max-width: 767px) {
+  .prose code:not(pre code) {
+    padding: 0.15em 0.3em;
+  }
+
+  .prose .code-block-wrapper {
+    margin:        1.75rem 0;
+  }
+
+  .prose pre {
+    padding: 1.5rem 1rem;
+    margin: 1.5rem 0;
+    border-radius: var(--prose-radius-sm);
+  }
+
+  .prose .code-content pre {
+    padding: 1rem 0.875rem;
+  }
+
+  .prose pre.line-numbers {
+    padding-left: 3.125rem;
+  }
+
+  .prose pre.line-numbers .line::before {
+    left:  -3.125rem;
+    width: 2.375rem;
+    padding-right: 0.5rem;
+  }
+
+  .prose pre.line-numbers .line.highlighted,
+  .prose pre.line-numbers .line.diff-add,
+  .prose pre.line-numbers .line.diff-remove {
+    margin-left: -3.125rem;
+    padding-left: 3.125rem;
+  }
+
+  .prose pre.line-numbers .line.highlighted::before,
+  .prose pre.line-numbers .line.diff-add::before,
+  .prose pre.line-numbers .line.diff-remove::before {
+    left: 0 !important;
+  }
+
+  .prose .copy-button { opacity: 1; }
+}
+```
+:::
+
+:::code
+```js
+// JavaScript example
+function testMarkdown() {
+  console.log("Semua sintaks markdown siap diuji");
+
+  const items = ["markdown", "syntax", "testing"];
+
+  return items.map((item) => ({
+    name: item,
+    active: true,
+  }));
+}
+```
+:::
+
+:::code
+```ts
+// TypeScript example
+type User = {
+  id: number;
+  name: string;
+  active: boolean;
+};
+
+const user: User = {
+  id: 1,
+  name: "Bima Akbar",
+  active: true,
+};
+
+export function getUser(): User {
+  return user;
+}
+```
+:::
+
+:::code
+:title[Button.tsx]
+```tsx
+// React TSX example
+type ButtonProps = {
+  label: string;
+};
+
+export function Button({ label }: ButtonProps) {
+  return (
+    <button className="rounded-lg border px-4 py-2">
+      {label}
+    </button>
+  );
+}
+```
+:::
+
+:::code
+```html
+<!-- HTML example -->
+<section class="card">
+  <h2>Testing HTML</h2>
+
+  <p>
+    Contoh HTML untuk menguji styling prose custom.
+  </p>
+</section>
+```
+:::
+
+:::code
+```css
+/* CSS example */
+.prose code {
+  font-size: 14px;
+  border-radius: 6px;
+  padding: 0.2rem 0.4rem;
+}
+```
+:::
+
+:::code
+```json
+{
+  "name": "markdown-test",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev"
+  }
+}
+```
+:::
+
+:::code
+```yaml
+name: markdown-testing
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+```
+:::
+
+:::code
+```bash
+# Bash example
+npm install
+npm run dev
+git status
+```
+:::
+
+:::code
+```python
+# Python example
+def test_markdown():
+    print("Markdown syntax siap diuji")
+
+    return {
+        "success": True
+    }
+```
+:::
+
+:::code
+```php
+<?php
+
+function testMarkdown() {
+    return "Semua syntax markdown siap diuji";
+}
+
+echo testMarkdown();
+```
+:::
+
+:::code
+```sql
+-- SQL example
+SELECT
+  id,
+  title,
+  published_at
+FROM posts
+ORDER BY published_at DESC;
+```
+:::
+
+:::code
+```md
+# Markdown example
+- Item pertama
+- Item kedua
+- Item ketiga
+```
+:::
+
+## Gambar
+![c0desk1](/org/c0desk1-og.webp)
+
+## Gambar dengan caption
+:::figure
+![c0desk1](/org/c0desk1-og.webp)
+Caption dan gambar di atas dipakai untuk memastikan alignment caption, typography, spacing vertikal, serta perilaku layout media tetap konsisten ketika digunakan bersama elemen markdown lainnya seperti paragraf, heading, maupun list.
+:::
+
+## File Tree
+:::filetree
+- src/
+  - styles/
+    - global.css
+    - utils.css
+  - consts.ts
+  - content.config.ts
+:::
+
+## Horizontal Rule
+---
+
+***
+
+## Footnote
+Artikel ini menggunakan beberapa footnote untuk memberikan penjelasan tambahan tanpa mengganggu alur utama pembahasan[^1]. Sistem seperti ini sering dipakai pada dokumentasi teknis, artikel akademik, maupun blog dengan konten panjang agar referensi tetap rapi dan mudah dibaca[^2].
+
+Selain itu, footnote juga berguna untuk menyisipkan konteks tambahan, sumber referensi, atau catatan kecil yang tidak terlalu penting jika dimasukkan langsung ke paragraf utama[^3]. Pada implementasi MDX atau Markdown modern, footnote biasanya dirender menjadi daftar referensi otomatis di bagian bawah halaman[^4].
+
+Contoh lain penggunaan footnote dapat ditemukan pada pembahasan API, changelog, maupun catatan kompatibilitas browser yang sering membutuhkan detail tambahan tanpa memenuhi isi utama artikel[^5].
+
+[^1]: Footnote pertama berisi penjelasan dasar mengenai penggunaan catatan kaki dalam dokumen Markdown.
+[^2]: Beberapa parser Markdown menggunakan sintaks footnote bawaan, sementara lainnya memerlukan plugin tambahan seperti remark-gfm atau remark-footnotes.
+[^3]: Footnote sering membantu menjaga tampilan artikel tetap bersih dan lebih nyaman dibaca pada layar kecil.
+[^4]: Pada sebagian tema blog, footnote dapat diberi animasi scroll atau backlink menuju posisi referensi awal.
+[^5]: Dalam workflow dokumentasi modern, footnote kadang dipakai untuk informasi deprecated, edge cases, atau catatan implementasi khusus.
+
+## Strikethrough
+~~Teks ini dicoret~~ untuk membantu testing styling strikethrough, ketebalan garis, alignment dengan typography utama, serta konsistensi rendering inline markdown pada berbagai ukuran layar dan mode tema.
+
+Selain itu, ~~bagian teks yang dicoret lebih panjang seperti ini~~ juga berguna untuk memastikan wrapping text, line-height, dan posisi dekorasi garis tetap stabil ketika digunakan pada paragraf multiline di dalam prose custom.
+
+## Highlight
+Ini paragraph dengan <mark>mark</mark> digunakan untuk membantu testing background highlight, border accent, spacing inline, serta konsistensi typography pada prose custom di berbagai ukuran layar.
+
+Teks yang <mark>di-highlight dengan HTML</mark> juga berguna untuk memastikan rendering elemen inline tetap stabil ketika berada di dalam paragraf panjang, memiliki wrapping multiline, maupun digunakan bersamaan dengan elemen markdown lain seperti [link](#), **strong**, atau `inline code`.
+
+## Escaping karakter
+Ini tidak miring karena \*backslash\*. Contoh ini digunakan untuk membantu testing escaped markdown character, rendering literal symbol, serta memastikan parser markdown tidak mengubah karakter tertentu menjadi elemen formatting otomatis.
+
+Selain itu, karakter seperti \# heading, \> blockquote, dan \`inline code\` juga sering dipakai untuk memastikan prose renderer tetap konsisten saat menampilkan dokumentasi teknis atau contoh sintaks markdown mentah di dalam artikel.
+
+## HTML inline
+Ini paragraf dengan <span class="custom-inline">HTML langsung</span> yang digunakan untuk membantu testing rendering HTML inline, inheritance typography, spacing, dan kompatibilitas styling custom di dalam prose markdown.
+
+Paragraf kedua dengan <mark>HTML langsung</mark> ini juga berguna untuk memastikan inline style, wrapping text, dan perilaku rendering HTML tetap konsisten pada berbagai ukuran layar maupun mode tema.
+
+## Abbreviation
+<abbr title="World Health Organization">WHO</abbr> adalah organisasi kesehatan yang digunakan di sini untuk membantu testing tooltip abbreviation, border style, hover interaction, serta rendering elemen inline HTML di dalam prose custom.
+
+<abbr title="Cascading Style Sheets">CSS</abbr> digunakan untuk styling dan juga dipakai pada contoh ini untuk memastikan typography, spacing inline, serta perilaku abbreviation tetap konsisten pada berbagai ukuran layar dan mode tema.
+
+## Sample Output
+<samp>Error: file not found (404)</samp> digunakan untuk membantu testing typography elemen sample output, background styling, border radius, spacing inline, serta konsistensi rendering elemen terminal-style di dalam prose custom.
+
+<samp>Build completed successfully in 1.24s</samp> juga berguna untuk memastikan wrapping text, line-height, dan alignment elemen output tetap stabil ketika digunakan bersama paragraf biasa, `inline code`, maupun block code pada berbagai ukuran layar.
+
+## Time element
+<time datetime="2026-05-19">19 Mei 2026</time> digunakan untuk membantu testing styling elemen time, typography inline, spacing antar elemen, serta rendering semantic HTML pada prose custom di berbagai ukuran layar dan mode tema.
+
+Selain itu, <time datetime="2026-05-19T14:30:00+07:00">19 Mei 2026 pukul 14:30 WIB</time> juga berguna untuk memastikan format datetime, wrapping text, dan perilaku elemen time tetap konsisten ketika digunakan bersama paragraf panjang, `inline code`, maupun elemen markdown lainnya.
+
+## Meter
+<meter value="0.6">60%</meter>
+
+60% digunakan untuk membantu testing rendering elemen meter, alignment inline, ukuran default browser styling, serta kompatibilitas typography pada prose custom di berbagai ukuran layar dan mode tema.
+
+<meter value="0.85">85%</meter>
+
+Selain itu, 85% juga berguna untuk memastikan tampilan indikator nilai tetap konsisten ketika digunakan bersama paragraf biasa, list, maupun elemen inline lainnya di dalam konten markdown.
+
+## Progress
+<progress value="70" max="100">70%</progress>
+
+70% digunakan untuk membantu testing elemen progress, tinggi komponen bawaan browser, alignment vertikal, serta rendering semantic HTML pada prose custom.
+
+<progress value="45" max="100">45%</progress>
+
+Selain itu, 45% dipakai untuk memastikan perubahan value, spacing antar elemen, dan perilaku rendering progress bar tetap stabil pada berbagai ukuran layar dan mode tema.
+
+## Inline quote
+<q>Ini kutipan pendek di dalam paragraf</q> digunakan untuk membantu testing styling elemen inline quote, typography quotation mark bawaan browser, spacing inline, serta kompatibilitas rendering semantic HTML pada prose custom.
+
+Selain itu, <q>Kutipan inline yang sedikit lebih panjang seperti ini</q> juga berguna untuk memastikan wrapping text, line-height, dan posisi tanda kutip tetap konsisten ketika digunakan bersama elemen markdown lain seperti **strong**, *em*, maupun `inline code`.
+
+## Variable
+Rumus luas persegi: <var>s</var><sup>2</sup> digunakan untuk membantu testing styling elemen variable, alignment superscript, typography matematika inline, serta kompatibilitas semantic HTML pada prose custom di berbagai ukuran layar dan mode tema.
+
+Selain itu, contoh seperti <var>x</var> + <var>y</var> = <var>z</var> juga berguna untuk memastikan rendering elemen variable tetap konsisten ketika digunakan bersama `inline code`, **strong text**, maupun elemen markdown lainnya di dalam paragraf panjang.
+
+## Small text
+<small>Hak cipta, disclaimer, atau catatan kaki digunakan untuk membantu testing typography small text, ukuran font kecil, line-height, serta konsistensi rendering elemen semantic HTML pada prose custom di berbagai ukuran layar dan mode tema.
+Selain itu, teks kecil seperti ini juga berguna untuk memastikan alignment inline, opacity visual, dan spacing tetap stabil ketika digunakan bersama paragraf biasa, link, maupun elemen markdown lainnya.</small>
+
+## Insert dan Delete
+Ini <ins>teks ditambahkan</ins> dan ini ~~teks dihapus~~. Contoh ini digunakan untuk membantu testing styling elemen insert dan delete, termasuk underline, strikethrough, spacing inline, serta konsistensi typography pada prose custom di berbagai ukuran layar dan mode tema.
+
+Selain itu, kombinasi seperti <ins>konten baru yang lebih panjang untuk pengujian wrapping text</ins> dan ~~konten lama yang sudah tidak digunakan lagi~~ juga berguna untuk memastikan rendering semantic HTML tetap stabil ketika digunakan bersama **strong text**, `inline code`, maupun elemen markdown lainnya di dalam paragraf panjang.
+
+## Citation
+<cite>Judul Buku atau Karya</cite> digunakan untuk membantu testing styling elemen citation, typography italic bawaan browser, spacing inline, serta kompatibilitas semantic HTML pada prose custom di berbagai ukuran layar dan mode tema.
+
+## Keyboard Input
+Tekan :kbd[Ctrl + C] untuk menyalin. Contoh ini digunakan untuk membantu testing styling elemen keyboard input, border, shadow, spacing inline, serta konsistensi typography pada prose custom di berbagai ukuran layar dan mode tema.
+
+Selain itu, kombinasi seperti :kbd[Ctrl + Shift + P] atau :kbd[⌘ + K] juga berguna untuk memastikan alignment, wrapping text, dan rendering elemen kbd tetap stabil ketika digunakan bersama paragraf biasa maupun elemen markdown lainnya.
+
+## Superscript dan Subscript
+H<sub>2</sub>O dan E = mc<sup>2</sup> digunakan untuk membantu testing alignment superscript dan subscript, typography matematika inline, spacing vertikal, serta kompatibilitas semantic HTML pada prose custom di berbagai ukuran layar dan mode tema.
+
+Selain itu, contoh seperti CO<sub>2</sub>, NH<sub>3</sub>, dan x<sup>10</sup> juga berguna untuk memastikan rendering elemen subscript maupun superscript tetap konsisten ketika digunakan bersama `inline code`, variable, atau elemen markdown lainnya di dalam paragraf panjang.
+
+## Definition List
+<dl>
+  <dt>Term 1</dt>
+  <dd>
+    Definisi term 1 yang dibuat sedikit lebih panjang untuk membantu testing spacing, indentation, typography, dan alignment antara definition term dengan definition description pada prose custom.
+  </dd>
+
+  <dt>Term 2</dt>
+  <dd>
+    Definisi term 2 digunakan untuk memastikan rendering definition list tetap konsisten ketika memiliki konten multiline, wrapping text, maupun kombinasi elemen inline seperti **strong**, *italic*, dan `inline code`.
+  </dd>
+</dl>
+
+## Bidirectional text
+<div dir="rtl">
+Teks ini terbaca dari kanan ke kiri digunakan untuk membantu testing rendering bidirectional text, alignment RTL, spacing inline, serta kompatibilitas semantic HTML pada prose custom di berbagai ukuran layar dan mode tema.
+</div>
+
+<div dir="rtl">
+Selain itu, contoh seperti Markdown dan HTML dapat diuji menggunakan direction RTL seperti ini juga berguna untuk memastikan wrapping text, typography, dan perilaku layout tetap konsisten ketika menggunakan konten dengan arah baca kanan ke kiri.
+</div>
+
+## Ruby annotation
+<ruby>漢字<rt>かんじ</rt></ruby> digunakan untuk membantu testing rendering ruby annotation, alignment furigana, spacing vertikal, serta kompatibilitas semantic HTML pada prose custom di berbagai ukuran layar dan mode tema.
+
+Selain itu, contoh seperti <ruby>東京<rt>とうきょう</rt></ruby> dan <ruby>日本語<rt>にほんご</rt></ruby> juga berguna untuk memastikan typography karakter Jepang, posisi annotation, dan wrapping text tetap konsisten ketika digunakan bersama paragraf biasa maupun elemen markdown lainnya.
+
+## Callout
+:::note
+ini contoh callout note yang dibuat sedikit lebih panjang untuk membantu testing padding, border, spacing internal, typography, dan rendering multiline pada komponen admonition atau callout custom di dalam prose markdown.
+:::
+
+:::info
+ini contoh callout info yang dibuat sedikit lebih panjang untuk membantu testing background variant, border accent, typography, spacing internal, dan rendering multiline pada komponen callout custom di dalam prose markdown.
+:::
+
+:::tip
+ini contoh callout tip yang dibuat sedikit lebih panjang untuk membantu testing styling komponen tip, termasuk warna accent, icon alignment, padding internal, serta konsistensi typography pada prose custom di berbagai ukuran layar dan mode tema.
+:::
+
+:::important
+ini contoh callout important yang dibuat sedikit lebih panjang untuk membantu testing styling komponen important, termasuk kontras warna, border emphasis, icon alignment, spacing internal, serta konsistensi typography pada prose custom di berbagai ukuran layar dan mode tema.
+:::
+
+:::warning
+ini contoh callout warning yang dibuat sedikit lebih panjang untuk membantu testing styling komponen warning, termasuk warna kontras, border highlight, icon alignment, spacing internal, serta konsistensi typography pada prose custom di berbagai ukuran layar dan mode tema.
+:::
+
+:::caution
+ini contoh callout caution yang dibuat sedikit lebih panjang untuk membantu testing styling komponen caution, termasuk warna peringatan, icon alignment, spacing internal, serta konsistensi typography pada prose custom di berbagai ukuran layar dan mode tema.
+:::
+
+:::danger
+ini contoh callout danger yang dibuat sedikit lebih panjang untuk membantu testing styling komponen danger, termasuk warna kontras tinggi, icon alignment, spacing internal, serta konsistensi typography pada prose custom di berbagai ukuran layar dan mode tema.
+:::
+
+## STEPS
+:::steps
+1. ini isi steps 1 yang dibuat lebih panjang untuk membantu testing layout steps, parsing heading, spacing antar section, serta rendering multiline pada komponen steps custom di dalam prose markdown. Bagian ini juga digunakan untuk memastikan setiap step memiliki visual hierarchy yang jelas, konsisten, dan tidak pecah ketika konten menjadi lebih kompleks. Tambahan teks ini juga membantu melihat bagaimana wrapping text bekerja pada container steps di berbagai ukuran layar.
+2. ini isi steps 2 yang diperpanjang agar bisa menguji perbedaan antar step, konsistensi heading parsing, alignment content, serta perilaku spacing internal dalam satu blok steps. Selain itu, ini membantu memastikan bahwa transisi antar section tetap stabil, baik ketika konten pendek maupun panjang, dan tidak terjadi overlap atau layout shift yang tidak diinginkan.
+3. ini isi steps 3 yang ditambahkan lebih banyak konten untuk menguji skenario steps menengah dengan kombinasi paragraf panjang, line wrapping, dan kemungkinan adanya elemen inline seperti **bold**, *italic*, atau `inline code`. Tujuannya adalah memastikan renderer tetap konsisten meskipun setiap step memiliki kompleksitas konten yang berbeda-beda.
+4. ini isi steps 4 yang dibuat cukup panjang untuk mengevaluasi batas maksimum kenyamanan pembacaan dalam satu step. Di sini diuji bagaimana layout menangani teks panjang, apakah spacing tetap rapi, dan apakah ada masalah overflow atau ketidakseimbangan vertical rhythm. Hal ini juga penting untuk memastikan UX tetap baik pada perangkat mobile.
+5. ini isi steps 5 sebagai langkah terakhir untuk memastikan seluruh komponen steps bekerja dengan baik dari awal hingga akhir. Bagian ini membantu mengecek apakah numbering tetap konsisten, apakah styling heading tidak tumpang tindih, serta apakah jarak antar step terakhir tetap sama seperti step sebelumnya tanpa anomali layout.
+:::
+
+## Details
+:::details 
+:summary[INI JUDUL DETAIL KLIK DISINI]
+ini isi Details yang dibuat lebih panjang untuk membantu testing rendering accordion, spacing internal, animation open/close, serta konsistensi typography pada prose custom di berbagai ukuran layar dan mode tema.
+
+Selain itu, konten tambahan seperti ini juga berguna untuk memastikan perilaku collapse state, wrapping text, dan visual hierarchy tetap stabil ketika digunakan bersama elemen markdown lain seperti steps, callout, maupun timeline.
+:::
+
+## Changelog
+::::changelog
+:::log[v1.0.4 - 2026-07-07]
+Perbaikan bug pada sistem autentikasi dan optimalisasi performa database:
+- Memperbaiki celah keamanan pada token JWT
+- Meningkatkan kecepatan query hingga `40%` lebih efisien
+- Memperbarui dokumentasi API internal
+:::
+:::log[v1.0.3 - 2026-06-15]
+Peluncuran modul inventaris baru untuk melacak stok barang secara real-time.
+:::
+::::
+
+## Badge
+
+Ini adalah :badge[NEW] badge yang digunakan untuk membantu testing styling inline badge, termasuk background color, padding, border radius, spacing inline, serta konsistensi typography pada prose custom di berbagai ukuran layar dan mode tema.
+
+Selain itu, :badge[UPDATED] badge juga digunakan untuk memastikan rendering elemen inline highlight tetap stabil ketika berada di dalam paragraf panjang, bersama elemen markdown lain seperti strong, italic, dan inline code.

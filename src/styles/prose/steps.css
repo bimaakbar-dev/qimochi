@@ -1,0 +1,34 @@
+/* src/styles/prose/steps.css */
+.prose .step-content h2,
+.prose .step-content h3,
+.prose .step-content h4 {
+  @apply text-heading-16;
+  color: var(--fg-strong);
+  margin: 0;
+}
+
+.prose .step-content ul,
+.prose .step-content ol,
+.prose .step-content p {
+  @apply text-body-16;
+  color: var(--fg-muted);
+  margin: 0;
+}
+
+.prose .step-wrapper .full-width-figure {
+  width: auto;
+}
+
+@media (min-width: 768px) {
+  .prose .step-content h2,
+  .prose .step-content h3,
+  .prose .step-content h4 {
+    @apply text-heading-18;
+  }
+
+  .prose .step-content ul,
+  .prose .step-content ol,
+  .prose .step-content p {
+    @apply text-body-16;
+  }
+}

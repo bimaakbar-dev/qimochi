@@ -1,0 +1,140 @@
+---
+// src/pages/docs/[...slug].astro
+import { 
+  getCollection, 
+  render 
+} from "astro:content";
+
+import { 
+  buildMeta, 
+  schemaWebPage, 
+  SITE 
+} from "@/consts";
+
+import { components } from "@components/mdx/MDXComponents";
+
+import DocsLayout from "@/layouts/DocsLayout.astro";
+import Container from "@ui/Container.astro";
+import Section from "@ui/Section.astro";
+import Toc from "@components/Toc.astro";
+import MobileToc from "@components/MobileToc.astro";
+import DocsHeader from "@docs/DocsHeader.astro";
+import ScrollToTop from "@docs/ScrollToTop.astro";
+import DocsFooter from "@docs/DocsFooter.astro";
+import CopyCode from "@/components/CopyCode.astro";
+
+export async function getStaticPaths() {
+  const docsEntries = await getCollection("docs");
+
+  const sorted = [...docsEntries].sort(
+    (a, b) => (a.data.order ?? 999) - (b.data.order ?? 999),
+  );
+  const root = sorted[0]?.id;
+
+  return docsEntries.map((entry) => {
+    const currentSlug = entry.data.slug || entry.id;
+    const isRoot = entry.id === root;
+
+    return {
+      params: { slug: isRoot ? undefined : currentSlug },
+      props: { entry, root },
+    };
+  });
+}
+
+const { entry, root } = Astro.props;
+
+if (!entry) {
+  return new Response(null, { status: 404, statusText: "Not Found" });
+}
+
+const { Content, headings } = await render(entry);
+
+const allDocs = await getCollection("docs");
+const sidebarItems = allDocs.sort(
+  (a, b) => (a.data.order ?? 999) - (b.data.order ?? 999),
+);
+
+const currentPath = Astro.url.pathname;
+
+const cleanSlug = Astro.params.slug;
+const currentUrl = `${SITE.url}/docs${cleanSlug ? `/${cleanSlug}` : ""}`;
+
+const currentIndex = sidebarItems.findIndex((item) => item.id === entry.id);
+const prevEntry = currentIndex > 0 ? sidebarItems[currentIndex - 1] : null;
+const nextEntry =
+  currentIndex < sidebarItems.length - 1
+    ? sidebarItems[currentIndex + 1]
+    : null;
+
+const metaProps = buildMeta({
+  title: entry.data.seo.title,
+  description: entry.data.seo.description ?? entry.data.description,
+  canonical: currentPath,
+  ogImage: entry.data.seo.ogImage,
+  ogType: "article",
+  datePublished: entry.data.pubDate?.toISOString(),
+  dateModified: entry.data.lastUpdated?.toISOString(),
+  authorName: "Bima Akbar",
+});
+
+const pageSchema = schemaWebPage({
+  title: entry.data.title,
+  description: entry.data.description || SITE.description,
+  url: currentUrl,
+});
+
+const markdown = `---
+title: "${entry.data.title}"
+description: "${entry.data.description || ""}"
+category: "${entry.data.category}"
+lastUpdated: "${entry.data.lastUpdated}"
+---
+
+${entry.body}`;
+
+const fullMarkdownContent = markdown;
+---
+
+<DocsLayout meta={metaProps} schema={pageSchema}>
+  <div data-pagefind-weight="2" class="hidden" />
+  <MobileToc title={entry.data.title} headings={headings} />
+  <Fragment>
+    <div class="mx-auto w-full min-w-0 pb-(--safe-bottom) px-0 lg:px-4">
+      <Section size="md">
+        <article data-pagefind-body data-pagefind-filter="type:docs">
+          <Container size="lg">
+            <DocsHeader
+              title={entry.data.title}
+              description={entry.data.description}
+              content={fullMarkdownContent}
+            />
+          </Container>
+          <div class="bg-none border-t border-dashed border-(--border-subtle)/80 my-6 md:my-8" />
+          <Container size="lg">
+            <div class="prose">
+              <Content components={components} />
+            </div>
+          </Container>
+          <div class="bg-none border-t border-dashed border-(--border-subtle)/80 mt-6 md:mt-8" />
+          <Container size="lg">
+            <DocsFooter 
+              lastUpdated={entry.data.lastUpdated}
+              prev={prevEntry}
+              next={nextEntry}
+              root={root} />
+          </Container>
+        </article>
+      </Section>
+    </div>
+  </Fragment>
+  <Fragment slot="right">
+    <div class="sticky top-0 right-0 space-y-2">
+      <ScrollToTop label="Scroll to top" />
+    </div>
+    <div class="fixed top-1/2 right-2 z-40 hidden -translate-y-1/2 lg:block">
+      <Toc headings={headings} />
+    </div>
+  </Fragment>
+  <CopyCode />
+</DocsLayout>

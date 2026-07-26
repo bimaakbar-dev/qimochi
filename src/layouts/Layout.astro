@@ -1,0 +1,53 @@
+---
+// src/layouts/Layout.astro
+import Page from "@/components/Page.astro";
+import Alert from "@/components/ui/Alert.astro";
+import Search from "@components/Search.astro";
+import { SITE, type buildMeta as BuildMetaFn } from "@/consts";
+
+import Head from "@components/Head.astro";
+import Header from "@components/Header.astro";
+import SkipLink from "@components/SkipLink.astro";
+import ThemeProvider from "@components/ThemeProvider.astro";
+
+interface Props {
+  meta?: Partial<ReturnType<typeof BuildMetaFn>>;
+  schema?: object | object[];
+  isHome?: boolean;
+  canonical?: string;
+  hideHeader?: boolean;
+  hideFooter?: boolean;
+}
+
+const {
+  meta,
+  schema,
+  isHome = false,
+  canonical,
+  hideHeader = false,
+  hideFooter = false,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang={SITE.lang} dir={SITE.dir}>
+  <Head {meta} {schema} {isHome} {canonical}>
+    <ThemeProvider />
+  </Head>
+  <body>
+    <SkipLink />
+    <Search />
+    <Page>
+      <!--<Alert
+        title="ALERT"
+        message="Docs Khusus A0"
+        icon="virus"
+        actionLabel="Read docs"
+        actionHref="/docs"
+      />-->
+      {!hideHeader && <Header />}
+      <slot />
+      {!hideFooter && <div />}
+    </Page>
+  </body>
+</html>

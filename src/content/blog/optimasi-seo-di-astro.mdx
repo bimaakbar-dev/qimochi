@@ -1,0 +1,79 @@
+---
+title: "Optimasi SEO di Astro dengan Mudah"
+description: "Tips dan trik meningkatkan SEO website Astro Anda menggunakan fitur bawaan dan integrasi."
+pubDate: 2026-07-10
+lastUpdated: 2026-07-12
+cover:
+  src: "/images/seo-astro.jpg"
+  alt: "Ilustrasi SEO dengan logo Astro"
+author:
+  name: "Budi Santoso"
+  role: "SEO Specialist"
+  avatar: "/avatars/budi.jpg"
+category: "SEO"
+tags: ["astro", "seo", "optimization", "performance"]
+draft: false
+seo:
+  title: "Optimasi SEO di Astro – Panduan Praktis"
+  description: "Pelajari cara mengoptimalkan SEO untuk situs Astro Anda, termasuk meta tag, sitemap, dan structured data."
+  ogImage: "/images/seo-og.jpg"
+  noIndex: false
+---
+
+## Optimasi SEO di Astro
+
+Astro menyediakan berbagai fitur untuk membantu optimasi SEO secara native. Berikut beberapa yang bisa Anda terapkan:
+
+### 1. Menggunakan Komponen `<Head>`
+
+Anda bisa mengelola meta tag dengan komponen `Head` di layout:
+
+```astro
+---
+// layouts/Layout.astro
+---
+<html>
+  <head>
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+```
+
+### 2. Integrasi `@astrojs/sitemap`
+Tambahkan sitemap otomatis untuk memudahkan crawling:
+
+```bash
+npx astro add @astrojs/sitemap
+```
+
+### 3. Struktur Data Terstruktur (JSON-LD)
+
+Gunakan JSON-LD di dalam komponen script untuk rich snippets:
+
+```js
+<script type="application/ld+json" set:html>
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "{title}",
+    "datePublished": "{pubDate}",
+    "author": {
+      "@type": "Person",
+      "name": "{author.name}"
+    }
+  }
+</script>
+```
+
+### 4. Optimasi Gambar
+Gunakan komponen `<Image>` dari `@astrojs/image` untuk mengurangi ukuran gambar dan menambahkan atribut alt yang deskriptif.
+
+## Kesimpulan
+Dengan langkah-langkah di atas, website Astro Anda akan lebih ramah mesin pencari dan meningkatkan peringkat di SERP.

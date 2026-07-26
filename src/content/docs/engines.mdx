@@ -1,0 +1,171 @@
+---
+slug: "engines"
+title: "Engine AI yang Didukung"
+description: "Panduan lengkap untuk setiap engine AI yang didukung oleh Adogen — Groq, Mistral AI, OpenRouter, Cloudflare Workers AI, dan Endpoint Kustom."
+lastUpdated: 2026-06-06T17:00
+order: 3
+category: "Getting Started"
+seo:
+  title: "Engine AI yang Didukung"
+  description: "Panduan lengkap untuk setiap engine AI yang didukung oleh Adogen — Groq, Mistral AI, OpenRouter, Cloudflare Workers AI, dan Endpoint Kustom."
+---
+
+Adogen mendukung beberapa engine AI. Masing-masing memiliki kekuatan, harga, dan persyaratan berbeda. Panduan ini akan membantu Anda memilih engine yang tepat untuk alur kerja Anda.
+
+---
+
+## Groq
+
+**Situs web:** [console.groq.com](https://console.groq.com/keys)  
+**Harga:** Berbayar per token — [lihat harga](https://groq.com/pricing/)  
+**Format kunci:** Harus diawali dengan `gsk_`
+
+### Model yang Tersedia
+
+| ID Model                                    | Deskripsi         | Kelebihan       |
+| ------------------------------------------- | ----------------- | --------------- |
+| `meta-llama/llama-4-scout-17b-16e-instruct` | Llama 4 Scout 17B | Cepat, efisien  |
+| `llama-3.1-70b-versatile`                   | Llama 3.1 70B     | Kualitas tinggi |
+| `mixtral-8x7b-32768`                        | Mixtral 8x7B      | Seimbang        |
+
+### Cara Mendapatkan Kunci API
+
+:::steps
+1. Buka [console.groq.com/keys](https://console.groq.com/keys) dan daftar atau masuk.
+2. Klik **"Create API Key"** dan beri nama.
+3. Salin kunci yang dihasilkan (diawali `gsk_`) dan tempel ke kolom API Key di Adogen.
+:::
+
+---
+
+## Mistral AI
+
+**Situs web:** [console.mistral.ai](https://console.mistral.ai/api-keys/)  
+**Harga:** Berbayar per token — [lihat harga](https://mistral.ai/pricing/)  
+**Format kunci:** Tidak ada awalan khusus
+
+### Model yang Tersedia
+
+| ID Model              | Deskripsi      | Kelebihan           |
+| --------------------- | -------------- | ------------------- |
+| `mistral-medium-2508` | Mistral Medium | Akurat, seimbang    |
+| `mistral-large-2407`  | Mistral Large  | Paling mumpuni      |
+| `pixtral-12b-2409`    | Pixtral 12B    | Multimodal (vision) |
+
+### Cara Mendapatkan Kunci API
+
+:::steps
+1. Buka [console.mistral.ai/api-keys](https://console.mistral.ai/api-keys/) dan daftar atau masuk.
+2. Klik **"Create new key"** dan beri deskripsi opsional.
+3. Salin kunci dan tempel ke kolom API Key di Adogen.
+:::
+
+---
+
+## OpenRouter
+
+**Situs web:** [openrouter.ai/keys](https://openrouter.ai/keys)  
+**Harga:** Berbayar — pengguna baru mendapat kredit **$1 gratis**  
+**Format kunci:** Tidak ada awalan khusus
+
+### Model yang Tersedia
+
+| ID Model             | Deskripsi    | Kelebihan                 |
+| -------------------- | ------------ | ------------------------- |
+| `llava/llava-13b`    | LLaVA 13B    | Vision sumber terbuka     |
+| `qwen/qwen-vl-plus`  | Qwen VL Plus | Vision berkualitas tinggi |
+| `openai/gpt-4o-mini` | GPT-4o Mini  | Cepat, mampu vision       |
+
+### Cara Mendapatkan Kunci API
+
+:::steps
+1. Buka [openrouter.ai/keys](https://openrouter.ai/keys) dan buat akun atau masuk.
+2. Klik **"Create Key"** dan atur nama serta batas kredit opsional.
+3. Salin kunci dan tempel ke kolom API Key di Adogen.
+:::
+
+:::note
+OpenRouter adalah layanan berbayar. Setelah kredit gratis $1 habis, Anda perlu menambahkan metode pembayaran.
+:::
+
+---
+
+## Cloudflare Workers AI
+
+**Situs web:** [dash.cloudflare.com](https://dash.cloudflare.com/ai/workers-ai)  
+**Harga:** Tersedia tingkat gratis — [lihat harga](https://developers.cloudflare.com/workers-ai/pricing/)  
+**Persyaratan:** ID Akun Cloudflare + Token API
+
+### Model yang Tersedia
+
+| ID Model                                | Deskripsi      | Kelebihan                   |
+| --------------------------------------- | -------------- | --------------------------- |
+| `@cf/llava-hf/llava-1.5-7b-hf`          | LLaVA 1.5 7B   | Vision ringan               |
+| `@cf/microsoft/phi-3.5-vision-instruct` | Phi 3.5 Vision | Model vision dari Microsoft |
+
+### Cara Mendapatkan Kredensial
+
+:::steps
+
+### Temukan ID Akun Anda
+
+Buka [dash.cloudflare.com](https://dash.cloudflare.com/), pilih akun Anda, dan salin **ID Akun** dari dasbor.
+
+### Buat Token API
+
+Navigasi ke **"Manage API Tokens"** dan buat token baru.
+
+### Atur izin
+
+Beri token izin **Workers AI: Run** dan selesaikan pembuatan.
+
+### Tempel kedua nilai
+
+Salin ID Akun dan Token API ke kolom Cloudflare yang sesuai di Adogen.
+:::
+
+:::note
+Cloudflare Workers AI memiliki tingkat gratis yang besar, tetapi mungkin ada batas kecepatan (rate limit).
+:::
+
+---
+
+## Endpoint Kustom
+
+Bawa sendiri endpoint API yang kompatibel dengan OpenAI.
+
+### Persyaratan
+
+- **URL Endpoint** — URL lengkap API Anda (contoh: `https://server-anda.com/v1/chat/completions`)
+- **Nama Model** — pengenal model (contoh: `meta-llama/llama-4-scout`)
+- **Kunci API** — kunci otentikasi Anda
+
+### Kasus Penggunaan
+
+- LLM yang dihosting sendiri (Ollama, vLLM, LocalAI)
+- Proksi pihak ketiga
+- API perusahaan
+
+### Cara Mengonfigurasi
+
+:::steps
+1. Pilih **Custom Endpoint** dari dropdown Provider di panel Engine.
+2. Isi URL Endpoint, Nama Model, dan Kunci API Anda.
+3. Klik **Save Changes** untuk menyimpan konfigurasi kustom Anda.
+:::
+
+:::note
+Endpoint Anda harus kompatibel dengan format API Chat Completions OpenAI.
+:::
+
+---
+
+## Tabel Perbandingan
+
+| Engine         | Tingkat Gratis | Memerlukan Kunci API | Model Vision | Terbaik Untuk  |
+| -------------- | -------------- | -------------------- | ------------ | -------------- |
+| **Groq**       | Tidak          | Ya                   | Tidak        | Kecepatan      |
+| **Mistral AI** | Tidak          | Ya                   | Ya (Pixtral) | Kualitas       |
+| **OpenRouter** | Kredit $1      | Ya                   | Ya           | Fleksibilitas  |
+| **Cloudflare** | Ya             | ID Akun + Token      | Ya           | Tingkat gratis |
+| **Kustom**     | Tergantung     | Tergantung           | Tergantung   | Host sendiri   |

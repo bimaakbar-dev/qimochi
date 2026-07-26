@@ -1,0 +1,69 @@
+---
+slug: "troubleshooting"
+title: "Troubleshooting"
+description: "Solutions for common issues when using Adogen."
+lastUpdated: 2026-06-06T17:00
+order: 6
+category: "Help"
+seo:
+  title: "Troubleshooting"
+  description: "Solutions for common issues when using Adogen."
+---
+
+### "API Key ditolak" (API Key rejected)
+
+- Make sure your API key is correct and active
+- For Groq: verify the key starts with `gsk_`
+- For Cloudflare: ensure your API token has **Workers AI: Run** permission
+- Try creating a new API key from your provider's dashboard
+
+### "Failed to process image"
+
+- The image may be too large (max 10 MB)
+- The file format may not be supported (use JPEG, PNG, or WebP)
+- Try resizing the image manually before uploading
+
+### "AI tidak memberikan respon" (No response from AI)
+
+- The AI engine may be experiencing downtime — try another engine
+- Check your internet connection
+- If using a custom endpoint, verify the URL is correct and accessible
+
+### Rate limit errors
+
+- Increase the **delay between requests** in Settings (try 3–5 seconds)
+- Switch to a different AI engine temporarily
+- Check your engine's dashboard for current rate limits
+
+### Images appear blurry or low quality
+
+- Adogen automatically resizes images to 1024px wide to save bandwidth
+- The AI analyzes the content, not the resolution — metadata quality should not be affected
+- If needed, use a higher resolution original in your final Adobe Stock upload
+
+### Regenerate button not working
+
+- The regenerate function uses the same engine and API key as the original generation
+- If your API key has changed, regenerate may fail — delete the item and re-upload the image
+- If the error persists, try switching engines and generating again
+
+### History is empty after browser restart
+
+- History is stored in localStorage and may be cleared if you use private/incognito mode
+- Some browser extensions or cleaners may remove localStorage data
+- Make sure you're using the same browser and profile
+
+### Nothing happens when I click Generate
+
+- Check if you're in Text mode and haven't entered a description
+- Check if you're in Image mode and haven't uploaded any images
+- Verify that your API key is filled in (or you're using a free engine)
+- Look for an error message in the UI
+
+### Still having issues?
+
+If your problem isn't listed here, try:
+
+- Switching to a different AI engine
+- Clearing your browser cache and reloading
+- Checking the browser console (F12) for error messages

@@ -1,0 +1,42 @@
+/* src/styles/prose/details.css */
+
+.prose .summary {
+  @apply text-heading-14;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.prose .summary::-webkit-details-marker {
+  display: none;
+}
+
+.prose .content ul,
+.prose .content ol,
+.prose .content p {
+  @apply text-body-14;
+}
+
+.prose .content > *:first-child {
+  margin-top: 10px !important;
+}
+
+.prose .content > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+@media (min-width: 768px) {
+  .prose .summary {
+    @apply text-heading-14;
+  }
+
+  .prose .content ul,
+  .prose .content ol,
+  .prose .content p {
+    @apply text-body-16;
+  }
+
+  .prose .content > *:first-child {
+    margin-top: 12px !important;
+  }
+}

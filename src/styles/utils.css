@@ -1,0 +1,328 @@
+/* ---- Display ---- */
+@utility text-display-96 {
+  font-weight: 800;
+  font-size: 96px;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+@utility text-display-80 {
+  font-weight: 800;
+  font-size: 80px;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+@utility text-display-72 {
+  font-weight: 800;
+  font-size: 72px;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+@utility text-display-64 {
+  font-weight: 800;
+  font-size: 64px;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+/* ---- Heading ---- */
+@utility text-heading-56 {
+  
+  font-size: 56px;
+  line-height: 1.07;
+  letter-spacing: -0.035em;
+}
+
+@utility text-heading-48 {
+
+  font-size: 48px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+@utility text-heading-40 {
+
+  font-size: 40px;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+@utility text-heading-32 {
+
+  font-size: 32px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+@utility text-heading-24 {
+
+  font-size: 24px;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+@utility text-heading-20 {
+
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+@utility text-heading-18 {
+
+  font-size: 18px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+@utility text-heading-16 {
+
+  font-size: 16px;
+  line-height: 1.4;
+  letter-spacing: -0.008em;
+}
+
+@utility text-heading-14 {
+
+  font-size: 14px;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+}
+
+/* ---- Body / Copy ---- */
+@utility text-body-20 {
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.65;
+  letter-spacing: -0.01em;
+}
+
+@utility text-body-18 {
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.65;
+  letter-spacing: -0.005em;
+}
+
+@utility text-body-16 {
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.7;
+  letter-spacing: 0;
+}
+
+@utility text-body-14 {
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.65;
+  letter-spacing: 0;
+}
+
+@utility text-body-13 {
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+/* ---- Label ---- */
+@utility text-label-16 {
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+@utility text-label-14 {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+
+@utility text-label-13 {
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+@utility text-label-12 {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0.005em;
+}
+
+@utility text-label-11 {
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Overline ---- */
+@utility text-overline-13 {
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@utility text-overline-12 {
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@utility text-overline-11 {
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+@utility text-overline-10 {
+  font-weight: 600;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* ---- Caption ---- */
+@utility text-caption-16 {
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+@utility text-caption-14 {
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+
+@utility text-caption-13 {
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+
+@utility text-caption-12 {
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+@utility text-caption-11 {
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+/* ---- Code / Mono ---- */
+@utility text-code-16 {
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.6;
+  font-family: var(--font-mono);
+  font-feature-settings:
+    "ss01" on,
+    "ss02" on,
+    "liga" on;
+  letter-spacing: 0;
+}
+
+@utility text-code-14 {
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.55;
+  font-family: var(--font-mono);
+  font-feature-settings:
+    "ss01" on,
+    "ss02" on,
+    "liga" on;
+  letter-spacing: 0;
+}
+
+@utility text-code-12 {
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 1.5;
+  font-family: var(--font-mono);
+  font-feature-settings:
+    "ss01" on,
+    "ss02" on,
+    "liga" on;
+  letter-spacing: 0;
+}
+
+@utility text-mono-label-13 {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.4;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+@utility text-mono-label-12 {
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1.35;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* ---- Button ---- */
+@utility text-button-16 {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+@utility text-button-14 {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: -0.005em;
+}
+
+@utility text-button-13 {
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+/* ---- Numeric ---- */
+@utility text-numeric-16 {
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+@utility text-numeric-14 {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}

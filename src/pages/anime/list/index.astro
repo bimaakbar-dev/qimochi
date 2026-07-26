@@ -1,0 +1,100 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import { buildMeta } from "@/consts";
+
+import Layout from '@/layouts/Layout.astro';
+import Section from "@/components/ui/Section.astro";
+import Container from '@/components/ui/Container.astro';
+
+type AnimeEntry = CollectionEntry<'anime'>;
+
+// 1. Ambil semua koleksi anime
+const allAnime: AnimeEntry[] = await getCollection('anime');
+
+// 2. Sort berdasarkan Title (A-Z)
+const sortedAnime = allAnime.sort((a, b) => 
+  a.data.title.localeCompare(b.data.title, 'id', { sensitivity: 'base' })
+);
+
+// 3. Kelompokkan anime berdasarkan huruf pertama (A, B, C, # untuk angka/simbol)
+const groupedAnime = sortedAnime.reduce((acc, anime) => {
+  const firstLetter = anime.data.title.trim().charAt(0).toUpperCase();
+  const letter = /[A-Z]/.test(firstLetter) ? firstLetter : '#';
+
+  if (!acc[letter]) {
+    acc[letter] = [];
+  }
+  acc[letter].push(anime);
+  return acc;
+}, {} as Record<string, AnimeEntry[]>);
+
+// Dapatkan daftar huruf yang tersedia untuk Quick Jump Navigation
+const availableLetters = Object.keys(groupedAnime).sort((a, b) => {
+  if (a === '#') return 1;
+  if (b === '#') return -1;
+  return a.localeCompare(b);
+});
+
+const currentPath = Astro.url.pathname;
+
+const meta = buildMeta({
+  title: "Daftar Anime A-Z",
+  description: "Daftar lengkap semua anime berdasarkan urutan abjad A sampai Z.",
+  canonical: currentPath,
+  ogType: "website",
+  keywords: ["anime list", "daftar anime", "anime a-z"],
+});
+---
+
+<Layout {meta}>
+  <Section size="md">
+    <Container size="lg">
+      <Section size="sm">
+        <a href="/anime" class="text-sm text-zinc-400 hover:text-white">← Kembali ke Anime</a>
+        <h1 class="text-2xl font-bold mt-2 mb-2">Daftar Anime A-Z</h1>
+        <p class="text-sm text-zinc-400 mb-6">Total {allAnime.length} anime tersedia</p>
+      </Section>
+
+      {/* Quick Jump Bar (Navigasi Abjad) */}
+      <Section size="sm">
+        <div class="flex flex-wrap gap-2 p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg mb-8">
+          {availableLetters.map((letter) => (
+            <a
+              href={`#letter-${letter}`}
+              class="px-2.5 py-1 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white rounded border border-zinc-700 transition"
+            >
+              {letter}
+            </a>
+          ))}
+        </div>
+      </Section>
+
+      <Section size="sm">
+        <div class="space-y-8">
+          {availableLetters.map((letter) => (
+            <div id={`letter-${letter}`} class="scroll-mt-20">
+              <h2 class="text-xl font-bold text-blue-500 border-b border-zinc-800 pb-2 mb-4">
+                {letter}
+              </h2>
+              <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {groupedAnime[letter].map((anime) => {
+                  const slug = anime.data.slug ?? anime.id;
+                  return (
+                    <li>
+                      <a
+                        href={`/anime/${slug}`}
+                        class="block p-2 text-sm text-zinc-300 hover:text-white hover:bg-zinc-900 rounded transition truncate"
+                      >
+                        {anime.data.title}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </Section>
+    </Container>
+  </Section>
+</Layout>

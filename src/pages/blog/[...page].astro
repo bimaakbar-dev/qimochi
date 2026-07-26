@@ -1,0 +1,162 @@
+---
+// src/pages/blog/[...page].astro
+
+import { getCollection } from "astro:content";
+import {
+  SITE,
+  ROUTES,
+  PAGINATION,
+  buildMeta,
+  schemaWebPage,
+} from "@/consts";
+
+import Layout from "@/layouts/Layout.astro";
+import Container from "@ui/Container.astro";
+import Section from "@ui/Section.astro";
+import BlogCard from "@/components/blog/BlogCard.astro";
+import Pagination from "@/components/blog/BlogPagination.astro";
+import Icon from "@/components/ui/Icons.astro";
+import Button from "@/components/ui/Button.astro";
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection("blog");
+
+  const publishedPosts = allPosts
+    .filter((post) => !post.data.draft)
+    .sort(
+      (a, b) =>
+        (b.data.pubDate?.getTime() ?? 0) -
+        (a.data.pubDate?.getTime() ?? 0)
+    );
+
+  const totalPosts = publishedPosts.length;
+  const totalPages = Math.ceil(totalPosts / PAGINATION.postsPerPage);
+
+  const paths = [];
+
+  for (let page = 1; page <= totalPages; page++) {
+    const start = (page - 1) * PAGINATION.postsPerPage;
+    const end = start + PAGINATION.postsPerPage;
+    const postsForThisPage = publishedPosts.slice(start, end);
+    const params = { page: page === 1 ? undefined : String(page) };
+
+    paths.push({
+      params,
+      props: {
+        posts: postsForThisPage,
+        currentPage: page,
+        totalPages,
+        featuredPosts: publishedPosts.slice(0, 3),
+      },
+    });
+  }
+
+  return paths;
+}
+
+const { 
+  posts: pagePosts, 
+  currentPage, 
+  totalPages, 
+  featuredPosts 
+} = Astro.props;
+
+const displayPosts = currentPage === 1 ? pagePosts.slice(3) : pagePosts;
+
+const blog = {
+  title: "Blog",
+  description: "Latest articles, tutorials and updates."
+}
+
+const meta = buildMeta({
+  title: blog.title,
+  description: blog.description,
+  canonical: ROUTES.blog,
+});
+
+const schema = schemaWebPage({
+  title: blog.title,
+  description: blog.description,
+  url: `${SITE.url}/blog`,
+});
+---
+
+<Layout meta={meta} schema={schema}>
+  <Section size="md">
+    <Container size="lg">
+      <header class="relative overflow-hidden items-center ring-1 ring-(--border)/0 rounded-md bg-(--bg-subtle)/40 px-4 py-10 md:px-10 md:py-14 mb-8 w-full">
+        <span aria-hidden="true" class="pointer-events-none absolute inset-0 select-none">
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/75" style="left:85%; top:15%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/60" style="left:88%; top:12%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/65" style="left:84%; top:22%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/50" style="left:92%; top:18%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/70" style="left:78%; top:25%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/45" style="left:81%; top:30%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/60" style="left:95%; top:28%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/55" style="left:65%; top:40%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/40" style="left:72%; top:52%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/50" style="left:58%; top:20%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/45" style="left:50%; top:35%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/35" style="left:62%; top:68%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/30" style="left:15%; top:25%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/25" style="left:28%; top:45%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/40" style="left:8%;  top:60%"></span>
+          <span class="absolute size-px rounded-full bg-(--fg-strong)/20" style="left:22%; top:75%"></span>
+        </span>
+        <div class="relative z-10 flex items-start justify-between w-full gap-6">
+          <div class="max-w-xl">
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tighter text-(--fg-strong) mb-2 text-balance">
+              {blog.title}
+            </h1>
+            <p class="text-sm md:text-base text-(--fg-muted) font-normal leading-relaxed">
+              {blog.description}
+            </p>
+          </div>
+          <Button
+            aria-label="RSS Feed"
+            title="RSS Feed"
+            variant="icon"
+            size="md"
+            href={ROUTES.rss}
+            thisIcon>
+            <Icon name="rss" class="size-4.5" />
+          </Button>
+        </div>
+      </header>
+
+      {currentPage === 1 && featuredPosts && featuredPosts.length > 0 && (
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-12">
+          {featuredPosts.map((post, index) => (
+            <BlogCard entry={post} index={index} />
+          ))}
+        </div>
+      )}
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        {displayPosts.map((post, index) => {
+          const cleanPostData = {
+            ...post,
+            data: {
+              ...post.data,
+              cover: undefined
+            }
+          };
+          
+          return <BlogCard entry={cleanPostData} index={index + 3} />;
+        })}
+      </div>
+
+      {totalPages > 1 && (
+        <div class="mt-10">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            href={(page) =>
+              page === 1 ? "/blog" : `/blog/${page}`
+            }
+          />
+        </div>
+      )}
+    </Container>
+  </Section>
+</Layout>

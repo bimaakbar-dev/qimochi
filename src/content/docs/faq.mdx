@@ -1,0 +1,101 @@
+---
+slug: "faq"
+title: "Pertanyaan Umum (FAQ)"
+description: "Jawaban atas pertanyaan umum tentang Adogen — metadata generator untuk kontributor Adobe Stock."
+lastUpdated: 2026-06-06T17:00
+order: 5
+category: "Help"
+seo:
+    title: "Pertanyaan Umum (FAQ)"
+    description: "Jawaban atas pertanyaan umum tentang Adogen — metadata generator untuk kontributor Adobe Stock."
+---
+
+## Pertanyaan Umum
+
+### Apakah Adogen benar-benar gratis?
+
+Ya, Adogen **gratis untuk digunakan**. Namun, Anda perlu menyediakan kunci API sendiri untuk engine AI yang Anda pilih (kecuali jika Anda menggunakan Cloudflare Workers AI yang memiliki tingkat gratis). Kami tidak memungut biaya apapun.
+
+### Engine AI mana yang gratis?
+
+- **Cloudflare Workers AI** — memiliki tingkat **gratis** (10.000 neuron per hari) tanpa perlu kunci API eksternal, tetapi Anda harus memiliki akun Cloudflare dan mengonfigurasi binding.
+- Engine lain (Groq, Mistral, OpenRouter) bersifat **berbayar**, namun OpenRouter memberikan kredit **$1 gratis** untuk pengguna baru.
+
+### Di mana kunci API saya disimpan?
+
+Semua kunci API disimpan **secara lokal di peramban Anda** (di `localStorage`). Kami tidak pernah mengirimkannya ke server kami. Anda dapat menghapusnya kapan saja dengan membersihkan data peramban.
+
+### Apakah gambar saya dikirim ke server?
+
+Tidak. Gambar dikonversi menjadi base64 di peramban Anda dan dikirim **langsung** ke engine AI yang Anda pilih. Kami tidak menyimpan, meneruskan, atau memproses gambar di server kami.
+
+### Mengapa saya tidak bisa menggunakan mode teks?
+
+Mode teks telah dihapus pada versi terbaru untuk menyederhanakan antarmuka. Saat ini, hanya **mode gambar** yang tersedia. Cukup unggah gambar, dan AI akan menganalisisnya secara visual.
+
+### Bagaimana sistem fallback bekerja?
+
+Jika Anda mengonfigurasi beberapa kunci API (misalnya Groq dan Mistral), Adogen akan mencoba engine pertama. Jika gagal, ia akan otomatis beralih ke engine berikutnya. Anda akan melihat badge **"Trying using Mistral"** saat fallback terjadi.
+
+### Mengapa hasil generate hilang setelah saya me-refresh halaman?
+
+Adogen **tidak menyimpan riwayat generate** untuk menjaga privasi dan menghindari pemborosan ruang penyimpanan. Pastikan Anda mengekspor hasil yang diperlukan (dengan tombol **Export CSV**) sebelum menutup atau me-refresh halaman.
+
+### Bisakah saya memproses banyak gambar sekaligus?
+
+Ya. Anda dapat mengunggah hingga **50+ gambar** sekaligus. Adogen akan memprosesnya satu per satu dengan jeda yang dapat diatur (dalam **Request Delay**) untuk menghindari batas kecepatan API. Status bar menunjukkan jumlah yang berhasil, gagal, dan masih antre.
+
+### Bagaimana cara mengubah panjang judul atau jumlah kata kunci?
+
+Buka panel **Configuration** (di desktop di sebelah kanan, di mobile melalui tombol FAB di pojok kiri bawah). Di bagian **Output Result**, Anda dapat mengatur **Max Title Length** (50–200 karakter) dan **Max Keywords** (10–50 kata kunci).
+
+### Apa yang dimaksud dengan "Custom Prompt"?
+
+Custom Prompt adalah instruksi tambahan yang Anda berikan kepada AI. Contoh: "Fokus pada warna-warna cerah dan tekstur" atau "Gunakan istilah teknis". Ini akan memperbaiki hasil generate untuk jenis gambar tertentu.
+
+### Apakah Adogen mendukung video?
+
+Saat ini **belum**. Namun dukungan video sedang dalam rencana pengembangan untuk rilis mendatang.
+
+### Apakah Adogen open source?
+
+Belum. Tapi jika ada permintaan yang cukup, kami akan mempertimbangkan untuk membuka kode sumber.
+
+### Ada masalah atau saran?
+
+Silakan buka _issue_ di [repository GitHub](https://github.com/your-repo) atau hubungi kami melalui email. Kami senang mendengar umpan balik Anda!
+
+---
+
+## Pemecahan Masalah Umum
+
+### Tombol "Generate" tidak aktif / tidak muncul
+
+- Pastikan Anda sudah mengunggah setidaknya satu gambar.
+- Periksa apakah Anda sudah mengisi kunci API yang valid (untuk engine berbayar). Jika engine yang dipilih tidak gratis dan kunci API kosong, tombol tidak akan muncul.
+
+### API key ditolak
+
+- Pastikan kunci API sesuai dengan engine yang dipilih (misalnya Groq diawali `gsk_`).
+- Cek apakah kunci masih berlaku dan memiliki kuota yang cukup.
+- Untuk Cloudflare Workers AI, pastikan Anda memasukkan **Account ID** dan **API Token** dengan benar (bukan hanya salah satu).
+
+### Generate gagal dengan pesan "All engines failed"
+
+- Ini berarti semua engine yang Anda konfigurasi gagal. Periksa kunci API dan koneksi internet Anda.
+- Jika Anda hanya mengonfigurasi satu engine, pastikan kunci API valid dan engine sedang berfungsi.
+
+### Hasil generate tidak sesuai harapan
+
+- Gunakan **Custom Prompt** untuk memberi arahan lebih spesifik.
+- Coba engine AI yang berbeda (misalnya Mistral untuk akurasi lebih tinggi, Groq untuk kecepatan).
+- Pastikan gambar memiliki pencahayaan dan komposisi yang jelas.
+
+### Halaman tidak responsif di ponsel
+
+- Adogen sepenuhnya responsif. Pastikan Anda menggunakan peramban modern (Chrome, Firefox, Safari).
+- Jika tombol FAB tidak muncul, coba muat ulang halaman. Jika masih, laporkan ke kami.
+
+---
+
+Masih ada pertanyaan? Jangan ragu untuk menghubungi kami!

@@ -1,0 +1,101 @@
+/* src/styles/prose/components/table.css */
+.prose table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+  color: var(--fg);
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.prose > table {
+  margin: 2.5rem 0;
+  overflow: hidden;
+}
+
+.prose thead {
+  background: rgb(from var(--bg-subtle) r g b / 0.5);
+}
+
+.prose thead th {
+  border-bottom: 1px solid rgb(from var(--border-subtle) r g b / 0.5);
+  color: var(--fg-strong);
+  text-align: start;
+  text-transform: none;
+  white-space: nowrap;
+}
+.prose th,
+.prose thead tr {
+  color: var(--fg-strong);
+}
+
+.prose tbody,
+.prose tbody tr {
+  background: var(--bg-subtle);
+}
+
+.prose th,
+.prose td {
+  vertical-align: top;
+  text-wrap: pretty;
+}
+
+.prose th a,
+.prose td a {
+  white-space: nowrap;
+}
+
+.prose td code,
+.prose th code {
+  white-space: nowrap;
+}
+
+.prose td a .external-icon,
+.prose th a .external-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.prose tbody td {
+  border-bottom: 1px solid rgb(from var(--border-subtle) r g b / 0.5);
+  background: transparent;
+  color: var(--fg);
+}
+
+.prose tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.prose tbody td strong {
+  color: var(--fg-strong);
+}
+
+.prose tbody td small {
+  @apply text-label-14;
+  color: var(--fg-subtle);
+}
+
+.prose th:not(:last-child),
+.prose td:not(:last-child) {
+  border-inline-end: 1px solid rgb(from var(--border-subtle) r g b / 0.5);
+}
+
+@media (max-width: 767px) {
+  .prose > table {
+    margin: 2rem 0;
+  }
+
+  .prose thead th,
+  .prose tbody td {
+    @apply text-numeric-14;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .prose thead th,
+  .prose tbody td {
+    @apply text-numeric-14;
+    padding: 0.75rem 1rem;
+  }
+}

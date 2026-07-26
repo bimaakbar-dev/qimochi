@@ -1,0 +1,115 @@
+---
+title: Mastering Content Collections in Astro
+description: Discover how Astro Content Collections help organize Markdown and MDX content with strong type safety and a better authoring experience.
+
+slug: mastering-content-collections
+
+pubDate: 2026-06-18
+lastUpdated: 2026-06-24
+
+draft: false
+
+cover:
+  src: /org/placeholder.svg
+  alt: Astro Content Collections
+
+category: Tutorial
+
+author:
+  name: Bima Akbar
+  role: Creator
+  avatar: /org/placeholder-user.jpg
+
+tags:
+  - Astro
+  - Content Collections
+  - MDX
+  - TypeScript
+
+seo:
+  title: Mastering Content Collections in Astro
+  description: Learn how to organize content with Astro Content Collections.
+  ogImage: /org/placeholder.svg
+---
+
+## Introduction
+
+Managing Markdown files manually becomes difficult as a project grows. Astro solves this by introducing Content Collections, allowing every document to be validated using a schema while providing full TypeScript support.
+
+## Why Use Content Collections?
+
+Content Collections provide several advantages:
+
+- Type-safe frontmatter
+- Automatic validation
+- Better editor autocomplete
+- Cleaner project organization
+- Easier content querying
+
+Instead of relying on loose Markdown files, every document follows the same structure, reducing mistakes before deployment.
+
+## Organizing Your Content
+
+A common project structure looks like this:
+
+:::filetree
+- src/
+  -  content/
+  -  blog/
+  -  docs/
+  -  novels/
+  -  legal/
+:::
+
+Separating content by collection keeps the project maintainable while making routing much easier.
+
+## Defining a Schema
+
+Every collection can define its own schema.
+
+```ts
+const blog = defineCollection({
+  loader: glob({
+    base: "./src/content/blog",
+    pattern: "**/*.{md,mdx}",
+  }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.date(),
+  }),
+});
+```
+
+Schemas ensure every article contains the required metadata before the site is built.
+
+## Working with MDX
+
+Since Astro supports MDX, articles can include reusable UI components directly inside the content.
+
+For example:
+
+- Callouts
+- Tabs
+- Steps
+- Cards
+- Accordions
+- Code Groups
+
+This makes technical writing significantly more expressive without sacrificing readability.
+
+## Best Practices
+
+When writing articles:
+
+- Keep titles concise.
+- Write meaningful descriptions.
+- Use headings consistently.
+- Add code examples where appropriate.
+- Optimize cover images before publishing.
+
+Following these practices helps improve both readability and search engine optimization.
+
+## Conclusion
+
+Content Collections are one of Astro's strongest features. They combine the simplicity of Markdown with the safety of structured data, making them an excellent choice for documentation, blogs, and other content-driven websites.

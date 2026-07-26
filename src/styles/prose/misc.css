@@ -1,0 +1,218 @@
+/* src/styles/prose/components/misc.css */
+
+.prose sub,
+.prose sup {
+  position: relative;
+  vertical-align: baseline;
+  transition: color var(--duration) var(--ease-out);
+  margin: 0 0.05em;
+  color: var(--fg-subtle);
+  font-size: 0.75em;
+  line-height: 0;
+}
+
+.prose sup {
+  top: -0.5em;
+}
+.prose sub {
+  bottom: -0.25em;
+}
+
+.prose sup a {
+  transition: color var(--duration) var(--ease-out);
+  color: inherit;
+  text-decoration: none;
+}
+
+.prose sup a:hover {
+  color: var(--accent);
+}
+
+.prose sup:has(a[href^="#fn"]) {
+  cursor: pointer;
+  scroll-margin-top: calc(var(--header-height) - 1rem) !important;
+}
+
+.prose small {
+  display: inline-block;
+  color: var(--fg-muted);
+}
+
+.prose figcaption small,
+.prose aside small,
+.prose footer small {
+  color: var(--fg-muted);
+}
+
+time {
+  @apply text-numeric-14;
+}
+
+.prose mark {
+  border-radius: var(--radius-xs);
+  background: rgb(from var(--color-chart-4) r g b / 0.2) !important;
+  padding: 0.1em 0.25em;
+  color: var(--fg-strong);
+}
+
+.prose abbr[title] {
+  transition:
+    color var(--duration) var(--ease-out);
+  cursor: help;
+  border-bottom: 1px dashed var(--border-subtle);
+  font-feature-settings: "calt" 1;
+  text-decoration: none;
+}
+
+.prose abbr[title]:hover {
+  border-bottom-color: var(--fg-strong);
+  color: var(--fg-strong);
+}
+
+.prose abbr[title]:active {
+  transition: none;
+  border-bottom-style: solid;
+}
+
+.prose cite {
+  color: var(--fg-muted);
+  font-style: italic;
+}
+
+.prose ins {
+  color: var(--fg-strong);
+  text-decoration-color: var(--border);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.prose q {
+  @apply text-body-16;
+  quotes: "“" "”" "‘" "’";
+  color: var(--fg-muted);
+}
+
+.prose q::before {
+  margin-left: 0.125rem;
+  content: open-quote;
+  color: var(--fg-muted);
+}
+
+.prose q::after {
+  margin-right: 0.125rem;
+  content: close-quote;
+  color: var(--fg-muted);
+}
+
+.prose dl {
+  margin: 20px 0;
+}
+
+.prose dl :last-child {
+  margin-bottom: 0;
+}
+
+.prose dt {
+  margin-top: 16px;
+  color: var(--fg-strong);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.prose dt:first-child {
+  margin-top: 0;
+}
+
+.prose dd {
+  margin-top: 4px;
+  margin-left: 20px;
+  color: var(--fg-subtle);
+}
+
+.prose dt + dd {
+  margin-top: 0;
+}
+
+.prose address {
+  @apply text-body-14;
+  transition: border-color var(--duration) var(--ease-out);
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-subtle);
+  padding: 0.75rem 1rem;
+  color: var(--fg-subtle);
+  font-style: normal;
+}
+
+.prose address:hover {
+  border-color: var(--border-strong);
+}
+
+.prose address a {
+  transition: border-color var(--duration) var(--ease-out);
+  border-bottom: 1px solid transparent;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.prose address a:hover {
+  border-bottom-color: var(--accent);
+}
+
+.prose address .contact-label {
+  color: var(--fg-strong);
+  font-weight: 600;
+}
+
+.prose samp {
+  @apply text-code-16;
+  display: inline-block;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-subtle);
+  padding: 0.15rem 0.35rem;
+  color: var(--fg);
+}
+
+.prose hr {
+  margin: 2rem 0;
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent);
+  
+}
+
+@media (max-width: 767px) {
+  .prose mark {
+    padding: 0.1em 0.2em;
+  }
+
+  .prose abbr[title] {
+    font-size: 14px;
+  }
+
+  .prose address {
+    @apply text-body-13;
+    margin: 1.25rem 0;
+    padding: 0.625rem 0.875rem;
+  }
+  .prose samp {
+    @apply text-code-14;
+  }
+}
+
+@media (min-width: 768px) {
+  .prose mark {
+    padding: 0.1em 0.25em;
+  }
+
+  .prose address {
+    @apply text-body-14;
+    margin: 1.5rem 0;
+    padding: 0.75rem 1rem;
+  }
+
+  .prose hr {
+    margin: 2.5rem 0;
+  }
+}

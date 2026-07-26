@@ -1,0 +1,91 @@
+/* src/styles/prose/components/callout.css */
+
+.prose .callout-content * {
+  @apply text-body-14;
+}
+
+.prose .callout-content > *:first-child {
+  margin-top: 0 !important;
+}
+.prose .callout-content > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+.prose .callout-content p,
+.prose .callout-content ul,
+.prose .callout-content ol,
+.prose .callout-content li {
+  margin-top: 0 !important;
+  color: inherit;
+}
+
+.prose .callout-content p,
+.prose .callout-content ul,
+.prose .callout-content ol {
+  margin-bottom: 0.5rem;
+}
+
+.prose .callout-content li {
+  margin-bottom: 0.2rem;
+}
+
+.prose .callout-content ul,
+.prose .callout-content ol {
+  padding-left: 1.125rem;
+}
+
+.prose .callout-content li::marker {
+  color: var(--c-icon);
+}
+
+.prose .callout-content strong {
+  color: var(--c-title);
+  font-weight: 600;
+}
+
+.prose .callout-content em {
+  color: var(--c-text);
+}
+
+.prose .callout-content small {
+  opacity: 0.75;
+  font-size: 0.7rem;
+  line-height: 1.1rem;
+}
+
+.prose .callout :not(pre) > code {
+  @apply text-code-14;
+  border: 1px solid rgb(from var(--c-border) r g b / 0.2);
+  border-radius: var(--prose-radius-sm);
+  background-color: rgb(from var(--c-border) r g b / 0.1);
+  padding: 0.1rem 0.25rem;
+  white-space: nowrap;
+}
+
+.prose .callout-content a {
+  transition: text-decoration-color var(--prose-duration) var(--prose-ease-out);
+  color: var(--c-title);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgb(from var(--c-border) r g b / 0.3);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.prose .callout-content a:hover {
+  text-decoration-color: var(--c-title);
+}
+
+.prose .callout-content .external-icon {
+  display: none !important;
+}
+
+@media (min-width: 768px) {
+  .prose .callout-content * {
+    @apply text-body-14;
+  }
+
+  .prose .callout :not(pre) > code {
+    @apply text-code-14;
+  }
+}

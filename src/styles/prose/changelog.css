@@ -1,0 +1,15 @@
+/* src/styles/prose/changelog.css */
+.prose .changelog-version h2,
+.prose .changelog-version h3,
+.prose .changelog-version h4 {
+  @apply text-heading-16;
+  color: var(--fg-strong);
+  margin-top: 0;
+}
+.prose .changelog-body li,
+.prose .changelog-body ul,
+.prose .changelog-body ol,
+.prose .changelog-body p {
+  @apply text-body-16;
+  color: var(--fg);
+}

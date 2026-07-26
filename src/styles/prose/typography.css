@@ -1,0 +1,136 @@
+/* src/styles/prose/typography.css */
+
+.prose :where(h1, h2, h3, h4, h5, h6, p, ul, ol, blockquote, pre, hr, table) {
+  margin-top: 0;
+}
+
+.prose :where(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: calc(var(--header-height)) !important;
+  font-family: var(--font-sans);
+  text-wrap: balance;
+}
+
+.prose h1 {
+  @apply text-heading-32;
+  margin-bottom: 24px;
+  margin-top: 42px;
+  color: var(--fg-strong);
+}
+
+.prose h2 {
+  @apply text-heading-24;
+  margin-bottom: 20px;
+  margin-top: 40px;
+  color: var(--fg-strong);
+}
+
+.prose h3 {
+  @apply text-heading-20;
+  margin-bottom: 16px;
+  margin-top: 32px;
+  color: var(--fg-strong);
+}
+
+.prose h4 {
+  @apply text-heading-18;
+  margin-bottom: 12px;
+  margin-top: 24px;
+  color: var(--fg-strong);
+}
+
+.prose h5 {
+  @apply text-heading-16;
+  margin-bottom: 12px;
+  margin-top: 24px;
+  color: var(--fg-muted);
+}
+
+.prose h6 {
+  @apply text-heading-14;
+  margin-bottom: 12px;
+  margin-top: 24px;
+  color: var(--fg-subtle);
+}
+
+.prose h1 + h2,
+.prose h2 + h3,
+.prose h3 + h4,
+.prose h4 + h5,
+.prose h5 + h6 {
+  margin: 1.5rem 0;
+}
+
+.prose h2,
+.prose h3 {
+  scroll-margin-top: calc(var(--header-height) - 1rem) !important;
+}
+
+.prose p {
+  @apply text-body-16;
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: var(--fg);
+  text-wrap: pretty;
+}
+
+.prose .lead,
+.prose p.lead {
+  @apply text-body-14;
+  margin-bottom: 32px;
+  color: var(--fg-muted);
+}
+
+.prose strong,
+.prose b,
+.prose br {
+  color: var(--fg-strong);
+  font-weight: 600;
+}
+
+.prose em,
+.prose i {
+  color: var(--fg-muted);
+  font-style: normal;
+}
+
+.prose del,
+.prose s {
+  color: var(--fg-subtle);
+  text-decoration: line-through;
+}
+
+.prose strong em,
+.prose em strong {
+  font-style: normal;
+}
+
+@media (min-width: 768px) {
+  .prose h1 {
+    @apply text-heading-32;
+  }
+
+  .prose h2,
+  .prose h3 {
+    scroll-margin-top: calc(var(--header-height) - 6rem) !important;
+  }
+
+  .prose p {
+    @apply text-body-16;
+  }
+
+  .prose .lead,
+  .prose p.lead {
+    @apply text-body-16;
+  }
+}
+
+@media (min-width: 1024px) {
+  .prose h1 {
+    @apply text-heading-48;
+  }
+
+  .prose h2,
+  .prose h3 {
+    scroll-margin-top: calc(var(--header-height) - 6rem) !important;
+  }
+}

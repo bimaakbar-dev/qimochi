@@ -1,0 +1,69 @@
+---
+// src/pages/anime/genres/index.astro
+
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+import {
+  buildMeta
+} from "@/consts";
+
+import Layout from '@/layouts/Layout.astro';
+import Section from "@/components/ui/Section.astro";
+import Container from '@/components/ui/Container.astro';
+import Card from '@/components/ui/Card.astro';
+
+const allAnime = await getCollection('anime');
+
+const genreCounts = new Map<string, { name: string; count: number }>();
+
+allAnime.forEach((item: CollectionEntry<'anime'>) => {
+  item.data.genres?.forEach((genre: string) => {
+    const slug = genre.toLowerCase().replace(/\s+/g, '-');
+    const existing = genreCounts.get(slug);
+    if (existing) {
+      existing.count++;
+    } else {
+      genreCounts.set(slug, { name: genre, count: 1 });
+    }
+  });
+});
+
+const genres = Array.from(genreCounts.entries())
+  .map(([slug, data]) => ({ slug, ...data }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+const currentPath = Astro.url.pathname;
+
+const meta = buildMeta({
+  title: "Genre",
+  description: "Daftar Genre Anime",
+  canonical: currentPath,
+  ogType: "website",
+  keywords: [],
+});
+---
+
+<Layout {meta}>
+  <Section size="md">
+    <Container size="lg">
+      <Section size="sm">
+        <h1 class="text-2xl font-bold mb-6">Daftar Genre</h1>
+      </Section>
+      <Section size="sm">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {genres.map(({ slug, name, count }) => (
+            <Card padding='sm' radius='sm' variant='secondary' class="hover:bg-(--bg) active:bg-(--bg)">
+              <a
+                href={`/anime/genres/${slug}`}
+                class="flex justify-between items-center px-1"
+              >
+                <span class="text-heading-16 text-(--fg) font-medium">{name}</span>
+                <span class="text-body-14 bg-(--bg) px-2 rounded-full ring-1 ring-(--border-subtle) text-(--fg-muted)">{count}</span>
+              </a>
+            </Card>
+          ))}
+        </div>
+      </Section>
+    </Container>
+  </Section>
+</Layout>

@@ -1,0 +1,62 @@
+---
+// src/pages/anime/[...page].astro
+import { getCollection, type CollectionEntry } from 'astro:content';
+import type { GetStaticPathsOptions } from 'astro';
+import { buildMeta, ROUTES } from "@/consts";
+
+import Layout from '@/layouts/Layout.astro';
+import Section from "@/components/ui/Section.astro";
+import Container from '@/components/ui/Container.astro';
+import AnimeCard from '@components/anime/AnimeCard.astro';
+import Pagination from "@/components/Pagination.astro";
+
+type AnimeEntry = CollectionEntry<'anime'>;
+
+export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
+  const allAnime: AnimeEntry[] = await getCollection('anime');
+  const sortedAnime = allAnime.sort((a: AnimeEntry, b: AnimeEntry) => {
+    const dateA = a.data.pubDate ?? a.data.releaseDate ?? new Date(0);
+    const dateB = b.data.pubDate ?? b.data.releaseDate ?? new Date(0);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+  return paginate(sortedAnime, { pageSize: 12 });
+}
+
+const { page } = Astro.props;
+
+const meta = buildMeta({
+  title: page.currentPage === 1 ? "Anime" : `Anime - Halaman ${page.currentPage}`,
+  description: "Kumpulan semua anime",
+  canonical: page.currentPage === 1 ? ROUTES.anime : `${ROUTES.anime}/${page.currentPage}`,
+  ogType: "website",
+  keywords: [],
+});
+
+const getPageUrl = (pageNum: number) => {
+  return pageNum === 1 ? '/anime' : `/anime/${pageNum}`;
+};
+---
+
+<Layout {meta} isHome={page.currentPage === 1}>
+  <Section size="md">
+    <Container size="lg">
+      <Section size="sm">
+        <h1 class="text-2xl font-bold mb-6">Daftar Anime</h1>
+      </Section>
+      <Section size="sm">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {page.data.map((entry: AnimeEntry) => 
+            <AnimeCard entry={entry} />
+          )}
+        </div>
+
+        <Pagination 
+          currentPage={page.currentPage} 
+          totalPages={page.lastPage} 
+          href={getPageUrl} 
+        />
+      </Section>
+    </Container>
+  </Section>
+</Layout>

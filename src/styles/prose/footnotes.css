@@ -1,0 +1,142 @@
+/* src/styles/prose/components/footnotes.css */
+
+.prose .footnotes,
+.prose section[data-footnotes] {
+  margin: 2.5rem 0;
+  border: 1px solid rgb(from var(--border-subtle) r g b / 0.5);
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  background-color: rgb(from var(--bg-subtle) r g b / 0.5);
+}
+
+.prose section[data-footnotes] * {
+  @apply text-label-14;
+}
+
+.prose section[data-footnotes] * :first-child {
+  margin-top: 0 !important;
+}
+
+.prose section[data-footnotes] * :last-child {
+  margin-top: 0 !important;
+}
+
+.prose section[data-footnotes] h2,
+.prose section[data-footnotes] h2.sr-only {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.prose section[data-footnotes] ol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  counter-reset: footnotes;
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  color: var(--fg-muted);
+}
+
+.prose section[data-footnotes] li {
+  display: flex;
+  position: relative;
+  gap: 0.75rem;
+  margin-bottom: 0;
+  padding-left: 0;
+  scroll-margin-top: calc(var(--header-height) - 1rem) !important;
+  color: var(--fg-muted);
+}
+
+.prose section[data-footnotes] li::marker {
+  content: none;
+}
+
+.prose section[data-footnotes] li::before {
+  font-family: var(--font-mono);
+  top: 0.125rem;
+  counter-increment: footnotes;
+  content: counter(footnotes) ".";
+  color: var(--fg-subtle);
+}
+
+.prose section[data-footnotes] li:hover {
+  color: var(--fg-strong);
+}
+
+.prose section[data-footnotes] li:target {
+  transition:
+    outline 0.5s;
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+  background-color: var(--bg) !important;
+  padding: 2px 4px
+}
+
+.prose section[data-footnotes] * .data-footnote-backref {
+  vertical-align: middle;
+  opacity: 0;
+  transition: opacity var(--duration) var(--ease-out);
+  margin-left: 0.25rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.prose section[data-footnotes] * .data-footnote-backref:hover,
+.prose section[data-footnotes] * .data-footnote-backref:active {
+  opacity: 1;
+}
+
+.prose section[data-footnotes] .external-icon {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.prose a[href^="#fn"] {
+  transition: color var(--duration) var(--ease-out);
+  scroll-margin-top: calc(var(--header-height) - 1rem) !important;
+  text-decoration: none;
+}
+
+.prose a[href^="#fn"]:hover {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+@media (max-width: 767px) {
+  .prose .footnotes,
+  .prose section[data-footnotes] {
+    margin: 2rem 0;
+  }
+
+  .prose section[data-footnotes] ol {
+    gap: 0.5rem;
+  }
+
+  .prose section[data-footnotes] li {
+    gap: 0.5rem;
+  }
+
+  .prose section[data-footnotes] .data-footnote-backref {
+    margin-left: 0.15rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .prose .footnotes,
+  .prose section[data-footnotes] {
+    margin: 2.5rem 0;
+  }
+
+  .prose section[data-footnotes] ol {
+    gap: 0.625rem;
+  }
+
+  .prose section[data-footnotes] li {
+    gap: 0.75rem;
+  }
+}

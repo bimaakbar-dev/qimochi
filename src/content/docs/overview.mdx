@@ -1,0 +1,129 @@
+---
+slug: 'overview'
+title: 'Overview'
+description: 'Adogen — generator metadata bertenaga AI untuk kontributor Adobe Stock. Gratis, privasi terjaga, dukungan banyak engine.'
+lastUpdated: 2026-06-06T17:00
+order: 1
+category: "Overview"
+seo:
+  title: 'Overview'
+  description: 'Generator metadata bertenaga AI untuk kontributor Adobe Stock. Gratis, privasi terjaga, dukungan banyak engine.'
+---
+
+## Apa itu Adogen?
+
+Adogen adalah **alat gratis bertenaga AI** yang membantu kontributor Adobe Stock menghasilkan **Judul**, **Kata Kunci**, dan **Kategori** untuk gambar mereka. Alih-alih mengetik metadata secara manual untuk setiap aset, Anda cukup unggah gambar, pilih engine AI, dan dapatkan metadata profesional dalam hitungan detik.
+
+:::note
+Adogen berfokus pada **Generator metadata gambar**. Alat **Pembesaran Gambar (Image Upscaler)** juga tersedia secara terpisah (saat ini dalam bentuk dasar).
+:::
+
+---
+
+## Mengapa Menggunakan Adogen?
+
+Menulis metadata secara manual untuk ratusan gambar memakan waktu dan tidak konsisten. Adogen mengatasi hal ini dengan:
+
+- **Menghemat waktu berjam-jam** — hasilkan metadata untuk puluhan gambar dalam hitungan menit
+- **Meningkatkan SEO** — judul dan kata kunci yang dihasilkan AI dioptimalkan untuk pencarian Adobe Stock
+- **Menjaga konsistensi** — semua metadata mengikuti format profesional yang sama
+- **Mendukung banyak engine AI** — pilih yang paling sesuai dengan konten Anda
+- **Melindungi privasi** — kunci API dan gambar Anda tidak pernah disimpan di server kami
+- **Sistem fallback cerdas** — jika satu engine gagal, Adogen akan mencoba engine lain secara otomatis (jika beberapa kunci API dikonfigurasi)
+
+---
+
+## Fitur Utama
+
+| Fitur                                 | Deskripsi                                                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Hanya Mode Gambar**                 | Unggah gambar, biarkan AI menganalisis secara visual (mode teks tidak tersedia)                                                |
+| **Banyak Engine AI**                  | Groq, Mistral AI, OpenRouter, Cloudflare Workers AI, atau endpoint kustom sendiri                                              |
+| **Pemrosesan Batch**                  | Unggah banyak gambar sekaligus – proses hingga 50+ file dalam satu antrean                                                     |
+| **Sistem Fallback**                   | Konfigurasikan beberapa kunci API; jika engine utama gagal, engine berikutnya akan digunakan otomatis                          |
+| **Ekspor CSV**                        | Ekspor hasil yang sukses ke CSV, siap unggah ke Adobe Stock                                                                    |
+| **Pengaturan yang Dapat Disesuaikan** | Kontrol panjang judul (50–200 karakter), jumlah kata kunci (10–50), prompt kustom, dan jeda antar permintaan                   |
+| **Privasi Utama**                     | Kunci API dan gambar tetap berada di peramban Anda (localStorage). Tidak ada penyimpanan di server, tidak ada cookie pelacakan |
+| **Tidak Ada Riwayat**                 | Hasil hanya disimpan selama sesi berjalan. Ekspor yang diperlukan sebelum menutup halaman                                      |
+
+:::note
+**Mengapa tidak ada riwayat?** Untuk menghindari pengisian penyimpanan peramban dengan data base64 gambar yang besar dan menjaga alat tetap ringan. Sebaiknya ekspor hasil Anda.
+:::
+
+---
+
+## Cara Kerjanya
+
+Adogen menggunakan antarmuka tiga panel sederhana (desktop) atau tata letak responsif dengan sidebar yang dapat diciutkan dan drawer untuk perangkat seluler:
+
+1. **Unggah** — Seret & lepas gambar ke area unggah
+2. **Konfigurasi** — Pilih engine AI dan sesuaikan pengaturan (panel kanan / drawer)
+3. **Generate** — Klik tombol dan dapatkan metadata Adobe Stock profesional
+
+Metadata yang dihasilkan meliputi:
+
+- **Judul**: Deskripsi faktual yang dioptimalkan SEO (sesuai batas yang Anda atur, maksimal 200 karakter)
+- **Kata Kunci**: Daftar dipisah koma, diurutkan berdasarkan kepentingan (hingga 50 kata kunci)
+- **Kategori**: ID kategori numerik Adobe Stock yang sesuai (1–21)
+
+---
+
+## Engine AI yang Didukung
+
+Adogen mendukung berbagai engine AI. Anda dapat mengonfigurasi beberapa engine sekaligus – sistem akan mencobanya secara berurutan hingga salah satu berhasil.
+
+| Engine                    | Harga                       | Fitur Utama                                      | Perlu Kunci API     |
+| ------------------------- | --------------------------- | ------------------------------------------------ | ------------------- |
+| **Groq**                  | Berbayar                    | Inferensi tercepat                               | Ya (diawali `gsk_`) |
+| **Mistral AI**            | Berbayar                    | Akurasi tinggi, multimodal                       | Ya                  |
+| **OpenRouter**            | Berbayar (kredit $1 gratis) | Akses ke banyak model (GPT‑4o mini, LLaVA, dll.) | Ya                  |
+| **Cloudflare Workers AI** | Gratis (10.000 neuron/hari) | Terintegrasi dengan ekosistem Cloudflare         | ID Akun + Token API |
+| **Endpoint Kustom**       | Host sendiri                | Kontrol penuh                                    | Ya (apa saja)       |
+
+:::info
+Cloudflare Workers AI memberi Anda 10.000 neuron per hari – cukup untuk ratusan permintaan.
+:::
+
+---
+
+## Privasi & Keamanan
+
+Kami membangun Adogen dengan privasi sebagai prinsip utama:
+
+- **Gambar diproses secara lokal** (dikonversi ke base64 di peramban Anda) dan dikirim langsung ke engine AI yang Anda pilih. Kami tidak pernah meneruskan atau menyimpannya.
+- **Kunci API disimpan di peramban Anda** (localStorage) – kami tidak pernah melihatnya, dan tidak pernah dikirim ke server kami.
+- **Tidak ada cookie, tidak ada pelacakan** – kami tidak menggunakan analitik atau skrip pelacakan.
+- **Tidak ada penyimpanan di server** – semua metadata yang dihasilkan tetap di perangkat Anda hingga Anda mengekspor atau menutup halaman.
+
+---
+
+## Memulai
+
+Siap mempercepat alur kerja Adobe Stock Anda?
+
+<LinkCard 
+  title="Lihat panduan" 
+  description="Lihat panduan Memulai untuk langkah-langkah awal"
+  href="/docs/getting-started" 
+/>
+
+Atau langsung menuju:
+<CardGrid>
+<LinkCard 
+  title="Engine yang Didukung" 
+  description="Temukan AI yang tepat untuk kebutuhan Anda"
+  href="/docs/engines" 
+/>
+
+<LinkCard 
+  title="Referensi Kategori" 
+  description="Pahami kategori Adobe Stock"
+  href="/docs/categories" 
+/>
+
+<LinkCard 
+  title="FAQ" 
+  description="Jawaban atas pertanyaan umum"
+  href="/docs/faq" 
+/>
+</CardGrid>

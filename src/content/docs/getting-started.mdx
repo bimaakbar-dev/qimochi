@@ -1,0 +1,132 @@
+---
+slug: "getting-started"
+title: "Getting Started"
+description: "Mulai gunakan Adogen untuk generate metadata Adobe Stock dalam hitungan detik."
+lastUpdated: 2026-06-06T17:00
+order: 2
+category: "Getting Started"
+seo:
+  title: "Getting Started"
+  description: "Mulai gunakan Adogen untuk generate metadata Adobe Stock dalam hitungan detik."
+---
+
+## 1. Buka Adogen
+
+Kunjungi **[Adogen](https://adogen.bimasaktiakbarr.workers.dev)**. Anda akan melihat **landing page** yang memperkenalkan dua tools utama:
+
+- **Metadata Generator** – untuk generate title, keywords, category dari gambar
+- **Image Upscaler** – untuk memperbesar resolusi gambar (masih dalam tahap pengembangan)
+
+Klik tombol **Try Metadata Generator** atau akses langsung disini [Metadata Generator](/metadata) untuk masuk ke halaman generator.  
+Tampilan utama generator terdiri dari tiga area:
+
+- **Sidebar kiri** — navigasi antar tools (Metadata Generator, Image Upscaler)
+- **Area tengah** — tempat upload gambar dan daftar hasil generate
+- **Panel kanan** — konfigurasi engine AI dan pengaturan output (di desktop)
+
+:::note
+Di layar kecil, panel kanan berubah menjadi drawer yang bisa dibuka via tombol FAB
+:::
+
+---
+
+## 2. Pilih AI Engine
+
+Di panel kanan (atau drawer **Configuration** di HP), pilih provider AI:
+
+| Engine         | Yang perlu diisi                  | Cara mendapatkannya                                                  |
+| -------------- | --------------------------------- | -------------------------------------------------------------------- |
+| **Groq**       | API key (diawali `gsk_`)          | [console.groq.com/keys](https://console.groq.com/keys)               |
+| **Mistral AI** | API key                           | [console.mistral.ai/api-keys/](https://console.mistral.ai/api-keys/) |
+| **OpenRouter** | API key                           | [openrouter.ai/keys](https://openrouter.ai/keys)                     |
+| **Cloudflare** | Account ID + API Token            | [dash.cloudflare.com](https://dash.cloudflare.com/)                  |
+| **Custom**     | Endpoint URL, model name, API key | Server Anda sendiri                                                  |
+
+Klik **Save All** untuk menyimpan konfigurasi. API key dan model pilihan akan tersimpan di `localStorage` browser Anda.  
+Jika Anda menyimpan lebih dari satu engine yang valid, sistem akan melakukan **fallback** otomatis (engine pertama gagal → coba berikutnya).
+
+---
+
+## 3. Upload Gambar
+
+Seret & letakkan satu atau beberapa gambar ke area upload, atau klik untuk memilih file.  
+Format yang didukung: **JPEG, PNG, WebP**. Maksimal ukuran file: **10 MB per gambar**.
+
+Setiap gambar yang diupload akan muncul di daftar hasil dengan status **Queued** (antre).
+
+---
+
+## 4. Generate Metadata
+
+Klik tombol **Generate Metadata**. Proses:
+
+- AI akan memproses gambar satu per satu (dengan jeda sesuai pengaturan **Request Delay**)
+- Status berubah menjadi **Generating…** disertai indikator engine yang sedang dipakai (misal _Generating using Groq_)
+- Jika engine pertama gagal, sistem akan mencoba engine lain yang valid (badge **Trying using Mistral** akan muncul)
+- Setelah selesai, status menjadi **Completed** dan menampilkan:
+  - **Title** (judul deskriptif)
+  - **Keywords** (kata kunci, dipisah koma)
+  - **Category** (kategori numerik Adobe Stock, 1–21)
+
+---
+
+## 5. Hasil Akhir
+
+Di setiap kartu hasil, Anda bisa:
+
+- **Copy Title** – klik tombol Copy di samping judul
+- **Copy Keywords** – klik tombol Copy di samping keywords
+- **Delete** – hapus item dari daftar
+- **Regenerate** – generate ulang metadata (hanya muncul jika status **Failed**)
+
+Di bagian atas daftar hasil terdapat:
+
+- **Search** – filter berdasarkan nama file
+- **Filter status** – tampilkan semua / sukses / antre / gagal
+- **Clear all** – hapus semua hasil sekaligus
+- **Export CSV** – unduh semua hasil sukses ke file CSV yang siap diunggah ke Adobe Stock
+
+---
+
+## 6. Sesuaikan Pengaturan (Opsional)
+
+Di panel kanan (atau drawer **Configuration**), Anda bisa mengubah:
+
+| Pengaturan           | Default | Rentang    | Fungsi                                                                      |
+| -------------------- | ------- | ---------- | --------------------------------------------------------------------------- |
+| **Max Title Length** | 200     | 50–200     | Batasi panjang judul (karakter)                                             |
+| **Max Keywords**     | 50      | 10–50      | Batasi jumlah kata kunci                                                    |
+| **Custom Prompt**    | kosong  | teks bebas | Tambahkan instruksi khusus untuk AI (misal: "Fokus pada warna dan tekstur") |
+| **Request Delay**    | 3 detik | 0–5 detik  | Jeda antar proses batch, hindari rate limit                                 |
+
+Klik **Save All** (di desktop) atau **Save Configuration** (di drawer mobile) untuk menyimpan. Pengaturan akan otomatis dipakai untuk generate berikutnya.
+
+---
+
+## 7. Proses Batch
+
+Anda bisa mengupload puluhan gambar sekaligus. Generator akan memprosesnya satu per satu sesuai urutan upload.  
+Status Bar di atas daftar hasil menunjukkan:
+
+- **Total** – jumlah semua item
+- **Pending** – masih antre
+- **Success** – sudah sukses
+- **Error** – gagal (bisa klik Regenerate untuk mencoba ulang)
+
+Jika satu item gagal, sistem tidak akan menghentikan batch; item berikutnya tetap diproses.
+
+---
+
+## 8. Tidak Ada Riwayat (History)
+
+Untuk menjaga privasi dan menghindari pemborosan ruang penyimpanan, Adogen **tidak menyimpan riwayat generate** di server maupun di browser. Hasil generate hanya tersedia selama sesi berlangsung. Pastikan Anda mengekspor hasil yang dibutuhkan sebelum menutup halaman.
+
+---
+
+## Langkah Berikutnya
+
+- Pelajari [Daftar lengkap engine yang didukung](/docs/engines)
+- Lihat [Referensi kategori Adobe Stock](/docs/categories)
+- Baca [FAQ](/docs/faq) jika ada masalah
+
+**Selamat mencoba!** 🚀
