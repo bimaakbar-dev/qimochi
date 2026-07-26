@@ -1,0 +1,138 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Card from '../ui/Card.astro';
+import Badge from '../ui/Badge.astro';
+import Button from '../ui/Button.astro';
+
+export interface Props {
+  latestAnime: CollectionEntry<'anime'>[];
+}
+
+const { latestAnime } = Astro.props;
+const topThree = latestAnime.slice(0, 3);
+---
+
+<Card variant='outline' padding='sm' radius='sm'>
+  <span aria-hidden="true" class="pointer-events-none absolute inset-0">
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/70"
+      style="left:1%;top:30%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/50"
+      style="left:3%;top:70%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/60"
+      style="left:5%;top:22%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/45"
+      style="left:7%;top:58%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/55"
+      style="left:9%;top:84%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/50"
+      style="left:12%;top:36%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/60"
+      style="left:15%;top:18%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/40"
+      style="left:18%;top:64%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/50"
+      style="left:21%;top:80%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/55"
+      style="left:24%;top:28%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/55"
+      style="left:76%;top:24%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/50"
+      style="left:79%;top:76%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/60"
+      style="left:82%;top:40%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/45"
+      style="left:85%;top:60%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/50"
+      style="left:88%;top:18%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/60"
+      style="left:91%;top:82%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/55"
+      style="left:94%;top:32%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/45"
+      style="left:96%;top:66%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/50"
+      style="left:98%;top:24%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/60"
+      style="left:99%;top:78%"></span>
+  </span>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 max-w-7xl mx-auto relative z-10">
+    <div class="flex flex-col gap-4 items-center lg:items-start text-center lg:text-left p-4">
+      <Badge
+        variant='accent'
+        class="text-sm"
+      >
+        Anime Subtitle Indonesia
+      </Badge>
+
+      <p class="text-(--fg-muted) text-heading-32 max-w-[90%] lg:max-w-full">
+        Download Anime Kualitas BD 360p,720p & 1080p dengan <span class='text-(--accent)'>Subtitle Indonesia</span>.
+      </p>
+
+      <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
+        <Button
+          href="/anime"
+          size='lg'
+          variant='primary'
+          class='rounded-full'>
+          Anime Terbaru
+        </Button>
+        <Button
+          href="/anime/genres"
+          size='lg'
+          variant='outline'
+          class='rounded-full'>
+          Daftar Genre
+        </Button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4">
+      {topThree.map((item) => (
+          <a
+            href={`/anime/${item.id}`}
+            class="bg-(--bg-muted) ring-1 ring-(--border-subtle)/40 rounded overflow-hidden transition-transform duration-(--duration) hover:-translate-y-1 hover:ring-(--accent) flex flex-col"
+          >
+            {
+              item.data.poster?.src ? (
+                <img
+                  src={item.data.poster.src}
+                  alt={item.data.poster.alt || item.data.title}
+                  loading="lazy"
+                  decoding="async"
+                  fetchpriority="high"
+                  class="w-full aspect-2/3 object-cover saturate-[0.85] contrast-[1.15] brightness-[0.9]"
+                />
+              ) : (
+                <div class="w-full aspect-2/3 bg-linear-to-br from-(--bg-muted) to-(--bg-subtle) flex flex-col items-center justify-center gap-1 p-4 text-center border-b border-(--border)">
+                  <span class="font-semibold text-(--fg-muted) text-sm">
+                    {item.data.title}
+                  </span>
+                </div>
+              )
+            }
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</Card>

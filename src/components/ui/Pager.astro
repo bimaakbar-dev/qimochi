@@ -1,0 +1,68 @@
+---
+// src/components/ui/Pager.astro
+import Icon from "@ui/Icons.astro";
+
+export interface PagerItem {
+  title: string;
+  href: string;
+}
+
+interface Props {
+  prev?: PagerItem | null;
+  next?: PagerItem | null;
+}
+
+const { prev, next } = Astro.props;
+---
+
+{
+  (prev || next) && (
+    <nav aria-label="Pagination navigasi"
+      class="mt-12 border-t border-(--border-subtle)/80 pt-8"
+    >
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {prev ? (
+          <div class="shrink-0 items-center text-left">
+            <a
+              href={prev.href}
+              class="group flex flex-col gap-1.5 rounded-md border border-(--border-subtle) bg-(--bg) p-4 no-underline transition-colors hover:border-(--border) hover:bg-(--bg-subtle) active:scale-[0.99]"
+            >
+              <span class="text-label-14 flex items-center justify-start gap-1.5 font-medium text-(--fg-muted)">
+                <span class="h-4 w-4 transition-transform group-hover:-translate-x-1">
+                  <Icon name="arrow-left" class="w-full h-full" />
+                </span>
+                Sebelumnya
+              </span>
+              <span class="truncate text-[14px] font-semibold text-(--fg-strong)">
+                {prev.title}
+              </span>
+            </a>
+          </div>
+        ) : (
+          <div />
+        )}
+        
+        {next ? (
+          <div class="shrink-0 items-center text-right">
+            <a
+              href={next.href}
+              class="group flex flex-col gap-1.5 rounded-md border border-(--border-subtle) bg-(--bg) p-4 no-underline transition-colors hover:border-(--border) hover:bg-(--bg-subtle) active:scale-[0.99]"
+            >
+              <span class="text-label-14 flex items-center justify-end gap-1.5 font-medium text-(--fg-muted)">
+                Selanjutnya
+                <span class="h-4 w-4 transition-transform group-hover:translate-x-1">
+                  <Icon name="arrow-right" class="w-full h-full" />
+                </span>
+              </span>
+              <span class="truncate text-[14px] font-semibold text-(--fg-strong)">
+                {next.title}
+              </span>
+            </a>
+          </div>
+        ) : (
+          <div />
+        )}
+      </div>
+    </nav>
+  )
+}

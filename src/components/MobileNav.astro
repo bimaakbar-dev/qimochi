@@ -1,0 +1,116 @@
+---
+// src/components/MobileNav.astro
+import { NAV } from "../consts";
+import Icon from "./ui/Icons.astro";
+import Socials from "./Socials.astro";
+import Theme from "./Theme.astro";
+import Card from "./ui/Card.astro";
+
+const currentPath = Astro.url.pathname;
+
+const links = [
+  ...NAV.mobileNavBar.map((item) => ({
+    label: item.label,
+    href: item.href,
+    icon: item.icon,
+  })),
+];
+
+const $ = {
+  wrapper: "group/nav md:hidden relative select-none",
+  trigger: [
+    "block aspect-square items-center justify-center shrink-0 p-1 rounded-md",
+    "text-(--fg-muted) hover:bg-(--bg-muted) active:bg-(--bg-muted)",
+    "cursor-pointer list-none [&::-webkit-details-marker]:hidden"
+  ].join(" "),
+  triggerIcon: [
+    "size-6 rotate-0",
+    "hover:text-(--fg-strong) active:text-(--fg-strong)",
+    "transition-transform duration-(--duration)",
+    "group-open/nav:rotate-180",
+  ].join(" "),
+  panel: [
+    "fixed left-0 right-0 top-[calc(--header-height)] z-40",
+    "bg-(--bg) rounded-b-lg border-b shadow-(--shadow-md) border-(--border)/80",
+    "overscroll-contain"
+  ].join(" "),
+  panelWrapper: "px-2 py-3 space-y-2 gap-2",
+  panelItem: [
+    "mobile-nav-link",
+    "flex gap-3 p-2 items-center text-body-14 font-medium",
+    "hover:text-(--fg-strong) active:text-(--fg-strong)",
+    "opacity-0 translate-y-full group-open/nav:opacity-100 group-open/nav:translate-0",
+    "transition-transform duration-(--duration) ease-(--ease-out)"
+  ].join(" "),
+  panelPrefix: "inline-flex items-center justify-center size-5",
+  panelFooter: "flex items-center justify-between items-center"
+}
+---
+
+<details id="mobile-menu-details" class={$.wrapper}>
+  <summary aria-label="Open menu" class={$.trigger}>
+    <Icon id="mobile-chevron" name="chevron-down" class={$.triggerIcon} />
+  </summary>
+  <div id="mobile-menu-panel" class={$.panel}>
+    <nav class={$.panelWrapper}>
+      {links.map((item) => (
+        <a
+          aria-label={item.label}
+          href={item.href}
+          class:list={[
+            $.panelItem,
+            currentPath === item.href 
+            ? "text-(--fg-strong)" 
+            : "text-(--fg-muted)"
+          ]}
+        >
+          <Icon name={item.icon as any} class={$.panelPrefix} />
+          {item.label}
+        </a>
+      ))}
+      <Card padding="xs" radius="sm" class="mt-4">
+        <div class={$.panelFooter}>
+          <Socials />
+          <Theme />
+        </div>
+      </Card>
+    </nav>
+  </div>
+</details>
+
+
+<script>
+  function initMobileNavDetails() {
+    const details = document.getElementById("mobile-menu-details") as HTMLDetailsElement | null;
+    if (!details) return;
+
+    const links = details.querySelectorAll(".mobile-nav-link");
+
+    links.forEach((link) => {
+      link.addEventListener("click", () => {
+        details.removeAttribute("open");
+      });
+    });
+
+    const mq = window.matchMedia("(min-width: 768px)");
+    mq.addEventListener("change", (e) => {
+      if (e.matches) details.removeAttribute("open");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (details.hasAttribute("open") && !details.contains(e.target as Node)) {
+        details.removeAttribute("open");
+      }
+    });
+
+    details.addEventListener("toggle", () => {
+      if (details.open) {
+    //    document.body.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = "";
+      }
+    });
+  }
+
+  initMobileNavDetails();
+</script>

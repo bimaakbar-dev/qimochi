@@ -1,0 +1,47 @@
+---
+import DocsPager from "./DocsPager.astro";
+import { formatDate } from "@lib/utils";
+// import Feedback from "../Feedback.astro";
+
+interface Props {
+    prev: any;
+    next: any;
+    root: string;
+    lastUpdated?: Date;
+}
+
+const { 
+    prev, 
+    next, 
+    root, 
+    lastUpdated 
+} = Astro.props;
+
+const $ = {
+    wrapper: "items-center justify-center flex-1 shrink-0 mb-(--safe-bottom) space-y-6",
+    date: "text-body-14 text-(--fg-muted) py-4"
+}
+---
+<div 
+  data-pagefind-ignore 
+  class={$.wrapper}
+>
+    <!--<Feedback />-->
+    <p class={$.date}>
+        {lastUpdated && (
+            <time 
+              data-page-meta="date" 
+              data-pagefind-sort="date" 
+              datetime={lastUpdated.toISOString()}
+            >
+                <span>Diperbarui: </span>
+                {formatDate(lastUpdated)}
+            </time>
+        )}
+    </p>
+    <DocsPager 
+      root={root} 
+      prev={prev} 
+      next={next} 
+    />
+</div>

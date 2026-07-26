@@ -1,0 +1,62 @@
+---
+// src/components/ui/Badge.astro
+import type { HTMLAttributes } from 'astro/types';
+
+type BadgeVariant = 
+  'default' | 
+  'accent'  | 
+  'success' | 
+  'warning' | 
+  'error';
+
+interface Props extends HTMLAttributes<'span'> {
+  variant?: BadgeVariant;
+  class?: string;
+}
+
+const { 
+  variant = 'default', 
+  class: className, 
+} = Astro.props;
+
+const baseClasses = [
+  "inline-flex items-center shrink-0 px-2 py-0.5",
+  "ring-1 rounded-full",
+  "font-medium"
+].join(" ");
+
+const variantClasses: Record<BadgeVariant, string> = {
+  default: [
+    "text-(--fg-muted)",
+    "bg-(--bg-subtle) ring-transparent"
+  ].join(" "),
+
+  accent:  [
+    "text-(--accent)",
+    "bg-(--accent-soft)/80 ring-(--accent-soft)"
+  ].join(" "),
+
+  success: [
+    "text-(--success)",
+    "bg-(--success-soft) ring-(--success-soft)"
+  ].join(" "),
+
+  warning: [
+    "text-(--warning)",
+    "bg-(--warning-soft) ring-(--warning-soft)"
+  ].join(" "),
+
+  error: [
+    "text-(--error)",
+    "bg-(--error-soft) ring-(--error-soft)"
+  ].join(" "),
+};
+---
+
+<span class:list={[
+  baseClasses,
+  variantClasses[variant], 
+  className
+]}>
+  <slot />
+</span>

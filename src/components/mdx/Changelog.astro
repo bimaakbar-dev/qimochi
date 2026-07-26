@@ -1,0 +1,72 @@
+---
+/* src/components/Changelog.astro */
+interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+const isContainer = !title;
+---
+
+{
+  isContainer ? (
+    <div class="block my-6 md:my-8 text-sm relative pl-6 before:content-[''] before:absolute before:left-1.5 before:top-2 before:bottom-2 before:w-px before:bg-(--border)">
+      <slot />
+    </div>
+  ) : (
+    <div class="relative mb-10 last:mb-0 group animate-changelogFade">
+      <div class="absolute -left-5.75 top-2 w-3 h-3 rounded-full bg-(--accent) border-2 border-(--bg) shadow-[0_0_0_4px_var(--border-subtle)] transition-transform duration-(--duration-fast)"></div>
+      <div class="changelog-version">
+        <h3 class="font-mono text-sm! font-semibold text-(--fg-strong) uppercase bg-(--bg-subtle) ring-1 ring-(--border-subtle) inline-block px-3 py-1 rounded-full shadow-(--shadow-sm)">
+          {title}
+        </h3>
+      </div>
+      <div class="changelog-body text-(--fg) leading-relaxed pl-1 max-w-none">
+        <slot />
+      </div>
+    </div>
+  )
+}
+
+<style>
+  @keyframes changelogFade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-changelogFade {
+    animation: changelogFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .changelog-body:first-child {
+    margin-top: 0 !important;
+  }
+
+  .changelog-body:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .changelog-body ul {
+    list-style-type: none !important;
+    padding-left: 0 !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .changelog-body li {
+    position: relative !important;
+    padding-left: 1.25rem !important;
+    margin-bottom: 0.35rem !important;
+    color: var(--fg-muted) !important;
+  }
+
+  .changelog-body li::before {
+    content: "—" !important;
+    position: absolute !important;
+    left: 0 !important;
+    color: var(--fg-dim) !important;
+  }
+
+  .changelog-body strong {
+    color: var(--fg-strong) !important;
+  }
+</style>

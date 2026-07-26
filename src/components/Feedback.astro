@@ -1,0 +1,137 @@
+---
+import Icon from "@ui/Icons.astro";
+import Button from "@ui/Button.astro";
+
+const $ = {
+  wrapper: [
+    'feedback-bar',
+    'relative ring-1 mt-6 px-3 py-2 rounded',
+    'ring-(--border-subtle) bg-(--bg)'
+  ].join(" "),
+  arrow: [
+    "absolute -top-2 left-8 w-4 h-2",
+    "text-(--border-subtle)",
+    "overflow-visible",
+  ].join(" "),
+  feedback: [
+    "flex items-center justify-between flex-1 text-body-14",
+    "text-(--fg)"
+  ].join(" "),
+  feedbackAction: "flex items-center gap-2",
+  feedbackForm: "hidden flex flex-col gap-4 pt-4 pb-1",
+  feedbackInput: [
+    "w-full text-body-16 rounded p-3 ring-1",
+    "bg-(--bg-subtle) text-(--fg) ring-(--border-subtle) hover:bg-(--bg-muted)/60 active:bg-(--bg-muted)/60",
+    "focus:bg-(--bg-muted)/60 focus:outline-none focus:ring-2 focus:ring-(--accent-ring) focus:border-(--border-strong)",
+    "placeholder:text-(--fg-muted)",
+  ].join(" "),
+  feedbackSubmit: "flex justify-end gap-2 text-button-14",
+  feedbackNotify: "hidden flex items-center text-body-14 text-(--accent) font-medium gap-1.5 p-1.5",
+  icon: "size-4.5",
+}
+---
+
+<div class={$.wrapper}>
+  <svg 
+    viewBox="0 0 16 8"
+    width="16"
+    height="16" 
+    fill="var(--bg)" 
+    stroke="currentColor" 
+    stroke-width="1"
+    stroke-linecap="butt"
+    stroke-linejoin="round"
+    preserveAspectRatio="none"
+    aria-hidden="true"
+    focusable="false"
+    class={$.arrow}
+  >
+    <path d="M0 8 L8 0 L16 8" />
+  </svg>
+
+  <div id="feedback-initial" class={$.feedback}>
+    <span>Apakah ini membantu?</span>
+    <div class={$.feedbackAction}>
+      <Button 
+        data-sentiment="positive"
+        variant="outline" 
+        size="md" 
+        prefix={
+          <Icon name="thumbs-up" class={$.icon} />
+        }
+        class="rounded-full">
+        Yes
+      </Button>
+      <Button 
+        data-sentiment="negative"
+        variant="outline" 
+        size="md" 
+        prefix={
+          <Icon name="thumbs-down" class={$.icon} />
+        }
+        class="rounded-full">
+        No
+      </Button>
+    </div>
+  </div>
+
+  <div id="feedback-form" class={$.feedbackForm}>
+    <textarea 
+      id="feedback-text"
+      rows="2" 
+      placeholder="Masukan Anda sangat membantu..."
+      class={$.feedbackInput}
+    />
+    <div class={$.feedbackSubmit}>
+      <Button
+        id="submit-feedback"
+        variant="accent"
+        size="md"
+        /* loading
+        disabled */
+        loadingText="Mengirim"
+        class="round-md">
+        Kirim
+      </Button>
+    </div>
+  </div>
+
+  <div id="feedback-thanks" class={$.feedbackNotify}>
+    <Icon name="info" class={$.icon} />
+    <span>Terima kasih atas masukannya!</span>
+  </div>
+</div>
+
+<script>
+  function setupFeedback() {
+    const bar = document.querySelector('.feedback-bar');
+    if (!bar) return;
+
+    const initial = bar.querySelector('#feedback-initial');
+    const form = bar.querySelector('#feedback-form');
+    const thanks = bar.querySelector('#feedback-thanks');
+    
+    let userSentiment = '';
+
+    bar.querySelectorAll('[data-sentiment]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        userSentiment = (e.currentTarget as HTMLElement).getAttribute('data-sentiment') || '';
+        
+        // initial?.classList.add('hidden');
+        form?.classList.remove('hidden');
+      });
+    });
+
+    bar.querySelector('#submit-feedback')?.addEventListener('click', () => {
+      const text = (bar.querySelector('#feedback-text') as HTMLTextAreaElement).value;
+      
+      console.log(`Sentiment: ${userSentiment}, Feedback: ${text}`);
+      
+      initial?.classList.add('hidden');
+      form?.classList.add('hidden');
+      thanks?.classList.remove('hidden');
+    });
+  }
+
+  setupFeedback();
+</script>

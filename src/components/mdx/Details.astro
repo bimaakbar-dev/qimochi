@@ -1,0 +1,39 @@
+---
+// src/components/mdx/Details.astro
+import Icon from "@/components/ui/Icons.astro";
+
+interface Props {
+  summary?: string;
+}
+
+const { summary = "Details" } = Astro.props || {};
+
+const s = {
+  details: 'details my-6 md:my-8 ring-1 ring-(--border-subtle)/80 rounded bg-(--bg-subtle)',
+  summary: 'summary flex items-center gap-2 px-3 py-2 text-(--fg-strong) rounded',
+  icon: 'icon shrink-0 size-4.5 text-(--fg-muted)/80 transition-transform duration-200',
+  content: 'content px-4 pt-2 pb-4 text-(--fg) border-t border-(--border-subtle)'
+}
+---
+
+<details class={s.details}>
+  <summary class={s.summary}>
+    <div class="flex items-center gap-2">
+      <Icon name="chevron-right" class={s.icon} />
+      <span>{summary}</span>
+    </div>
+  </summary>
+  <div class={s.content}>
+    <slot />
+  </div>
+</details>
+
+<style is:global>
+  .summary:hover .icon,
+  .details[open] .icon {
+    color: var(--fg-strong);
+  }
+  .details[open] .icon {
+    transform: rotate(90deg);
+  }
+</style>

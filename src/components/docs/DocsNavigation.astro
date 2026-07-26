@@ -1,0 +1,67 @@
+---
+// src/components/docs/DocsNavigation.astro
+import { getCollection } from 'astro:content';
+import SidebarGroup from '@/components/ui/SidebarGroup.astro';
+import SidebarLink from '@/components/ui/SidebarLink.astro';
+
+const allDocs = await getCollection('docs');
+
+const sortedDocs = [...allDocs].sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999));
+const primaryRootId = sortedDocs[0]?.id;
+
+const ungroupedDocs = sortedDocs.filter((doc) => !doc.data.category);
+
+const docsByCategory = sortedDocs.reduce((acc, doc) => {
+  const category = doc.data.category;
+  if (!category) return acc;
+  if (!acc[category]) acc[category] = [];
+  acc[category].push(doc);
+  return acc;
+}, {} as Record<string, typeof allDocs>);
+
+const sortedCategories = Object.keys(docsByCategory).sort((a, b) => {
+  const minOrderA = docsByCategory[a][0].data.order ?? 999;
+  const minOrderB = docsByCategory[b][0].data.order ?? 999;
+  return minOrderA - minOrderB;
+});
+
+const currentPath = Astro.url.pathname;
+
+const checkIsActive = (href: string) => {
+  if (href === '/docs') {
+    return currentPath === '/docs' || currentPath === '/docs/';
+  }
+  return currentPath === href || currentPath === `${href}/`;
+};
+
+const getHref = (doc: (typeof allDocs)[number]) => {
+  const finalSlug = doc.data.slug || doc.id;
+  return doc.id === primaryRootId ? '/docs' : `/docs/${finalSlug}`;
+};
+
+const $ = {
+  wrapper: "flex flex-col space-y-1 w-full flex-1 px-2 md:px-4 py-2",
+}
+---
+
+<nav class={$.wrapper}>
+  {sortedCategories.map((category) => {
+    const hasActiveChild = docsByCategory[category].some((doc) =>
+      checkIsActive(getHref(doc))
+    );
+    return (
+      <SidebarGroup title={category} open={hasActiveChild}>
+        {docsByCategory[category].map((doc) => (
+          <SidebarLink href={getHref(doc)} isActive={checkIsActive(getHref(doc))}>
+            {doc.data.title}
+          </SidebarLink>
+        ))}
+      </SidebarGroup>
+    );
+  })}
+  {ungroupedDocs.map((doc) => (
+    <SidebarLink href={getHref(doc)} isActive={checkIsActive(getHref(doc))} grouped={false}>
+      {doc.data.title}
+    </SidebarLink>
+  ))}
+</nav>

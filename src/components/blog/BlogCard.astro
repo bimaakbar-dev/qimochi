@@ -1,0 +1,121 @@
+---
+// src/components/blog/BlogCard.astro
+import type { CollectionEntry } from "astro:content";
+import { formatDateCompact } from "@lib/utils";
+import { 
+  IMAGE, 
+  SITE 
+} from "@/consts";
+
+import Button from "@ui/Button.astro";
+import Card from "@ui/Card.astro";
+
+interface Props {
+  entry: CollectionEntry<"blog">;
+  index?: number;
+}
+
+const { entry, index = 0 } = Astro.props;
+
+const {
+  title,
+  description,
+  slug,
+  category,
+  pubDate,
+  author,
+  cover,
+} = entry.data;
+
+const href = `/blog/${slug || entry.id}`;
+
+const Author = {
+  avatar: author.avatar,
+  alt: author.name ?? SITE.name,
+  width: IMAGE.avatar.width,
+  height: IMAGE.avatar.height
+}
+
+const isCritical = index === 0;
+const imageLoading = isCritical ? "eager" : "lazy";
+const imagePriority = isCritical ? "high" : "low";
+
+const $ = {
+  wrapper: "flex flex-col h-full",
+  body: "flex flex-1 flex-col",
+  coverWrapper: "mb-4 aspect-video w-full h-auto overflow-hidden rounded bg-(--bg-muted)",
+  coverImage: "size-full object-cover filter contrast-[1.01] saturate-[0.98]",
+  meta: "mb-4 flex items-center justify-between text-label-14 text-(--fg-subtle)",
+  metaRight: "flex items-center gap-1.5",
+  avatar: "hidden size-5 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-(--border-subtle)",
+  avatarImage: "size-full object-cover",
+  content: "flex flex-1 flex-col gap-4",
+  title: "text-heading-18 font-semibold text-(--fg-strong) line-clamp-3",
+  description: "text-body-14 text-(--fg-muted) line-clamp-4",
+  footer: "mt-auto pt-2 flex items-center justify-between",
+};
+---
+
+<article class={$.wrapper}>
+  <Card padding="md" radius="sm" variant="secondary" class={$.body}>
+    {cover?.src && (
+      <div class={$.coverWrapper}>
+        <img
+          src={cover.src}
+          alt={cover.alt ?? title}
+          width={IMAGE.thumbnail.width}
+          height={IMAGE.thumbnail.height}
+          loading={imageLoading}
+          fetchpriority={imagePriority}
+          decoding="async"
+          onerror={`this.onerror=null; this.src='${IMAGE.thumbnail.placeholder}'`}
+          class={$.coverImage}
+        />
+      </div>
+    )}
+    <div class={$.meta}>
+      <span>{category}</span>
+      <div class={$.metaRight}>
+        <p>
+          {pubDate && (
+            <time datetime={pubDate.toISOString()}>
+              {formatDateCompact(pubDate)}
+            </time>
+          )}
+        </p>
+        {author.avatar && (
+          <div class={$.avatar}>
+            <img
+              src={Author.avatar}
+              alt={Author.alt}
+              width={Author.width}
+              height={Author.height}
+              loading={imageLoading}           
+              decoding="async"
+              fetchpriority={imagePriority}
+              onerror={`this.onerror=null; this.src='${IMAGE.avatar.placeholder}'`}
+              class={$.avatarImage}      
+            />
+          </div>
+        )}
+      </div>
+    </div>
+    <div class={$.content}>
+      <h3 class={$.title}>
+        {title}
+      </h3>
+      <p class={$.description}>
+        {description}
+      </p>
+      <div class={$.footer}>
+        <Button
+          href={href}
+          variant="primary"
+          size="md"
+          block>
+          Baca Selengkapnya
+        </Button>
+      </div>
+    </div>
+  </Card>
+</article>

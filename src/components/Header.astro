@@ -1,0 +1,86 @@
+---
+// src/components/Header.astro
+import Container from "./ui/Container.astro";
+import Socials from "./Socials.astro";
+import Mobile from "./MobileNav.astro";
+import Theme from "./Theme.astro";
+import Logo from "./ui/Logo.astro";
+import SearchBar from "./ui/SearchBar.astro";
+import NavLink from "./NavLink.astro";
+
+const $ = {
+  header: [
+    "sticky top-0 z-50 w-full h-full pt-(--safe-top)",
+    "bg-none border-b lg:border-b-none border-(--border-subtle)/40",
+    "transition-opacity duration-(--duration-fast) ease-(--ease-out)"
+  ].join(" "),
+
+  wrapper: [
+    "flex h-(--header-height) mx-auto items-center justify-between",
+  ].join(" "),
+
+  left: "inline-flex items-center shrink-0 gap-4",
+  right: "flex items-center shrink-0 gap-2"
+}
+---
+<header id="main-header" class={$.header}>
+  <Container size="full">
+    <div class={$.wrapper}>
+      <div class={$.left}>
+        <Logo />
+        <NavLink />
+      </div>
+      <div class={$.right}>
+        <div class="items-center flex md:hidden">
+          <SearchBar iconOnly />
+        </div>
+        <div class="items-center hidden md:flex gap-2">
+          <SearchBar class="min-w-64" />
+          <div class="flex items-center gap-1">
+            <Socials />
+            <Theme />
+          </div>
+        </div>
+        <Mobile />
+      </div>
+    </div>
+  </Container>
+</header>
+
+<script is:inline>
+  (() => {
+    const header = document.getElementById("main-header");
+    if (!header) return;
+
+    const toggleHeader = () => {
+      if (window.scrollY > 10) {
+        header.classList.add(
+          "bg-(--bg)/80",
+          "lg:border-(--border-subtle)/40",
+          "backdrop-blur-sm",
+          "shadow-(--shadow-sm)"
+        );
+        header.classList.remove(
+          "bg-none",
+          "lg:border-none"
+        );
+      } else {
+        header.classList.remove(
+          "bg-(--bg)/80",
+          "lg:border-(--border-subtle)/40",
+          "backdrop-blur-sm",
+          "shadow-(--shadow-sm)"
+        );
+        header.classList.add(
+          "bg-none",
+          "lg:border-none"
+        );
+      }
+    };
+
+    window.removeEventListener("scroll", toggleHeader);
+    window.addEventListener("scroll", toggleHeader, { passive: true });
+    
+    toggleHeader();
+  })();
+</script>

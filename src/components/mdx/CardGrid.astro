@@ -1,0 +1,12 @@
+---
+// src/components/mdx/CardGrid.astro
+---
+<div class="card-grid grid grid-cols-1 md:grid-cols-2 gap-4">
+  <slot />
+</div>
+
+<style is:global>
+  .card-grid .link-card {
+    margin: 0;
+  }
+</style>

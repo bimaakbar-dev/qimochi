@@ -1,0 +1,74 @@
+---
+import Button from "@ui/Button.astro";
+import Icon from "@ui/Icons.astro";
+
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+
+const aLabel = 'Scroll to top';
+const defaultClass = 'pointer-events-none fixed right-6 bottom-6 z-50 flex h-10 w-10 translate-y-10 transform cursor-pointer items-center justify-center rounded-md border border-(--border)/40 bg-(--bg) p-2 text-(--fg-muted) opacity-0 shadow-xl transition-all duration-300 hover:bg-(--bg-muted) focus:outline-none active:bg-(--bg-muted) md:hidden';
+---
+
+<Button
+  id="scroll-to-top-floating"
+  variant="icon"
+  size="md"
+  thisIcon
+  aria-label={aLabel}
+  class:list={[
+    defaultClass,
+    className,
+  ]}
+  
+>
+  <Icon name="arrow-up" class="h-5 w-5" />
+</Button>
+
+<script>
+  const initFloatingBackToTop = () => {
+    const button = document.getElementById("scroll-to-top-floating");
+    if (!button) return;
+
+    const toggleVisibility = () => {
+      if (window.scrollY > 300) {
+        button.classList.remove(
+          "translate-y-10",
+          "opacity-0",
+          "pointer-events-none",
+        );
+        button.classList.add("translate-y-0", "opacity-100");
+      } else {
+        button.classList.add(
+          "translate-y-10",
+          "opacity-0",
+          "pointer-events-none",
+        );
+        button.classList.remove("translate-y-0", "opacity-100");
+      }
+    };
+
+    const scrollToTop = () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.addEventListener("scroll", toggleVisibility, { passive: true });
+    button.addEventListener("click", scrollToTop);
+
+    toggleVisibility();
+
+    return () => {
+      window.removeEventListener("scroll", toggleVisibility);
+      button.removeEventListener("click", scrollToTop);
+    };
+  };
+
+  let destroyFloatingBtn: (() => void) | undefined;
+  const runSetup = () => {
+    destroyFloatingBtn?.();
+    destroyFloatingBtn = initFloatingBackToTop();
+  };
+
+  runSetup();
+</script>

@@ -1,0 +1,85 @@
+---
+// src/components/mdx/Link.astro
+
+interface Props {
+  href?: string;
+  class?: string;
+  [key: string]: any;
+}
+
+const { 
+  href, 
+  ...props 
+} = (Astro.props || {}) as Props;
+
+const siteUrl = Astro.site?.href || import.meta.env.SITE || "";
+const isExternal = href?.startsWith("http") && !href?.startsWith(siteUrl);
+---
+
+<a
+  href={href}
+  target={
+    isExternal ? "_blank" 
+    : undefined
+  }
+  rel={
+    isExternal ? "nofollow noopener noreferrer" 
+    : undefined
+  }
+  class:list={[
+    "inline-link", 
+    isExternal && "is-external", 
+    props.class
+  ]}
+  {...props}
+>
+  <slot />
+</a>
+
+<style>
+  .inline-link.is-external {
+    display: inline-flex !important;
+    align-items: center;
+  }
+
+  .inline-link.is-external::after {
+    content: "";
+    display: inline-block;
+    vertical-align: middle;
+    width: 0.95em;
+    height: 0.95em;
+    margin-left: 0.25rem;
+    margin-top: 0;
+    margin-bottom: 0;
+    opacity: 0.7;
+    line-height: 1.7 !important;
+
+    background-color: currentColor;
+    transition: opacity var(--duration, 150ms) var(--ease-out, ease);
+
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke='none' d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M12 6h-6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6'/%3E%3Cpath d='M11 13l9-9'/%3E%3Cpath d='M15 4h5v5'/%3E%3C/svg%3E");
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke='none' d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M12 6h-6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6'/%3E%3Cpath d='M11 13l9-9'/%3E%3Cpath d='M15 4h5v5'/%3E%3C/svg%3E");
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+  }
+
+  @media (hover: hover) {
+    .inline-link.is-external:hover::after {
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .inline-link.is-external::after {
+      opacity: 1;
+    }
+    .inline-link.is-external:active::after {
+      opacity: 0.7;
+    }
+  }
+</style>

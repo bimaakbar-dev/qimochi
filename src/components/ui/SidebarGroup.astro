@@ -1,0 +1,30 @@
+---
+// src/components/SidebarGroup.astro
+import Icon from './Icons.astro';
+interface Props {
+  title: string;
+  open?: boolean;
+}
+
+const { title, open = true } = Astro.props;
+
+const $ = {
+  wrapper: "flex items-center justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none py-2 px-2 rounded-md hover:bg-(--bg-muted) active:bg-(--bg-muted)",
+  label: "text-body-14 font-medium text-(--fg-strong)",
+  icon: "transition-transform duration-(--duration) group-open:rotate-90",
+  iconSize: "size-4",
+  content: "flex flex-col"
+}
+---
+
+<details class="group" {open}>
+  <summary class={$.wrapper}>
+    <span class={$.label}>{title}</span>
+    <span class={$.icon}>
+        <Icon name='chevron-right' class={$.iconSize} />
+    </span>
+  </summary>
+  <nav class={$.content}>
+    <slot />
+  </nav>
+</details>

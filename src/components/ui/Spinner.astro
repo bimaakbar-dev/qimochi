@@ -1,0 +1,28 @@
+---
+// src/components/ui/Spinner.astro
+import type { HTMLAttributes } from "astro/types";
+import Icon from "./Icons.astro";
+
+type SpinnerSize = "sm" | "md" | "lg";
+
+interface Props extends HTMLAttributes<"div"> {
+  size?: SpinnerSize;
+}
+
+const { size = "md", class: className, ...rest } = Astro.props;
+
+const sizeClasses: Record<SpinnerSize, string> = {
+  sm: "w-4 h-4",
+  md: "w-6 h-6",
+  lg: "w-10 h-10",
+};
+---
+
+<div
+  class:list={["animate-spin", sizeClasses[size], className]}
+  role="status"
+  aria-label="Loading"
+  {...rest}
+>
+  <Icon name="spinner" class="w-full h-full" />
+</div>

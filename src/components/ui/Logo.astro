@@ -1,0 +1,31 @@
+---
+//src/ui/Logo.astro
+import { 
+    SITE, 
+    ROUTES 
+} from "@/consts";
+
+import Button from "./Button.astro";
+import AstroMascot from "./Maskot.astro";
+
+interface Props {
+  label?: boolean;
+}
+
+const { label = true } = Astro.props;
+---
+<Button
+    href={ROUTES.home}
+    aria-label={SITE.name}
+    variant="ghost"
+    size="lg"
+
+    class="p-0! hover:bg-transparent! active:bg-transparent! text-heading-24 font-semibold text-(--fg-strong)">
+    <AstroMascot class="w-8 h-8" />
+    {label && ( 
+        <span>
+            {SITE.name}
+        </span> 
+    )}
+    <br />
+</Button>

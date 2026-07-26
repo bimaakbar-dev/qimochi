@@ -1,0 +1,70 @@
+---
+// src/components/ui/Card.astro
+import type { HTMLAttributes } from "astro/types";
+
+type CardPadding = 
+  | "none"
+  | 'xs' 
+  | "sm" 
+  | "md" 
+  | "lg";
+type CardRadius = 
+  | "sm" 
+  | "md" 
+  | "lg";
+type CardVariant =
+  | "default"
+  | "outline"
+  | "primary"
+  | "secondary"
+
+interface Props extends HTMLAttributes<"div"> {
+  variant?: CardVariant;
+  hover?: boolean;
+  padding?: CardPadding;
+  radius?: CardRadius;
+}
+
+const {
+  variant = "default",
+  hover = false,
+  padding = "md",
+  radius = "md",
+  class: className,
+  ...rest
+} = Astro.props;
+
+const variantClasses: Record<CardVariant, string> = {
+  default: "ring-transparent bg-(--bg-subtle)",
+  primary: "ring-(--border)/80 bg-(--bg)/80",
+  secondary: "ring-(--border-subtle)/80 bg-(--bg-subtle)",
+  outline: "ring-(--border-strong)/80 bg-transparent"
+};
+
+const paddingMap: Record<CardPadding, string> = {
+  none: "p-0",
+  xs: 'p-1',
+  sm: "p-2",
+  md: "p-3",
+  lg: "p-4",
+};
+
+const radiusMap: Record<CardRadius, string> = {
+  sm: "rounded-md",
+  md: "rounded-lg",
+  lg: "rounded-xl",
+};
+
+const cardClasses = [
+  'ring-1 min-w-0',
+  variantClasses[variant],
+  paddingMap[padding],
+  radiusMap[radius],
+  hover && "cursor-pointer hover:shadow-(--shadow-md)",
+  className,
+];
+---
+
+<div class:list={cardClasses} {...(rest as HTMLAttributes<"div">)}>
+  <slot />
+</div>

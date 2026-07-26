@@ -1,0 +1,70 @@
+---
+// src/components/ui/SidebarLink.astro
+interface Props {
+  href: string;
+  isActive?: boolean;
+  grouped?: boolean;
+}
+
+const { 
+  href, 
+  isActive = false,
+  grouped = true,
+} = Astro.props;
+
+const $ = {
+  group: "relative ml-3 gap-y-1",
+  groupItems: [
+    "relative pr-2 py-1.5 -ml-3 rounded",
+    "before:absolute before:inset-0 before:rounded before:-z-10"
+  ].join(" "),
+  items: "relative flex items-center w-full text-body-14 font-medium",
+  itemsIndicator: "absolute left-0 top-0 bottom-0 w-px bg-(--border-subtle) rounded-full"
+}
+---
+
+{grouped ? (
+  <ul class:list={[
+    $.group,
+  ]}>
+    <span class={$.itemsIndicator} />
+    <li class:list={[
+      $.groupItems,
+      isActive 
+        ? "before:bg-(--accent)/10" 
+        : "hover:before:bg-(--bg-muted) active:before:bg-(--bg-muted)",
+    ]}>
+      <a
+        href={href}
+        class:list={[
+          $.items,
+          "pl-6",
+          isActive
+            ? "text-(--accent) border-(--accent)"
+            : "text-(--fg) border-transparent"
+        ]}>
+        {isActive && (
+          <span class:list={[
+            $.itemsIndicator,
+            "left-3",
+            isActive ? "bg-(--accent)!" : ""
+          ]} />
+        )}
+        <slot />
+      </a>
+    </li>
+  </ul>
+) : (
+  <a
+    href={href}
+    class:list={[
+      $.items,
+      "px-2 py-1.5 rounded",
+      "before:absolute before:inset-0 before:rounded before:-z-10",
+      isActive 
+        ? "before:bg-(--bg-muted) text-(--fg-strong)" 
+        : "text-(--fg) hover:before:bg-(--bg-muted) active:before:bg-(--bg-muted)",
+    ]}>
+    <slot />
+  </a>
+)}

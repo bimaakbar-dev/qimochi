@@ -1,0 +1,78 @@
+---
+// src/components/mdx/Video.astro
+interface Props {
+  src: string;
+  title?: string;
+  caption?: string;
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+}
+
+const {
+  src,
+  title = "Embedded video",
+  caption,
+  autoplay = false,
+  loop = false,
+  muted = true,
+} = (Astro.props || {}) as Props;
+
+const getYouTubeId = (url: string) => {
+  if (!url) return null;
+  const m = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+  );
+  return m ? m[1] : null;
+};
+
+const getVimeoId = (url: string) => {
+  if (!url) return null;
+  const m = url.match(/vimeo\.com\/(\d+)/);
+  return m ? m[1] : null;
+};
+
+const ytId = src ? getYouTubeId(src) : null;
+const vimeoId = src ? getVimeoId(src) : null;
+const isDirect = !ytId && !vimeoId;
+
+const ytParams = new URLSearchParams({
+  rel: "0",
+  modestbranding: "1",
+  ...(autoplay ? { autoplay: "1" } : {}),
+});
+const embedSrc = ytId
+  ? `https://youtube-nocookie.com{ytId}?${ytParams}`
+  : vimeoId
+    ? `https://vimeo.com{vimeoId}?dnt=1`
+    : null;
+---
+
+<figure class="video-figure not-prose ring-1 ring-(--border-subtle)/40">
+  <div class="video-wrapper">
+    {
+      isDirect ? (
+        <video
+          src={src}
+          controls
+          playsinline
+          autoplay={autoplay}
+          loop={loop}
+          muted={muted}
+          title={title}
+          class="video-element"
+        />
+      ) : (
+        <iframe
+          src={embedSrc!}
+          title={title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+          loading="lazy"
+          class="video-element"
+        />
+      )
+    }
+  </div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>

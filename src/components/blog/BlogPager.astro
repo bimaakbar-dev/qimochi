@@ -1,0 +1,106 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+import Icon from "@ui/Icons.astro";
+
+interface Props {
+  prev?: CollectionEntry<"blog"> | null;
+  next?: CollectionEntry<"blog"> | null;
+}
+
+const { prev, next } = Astro.props;
+
+const getHref = (item: CollectionEntry<"blog">) =>
+  `/blog/${item.data.slug || item.id}`;
+
+const $ = {
+  wrapper: 'items-center justify-center shrink-0 pb-(--safe-bottom)',
+  grid: 'grid grid-cols-1 gap-4 sm:grid-cols-2 items-center justify-center',
+
+  pegination: [
+    'group flex flex-col shrink-0 gap-2 rounded ring-1 p-4 font-medium',
+    'ring-(--border-subtle)/80 hover:bg-(--bg-muted)/40 active:bg-(--bg-muted)/40',
+    'no-underline'
+  ].join(" "),
+
+  header: 'flex items-center gap-1 text-(--fg-strong)',
+  label: 'text-label-13 font-semibold',
+  icon: 'block shrink-0 items-center justify-center size-4',
+  subLabel: 'text-label-14 text-(--fg-muted) truncate'
+};
+---
+
+{
+  (prev || next) && (
+    <nav 
+      data-pagefind-ignore 
+      aria-label="Blog pagination" 
+      class={$.wrapper}
+    >
+      <div class={$.grid}>
+        {prev ? (
+          <a
+            href={getHref(prev)}
+            class:list={[
+              "text-start",
+              "justify-start",
+              $.pegination
+            ]}>
+            <span class:list={[
+              "justify-start",
+              $.header
+              ]}>
+              <Icon
+                name="chevron-left"
+                class={$.icon}
+              />
+              <span class={$.label}>
+                {prev.data.title}
+              </span>
+            </span>
+            {prev.data.description && (
+              <span class={$.subLabel}>
+                {prev.data.description}
+              </span>
+            )}
+          </a>
+        ) : (
+          <div />
+        )}
+
+        {next ? (
+            <a
+              href={getHref(next)}
+              class:list={[
+                "text-end",
+                "justify-end",
+                $.pegination
+              ]}
+            >
+              <span class:list={[
+                "justify-end",
+                $.header
+              ]}>
+                <span class={$.label}>
+                  {next.data.title}
+                </span>
+
+                <Icon
+                  name="chevron-right"
+                  class={$.icon}
+                />
+              </span>
+
+              {next.data.description && (
+                <span class={$.subLabel}>
+                  {next.data.description}
+                </span>
+              )}
+            </a>
+        ) : (
+          <div />
+        )}
+      </div>
+    </nav>
+  )
+}

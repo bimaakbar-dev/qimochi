@@ -1,0 +1,34 @@
+---
+// src/components/GenreList.astro
+import Button from '@ui/Button.astro';
+export interface Props {
+  genres: string[];
+  limit?: number;
+}
+
+const { genres, limit = 12 } = Astro.props;
+const displayGenres = genres.slice(0, limit);
+---
+
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+  {
+    displayGenres.map((genre) => (
+      <Button
+        href={`/genres/${genre.toLowerCase()}`}
+        variant='primary'
+        size='md'
+        class="text-sm font-medium"
+      >
+        {genre}
+      </Button>
+    ))
+  }
+  {genres.length > limit && (
+    <a
+      href="/genres"
+      class="px-4 py-2 text-sm font-['Cinzel'] uppercase tracking-wider border rounded transition-all duration-200 bg-transparent text-[--fg-dim] border-[--border] hover:border-[--fg-muted] hover:text-[--fg-muted]"
+    >
+      +{genres.length - limit} Lainnya
+    </a>
+  )}
+</div>

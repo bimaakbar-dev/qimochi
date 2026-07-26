@@ -1,0 +1,64 @@
+---
+const html =
+  typeof Astro !== "undefined" && Astro.slots
+    ? await Astro.slots.render("default")
+    : "";
+
+const liRegex = /<li[^>]*>([\s\S]*?)<\/li>/gi;
+const steps: string[] = [];
+
+let match;
+if (html) {
+  while ((match = liRegex.exec(html)) !== null) {
+    steps.push(match[1].trim());
+  }
+}
+
+const s = {
+  stepsWrapper: 'my-6 md:my-8',
+  stepsItem: 'step-item relative flex items-start gap-3 mb-7 last:mb-0 pl-0',
+  stepsCounter: 'step-bullet relative z-10 inline-flex shrink-0 items-center justify-center h-6 w-6 rounded-full border border-(--border) ring-1 bg-(--bg-subtle) text-[13px] font-semibold text-(--fg-strong)',
+  stepsContent: 'step-content flex-1 leading-6 pl-0.5'
+}
+---
+
+<div class={s.stepsWrapper}>
+  {steps.map((step, idx) => (
+    <div class={s.stepsItem}>
+      <span class={s.stepsCounter}>
+        {idx + 1}
+      </span>
+      <div class={s.stepsContent} set:html={step} />
+    </div>
+  ))}
+</div>
+
+<style is:global>
+  .step-content * :first-child {
+    margin-top: 0 !important;
+  }
+
+  .step-content * :last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .step-content > * + * {
+    margin-bottom: 0.25rem;
+  }
+  
+  .step-item:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    left: 0.75rem;
+    top: 1.5rem;
+    bottom: -1.75rem;
+    width: 1px;
+    transform: translateX(-50%);
+    background-color: var(--border-subtle);
+    border-radius: var(--radius-full);
+  }
+
+  .step-bullet {
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+</style>

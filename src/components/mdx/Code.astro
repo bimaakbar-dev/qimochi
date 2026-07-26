@@ -1,0 +1,178 @@
+---
+// src/components/mdx/Code.astro
+import Icon from "@ui/Icons.astro";
+import Button from "@ui/Button.astro";
+import Badge from "@ui/Badge.astro";
+
+interface Props {
+  title?: string;
+}
+
+const props = typeof Astro !== "undefined" && Astro.props ? Astro.props : {};
+
+const { 
+  title = "" 
+} = props as Props;
+
+const aria = "Salin kode";
+
+const $ = {
+  wrapper: [
+    "code-block-wrapper overflow-hidden",
+    "relative items-center my-6 md:my-8 rounded ring-1",
+    "ring-(--border-subtle)/80",
+  ].join(" "),
+
+  header: [
+    "code-block-header",
+    "flex items-center justify-between px-2 py-1.5 border-b",
+    "bg-(--bg) border-(--border-subtle)/80"
+  ].join(" "),
+  leftSlot: [
+    "header-left",
+    "relative flex items-center gap-2 min-w-0 flex-1 pr-6",
+    "font-mono text-label-13"
+  ].join(" "),
+  rightSlot: [
+    "header-right",
+    "flex items-center gap-2 shrink-0",
+  ].join(" "),
+
+  titleText: "code-block-title truncate text-(--fg-muted)",
+  content: [
+    "code-content group/content",
+    "bg-(--bg-subtle)",
+    "overflow-x-auto",
+  ].join(" "),
+  icon: "size-4.5"
+} as const;
+---
+<div class={$.wrapper}>
+  <div class={$.header}>
+    <div class={$.leftSlot}>
+      {title && 
+        <span class={$.titleText}>
+          {title}
+        </span>
+      }
+    </div>
+    <div class={$.rightSlot}>
+      <Button 
+        size="sm" 
+        variant="icon" 
+        aria-label={aria}
+        title={aria}
+        thisIcon
+        class:list={["relative copy-button p-1"]}>
+        <Icon name="copy" class:list={[
+          "copy-icon",
+          $.icon
+        ]} />
+        <Icon name="check" class:list={[
+          "check-icon hidden",
+          $.icon
+        ]} />
+      </Button>
+      <Button 
+        id="code-expand-btn"
+        size="sm" 
+        variant="icon" 
+        aria-label={aria}
+        title={aria}
+        thisIcon
+        style="display: none;"
+        class:list={["btn-expand p-1"]}>
+        <Icon name="chevron-down" class:list={[
+          $.icon
+        ]} />
+      </Button>
+    </div>
+  </div>
+  <div class={$.content}>
+    <slot />
+  </div>
+</div>
+
+<style is:global>
+  .code-content { 
+    scrollbar-width: none; 
+  }
+  .code-content::-webkit-scrollbar { 
+    display: none; 
+  }
+  .code-block-wrapper.is-collapsed .code-content .astro-code {
+    max-height: 12rem; 
+    overflow: hidden;
+  }
+  .code-content .astro-code { 
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+  }
+  .code-block-wrapper:not(.is-collapsed) .btn-expand svg { 
+    transform: rotate(180deg); 
+  }
+</style>
+
+<script>
+  (() => {
+    const THRESHOLD = 25;
+
+    const setupCopyButton = (btn: HTMLButtonElement, code: HTMLElement) => {
+      btn.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(code.textContent?.trimEnd() ?? "");
+        const copyIcon = btn.querySelector(".copy-icon");
+        const checkIcon = btn.querySelector(".check-icon");
+        copyIcon?.classList.add("hidden");
+        checkIcon?.classList.remove("hidden");
+        btn.classList.add("copied");
+
+        setTimeout(() => {
+          copyIcon?.classList.remove("hidden");
+          checkIcon?.classList.add("hidden");
+          btn.classList.remove("copied");
+        }, 2000);
+      });
+    };
+
+    const setupCodeBlock = (wrapper: HTMLElement) => {
+      wrapper.classList.add("is-processed");
+      
+      const pre = wrapper.querySelector<HTMLElement>(".code-content pre.astro-code");
+      const btnExpand = wrapper.querySelector<HTMLButtonElement>("#code-expand-btn");
+      if (!pre) return;
+
+      const btn = wrapper.querySelector<HTMLButtonElement>(".copy-button");
+      const code = pre.querySelector("code");
+      
+      if (btn && code) {
+        setupCopyButton(btn, code);
+      }
+
+      const lines = pre.querySelectorAll("code > .line");
+      if (lines.length >= THRESHOLD && btnExpand) {
+        wrapper.classList.add("is-collapsed");
+        btnExpand.style.display = "flex";
+
+        btnExpand.addEventListener("click", () => {
+          const collapsed = wrapper.classList.toggle("is-collapsed");
+          if (collapsed) {
+              pre.style.maxHeight = "";
+              const rect = wrapper.getBoundingClientRect();
+              if (rect.top < 0) wrapper.scrollIntoView({ 
+                behavior: "smooth", 
+                block: "start" 
+              });
+            } else {
+              pre.style.maxHeight = `${pre.scrollHeight + 16}px`;
+            }
+        });
+      }
+    };
+
+    const initAllBlocks = () => {
+      document.querySelectorAll<HTMLElement>(".code-block-wrapper:not(.is-processed)").forEach(setupCodeBlock);
+    };
+
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initAllBlocks);
+    else initAllBlocks();
+  })();
+</script>

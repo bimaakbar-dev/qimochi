@@ -1,0 +1,25 @@
+---
+// src/components/mdx/Kbd.astro
+interface Props {
+  keys: string;
+}
+
+const { keys } = Astro.props || {};
+const keyList = keys
+  .split("+")
+  .map((k) => k.trim())
+  .filter(Boolean);
+---
+
+<span class="kbd-group">
+  {
+    keyList.map((key, i) => (
+      <>
+        {i > 0 && <span class="kbd-separator text-body-16">+</span>}
+        <kbd class="kbd-key text-mono-label-13 sm:text-mono-label-13 text-(--prose-kbd-text)">
+          {key}
+        </kbd>
+      </>
+    ))
+  }
+</span>

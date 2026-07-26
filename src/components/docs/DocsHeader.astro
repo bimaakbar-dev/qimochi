@@ -1,0 +1,28 @@
+---
+// src/components/ui/DocsHeader.astro
+import ActionCopy from "../ActionCopy.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+  content?: string;
+}
+
+const { title, description, content = "" } = Astro.props;
+
+const Header = "py-4 space-y-4";
+const Title = "text-heading-32 md:text-heading-40 leading-tight font-semibold tracking-tight text-(--fg-strong) flex-1 mb-4";
+const Description = "text-body-16 max-w-3xl leading-relaxed text-(--fg-muted)";
+---
+
+<header data-pagefind-ignore class={Header}>
+  <h1 data-pagefind-meta="title" class={Title}>
+    {title}
+  </h1>
+  <p data-pagefind-meta="description" class={Description}>
+    {description}
+  </p>
+  <div class="flex items-center justify-end">
+    <ActionCopy rawMarkdown={content} />
+  </div>
+</header>

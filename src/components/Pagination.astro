@@ -1,0 +1,139 @@
+---
+//src/components/Pagination.astro
+
+import Button from "@ui/Button.astro";
+import Icon from "@ui/Icons.astro";
+
+interface Props {
+  currentPage: number;
+  totalPages: number;
+  href: (page: number) => string;
+}
+
+const { currentPage, totalPages, href } = Astro.props;
+
+const prevPage = Math.max(1, currentPage - 1);
+const nextPage = Math.min(totalPages, currentPage + 1);
+
+const pages: (number | "...")[] = [];
+
+if (totalPages <= 7) {
+  for (let i = 1; i <= totalPages; i++) {
+    pages.push(i);
+  }
+} else {
+  pages.push(1);
+
+  if (currentPage > 3) {
+    pages.push("...");
+  }
+
+  const start = Math.max(2, currentPage - 1);
+  const end = Math.min(totalPages - 1, currentPage + 1);
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  if (currentPage < totalPages - 2) {
+    pages.push("...");
+  }
+
+  pages.push(totalPages);
+}
+
+const $ = {
+  nav: "flex justify-center pt-10",
+
+  list: "flex items-center gap-2",
+
+  item:
+    "ring-1! ring-(--border-subtle)/40! text-body-14",
+
+  active:
+    "bg-(--bg-subtle) text-(--accent-fg)",
+
+  disabled:
+    "pointer-events-none opacity-40",
+
+  dots:
+    "text-(--fg-muted)",
+
+  icon:
+    "size-4.5",
+};
+---
+
+{
+  totalPages > 1 && (
+    <nav class={$.nav} aria-label="Pagination">
+      <div class={$.list}>
+        <Button
+          href={href(prevPage)}
+          rel="prev"
+          aria-label="Previous page"
+          variant="icon"
+          thisIcon
+          size="md"
+          class:list={[
+            $.item,
+            currentPage === 1 && $.disabled,
+          ]}
+        >
+          <Icon
+            name="chevron-left"
+            class={$.icon}
+          />
+        </Button>
+
+        {pages.map((page) =>
+          page === "..." ? (
+            <Icon
+              name="more"
+              class:list={[
+                $.icon,
+                $.dots
+              ]}
+            />
+          ) : (
+            <Button
+              href={href(page)}
+              aria-current={
+                page === currentPage
+                  ? "page"
+                  : undefined
+              }
+              variant="icon"
+              size="md"
+              thisIcon
+              class:list={[
+                $.item,
+                page === currentPage && $.active,
+              ]}
+            >
+              {page}
+            </Button>
+          ),
+        )}
+
+        <Button
+          href={href(nextPage)}
+          rel="next"
+          aria-label="Next page"
+          variant="icon"
+          thisIcon
+          size="md"
+          class:list={[
+            $.item,
+            currentPage === totalPages && $.disabled,
+          ]}
+        >
+          <Icon
+            name="chevron-right"
+            class={$.icon}
+          />
+        </Button>
+      </div>
+    </nav>
+  )
+}

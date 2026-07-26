@@ -1,0 +1,32 @@
+---
+// src/components/Footer.astro
+import { 
+  SITE
+} from "@/consts";
+
+import Socials from "./Socials.astro";
+import Theme from "./Theme.astro";
+import Card from "./ui/Card.astro";
+
+const currentYear = new Date().getFullYear();
+
+const copyrightYear =
+  currentYear 
+    > SITE.foundingYear
+    ? `${SITE.foundingYear}–${currentYear}`
+    : SITE.foundingYear;
+---
+
+<footer class="mt-auto shrink-0 py-4 px-2">
+  <Card padding="none" radius="sm" variant="outline" class="flex items-center justify-between p-1">
+    <div class="flex items-center gap-1">
+      <Socials />
+    </div>
+    <div class="flex items-center">
+      <Theme />
+    </div>
+  </Card>
+  <div class="text-center text-xs tracking-wider text-(--fg-muted)/70 hidden">
+    &copy; {copyrightYear} {SITE.name}
+  </div>
+</footer>

@@ -1,0 +1,19 @@
+---
+interface Props {
+    class?: string
+}
+
+const {
+  class: className = '',
+} = Astro.props;
+
+const deafultClass = "min-h-screen w-full flex flex-1 flex-col pl-(--safe-left) pr-(--safe-right)";
+
+const classes = [
+    deafultClass,
+    className,
+]
+---
+<div class:list={[classes]}>
+    <slot />
+</div>

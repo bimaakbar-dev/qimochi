@@ -1,0 +1,137 @@
+---
+// src/components/ui/Figure.astro
+import { 
+ cdnImage, 
+ isCdnUrl 
+} from '@/lib/utils';
+
+import { IMAGE } from '@/consts';
+
+interface Props {
+  src?: string;
+  alt?: string;
+  title?: string;
+  caption?: string;
+  href?: string;
+}
+
+const { src, alt = '', title, caption, href } = Astro.props;
+
+const isPlaceholder = !src;
+const optimizedSrc = !isPlaceholder && isCdnUrl(src) 
+  ? cdnImage(src, { w: IMAGE.thumbnail.width, h: IMAGE.thumbnail.height, q: IMAGE.thumbnail.quality }) 
+  : src ?? IMAGE.thumbnail.placeholder;
+  
+const hasLink = !!href;
+
+const imageClass = `relative w-full h-auto object-cover block rounded-md ring-1 ring-(--border-subtle)/40 bg-(--bg-subtle) transition-opacity duration-(--duration) ${!hasLink ? 'zoomable-image cursor-zoom-in hover:brightness-95' : ''}`;
+---
+
+<figure class="full-width-figure not-prose">
+  {hasLink ? (
+    <a data-pagefind-ignore 
+      href={href} 
+      target="_blank" 
+      rel="nofollow noopener noreferrer" 
+      title={title} 
+      class="block focus:outline-none rounded-lg overflow-hidden">
+      <img 
+        src={optimizedSrc} 
+        alt={alt} 
+        title={title} 
+        loading="lazy" 
+        fetchpriority="low" 
+        decoding="async" 
+        width={1200} 
+        height={630} 
+        onerror={`this.onerror=null; this.src='${IMAGE.thumbnail.placeholder}'`}
+        class={imageClass}
+       />
+    </a>
+  ) : (
+    <img 
+      src={optimizedSrc} 
+      alt={alt} 
+      title={title} 
+      loading="lazy" 
+      fetchpriority="low" 
+      decoding="async" 
+      width={1200} 
+      height={630} 
+      onerror={`this.onerror=null; this.src='${IMAGE.thumbnail.placeholder}'`}
+      class={imageClass} 
+    />
+  )}
+  {caption && 
+    <figcaption>
+      {caption}
+    </figcaption>
+  }
+</figure>
+
+<script>
+  let overlay: HTMLElement | null = null;
+  let lightboxImg: HTMLImageElement | null = null;
+
+  function createLightboxSingleton() {
+    let existingOverlay = document.getElementById('global-lightbox-overlay');
+    if (existingOverlay) return existingOverlay;
+
+    const node = document.createElement('div');
+    node.id = 'global-lightbox-overlay';
+    node.className = 'lightbox-overlay';
+    node.setAttribute('aria-hidden', 'true');
+    node.innerHTML = `
+      <button id="global-lightbox-close" class="lightbox-close p-2 rounded-full focus:outline-none" aria-label="Close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      <div class="lightbox-zoom-container">
+        <img id="global-lightbox-image" src="" alt="" class="lightbox-image" />
+      </div>
+    `;
+    document.body.appendChild(node);
+    return node;
+  }
+
+  const openLightbox = (src: string, alt: string) => {
+    if (!overlay || !lightboxImg) return;
+    lightboxImg.src = src;
+    lightboxImg.alt = alt;
+    overlay.classList.add('active');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeLightbox = () => {
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  };
+
+  function setupLightboxEngine() {
+    overlay = createLightboxSingleton();
+    lightboxImg = overlay.querySelector('#global-lightbox-image') as HTMLImageElement;
+    const closeBtn = overlay.querySelector('#global-lightbox-close') as HTMLButtonElement;
+
+    if (!overlay || !lightboxImg || !closeBtn) return;
+
+    closeBtn.onclick = closeLightbox;
+    overlay.onclick = (e) => { if (e.target === overlay) closeLightbox(); };
+    lightboxImg.onclick = closeLightbox;
+
+    document.querySelectorAll('.zoomable-image').forEach(img => {
+      (img as HTMLElement).onclick = (e) => {
+        const target = e.currentTarget as HTMLImageElement;
+        openLightbox(target.src, target.alt);
+      };
+    });
+  }
+
+  document.addEventListener('astro:page-load', setupLightboxEngine);
+  if (document.readyState !== 'loading') setupLightboxEngine();
+
+  document.onkeydown = (e) => {
+    if (e.key === 'Escape' && overlay?.classList.contains('active')) closeLightbox();
+  };
+</script>

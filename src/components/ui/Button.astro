@@ -1,0 +1,222 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import Spinner from './Spinner.astro';
+
+type ButtonVariant =
+  | 'accent'
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'ghost'
+  | 'danger'
+  | 'icon';
+
+type ButtonSize = 
+  'sm' | 
+  'md' | 
+  'lg';
+
+export interface Props extends HTMLAttributes<'button'> {
+  href?: string;
+  target?: HTMLAttributes<'a'>['target'];
+  rel?: HTMLAttributes<'a'>['rel'];
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  prefix?: any;
+  suffix?: any;
+  loading?: boolean;
+  loadingText?: string;
+  block?: boolean;
+  class?: string;
+  thisIcon?: boolean;
+}
+
+const {
+  href,
+  target,
+  rel,
+  variant = 'primary',
+  size = 'md',
+  prefix,
+  suffix,
+  loading = false,
+  loadingText,
+  block = false,
+  class: className = '',
+  thisIcon = false,
+  ...props
+} = Astro.props;
+
+const isLink = !!href;
+const isDisabled = loading || (props as any).disabled;
+const isIconOnly = variant === 'icon';
+
+const baseClasses = [
+  'inline-flex items-center rounded shrink-0 ring-1',
+  'font-medium whitespace-nowrap',
+  'transition-opacity duration-(--duration)',
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent-ring)',
+  'disabled:opacity-50 disabled:pointer-events-none'
+].join(" ");
+
+const variantClasses: Record<ButtonVariant, string> = {
+  accent: [
+    'bg-(--accent) text-(--accent-fg) ring-transparent',
+    'hover:opacity-60 active:opacity-60'
+  ].join(" "),
+
+  primary: [
+    'bg-(--fg-strong) text-(--fg-inverted)! ring-transparent',
+    'hover:opacity-60 active:opacity-60'
+  ].join(" "),
+
+  secondary: [
+    'bg-(--bg-subtle) text-(--fg) ring-(--border-subtle)',
+    'hover:bg-(--bg-muted)/80 active:bg-(--bg-muted)/80'
+  ].join(" "),
+
+  outline: [
+    'ring-(--border-subtle) text-(--fg)',
+    'hover:bg-(--bg-muted)/60 active:bg-(--bg-muted)/60'
+  ].join(" "),
+
+  ghost: [
+    'bg-transparent text-(--fg-muted) ring-transparent',
+    'hover:bg-(--bg-muted)/80 hover:text-(--fg)',
+    'active:bg-(--bg-muted)/80 active:text-(--fg)'
+  ].join(" "),
+
+  danger: [
+    'bg-(--error) text-(--error-fg) ring-transparent',
+    'hover:opacity-90 active:opacity-90'
+  ].join(" "),
+
+  icon: [
+    'text-(--fg-muted) ring-transparent',
+    'hover:bg-(--bg-muted) hover:text-(--fg)',
+    'active:bg-(--bg-muted) active:text-(--fg)',
+  ].join(" ")
+};
+
+const sizeClasses: Record<ButtonSize, string> = {
+  sm: [
+    'h-6 px-2 text-button-13 gap-1.5',
+  ].join(" "),
+
+  md: [
+    'h-8 px-3 text-button-14 gap-2',
+  ].join(" "),
+
+  lg: [
+    'h-10 px-4 text-button-16 gap-3',
+  ].join(" ")
+};
+
+const iconSizeClasses: Record<ButtonSize, string> = {
+  sm: [
+    'size-6'
+  ].join(" "),
+
+  md: [
+    'size-8'
+  ].join(" "),
+
+  lg: [
+    'size-10'
+  ].join(" ")
+};
+
+const sizeClass = isIconOnly ? iconSizeClasses[size] : sizeClasses[size];
+
+const hasDecorators = !!prefix || !!suffix || loading;
+
+const alignmentClass = block 
+  ? (hasDecorators ? 'w-full justify-start' : 'w-full justify-center') 
+  : 'justify-center';
+
+const classes = [
+  baseClasses,
+  variantClasses[variant],
+  sizeClass,
+  alignmentClass,
+  loading && 'opacity-80 pointer-events-none',
+  isIconOnly && 'aspect-square',
+  className,
+].filter(Boolean).join(' ');
+
+  const textContainerClasses = [
+  "inline-flex items-center shrink-0 gap-1.5",
+  block && hasDecorators ? "flex-1 justify-start text-start" : "justify-center text-center"
+].join(" ");
+---
+
+{
+  isLink ? (
+    <a
+      href={href}
+      target={target}
+      rel={rel}
+      class={classes}
+      aria-busy={loading || undefined}
+      aria-disabled={isDisabled ? 'true' : undefined}
+      {...(props as HTMLAttributes<'a'>)}
+    >
+      {loading && 
+        <Spinner size="sm" class="inline-block items-center shrink-0" />
+      }
+      {prefix && 
+        <span class="inline-block items-center shrink-0">
+          {prefix}
+        </span>
+      }
+      {!thisIcon && (
+        <span class={textContainerClasses}>
+          {loading ? loadingText : <slot />}
+        </span>
+      )}
+      {thisIcon && 
+        <span class="inline-block items-center shrink-0">
+          <slot />
+        </span>
+      }
+      {suffix && 
+        <span class="inline-block items-center shrink-0 ml-auto">
+          {suffix}
+        </span>
+      }
+    </a>
+  ) : (
+    <button
+      type={(props as any).type || 'button'}
+      disabled={isDisabled}
+      class={classes}
+      aria-busy={loading || undefined}
+      aria-disabled={isDisabled ? 'true' : undefined}
+      {...(props as HTMLAttributes<'button'>)}
+    >
+      {loading && 
+        <Spinner size="sm" class="inline-block items-center shrink-0" />
+      }
+      {prefix && 
+        <span class="inline-block items-center shrink-0">
+          {prefix}
+        </span>
+      }
+      {!thisIcon && (
+        <span class={textContainerClasses}>
+          {loading ? loadingText : <slot />}
+        </span>
+      )}
+      {thisIcon && 
+        <span class="inline-block items-center shrink-0">
+          <slot />
+        </span>
+      }
+      {suffix && 
+        <span class="inline-block items-center shrink-0 ml-auto">
+          {suffix}
+        </span>
+      }
+    </button>
+  )
+}

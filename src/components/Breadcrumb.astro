@@ -1,0 +1,42 @@
+---
+// src/components/ui/Breadcrumb.astro
+import Icon from "./ui/Icons.astro";
+
+interface BreadcrumbItem {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+  separator?: "chevron" | "slash" | "arrow";
+  class?: string;
+}
+
+const { items, separator = "chevron", class: className } = Astro.props;
+
+const separators = {
+  chevron: "chevron-right",
+  slash: "slash",
+  arrow: "arrow-right",
+};
+---
+
+{items.length > 0 && (
+  <nav aria-label="Breadcrumb" class:list={["flex items-center gap-2 text-sm text-(--fg-muted)", className]}>
+    {items.map((item, index) => (
+      <span class="flex items-center gap-2">
+        {index > 0 && (
+          <Icon name={separators[separator] as any} class="h-4 w-4 shrink-0 items-center" />
+        )}
+        {index === items.length - 1 ? (
+          <span data-pagefind-filter="category" class="font-medium text-(--fg-strong)">{item.label}</span>
+        ) : (
+          <a data-pagefind-meta="category" data-pagefind-filter="category" href={item.href} class="hover:text-(--fg-strong) transition-opacity">
+            {item.label}
+          </a>
+        )}
+      </span>
+    ))}
+  </nav>
+)}

@@ -1,0 +1,114 @@
+---
+
+import { 
+  SITE,
+  IMAGE
+} from "@/consts"
+
+import {
+  formatDate,
+  getReadingTime,
+} from "@lib/utils";
+
+import Breadcrumb from "@components/Breadcrumb.astro";
+import ActionShare from "@components/ActionShare.astro";
+import { Image } from "astro:assets";
+
+interface Props {
+  title: string;
+  description?: string;
+  cover?: {
+    src: string;
+    alt: string;
+  };
+  pubDate?: Date;
+  content?: string;
+  author: {
+    name: string;
+    role?: string;
+    avatar?: string;
+  };
+  breadcrumb?: {
+    label: string;
+    href: string;
+  }[];
+}
+
+const {
+  title,
+  description,
+  cover,
+  pubDate,
+  content = "",
+  author,
+  breadcrumb = [],
+} = Astro.props;
+
+const HeroImage = {
+ src: cover?.src,
+ alt: cover?.alt ?? title,
+ width: IMAGE.thumbnail.width,
+ height: IMAGE.thumbnail.height
+}
+
+const Author = {
+  name: author.name ?? SITE.name
+}
+
+const readingTime = getReadingTime(content);
+
+const Header = "space-y-6";
+const Cover = "prose overflow-hidden";
+const CoverImage = "aspect-video w-full h-auto object-cover";
+const Title = "text-heading-32 md:text-heading-40 font-semibold tracking-tight leading-tight text-balance text-(--fg-strong)";
+const Description = "max-w-3xl text-body-16 leading-relaxed text-(--fg-muted)/80";
+const Meta = "flex flex-wrap items-center gap-2 text-body-14 text-(--fg-muted)";
+const Item = "inline-flex items-center gap-1.5";
+const Divider = "text-(--fg-muted)/50";
+---
+
+<header data-pagefind-ignore class={Header}>
+  <div class="flex items-center justify-between gap-4">
+    {breadcrumb.length > 0 && (
+      <Breadcrumb items={breadcrumb} separator="chevron" />
+    )}
+    <ActionShare />
+  </div>
+  <div class="space-y-4">
+    <div class={Meta}>
+      <span class={Item}>
+        <span class="text-(--fg-muted)">Ditulis oleh </span>
+        <span data-pagefind-meta="author" class="text-(--fg-strong)">{Author.name}</span>
+      </span>
+    </div>
+    <h1 data-pagefind-meta="title" class={Title}>{title}</h1>
+    <div class={Meta}>
+      {pubDate && (
+        <p class={Item}>
+          <time data-pagefind-meta="date" data-pagefind-sort="date" datetime={pubDate.toISOString()}>
+            {formatDate(pubDate)}
+          </time>
+        </p>
+      )}
+      <span aria-hidden="true" class={Divider}>/</span>
+      <span class={Item}>{readingTime}</span>
+    </div>
+    <p data-pagefind-meta="description" class={Description}>{description}</p>
+    {cover && (
+      <figure class={Cover}>
+        <img
+          data-pagefind-meta="image[src], image_alt[alt]"
+          src={HeroImage.src}
+          alt={HeroImage.alt}
+          class={CoverImage}
+          width={HeroImage.width}
+          height={HeroImage.height}
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+          onerror={`this.onerror=null; this.src='${IMAGE.thumbnail.placeholder}'`}
+        />
+      </figure>
+    )}
+  </div>
+</header>

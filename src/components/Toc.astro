@@ -1,0 +1,176 @@
+---
+import Icon from '@ui/Icons.astro';
+
+interface Heading {
+  depth: number;
+  text: string;
+  slug: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+
+{
+  filteredHeadings.length > 0 && (
+    <div class="toc-wrapper group relative">
+      <div class="toc-dots flex flex-col items-center gap-2 py-4 transition-opacity duration-200 group-hover:opacity-0">
+        {filteredHeadings.map((h) => (
+          <div
+            data-toc-dot={h.slug}
+            class="toc-dot h-0.5 w-4 rounded-full transition-opacity duration-200 bg-(--border)"
+          />
+        ))}
+      </div>
+      <div class="toc-popup pointer-events-none absolute top-1/2 right-0 w-72 translate-x-2 -translate-y-1/2 rounded-md border border-(--border) bg-(--bg) opacity-0 transition-all duration-200 group-focus-within:pointer-events-auto group-focus-within:translate-x-0 group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:translate-x-0 group-hover:opacity-100">
+        <div class="inline-flex w-full shrink-0 items-center justify-center gap-1.5 px-4 py-2 text-(--fg-muted)">
+          <span class="inline-flex shrink-0 items-center justify-center w-4 h-4">
+            <Icon name='toc' class='w-full h-full' />
+          </span>
+          <span class="inline-flex flex-1 shrink-0 items-center text-sm font-medium">On this page</span>
+        </div>
+        <nav class="toc-nav max-h-[60vh] overflow-y-auto p-2">
+          <ul class="relative space-y-1" id="toc-list">
+            {filteredHeadings.map((h) => {
+              const isSub = h.depth === 3;
+              return (
+                <li>
+                  <a
+                    href={`#${h.slug}`}
+                    data-toc-link={h.slug}
+                    data-depth={h.depth}
+                    class:list={[
+                      "toc-link flex items-center justify-end py-2 text-right text-sm font-medium transition-colors duration-200",
+                      "hover:text-(--fg-strong)",
+                      "pl-3",
+                      isSub ? "pr-3" : "pr-3",
+                      "text-(--fg-subtle)",
+                    ]}
+                  >
+                    <span class="toc-text truncate items-center">{h.text}</span>
+                    <span class="toc-marker text-(--fg-subtle) transition-colors duration-200 ml-2 shrink-0 items-center">
+                      —
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  )
+}
+
+<style is:global>
+  .toc-nav {
+    mask-image: linear-gradient(to bottom, var(--bg) 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, var(--bg) 85%, transparent 100%);
+  }
+
+  .toc-dot.active {
+    background-color: var(--accent);
+  }
+
+  .toc-link.active {
+    color: var(--accent);
+  }
+
+  .toc-link.active .toc-marker {
+    color: var(--accent);
+  }
+
+  .toc-popup {
+    transition: opacity 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+</style>
+
+<script>
+  (() => {
+    const initToc = () => {
+      const links = document.querySelectorAll<HTMLElement>("[data-toc-link]");
+      const dots = document.querySelectorAll<HTMLElement>("[data-toc-dot]");
+      if (!links.length) return;
+
+      const slugs = Array.from(links).map((el) => el.dataset.tocLink!);
+      const targets = slugs
+        .map((slug) => document.getElementById(slug))
+        .filter((el): el is HTMLElement => el !== null);
+
+      if (!targets.length) return;
+
+      let active = "";
+
+      const updateActive = () => {
+        const headerHeight = document.querySelector("header")?.offsetHeight ?? 64;
+        const threshold = headerHeight + 56;
+
+        let current = "";
+        for (const el of targets) {
+          if (el.getBoundingClientRect().top <= threshold) {
+            current = el.id;
+          } else {
+            break;
+          }
+        }
+
+        if (window.scrollY < 100) {
+          current = "";
+        }
+
+        if (current !== active) {
+          active = current;
+
+          links.forEach((link) => {
+            const isActive = link.dataset.tocLink === active;
+            link.classList.toggle("active", isActive);
+          });
+
+          dots.forEach((dot) => {
+            const isActive = dot.dataset.tocDot === active;
+            dot.classList.toggle("active", isActive);
+          });
+        }
+      };
+      
+
+      updateActive();
+      window.addEventListener("scroll", updateActive, { passive: true });
+
+      links.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+
+          const slug = link.dataset.tocLink;
+          if (!slug) return;
+
+          const target = document.getElementById(slug);
+          if (!target) return;
+
+          target.scrollIntoView({
+            behavior: "instant",
+            block: "start",
+          });
+
+          if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+          }
+          link.blur();
+        });
+      });
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initToc);
+    } else {
+      initToc();
+    }
+
+    document.addEventListener("astro:page-load", initToc);
+  })();
+</script>

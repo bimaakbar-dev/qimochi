@@ -1,0 +1,24 @@
+---
+import { NAV } from "@/consts";
+
+const currentPath = Astro.url.pathname;
+---
+<nav class="text-label-14 hidden items-center gap-6 font-medium sm:flex">
+    {
+        NAV.navBar.map((item) => (
+            <a
+                href={item.href}
+                class:list={[
+                  "transition-opacity",
+                  currentPath === item.href
+                    ? "text-(--fg-strong)"
+                    : "text-(--fg-muted) hover:text-(--fg)",
+                ]}
+                target={item.isExternal ? "_blank" : undefined}
+                rel={item.isExternal ? "noopener noreferrer" : undefined}
+            >
+                {item.label}
+            </a>
+        ))
+    }
+</nav>

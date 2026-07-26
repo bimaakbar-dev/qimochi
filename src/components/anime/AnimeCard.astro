@@ -1,0 +1,66 @@
+---
+import { IMAGE } from '@/consts';
+import type { CollectionEntry } from 'astro:content';
+import Card from '../ui/Card.astro';
+import Badge from '../ui/Badge.astro';
+
+export interface Props {
+  entry: CollectionEntry<'anime'>;
+  class?: string;
+}
+
+const { entry } = Astro.props;
+const { data, id } = entry;
+const animeSlug = data.slug?? id;
+const poster = data.poster?.src;
+const posterAlt = data.poster?.alt?? data.title;
+
+const $ = {
+  wrapper: "overflow-hidden group hover:ring-(--accent)/80 active:ring-(--accent)/80 transition-opacity duration-(--duration)",
+  coverWrapper: "relative aspect-2/3 overflow-hidden",
+  cover: "w-full h-full object-cover",
+  status: "absolute top-2 left-2 text-xs font-semibold backdrop-blur text-(--fg-strong)",
+  rating: "absolute top-2 right-2 text-xs font-semibold",
+  bodyWrapper: "flex flex-col p-3",
+  title: "font-semibold text-heading-14 flex-1 truncate",
+  metaWrapper: "flex flex-wrap gap-1.5 mt-auto",
+}
+---
+
+<a href={`/anime/${animeSlug}`}>
+  <Card padding='none' radius='sm' variant='secondary' class={$.wrapper}>
+    <div class={$.coverWrapper}>
+      <img
+        src={poster}
+        alt={posterAlt}
+        width={IMAGE.thumbnail.width}
+        height={IMAGE.thumbnail.height}
+        loading="lazy"
+        decoding="async"
+        fetchpriority="high"
+        onerror={`this.onerror=null; this.src='${IMAGE.thumbnail.placeholder}'`}
+        class={$.cover}
+      />
+      {data.types && (
+        <Badge variant='accent' class={$.status}>
+          {data.types}
+        </Badge>
+      )}
+      {data.rating && (
+        <Badge variant='warning' class={$.rating}>
+          ★ {data.rating.toFixed(1)}
+        </Badge>
+      )}
+    </div>
+    <div class={$.bodyWrapper}>
+      <h3 class={$.title}>{data.title}</h3>
+      {data.genres && data.genres.length > 0 && (
+        <div class={$.metaWrapper}>
+          {data.genres.slice(0, 3).map((g) => (
+            <span class="text-xs text-(--fg-muted)">{g}</span>
+          ))}
+        </div>
+      )}
+    </div>
+  </Card>
+</a>

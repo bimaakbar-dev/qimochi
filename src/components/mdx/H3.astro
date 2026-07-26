@@ -1,0 +1,7 @@
+---
+import HeadingBase from "./Heading.astro";
+
+const props = Astro.props || {};
+---
+
+<HeadingBase level={3} {...props}><slot /></HeadingBase>

@@ -1,0 +1,114 @@
+---
+import Icon from "@/components/ui/Icons.astro";
+import Button from "@/components/ui/Button.astro";
+
+interface Props {
+  title: string;
+  message: string;
+  icon?: string;
+  actionLabel?: string;
+  actionHref?: string;
+}
+
+const {
+  title,
+  message,
+  icon = "logo",
+  actionLabel = "",
+  actionHref = "",
+} = Astro.props;
+---
+
+<div role="alert" class="relative z-40 h-12 w-full items-center justify-between gap-4 overflow-hidden border-y border-(--border-subtle)/80 bg-(--bg) px-4">
+  <span aria-hidden="true" class="pointer-events-none absolute inset-0">
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/70"
+      style="left:1%;top:30%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/50"
+      style="left:3%;top:70%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/60"
+      style="left:5%;top:22%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/45"
+      style="left:7%;top:58%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/55"
+      style="left:9%;top:84%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/50"
+      style="left:12%;top:36%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/60"
+      style="left:15%;top:18%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/40"
+      style="left:18%;top:64%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/50"
+      style="left:21%;top:80%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/55"
+      style="left:24%;top:28%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/55"
+      style="left:76%;top:24%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/50"
+      style="left:79%;top:76%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/60"
+      style="left:82%;top:40%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/45"
+      style="left:85%;top:60%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/50"
+      style="left:88%;top:18%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/60"
+      style="left:91%;top:82%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/55"
+      style="left:94%;top:32%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/45"
+      style="left:96%;top:66%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/50"
+      style="left:98%;top:24%"></span>
+    <span
+      class="absolute size-px rounded-full bg-(--fg-strong)/60"
+      style="left:99%;top:78%"></span>
+  </span>
+  <div class="flex h-full items-center justify-center gap-3">
+    <div class="flex shrink-0 items-center gap-2 text-(--fg-strong)">
+      <span
+        class="inline-flex h-3.5 w-3.5 shrink-0 items-center sm:h-4.5 sm:w-4.5"
+      >
+        <Icon name={icon as any} class="h-full w-full" />
+      </span>
+      <span
+        class="text-label-14 font-mono font-medium text-(--fg-strong) uppercase"
+        >{title}</span
+      >
+    </div>
+    <span class="text-body-14 hidden items-center gap-2 font-mono font-medium whitespace-nowrap text-(--fg) uppercase min-[767px]:inline-flex">
+      <Icon name="tally" class="h-5 w-5 text-(--fg-subtle)" />
+      {message}
+    </span>
+    <Icon name="tally" class="h-5 w-5 text-(--fg-subtle)" />
+    <Button
+      href={actionHref}
+      aria-label={actionLabel}
+      variant="secondary"
+      size="sm"
+      class="rounded-full!"
+      suffix={<Icon slot="icon-right" name="arrow-right" class="h-4 w-4" />}
+    >
+      {actionLabel}
+      
+    </Button>
+  </div>
+</div>

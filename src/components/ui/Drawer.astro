@@ -1,0 +1,165 @@
+---
+// src/components/ui/Drawer.astro
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+
+const $ = {
+  wrapper: "drawer-root fixed inset-0 z-80 hidden items-end justify-center",
+  overlay: "absolute inset-0 bg-(--bg)/40 backdrop-blur-sm transition-opacity duration-(--duration-fast) ease-(--ease-out) opacity-0",
+  drawer: "relative flex h-[70vh] w-full flex-col rounded-t-2xl border-t border-(--border-subtle) bg-(--bg) shadow-2xl transition-transform duration-(--duration) ease-[cubic-bezier(0.32,0.94,0.6,1)] translate-y-full will-change-transform",
+  headerDrawer: "flex w-full cursor-grab items-center justify-center pb-4 pt-3 touch-none select-none active:cursor-grabbing",
+  handleDrawer: "h-1.5 w-12 rounded-full bg-(--border-strong) opacity-60",
+  content: "flex flex-1 flex-col overflow-y-auto px-2 pt-4 pb-(--safe-bottom) overscroll-contain"
+}
+---
+
+<div id={id} class={$.wrapper} data-drawer>
+  <div data-drawer-backdrop class={$.overlay}></div>
+  <aside data-drawer-panel class={$.drawer}>
+    <div data-drag-handle class={$.headerDrawer}>
+      <div class={$.handleDrawer}></div>
+    </div>
+    <div data-drawer-content class={$.content}>
+      <slot />
+    </div>
+  </aside>
+</div>
+
+<script>
+  const initDrawers = () => {
+    const triggers = document.querySelectorAll('[data-drawer-trigger]');
+    const mainWrapper = document.querySelector('main') || document.body.firstElementChild as HTMLElement;
+    
+    if (mainWrapper) {
+      mainWrapper.style.transition = 'transform 0.4s cubic-bezier(0.32, 0.94, 0.6, 1), border-radius 0.4s ease';
+      mainWrapper.style.transformOrigin = 'center top';
+    }
+
+    const openDrawer = (drawer: HTMLElement) => {
+      const backdrop = drawer.querySelector('[data-drawer-backdrop]') as HTMLElement;
+      const panel = drawer.querySelector('[data-drawer-panel]') as HTMLElement;
+
+      drawer.classList.remove("hidden");
+      drawer.classList.add("flex");
+
+      requestAnimationFrame(() => {
+        backdrop.classList.remove("opacity-0");
+        panel.classList.remove("translate-y-full");
+
+        if (mainWrapper && window.innerWidth > 640) {
+          mainWrapper.style.transform = 'scale(0.96) translateY(12px)';
+          mainWrapper.style.borderRadius = '12px';
+        }
+      });
+      document.body.style.overflow = "hidden";
+    };
+
+    const closeDrawer = (drawer: HTMLElement) => {
+      const backdrop = drawer.querySelector('[data-drawer-backdrop]') as HTMLElement;
+      const panel = drawer.querySelector('[data-drawer-panel]') as HTMLElement;
+
+      backdrop.classList.add("opacity-0");
+      panel.classList.add("translate-y-full");
+      panel.style.transform = '';
+      
+      if (mainWrapper) {
+        mainWrapper.style.transform = '';
+        mainWrapper.style.borderRadius = '';
+      }
+
+      setTimeout(() => {
+        drawer.classList.add("hidden");
+        drawer.classList.remove("flex");
+        document.body.style.overflow = "";
+      }, 300);
+    };
+
+    triggers.forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const targetId = trigger.getAttribute('data-drawer-trigger');
+        const drawer = document.getElementById(targetId || "");
+        if (drawer) openDrawer(drawer);
+      });
+    });
+
+    document.querySelectorAll('[data-drawer]').forEach(drawer => {
+      const drawerEl = drawer as HTMLElement;
+      const backdrop = drawer.querySelector('[data-drawer-backdrop]') as HTMLElement;
+      const panel = drawer.querySelector('[data-drawer-panel]') as HTMLElement;
+      const handle = drawer.querySelector('[data-drag-handle]') as HTMLElement; // Ambil elemen handle atas
+
+      let startY = 0;
+      let isDragging = false;
+
+      const handleStart = (clientY: number) => {
+        startY = clientY;
+        isDragging = true;
+        panel.style.transition = 'none';
+        if (backdrop) backdrop.style.transition = 'none';
+      };
+
+      const handleMove = (clientY: number) => {
+        if (!isDragging) return;
+        const deltaY = clientY - startY;
+
+        if (deltaY < 0) {
+          const resistance = Math.pow(Math.abs(deltaY), 0.75);
+          panel.style.transform = `translateY(${-resistance}px)`;
+        } else {
+          panel.style.transform = `translateY(${deltaY}px)`;
+          if (backdrop) {
+            const opacity = Math.max(0, 1 - (deltaY / panel.offsetHeight));
+            backdrop.style.opacity = opacity.toString();
+          }
+        }
+      };
+
+      const handleEnd = (clientY: number) => {
+        if (!isDragging) return;
+        isDragging = false;
+        panel.style.transition = '';
+        if (backdrop) backdrop.style.transition = '';
+
+        const deltaY = clientY - startY;
+        if (deltaY > 120) {
+          closeDrawer(drawerEl);
+        } else {
+          panel.style.transform = 'translateY(0)';
+          if (backdrop) backdrop.style.opacity = '1';
+        }
+      };
+
+      handle.addEventListener('touchstart', (e) => {
+        handleStart(e.touches[0].clientY);
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        handleMove(e.touches[0].clientY);
+      }, { passive: true });
+
+      window.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+        handleEnd(e.changedTouches[0].clientY);
+      });
+
+      handle.addEventListener('mousedown', (e) => {
+        handleStart(e.clientY);
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        handleMove(e.clientY);
+      });
+
+      window.addEventListener('mouseup', (e) => {
+        handleEnd(e.clientY);
+      });
+
+      backdrop.addEventListener('click', () => closeDrawer(drawerEl));
+    });
+  };
+
+  initDrawers();
+</script>

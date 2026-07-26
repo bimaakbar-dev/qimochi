@@ -1,0 +1,21 @@
+---
+// src/components/ui/Container.astro
+interface Props {
+  size?: "sm" | "md" | "lg" | "xl" | "full";
+  class?: string;
+}
+
+const { size = "lg", class: className = "" } = Astro.props;
+
+const sizeClasses = {
+  sm: "max-w-2xl",
+  md: "max-w-3xl",
+  lg: "max-w-5xl",
+  xl: "max-w-7xl",
+  full: "max-w-full",
+};
+---
+
+<div class:list={["mx-auto w-full px-4", sizeClasses[size], className]}>
+  <slot />
+</div>

@@ -1,0 +1,165 @@
+---
+interface Props {
+  id?: string;
+  class?: string;
+  level: number;
+}
+
+const { id, class: className, level } = (Astro.props || {}) as Props;
+const Tag = `h${level}` as any;
+
+const anchorLabel = "Link to this heading";
+
+const headingClasses: Record<string, string> = {
+  h1: "text-heading-32 md:text-heading-48 lg:text-heading-56",
+  h2: "text-heading-24 md:text-heading-32",
+  h3: "text-heading-20 md:text-heading-24",
+  h4: "text-heading-16 md:text-heading-20",
+  h5: "text-label-14",
+  h6: "text-label-12",
+};
+const classes = headingClasses[`h${level}`] || "text-heading-20";
+---
+
+<Tag
+  id={id}
+  class:list={[
+    "heading-group has-anchor",
+    classes,
+    className,
+  ]}
+>
+  <span class="heading-text-wrapper">
+    <slot />
+    {id && (level === 2 || level === 3) && (
+      <a
+        href={`#${id}`}
+        data-pagefind-ignore
+        aria-label={anchorLabel}
+        class="anchor-link"
+      />
+    )}
+  </span>
+</Tag>
+
+<style is:global>
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  .heading-group.has-anchor {}
+
+  .heading-text-wrapper {
+    display: inline;
+    cursor: pointer;
+    word-break: break-word;
+    padding: 0;
+    margin: 0;
+  }
+
+  .anchor-link {
+    display: inline-block;
+    vertical-align: middle;
+    width: 0.75em;
+    height: 0.75em;
+    margin-left: 0.35rem;
+    margin-top: 0;
+    margin-bottom: 0;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      color 0.15s ease;
+    text-decoration: none;
+    pointer-events: auto;
+    cursor: pointer;
+
+    color: var(--fg-muted);
+
+    background-color: currentColor;
+
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71' /%3E%3C/svg%3E");
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71' /%3E%3C/svg%3E");
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+  }
+
+  h3 .anchor-link {
+    width: 0.7em;
+    height: 0.7em;
+  }
+
+  @media (hover: hover) {
+    .heading-text-wrapper:hover .anchor-link {
+      opacity: 1;
+      transform: translateX(0);
+      color: var(--fg-muted);
+    }
+
+    .heading-text-wrapper .anchor-link:hover {
+      color: var(--accent);
+    }
+  }
+
+  @media (hover: none) {
+    .heading-group.is-tapped .anchor-link {
+      opacity: 1;
+      transform: translateX(0);
+      color: var(--fg-muted);
+    }
+
+    .heading-group.is-tapped .anchor-link:active {
+      color: var(--accent);
+    }
+  }
+</style>
+
+<script>
+  function initHeadingTap() {
+    if (window.matchMedia("(hover: hover)").matches) return;
+
+    document.querySelectorAll(".heading-text-wrapper").forEach((wrapper) => {
+      wrapper.addEventListener("click", (e) => {
+        const heading = wrapper.closest(".heading-group");
+        if (!heading) return;
+
+        const anchor = heading.querySelector(".anchor-link") as HTMLAnchorElement | null;
+        if (!anchor) return;
+
+        if (e.target instanceof Element && anchor.contains(e.target)) {
+          return;
+        }
+
+        e.preventDefault();
+
+        const isAlreadyTapped = heading.classList.contains("is-tapped");
+
+        document.querySelectorAll(".heading-group.is-tapped").forEach((el) => {
+          el.classList.remove("is-tapped");
+        });
+
+        if (!isAlreadyTapped) {
+          heading.classList.add("is-tapped");
+        }
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      const target = e.target as Node;
+      const clickedHeading = (target as Element).closest?.(".heading-group");
+      if (!clickedHeading) {
+        document.querySelectorAll(".heading-group.is-tapped").forEach((el) => {
+          el.classList.remove("is-tapped");
+        });
+      }
+    });
+  }
+
+  initHeadingTap();
+</script>

@@ -1,0 +1,39 @@
+---
+import { 
+  NAV 
+} from "@/consts";
+
+import Icon from "@ui/Icons.astro";
+import Button from "@ui/Button.astro";
+
+interface Props {
+  class?: string;
+}
+
+const { 
+    class: className = " " 
+} = Astro.props;
+
+const socials = NAV.Social || [];
+
+const $ = {
+    trigger: "relative items-center justify-center shrink-0 rounded-md  p-1.5",
+    iconSize: "size-5"
+}
+---
+
+{socials.map((item) => (
+    <Button
+        href={item.href}
+        target={item.isExternal ? "_blank" : undefined}
+        rel={item.isExternal ? "noopener noreferrer nofollow" : undefined}
+        variant="icon"
+        size="md"
+        thisIcon
+        aria-label={item.label}
+        class:list={[
+            $.trigger,
+            className]}>
+        <Icon name={item.icon as any} class={$.iconSize} />
+    </Button>
+))}

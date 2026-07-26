@@ -1,0 +1,173 @@
+---
+import Icon from "@ui/Icons.astro";
+
+interface Props {
+  label?: string;
+  class?: string;
+  rawMarkdown?: string;
+}
+
+const { 
+  label = "Copy Page", 
+  class: className, 
+  rawMarkdown = "" 
+} = Astro.props;
+
+const s = {
+  ActionWrapper: [
+    'copy-dropdown-wrapper',
+    'relative inline-flex items-stretch rounded ring-1 shadow-(--shadow-sm)',
+    'ring-(--border-subtle) bg-(--bg-subtle)',
+    'hover:shadow active:shadow',
+    'transition-shadow duration-(--duration)'
+  ].join(" "),
+
+  actionGroup: [
+    'flex items-center gap-1.5 text-button-13 md:text-button-14',
+    'hover:bg-(--bg-muted) active:bg-(--bg-muted)',
+    'transition-colors cursor-pointer'
+  ].join(" "),
+
+  actionDivider: "h-px bg-(--border-subtle) my-1.5 mx-1",
+
+  actionIcon: [
+    'relative inline-flex items-center justify-center shrink-0',
+    'size-4.5',
+  ].join(" "),
+
+  actionSuffix: 'relative inline-flex items-center justify-center shrink-0',
+
+  actionDropdown: [
+    'copy-menu',
+    'hidden absolute right-0 top-[calc(100%+0.5rem)] min-w-[12rem] z-50 rounded-md ring-1 p-1',
+    'ring-(--border-subtle) bg-(--bg-subtle) shadow-(--shadow-lg)',
+    'animate-in fade-in slide-in-from-top-2 origin-top-right',
+  ].join(" "),
+
+  actionDropdownItems: [
+    'flex items-center gap-2 p-2 text-button-13 md:text-button-14 text-start rounded w-full',
+    'text-(--fg) hover:bg-(--bg-muted) hover:text-(--fg-strong) active:bg-(--bg-muted) active:text-(--fg-muted)',
+    'cursor-pointer'
+  ].join(" "),
+}
+---
+
+<div class:list={[
+  s.ActionWrapper, 
+  className
+  ]}>
+  <template class="raw-markdown-data">{rawMarkdown}</template>
+  <button 
+    data-action="copy-default" 
+    aria-label="Copy page URL" 
+    class:list={[
+      "px-2 py-1.5",
+      "rounded-l-md",
+      s.actionGroup
+    ]}>
+    <div class:list={[
+      s.actionIcon
+    ]}>
+      <Icon name="copy" class="icon-copy w-full h-full text-(--fg-muted) hover:text-(--fg-strong) active:text-(--fg-strong)" />
+      <Icon name="check" class="icon-check w-full h-full hidden absolute inset-0 text-(--accent) transition-opacity duration-(--duration)" />
+    </div>
+    <span>{label}</span>
+  </button>
+  <button 
+    aria-label="More copy options" 
+    class:list={[
+      "copy-trigger",
+      "p-1.5",
+      "rounded-r-md border-l border-(--border-subtle)",
+      s.actionGroup
+    ]}>
+    <div class:list={[
+      s.actionIcon
+    ]}>
+      <Icon name="chevron-down" class="w-full h-full text-(--fg-muted) hover:text-(--fg-strong) active:text-(--fg-strong)" />
+    </div>
+  </button>
+
+  <div class={s.actionDropdown}>
+    <button data-action="url" class={s.actionDropdownItems}>
+      <Icon name="link" class={s.actionIcon} /> Copy as URL
+    </button>
+    <button data-action="markdown" class={s.actionDropdownItems}>
+      <Icon name="file" class={s.actionIcon} /> Copy as Markdown
+    </button>
+    <div class={s.actionDivider}></div>
+    <button data-action="agent" class={s.actionDropdownItems}>
+      <Icon name="ai-agent" class={s.actionIcon} /> Open in Agent
+    </button>
+  </div>
+</div>
+
+<script>
+  function setupCopyButton() {
+    document.querySelectorAll('.copy-dropdown-wrapper').forEach(wrapper => {
+      const primaryBtn = wrapper.querySelector('[data-action="copy-default"]');
+      const trigger = wrapper.querySelector('.copy-trigger');
+      const menu = wrapper.querySelector('.copy-menu');
+      const iconCopy = wrapper.querySelector('.icon-copy');
+      const iconCheck = wrapper.querySelector('.icon-check');
+      const template = wrapper.querySelector('.raw-markdown-data');
+
+      if (!primaryBtn || !trigger || !menu) return;
+
+      const showCheckmark = () => {
+        iconCopy?.classList.add('hidden');
+        iconCheck?.classList.remove('hidden');
+        setTimeout(() => {
+          iconCopy?.classList.remove('hidden');
+          iconCheck?.classList.add('hidden');
+        }, 2000);
+      };
+
+      primaryBtn.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(window.location.href);
+        showCheckmark();
+      });
+
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+
+        document.querySelectorAll('.copy-menu').forEach(m => {
+          if (m !== menu) m.classList.add('hidden');
+        });
+        menu.classList.toggle('hidden');
+      });
+
+      menu.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          menu.classList.add('hidden');
+          
+          const action = btn.getAttribute('data-action');
+          
+          if (action === 'url') {
+            await navigator.clipboard.writeText(window.location.href);
+            showCheckmark();
+          }
+          
+          if (action === 'markdown') {
+            const rawContent = template?.innerHTML || "";
+            if (rawContent) {
+              await navigator.clipboard.writeText(rawContent);
+              showCheckmark();
+            }
+          }
+          
+          if (action === 'agent') {
+            window.location.href = `/agent?page=${window.location.pathname}`;
+          }
+        });
+      });
+    });
+
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.copy-menu').forEach(m => m.classList.add('hidden'));
+    });
+  }
+
+  setupCopyButton();
+</script>

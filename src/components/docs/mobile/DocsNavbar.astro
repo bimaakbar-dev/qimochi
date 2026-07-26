@@ -1,0 +1,32 @@
+---
+// src/components/docs/mobile/DocsNavbar.astro
+import { NAV } from "@/consts";
+import Select from "@ui/Select.astro";
+
+const currentPath = Astro.url.pathname;
+
+const navItems = NAV.navBar.map((item) => ({
+  label: item.label,
+  value: item.label.toLowerCase(),
+  href: item.href,
+  icon: item.icon,
+  isExternal: item.isExternal,
+}));
+
+const activeNavItem = navItems.find((item) => {
+  if (item.href === "/") return currentPath === "/";
+  return currentPath.startsWith(item.href);
+});
+
+---
+
+<header>
+  <div class="flex flex-col gap-2 w-full px-2">
+    <Select 
+      size="md"
+      options={navItems} 
+      selectedValue={activeNavItem?.value} 
+      placeholder="Select Page"
+    />
+  </div>
+</header>

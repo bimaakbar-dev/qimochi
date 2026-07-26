@@ -1,0 +1,117 @@
+---
+import { fileIcons } from "@/assets/icons/file";
+
+const svg = fileIcons;
+const extIcons = fileIcons;
+
+const s = {
+  wrapper: 'my-6 md:my-8 rounded bg-(--bg-subtle) overflow-x-auto font-mono px-4 py-2 ring-1 ring-(--border-subtle)/60',
+  fileTree: 'file-tree text-code-14'
+}
+---
+
+<div class={s.wrapper}>
+  <div class={s.fileTree}>
+    <slot />
+  </div>
+</div>
+
+<script define:vars={{ svg, extIcons }}>
+  (() => {
+    function getIcon(filename) {
+      const ext = filename.split(".").pop()?.toLowerCase() || "";
+      return extIcons[ext] ?? svg.file;
+    }
+
+    const initFileTreeEngine = () => {
+      const trees = document.querySelectorAll(".file-tree:not(.is-processed)");
+
+      trees.forEach((root) => {
+        root.classList.add("is-processed");
+
+        function processList(list) {
+          list.classList.add("file-tree-list");
+
+          for (const item of Array.from(list.children)) {
+            if (!(item instanceof HTMLLIElement)) continue;
+
+            const contentWrapper = document.createElement('div');
+            const childNodesToRemove = [];
+
+            for (const node of item.childNodes) {
+              if (node.nodeName === "UL" || node.nodeName === "OL") break;
+              contentWrapper.appendChild(node.cloneNode(true));
+              childNodesToRemove.push(node);
+            }
+
+            const rawHTML = contentWrapper.innerHTML.trim();
+            const plainText = contentWrapper.textContent.trim();
+            const isMarked = rawHTML.includes('<mark>');
+            
+            if (!plainText) continue;
+
+            const isFolder = plainText.endsWith("/");
+            const finalHTML = isFolder ? rawHTML.replace(/\/$/, '') : rawHTML;
+            childNodesToRemove.forEach((n) => n.remove());
+
+            if (isFolder) {
+              const details = document.createElement("details");
+              details.className = "file-tree-folder open";
+              details.open = true;
+
+              const summary = document.createElement("summary");
+              summary.className = "file-tree-label";
+              if (isMarked) summary.classList.add("is-marked");
+
+              const iconSpan = document.createElement("span");
+              iconSpan.className = "icon folder-icon";
+              iconSpan.innerHTML = svg["folder-open"];
+              
+              const nameSpan = document.createElement("span");
+              nameSpan.className = "file-name";
+              nameSpan.innerHTML = finalHTML;
+
+              summary.append(iconSpan, nameSpan);
+              details.appendChild(summary);
+
+              details.addEventListener("toggle", () => {
+                const iconEl = summary.querySelector(".folder-icon");
+                if (iconEl) iconEl.innerHTML = details.open ? (svg["folder-open"] || svg.folder) : svg.folder;
+              });
+
+              const subList = item.querySelector("ul, ol");
+              if (subList) {
+                const div = document.createElement("div");
+                div.className = "file-tree-children";
+                div.appendChild(subList);
+                details.appendChild(div);
+              }
+              item.appendChild(details);
+            } else {
+              item.classList.add("file-tree-file");
+              item.replaceChildren();
+
+              const labelDiv = document.createElement("div");
+              labelDiv.className = "file-tree-label";
+              if (isMarked) labelDiv.classList.add("is-marked");
+
+              const iconSpan = document.createElement("span");
+              iconSpan.className = "icon file-icon";
+              iconSpan.innerHTML = getIcon(plainText);
+
+              const nameSpan = document.createElement("span");
+              nameSpan.className = "file-name";
+              nameSpan.innerHTML = finalHTML;
+
+              labelDiv.append(iconSpan, nameSpan);
+              item.appendChild(labelDiv);
+            }
+          }
+        }
+        root.querySelectorAll("ul, ol").forEach(processList);
+      });
+    };
+
+    initFileTreeEngine();
+  })();
+</script>

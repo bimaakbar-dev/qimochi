@@ -1,0 +1,8 @@
+---
+// src/components/mdx/H1.astro
+import HeadingBase from "./Heading.astro";
+
+const props = Astro.props || {};
+---
+
+<HeadingBase level={1} {...props}><slot /></HeadingBase>

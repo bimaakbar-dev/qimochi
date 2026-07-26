@@ -1,0 +1,66 @@
+---
+// src/components/SearchBar.astro
+import Icon from "./Icons.astro";
+import Button from "./Button.astro";
+
+interface Props {
+  iconOnly?: boolean;
+  class?: string;
+}
+
+const { 
+  iconOnly = false,
+  class: className= ""
+} = Astro.props;
+---
+{iconOnly && (
+  <Button 
+    data-search-trigger
+    aria-label="Buka pencarian"
+    variant="icon"
+    size="md"
+    thisIcon>
+    <Icon name="search" fill class="h-5 w-5"
+    />
+  </Button>
+)}
+{!iconOnly && (
+  <Button
+    data-search-trigger
+    aria-label="Buka pencarian"
+    variant="outline"
+    size="md"
+    class:list={[
+      "group flex items-center text-(--fg-muted) justify-between w-auto rounded-md! px-2",
+      className
+    ]}
+    prefix={<Icon name="search" fill class="h-4 w-4" />}
+    suffix={
+      <div class="hidden items-center gap-1 font-mono text-[10px] font-medium text-(--fg-muted) transition-colors group-hover:text-(--fg) lg:flex select-none pointer-events-none">
+        <kbd class="flex h-5 items-center justify-center rounded border border-(--border-subtle) bg-(--bg-muted) px-1.5 min-w-5 shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
+          Ctrl
+        </kbd>
+        <kbd class="flex h-5 items-center justify-center rounded border border-(--border-subtle) bg-(--bg-muted) px-1.5 min-w-5 shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
+          K
+        </kbd>
+      </div>
+    }>
+    Cari...
+  </Button>
+)}
+
+<script>
+  (() => {
+    const initSearchTrigger = () => {
+      const triggers = document.querySelectorAll("[data-search-trigger]");
+      
+      triggers.forEach((trigger) => {
+        trigger.addEventListener("click", (e) => {
+          e.preventDefault();
+          document.dispatchEvent(new CustomEvent("open-search"));
+        });
+      });
+    };
+    initSearchTrigger();
+  })();
+</script>

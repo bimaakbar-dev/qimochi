@@ -1,0 +1,22 @@
+---
+interface Props {
+  id?: string;
+  class?: string;
+}
+
+const { 
+  id, 
+  class: className = '' 
+} = Astro.props;
+
+const $ = {
+  baseClass: "flex h-screen w-full flex-col py-2 flex-1 scrollbar-hide"
+}
+---
+
+<div id={id} class:list={[
+  $.baseClass,
+  className
+]}>
+  <slot />
+</div>

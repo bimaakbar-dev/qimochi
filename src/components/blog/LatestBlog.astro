@@ -1,0 +1,24 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BlogCard from './BlogCard.astro';
+
+export interface Props {
+  items: CollectionEntry<'blog'>[];
+  limit?: number;
+}
+
+const { 
+  items, 
+  limit = 3 
+} = Astro.props;
+
+const displayItems = items.slice(0, limit);
+---
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  {
+    displayItems.map((item, index) => (
+      <BlogCard entry={item} index={index} />
+    ))
+  }
+</div>

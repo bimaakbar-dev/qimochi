@@ -1,0 +1,70 @@
+---
+// src/components/Theme.astro
+import Button from "@ui/Button.astro";
+import Icon from "@ui/Icons.astro";
+
+const $ = {
+  trigger: "relative shrink-0 items-center justify-center p-1.5 rounded-md",
+  iconSize: "size-5"
+}
+---
+
+<theme-toggle>
+  <Button 
+    variant="icon"
+    size="md"
+    thisIcon
+    aria-label="Toggle tema"
+    class:list={[
+      "theme-btn",
+      $.trigger
+    ]}>
+    <Icon name="moon" fill class:list={[
+      "icon-moon hidden",
+      $.iconSize ]} />
+    <Icon name="sun" fill class:list={[
+      "icon-sun hidden",
+      $.iconSize ]} />
+  </Button>
+</theme-toggle>
+
+<style is:global>
+  .theme-btn {
+    display: flex;
+  }
+  [data-theme='dark'] .icon-sun { display: flex; }
+  [data-theme='light'] .icon-moon { display: flex; }
+</style>
+
+
+
+<script>
+  class ThemeToggle extends HTMLElement {
+    constructor() {
+      super();
+
+      const btn = this.querySelector('.theme-btn');
+      
+      const updateTheme = (newTheme: string) => {
+        document.documentElement.dataset.theme = newTheme;
+        document.documentElement.style.colorScheme = newTheme;
+        localStorage.setItem('a0-theme', newTheme);
+      };
+
+      btn?.addEventListener('click', () => {
+        const currentTheme = document.documentElement.dataset.theme;
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        updateTheme(newTheme);
+        
+        window.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: newTheme } }));
+      });
+
+      window.addEventListener('theme-changed', (e: any) => {
+        if (e.detail.theme !== document.documentElement.dataset.theme) {
+          updateTheme(e.detail.theme);
+        }
+      });
+    }
+  }
+  customElements.define('theme-toggle', ThemeToggle);
+</script>

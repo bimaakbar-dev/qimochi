@@ -1,0 +1,259 @@
+---
+// src/components/ui/Select.astro
+import Icon from "./Icons.astro";
+
+type SelectSize = "sm" | "md" | "lg";
+
+export interface SelectOption {
+  label: string;
+  value: string;
+  icon?: string;
+  subtitle?: string;
+  href?: string;
+  isExternal?: boolean;
+}
+
+interface Props {
+  options: SelectOption[];
+  selectedValue?: string;
+  placeholder?: string;
+  class?: string;
+  id?: string;
+  suffix?: string;
+  prefix?: string;
+  size?: SelectSize;
+}
+
+const {
+  options,
+  selectedValue,
+  placeholder = "Pilih opsi...",
+  class: className,
+  id = "custom-select",
+  prefix = "",
+  suffix = "select",
+  size = "md",
+} = Astro.props;
+
+const activeOption = options.find((opt) => opt.value === selectedValue);
+
+const sizeClasses: Record<SelectSize, string> = {
+  sm: "h-8 px-2.5 text-xs gap-1.5 rounded-md",
+  md: "h-10 px-3.5 text-sm gap-2 rounded-md",
+  lg: "h-12 px-4.5 text-base gap-2.5 rounded-lg",
+};
+
+const itemSizeClasses: Record<SelectSize, string> = {
+  sm: "px-2 py-1.5 text-xs rounded-sm",
+  md: "px-2.5 py-2 text-sm rounded-md",
+  lg: "px-3.5 py-2.5 text-base rounded-lg",
+};
+
+const triggerClasses = [
+  "flex w-full items-center justify-between border border-(--border-subtle) bg-(--bg) text-(--fg) shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-opacity duration-(--duration) hover:bg-(--bg-subtle) hover:text-(--fg-strong) active:bg-(--bg-subtle) select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent) focus-visible:border-transparent",
+  sizeClasses[size],
+  className,
+]
+  .filter(Boolean)
+  .join(" ");
+
+const itemSize = itemSizeClasses[size];
+
+const $ = {
+  wrapper: 'relative w-full',
+  itemsWrapper: 'flex items-center shrink-0 gap-2 truncate flex-1 text-left',
+  prefix: 'shrink-0 text-(--fg-subtle) size-5',
+  suffix: 'shrink-0 text-(--fg-subtle) size-4 transition-transform duration-(--duration) ease-[cubic-bezier(0.34,1.56,0.64,1)]',
+  dropdownWrapper: "absolute left-0 right-0 top-full z-50 mt-1.5 hidden max-h-60 overflow-y-auto rounded-md border border-(--border-subtle) bg-(--bg)/95 backdrop-blur-md p-1.5 shadow-xl space-y-0.5 select-none scrollbar-thin origin-top",
+
+}
+---
+
+<div
+  data-select-wrapper
+  data-select-id={id}
+  class:list={["custom-select", $.wrapper]}
+>
+  <button
+    data-select-trigger
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    type="button"
+    class={triggerClasses}
+  >
+    <span class={$.itemsWrapper} data-select-label-container>
+      {prefix && (
+        <Icon
+          name={prefix as any}
+          class={$.prefix}
+        />
+      )}
+      {activeOption?.icon && (
+        <Icon
+          name={activeOption.icon as any}
+          class={$.prefix}
+        />
+      )}
+      <span data-select-label class={activeOption ? "text-(--fg-strong)" : "text-(--fg-muted)"}>
+        {activeOption?.label || placeholder}
+      </span>
+    </span>
+    <Icon
+      name={suffix as any}
+      class={$.suffix}
+      data-select-icon
+    />
+  </button>
+
+  <div
+    data-select-dropdown
+    role="listbox"
+    class={$.dropdownWrapper}
+  >
+    {options.map((option) => {
+      const isActive = option.value === selectedValue;
+      const commonClasses = [
+        "flex w-full items-start gap-2.5 text-left transition-all duration-(--duration) cursor-pointer focus:outline-none focus:bg-(--bg-subtle) focus:text-(--fg-strong)",
+        itemSize,
+        isActive 
+          ? "bg-(--bg-muted) text-(--fg-strong)" 
+          : "text-(--fg-muted) hover:bg-(--bg-subtle) hover:text-(--fg-strong)",
+      ];
+
+      const innerContent = (
+        <>
+          {option.icon && (
+            <Icon
+              name={option.icon as any}
+              class="size-5"
+            />
+          )}
+          <div class="flex-1 min-w-0">
+            <div class="truncate">{option.label}</div>
+            {option.subtitle && (
+              <div class="truncate text-[13px] text-(--fg-subtle) mt-0.5">
+                {option.subtitle}
+              </div>
+            )}
+          </div>
+          {isActive && (
+            <Icon
+              data-check-icon
+              name="check"
+              class="shrink-0 size-4 text-(--accent) animate-in fade-in zoom-in-75 duration-(--duration)"
+              
+            />
+          )}
+        </>
+      );
+
+      return option.href ? (
+        <a
+          href={option.href}
+          target={option.isExternal ? "_blank" : undefined}
+          rel={option.isExternal ? "noopener noreferrer" : undefined}
+          class:list={commonClasses}
+          data-select-option
+          role="option"
+          aria-selected={isActive}
+        >
+          {innerContent}
+        </a>
+      ) : (
+        <button
+          type="button"
+          data-value={option.value}
+          class:list={commonClasses}
+          data-select-option
+          role="option"
+          aria-selected={isActive}
+        >
+          {innerContent}
+        </button>
+      );
+    })}
+  </div>
+</div>
+
+<style is:global>
+  .custom-select [data-select-icon].rotate-180 {
+    transform: rotate(180deg);
+  }
+
+  [data-select-dropdown]:not(.hidden) {
+    display: block !important;
+    animation: selectPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes selectPopIn {
+    from {
+      opacity: 0;
+      transform: scale(0.96) translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--fg-strong);
+    border-radius: 9999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+</style>
+
+<script>
+  const initSelects = () => {
+    const closeAllSelects = (exceptDropdown?: HTMLElement) => {
+      document.querySelectorAll("[data-select-dropdown]").forEach((d) => {
+        const el = d as HTMLElement;
+        if (el !== exceptDropdown) {
+          el.classList.add("hidden");
+          const parent = el.parentElement;
+          parent?.querySelector("[data-select-trigger]")?.setAttribute("aria-expanded", "false");
+          parent?.querySelectorAll("[data-select-icon]").forEach((icon) => icon.classList.remove("rotate-180"));
+        }
+      });
+    };
+
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const trigger = target.closest("[data-select-trigger]") as HTMLButtonElement | null;
+
+      if (trigger) {
+        const wrapper = trigger.closest("[data-select-wrapper]") as HTMLElement | null;
+        if (!wrapper) return;
+
+        const dropdown = wrapper.querySelector("[data-select-dropdown]") as HTMLElement | null;
+        if (!dropdown) return;
+
+        const isOpen = !dropdown.classList.contains("hidden");
+
+        closeAllSelects(dropdown);
+
+        dropdown.classList.toggle("hidden", isOpen);
+        trigger.setAttribute("aria-expanded", isOpen ? "false" : "true");
+        trigger.querySelectorAll("[data-select-icon]").forEach((icon) => icon.classList.toggle("rotate-180", !isOpen));
+        return;
+      }
+
+      if (!target.closest("[data-select-wrapper]")) {
+        closeAllSelects();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeAllSelects();
+      }
+    });
+  };
+
+  initSelects();
+</script>

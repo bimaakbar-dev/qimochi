@@ -1,0 +1,88 @@
+---
+// src/components/docs/mobile/MobileHeader.astro
+import Container from "./ui/Container.astro";
+import Icon from "@ui/Icons.astro";
+import Button from "@ui/Button.astro";
+import Logo from "@ui/Logo.astro";
+import SearchBar from "./ui/SearchBar.astro";
+import Drawer from "@ui/Drawer.astro";
+
+const label = "Buka Menu"
+const $ = {
+  header: [
+    "sticky top-0 z-50 w-full h-full pt-(--safe-top) md:hidden",
+    "bg-none border-b lg:border-b-none border-(--border-subtle)/40",
+    "transition-opacity duration-(--duration-fast) ease-(--ease-out)",
+  ].join(" "),
+
+  wrapper: [
+    "flex flex-1 h-(--header-height) w-full items-center mx-auto justify-between",
+  ].join(" "),
+
+  left: "flex items-center shrink-0 gap-4",
+  right: "flex items-center shrink-0 gap-2",
+  iconSize: "size-6"
+}
+---
+
+<header id="mobile-header" class={$.header}>
+   <Container size="full">
+    <div class={$.wrapper}>
+      <div class={$.left}>
+        <Logo />
+      </div>
+      <div class={$.right}>
+        <SearchBar iconOnly />
+        <Button 
+          variant="icon" 
+          size="md" 
+          thisIcon
+          data-drawer-trigger="mobile-nav-drawer" 
+          aria-label={label}>
+          <Icon name="menu" class={$.iconSize} />
+        </Button>
+      </div>
+    </div>
+   </Container>
+</header>
+<Drawer id="mobile-nav-drawer">
+  <slot />
+</Drawer>
+
+<script is:inline>
+  (() => {
+    const header = document.getElementById("mobile-header");
+    if (!header) return;
+
+    const toggleHeader = () => {
+      if (window.scrollY > 10) {
+        header.classList.add(
+          "bg-(--bg)/80",
+          "backdrop-blur-sm",
+          "lg:border-(--border-subtle)/40",
+          "shadow-(--shadow-sm)"
+        );
+        header.classList.remove(
+          "bg-none",
+          "lg:border-none"
+        );
+      } else {
+        header.classList.remove(
+          "bg-(--bg)/80",
+          "backdrop-blur-sm",
+          "lg:border-(--border-subtle)/40",
+          "shadow-(--shadow-sm)"
+        );
+        header.classList.add(
+          "bg-none",
+          "lg:border-none"
+        );
+      }
+    };
+
+    window.removeEventListener("scroll", toggleHeader);
+    window.addEventListener("scroll", toggleHeader, { passive: true });
+    
+    toggleHeader();
+  })();
+</script>

@@ -1,0 +1,15 @@
+---
+// src/components/mdx/Table.astro
+
+const s = {
+  tableWrapper: 'table-wrapper my-6 md:my-8 overflow-hidden rounded ring-1 ring-(--border-subtle)/80'
+}
+---
+
+<div class={s.tableWrapper}>
+  <div class="overflow-x-auto">
+    <table class="min-w-full border-collapse">
+      <slot />
+    </table>
+  </div>
+</div>

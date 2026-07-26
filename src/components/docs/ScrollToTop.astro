@@ -1,0 +1,38 @@
+---
+import Icon from "@ui/Icons.astro";
+import Button from "@ui/Button.astro";
+
+interface Props {
+  label?: string;
+  class?: string;
+}
+
+const { label = "Scroll to top", class: className = "" } = Astro.props;
+---
+
+<Button
+  type="button"
+  id="scroll-to-top-btn"
+  variant="ghost"
+  size="sm"
+  aria-label={label}
+  prefix={<Icon name="arrow-move-up" class="size-4.5" />}
+  class:list={[
+    "text-button-14 cursor-pointer",
+    className,
+  ]}
+  ><span>{label}</span>
+</Button>
+
+<script>
+  const initBackToTop = () => {
+    const button = document.getElementById("scroll-to-top-btn");
+    if (!button) return;
+
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  };
+  initBackToTop();
+</script>

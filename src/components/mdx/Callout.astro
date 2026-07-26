@@ -1,0 +1,120 @@
+---
+// src/components/mdx/Callout.astro
+import Icon from "@/components/ui/Icons.astro";
+
+interface Props {
+  type?:
+    | "note"
+    | "info"
+    | "tip"
+    | "warning"
+    | "danger"
+    | "important"
+    | "caution";
+}
+
+const props = typeof Astro !== "undefined" && Astro.props ? Astro.props : {};
+const { type = "note" } = props as Props;
+
+const icons = {
+  note: "note",
+  info: "info",
+  tip: "tip",
+  warning: "warning",
+  danger: "danger",
+  important: "important",
+  caution: "caution",
+} as const;
+
+const label = type.charAt(0).toUpperCase() + type.slice(1);
+
+const $ = {
+  callout: [
+    'flex my-6 md:my-8 ring-1 rounded',
+    'bg-(--bg-subtle) text-(--c-text) ring-(--border-subtle)',
+  ].join(" "),
+
+  calloutHeader: [
+    'items-center justify-start p-2.5 border-r',
+    'border-(--border-subtle) text-(--c-icon)',
+  ].join(" "),
+
+  calloutIcon: 'shrink-0 items-center size-4.5',
+  calloutLabel: 'text-heading-16 font-medium text-(--c-title) hidden',
+  calloutBody: 'flex-1 px-3 py-2 min-w-0',
+  calloutContent: [
+    'callout-content items-center',
+    'text-(--c-text)'
+  ].join(" ")
+}
+---
+
+<aside class={$.callout} data-callout={type} role="note" aria-label={label}>
+  <div class={$.calloutHeader}>
+    <Icon name={icons[type]} class={$.calloutIcon} />
+  </div>
+  <div class={$.calloutBody}>
+    <span class={$.calloutLabel}>{label}</span>
+    <div class={$.calloutContent}>
+      <slot />
+    </div>
+  </div>
+</aside>
+
+<style is:global>
+  [data-callout="note"] {
+    --c-bg: var(--bg-subtle);
+    --c-border: var(--border-subtle);
+    --c-text: var(--fg);
+    --c-icon: var(--fg-subtle);
+    --c-title: var(--fg-strong);
+  }
+
+  [data-callout="info"] {
+    --c-bg: var(--color-chart-2);
+    --c-border: var(--color-chart-2);
+    --c-text: var(--fg);
+    --c-icon: var(--color-chart-2);
+    --c-title: var(--color-chart-2);
+  }
+
+  [data-callout="tip"] {
+    --c-bg: var(--accent);
+    --c-border: var(--accent);
+    --c-text: var(--fg);
+    --c-icon: var(--accent);
+    --c-title: var(--accent);
+  }
+
+  [data-callout="warning"] {
+    --c-bg: var(--color-warning);
+    --c-border: var(--color-warning);
+    --c-text: var(--fg);
+    --c-icon: var(--color-warning);
+    --c-title: var(--color-warning);
+  }
+
+  [data-callout="caution"] {
+    --c-bg: var(--color-chart-5);
+    --c-border: var(--color-chart-5);
+    --c-text: var(--fg);
+    --c-icon: var(--color-chart-5);
+    --c-title: var(--color-chart-5);
+  }
+
+  [data-callout="important"] {
+    --c-bg: var(--color-chart-3);
+    --c-border: var(--color-chart-3);
+    --c-text: var(--fg);
+    --c-icon: var(--color-chart-3);
+    --c-title: var(--color-chart-3);
+  }
+
+  [data-callout="danger"] {
+    --c-bg: var(--color-error);
+    --c-border: var(--color-error);
+    --c-text: var(--fg);
+    --c-icon: var(--color-error);
+    --c-title: var(--color-error);
+  }
+</style>

@@ -1,0 +1,138 @@
+---
+// src/components/ui/Input.astro
+import type { HTMLAttributes } from 'astro/types';
+import Icon from './Icons.astro';
+
+interface Props extends HTMLAttributes<'input'> {
+  label?: string;
+  error?: string;
+  helper?: string;
+}
+
+const {
+  label,
+  error,
+  helper,
+  id,
+  type = 'text',
+  class: className,
+  ...rest
+} = Astro.props;
+
+const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
+const isPassword = type === 'password';
+
+const preffix = Astro.slots.has('prefix');
+const suffix = Astro.slots.has('suffix');
+
+const $ = {
+  wrapper: "flex flex-col gap-2 w-full",
+  label: "text-[14px] font-medium text-(--fg-strong) mb-2",
+  bar: "relative flex items-center w-full",
+  preffix: "absolute left-2 pointer-events-none text-(--fg-muted) flex items-center justify-center z-10",
+  suffix: "absolute right-2 pointer-events-none text-(--fg-muted) flex items-center justify-center z-10",
+  input: [
+    "w-full h-9 rounded-md",
+    "border border-(--border-subtle) bg-transparent",
+    "text-[15px] text-(--fg-strong)",
+    "placeholder:text-(--fg-muted)",
+    "focus:bg-(--bg-muted)/40 focus:outline-none focus:ring-2 focus:ring-(--accent-ring) focus:border-(--border-strong)",
+    "transition-opacity disabled:opacity-40 disabled:cursor-not-allowed",
+  ].join(" "),
+  toggle: [
+    "absolute right-1.5 p-1.5 z-10 rounded-sm",
+    "text-(--fg-muted) hover:text-(--fg-strong) active:text-(--fg-strong)",
+    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--border)",
+    "transition-opacity cursor-pointer"
+  ].join(" "),
+}
+---
+
+<div data-input-root class={$.wrapper}>
+  {label && (
+    <label for={inputId} class={$.label}>
+      {label}
+    </label>
+  )}
+  <div class={$.bar}>
+    {preffix && (
+      <div class={$.preffix}>
+        <slot name="prefix" />
+      </div>
+    )}
+    <input
+      id={inputId}
+      type={type}
+      class:list={[
+        $.input,
+        preffix ? "pl-8" : "pl-3",
+        suffix ? "pr-8" : "pr-3",
+        isPassword ? "pr-8" : "pr-3",
+        error ? "border-(--error) text-(--error) focus:border-(--error) focus:ring-(--error)" : "",
+        className,
+      ]}
+      {...rest as HTMLAttributes<'input'>}
+    />
+
+    {suffix && (
+      <div class={$.suffix}>
+        <slot name="suffix" />
+      </div>
+    )}
+
+    {isPassword && (
+      <button
+        type="button"
+        data-password-toggle
+        aria-label="Toggle password visibility"
+        class={$.toggle}
+      >
+        <Icon data-eye-open name="eye-open" class="size-4" />
+        <Icon data-eye-close name="eye-close" class="size-4 hidden" />
+      </button>
+    )}
+  </div>
+
+  {(error || helper || Astro.slots.has('helper')) && (
+    <div class="flex flex-col gap-1 mt-2">
+      {error && <p class="text-[12px] font-medium text-(--error) animate-in fade-in">{error}</p>}
+      {(helper || Astro.slots.has('helper')) && (
+        <div class="text-[12px] text-(--fg-muted)">
+          {helper || <slot name="helper" />}
+        </div>
+      )}
+    </div>
+  )}
+</div>
+
+<script>
+  const initInputFeatures = () => {
+    const inputRoots = document.querySelectorAll('[data-input-root]');
+
+    inputRoots.forEach((root) => {
+      const toggleBtn = root.querySelector('[data-password-toggle]') as HTMLButtonElement | null;
+      const input = root.querySelector('input') as HTMLInputElement | null;
+      
+      if (!toggleBtn || !input) return;
+
+      const eyeOpenIcon = toggleBtn.querySelector('[data-eye-open]');
+      const eyeCloseIcon = toggleBtn.querySelector('[data-eye-close]');
+
+      if (toggleBtn.dataset.bound === '1') return;
+      toggleBtn.dataset.bound = '1';
+
+      toggleBtn.addEventListener('click', () => {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+
+        if (eyeOpenIcon && eyeCloseIcon) {
+          eyeOpenIcon.classList.toggle('hidden', isPassword);
+          eyeCloseIcon.classList.toggle('hidden', !isPassword);
+        }
+      });
+    });
+  };
+
+  initInputFeatures();
+  if (document.readyState !== 'loading') initInputFeatures();
+</script>

@@ -1,0 +1,44 @@
+---
+interface Props {
+  class?: string;
+}
+const { class: className = "w-8 h-8" } = Astro.props;
+---
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" class={className}>
+  <defs>
+    <linearGradient id="astroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF5D01" />
+      <stop offset="100%" stop-color="#F81CE5" />
+    </linearGradient>
+    <style>
+      .helmet { fill: #FFFFFF; stroke: #17191E; stroke-width: 14; stroke-linejoin: round; }
+      .accent { fill: url(#astroGrad); stroke: #17191E; stroke-width: 10; stroke-linejoin: round; }
+      .visor { fill: #17191E; stroke: #17191E; stroke-width: 10; }
+      .glass-shine { fill: #2A2E37; }
+      .eye-bg { fill: #FFFFFF; }
+      .pupil { fill: #17191E; }
+      .highlight { fill: #FFFFFF; }
+      .mouth { fill: none; stroke: #FFFFFF; stroke-width: 8; stroke-linecap: round; }
+      .blush { fill: #FF4D85; opacity: 0.8; }
+    </style>
+  </defs>
+
+  <path class="accent" d="M 140 320 Q 200 400 260 320 Q 230 310 200 310 Q 170 310 140 320 Z" />
+  <path d="M 170 330 Q 200 380 230 330 Z" fill="#FFB703" />
+  <rect class="helmet" x="80" y="80" width="240" height="240" rx="100" />
+  <rect class="accent" x="55" y="170" width="35" height="60" rx="12" />
+  <rect class="accent" x="310" y="170" width="35" height="60" rx="12" />
+  <rect class="visor" x="110" y="120" width="180" height="150" rx="60" />
+  <path class="glass-shine" d="M 120 180 Q 200 110 280 180 L 280 140 Q 200 100 120 140 Z" />
+  <circle class="eye-bg" cx="155" cy="200" r="22" />
+  <circle class="pupil" cx="155" cy="200" r="10" />
+  <circle class="highlight" cx="150" cy="196" r="4" />
+  <circle class="eye-bg" cx="245" cy="200" r="22" />
+  <circle class="pupil" cx="245" cy="200" r="10" />
+  <circle class="highlight" cx="240" cy="196" r="4" />
+  <line class="mouth" x1="185" y1="215" x2="215" y2="215" />
+  <ellipse class="blush" cx="135" cy="225" rx="12" ry="7" transform="rotate(-15 135 225)" />
+  <ellipse class="blush" cx="265" cy="225" rx="12" ry="7" transform="rotate(15 265 225)" />
+  <line x1="200" y1="80" x2="200" y2="40" stroke="#17191E" stroke-width="12" stroke-linecap="round" />
+  <circle cx="200" cy="30" r="15" class="accent" />
+</svg>

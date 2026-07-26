@@ -1,0 +1,515 @@
+---
+import Button from "./ui/Button.astro";
+import Icon from "./ui/Icons.astro";
+import Input from "./ui/Input.astro";
+import Spinner from "./ui/Spinner.astro";
+
+const PAGE_SIZE = 6;
+
+const ui = {
+  overlay:   "fixed inset-0 z-9999 hidden bg-black/50 backdrop-blur-sm",
+  modal: [
+    "fixed w-full left-0 border-t border-(--border-subtle) sm:border-none sm:left-1/2 bottom-0 sm:bottom-auto sm:top-4 rounded-t-md sm:rounded-md",
+    "sm:w-[95%] sm:max-w-2xl",
+    "sm:-translate-x-1/2",
+    "sm:ring-1 ring-(--border-subtle) bg-(--bg)",
+    "shadow-2xl opacity-0 scale-95"
+  ].join(" "),
+  iconSlot: [
+    "relative block shrink-0 items-center justify-center size-5",
+    "transition-opacity duration-(--duration)"
+  ].join(" "),
+  spinner: [
+    "absolute inset-0 hidden",
+    "size-5!",
+    "text-(--fg)/80",
+  ].join(" "),
+  bar:       "flex items-center gap-2 py-2 px-3",
+  closeDesk: "font-mono rounded! hidden! sm:inline-flex!",
+  closeMob:  "inline-flex! sm:hidden! shrink-0 p-1.5",
+  results:   "max-h-[55vh] sm:max-h-[75vh] overflow-y-auto overscroll-contain",
+  list:      "hidden space-y-4 p-2",
+  empty:     "p-10 text-center text-sm text-(--fg-muted)",
+  footer:    "hidden px-2 pb-2",
+  total:     "text-xs text-(--fg-muted) px-2 py-1.5",
+};
+
+const card = {
+  group: [
+    "result-group",
+    "rounded overflow-hidden ring-1",
+    "bg-(--bg-subtle) ring-(--border-subtle)/80"
+  ].join(" "),
+
+  link: [
+    "result-item",
+    "flex items-start justify-center",
+    "gap-1.5 px-4 py-2 text-sm",
+    "outline-none"
+  ].join(" "),
+
+  cover: [
+    "aspect-video object-cover",
+    "h-10 w-auto shrink-0 rounded hidden ring-1",
+    "ring-(--border-subtle)"
+  ].join(" "),
+
+  body:       "flex flex-1 min-w-0 flex-col gap-0.5",
+  title:      "truncate text-(--fg-strong) font-medium text-md",
+  meta:       "flex gap-2 text-xs text-(--fg-muted) hidden",
+
+  excerpt: [
+    "result-excerpt",
+    "text-sm text-(--fg-muted) line-clamp-1",
+  ].join(" "),
+
+  subList: [
+    "sub-results-list",
+    "border-t border-(--border-subtle)/60",
+  ].join(" "),
+
+  subRow: [
+    "sub-result",
+    "relative flex justify-start pl-6 pr-3 bg-none",
+  ].join(" "),
+
+  subLink: [
+    "sub-result-item",
+    "flex w-full items-start gap-2 py-1.5 pl-2 text-sm",
+    "outline-none",
+  ].join(" "),
+
+  subBody:    "flex min-w-0 flex-col gap-1",
+  subTitle:   "text-(--fg) truncate",
+  subExcerpt: [
+    "result-excerpt",
+    "text-(--fg-muted) line-clamp-1",
+  ].join(" "),
+};
+---
+
+<div
+  id="search-overlay"
+  class={ui.overlay}
+  role="dialog"
+  aria-modal="true"
+  aria-label="Pencarian"
+>
+  <div id="search-modal" class={ui.modal}>
+    <div class={ui.bar}>
+      <Input
+        id="search-input"
+        type="text"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-controls="search-list"
+        aria-expanded="false"
+        placeholder="Ketik untuk mencari..."
+        autocomplete="off"
+        spellcheck="false">
+        <Fragment slot="prefix">
+          <div class={ui.iconSlot}>
+            <Icon id="search-icon" name="search" fill class="h-full w-full" />
+            <Spinner id="search-spinner" size="sm" class={ui.spinner} />
+          </div>
+        </Fragment>
+      </Input>
+      <Button 
+        data-action="close-search" 
+        aria-label="Tutup pencarian" 
+        variant="icon" 
+        size="md" 
+        thisIcon 
+        class={ui.closeMob}>
+        <Icon name="remove" class="size-5" />
+      </Button>
+      <Button 
+        data-action="close-search" 
+        aria-label="Tutup pencarian" 
+        variant="secondary" 
+        size="sm" 
+        class={ui.closeDesk}>
+        ESC
+      </Button>
+    </div>
+    <div id="search-results" class={ui.results}>
+      <div id="search-total" class={`${ui.total} hidden`}></div>
+      <div id="search-empty" class="hidden"></div>
+      <ul
+        id="search-list"
+        class={ui.list}
+        role="listbox"
+        aria-label="Hasil pencarian">
+      </ul>
+      <div id="search-footer" class={ui.footer}>
+        <Button
+          id="search-load-more"
+          variant="secondary"
+          size="md"
+          block>
+          Tampilkan lebih banyak
+        </Button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<template id="tpl-result">
+  <li class={card.group} role="option" aria-selected="false">
+    <a class={card.link} tabindex="-1">
+      <img data-slot="image" class={card.cover} src="" alt="" loading="lazy" />
+      <div class={card.body}>
+        <div data-slot="meta" class={card.meta}>
+          <span data-slot="author"></span>
+          <span data-slot="date"></span>
+        </div>
+        <span data-slot="title"  class={card.title}></span>
+        <span data-slot="excerpt" class={card.excerpt}></span>
+      </div>
+    </a>
+    <ul data-slot="subs" class={card.subList}></ul>
+  </li>
+</template>
+
+<template id="tpl-subresult">
+  <li class={card.subRow} role="option" aria-selected="false">
+    <a class={card.subLink} tabindex="-1">
+      <div class={card.subBody}>
+        <span data-slot="title"   class={card.subTitle}></span>
+        <span data-slot="excerpt" class={card.subExcerpt}></span>
+      </div>
+    </a>
+  </li>
+</template>
+
+<template id="tpl-empty">
+  <p class={ui.empty}>Tidak ada hasil ditemukan.</p>
+</template>
+
+<style is:global>
+  #search-modal {
+    transition:
+      transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity   0.18s ease-out;
+  }
+
+  @media (max-width: 639px) {
+    #search-modal {
+      transform: translateY(100%);
+      opacity: 1 !important;
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #search-modal.translate-y-0 {
+      transform: translateY(0);
+    }
+  }
+
+  .result-item:hover,
+  .sub-result:hover {
+    background-color: var(--bg-muted);
+  }
+
+  .sub-result::before {
+    content: "";
+    position: absolute;
+    top: 0; 
+    left: 14px;
+    width: 14px; 
+    height: 16px;
+    border-left:   1.5px solid var(--border-subtle);
+    border-bottom: 1.5px solid var(--border-subtle);
+  }
+  .sub-result:not(:last-of-type)::after {
+    content: "";
+    position: absolute;
+    top: 0; 
+    bottom: 0; 
+    left: 14px;
+    border-left: 1.5px solid var(--border-subtle);
+  }
+
+  .result-excerpt mark {
+    background-color: color-mix(in srgb, var(--accent) 20%, transparent) !important;
+    color:            var(--accent) !important;
+    border-radius:    0 !important;
+    padding:          0 4px !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #search-modal { transition: none !important; }
+  }
+</style>
+
+<script is:inline define:vars={{ PAGE_SIZE }}>
+  (() => {
+    const $         = (id) => document.getElementById(id);
+    const overlay   = $("search-overlay");
+    const modal     = $("search-modal");
+    const input     = $("search-input");
+    const resultsEl = $("search-results");
+    const list      = $("search-list");
+    const emptyEl   = $("search-empty");
+    const totalEl   = $("search-total");
+    const footerEl  = $("search-footer");
+    const loadMoreBtn = $("search-load-more");
+    const iconEl    = $("search-icon");
+    const spinnerEl = $("search-spinner");
+
+    const tplResult    = $("tpl-result");
+    const tplSubresult = $("tpl-subresult");
+    const tplEmpty     = $("tpl-empty");
+
+    let isOpen    = false;
+    let pf        = null;
+    let pfLoader  = null;
+    let results   = [];
+    let rendered  = 0;
+    let token     = 0;
+    let activeIdx = -1;
+
+    function loadPF() {
+      if (!pfLoader) pfLoader = import("/pagefind/pagefind.js").then(async (m) => {
+        pf = m;
+        await pf.init();
+      });
+      return pfLoader;
+    }
+
+    function isMobile() {
+      return window.innerWidth < 640;
+    }
+
+    function setLoading(on) {
+      iconEl?.classList.toggle("opacity-0", on);
+      spinnerEl?.classList.toggle("hidden", !on);
+    }
+
+    function getFocusables() {
+      return [...list.querySelectorAll("a[tabindex]")];
+    }
+
+    function reset() {
+      list.innerHTML    = "";
+      list.classList.add("hidden");
+      emptyEl.innerHTML = "";
+      emptyEl.classList.add("hidden");
+      totalEl.classList.add("hidden");
+      footerEl.classList.add("hidden");
+      input.setAttribute("aria-expanded", "false");
+      results   = [];
+      rendered  = 0;
+      activeIdx = -1;
+    }
+
+    function showEmpty() {
+      emptyEl.appendChild(tplEmpty.content.cloneNode(true));
+      emptyEl.classList.remove("hidden");
+    }
+
+    function updateTotal() {
+      totalEl.textContent = `${results.length} hasil ditemukan`;
+      totalEl.classList.remove("hidden");
+    }
+
+    function updateFooter() {
+      if (rendered < results.length) {
+        footerEl.classList.remove("hidden");
+      } else {
+        footerEl.classList.add("hidden");
+      }
+    }
+
+    function setActive(idx) {
+      const links = getFocusables();
+      if (!links.length) return;
+
+      idx = Math.max(-1, Math.min(idx, links.length - 1));
+
+      links.forEach((a) => {
+        a.closest('[role="option"]')?.setAttribute("aria-selected", "false");
+        a.classList.remove("bg-(--bg-muted)");
+      });
+
+      activeIdx = idx;
+
+      if (idx === -1) {
+        input.focus();
+        return;
+      }
+
+      const target = links[idx];
+      target.closest('[role="option"]')?.setAttribute("aria-selected", "true");
+      target.classList.add("bg-(--bg-muted)");
+      target.scrollIntoView({ block: "nearest" });
+    }
+
+    function buildSub(sub) {
+      const node = tplSubresult.content.cloneNode(true);
+      node.querySelector("a").href = sub.url;
+      
+      const subTitle = sub.title ?? "";
+      node.querySelector('[data-slot="title"]').textContent = subTitle;
+
+      const excEl = node.querySelector('[data-slot="excerpt"]');
+      const excerpt = sub.excerpt || sub.meta?.description || "";
+
+      if (excerpt) {
+        excEl.innerHTML = excerpt;
+      } else {
+        excEl.remove();
+      }
+
+      return node;
+    }
+
+    function buildResult(item) {
+      const node = tplResult.content.cloneNode(true);
+      node.querySelector("a").href = item.url;
+      node.querySelector('[data-slot="title"]').textContent = item.meta?.title ?? item.url;
+
+      const img = node.querySelector('[data-slot="image"]');
+      if (item.meta?.image) { 
+        img.src = item.meta.image; 
+      }
+
+      const author = node.querySelector('[data-slot="author"]');
+      const date   = node.querySelector('[data-slot="date"]');
+      
+      if (item.meta?.author) author.textContent = `by ${item.meta.author}`;
+      if (item.meta?.date)   date.textContent   = new Date(item.meta.date).toLocaleDateString("id-ID");
+      if (!item.meta?.author && !item.meta?.date) node.querySelector('[data-slot="meta"]')?.remove();
+
+      const excEl = node.querySelector('[data-slot="excerpt"]');
+      const exc   = item.meta?.description || item.excerpt || "";
+      
+      if (exc) excEl.innerHTML = exc; else excEl.remove();
+
+      const subsEl = node.querySelector('[data-slot="subs"]');
+      const subs   = (item.sub_results ?? []).filter((s) => s.url !== item.url).slice(0, 3);
+      
+      if (subs.length) subs.forEach((s) => subsEl.appendChild(buildSub(s)));
+      else subsEl.remove();
+
+      return node;
+    }
+
+    async function renderPage(t) {
+      const batch = results.slice(rendered, rendered + PAGE_SIZE);
+      if (!batch.length) return;
+
+      const items = await Promise.all(batch.map((r) => r.data()));
+      if (t !== token) return;
+
+      const frag = document.createDocumentFragment();
+      items.forEach((i) => frag.appendChild(buildResult(i)));
+      list.appendChild(frag);
+      rendered += batch.length;
+      updateFooter();
+    }
+
+    async function search() {
+      const t     = ++token;
+      const query = input.value.trim();
+
+      reset();
+      if (!query) { setLoading(false); return; }
+
+      setLoading(true);
+      await loadPF();
+
+      const res = await pf.debouncedSearch(query);
+      if (t !== token) return;
+
+      results  = res?.results ?? [];
+      rendered = 0;
+
+      if (!results.length) { showEmpty(); setLoading(false); return; }
+
+      updateTotal();
+      list.classList.remove("hidden");
+      input.setAttribute("aria-expanded", "true");
+
+      await renderPage(t);
+      if (t === token) setLoading(false);
+    }
+
+    loadMoreBtn?.addEventListener("click", async () => {
+      const t = token;
+      await renderPage(t);
+    });
+
+    input?.addEventListener("input", search);
+
+    document.addEventListener("keydown", (e) => {
+      if (!isOpen) {
+        if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); open(); }
+        return;
+      }
+
+      if (e.key === "ArrowDown") { e.preventDefault(); setActive(activeIdx + 1); return; }
+      if (e.key === "ArrowUp")   { e.preventDefault(); setActive(activeIdx - 1); return; }
+      if (e.key === "Enter" && activeIdx >= 0) {
+        e.preventDefault();
+        getFocusables()[activeIdx]?.click();
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); close(); return; }
+      if (e.key === "Escape") { close(); return; }
+      if (activeIdx >= 0 && e.key.length === 1 && !e.metaKey && !e.ctrlKey) setActive(-1);
+    });
+
+    function open() {
+      if (isOpen) return;
+      loadPF();
+      overlay.classList.remove("hidden");
+      isOpen = true;
+      document.body.style.overflow = "hidden";
+
+      requestAnimationFrame(() => {
+        if (isMobile()) {
+          modal.classList.remove("scale-95", "opacity-0");
+          modal.classList.add("scale-100", "opacity-100", "translate-y-0");
+        } else {
+          modal.classList.remove("scale-95", "opacity-0");
+          modal.classList.add("scale-100", "opacity-100");
+        }
+      });
+
+      setTimeout(() => input?.focus(), 100);
+      reset();
+    }
+
+    function close() {
+      if (!isOpen) return;
+
+      if (isMobile()) {
+        modal.classList.remove("translate-y-0");
+        setTimeout(() => {
+          overlay.classList.add("hidden");
+          modal.classList.remove("scale-100", "opacity-100");
+          modal.classList.add("scale-95", "opacity-0");
+          isOpen = false;
+          document.body.style.overflow = "";
+          if (input) input.value = "";
+          reset();
+          setLoading(false);
+        }, 280);
+      } else {
+        modal.classList.remove("scale-100", "opacity-100");
+        modal.classList.add("scale-95", "opacity-0");
+        setTimeout(() => {
+          overlay.classList.add("hidden");
+          isOpen = false;
+          document.body.style.overflow = "";
+          if (input) input.value = "";
+          reset();
+          setLoading(false);
+        }, 200);
+      }
+    }
+
+    document.addEventListener("open-search", open);
+    overlay?.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+    document.querySelectorAll('[data-action="close-search"]').forEach((el) => el.addEventListener("click", close));
+  })();
+</script>

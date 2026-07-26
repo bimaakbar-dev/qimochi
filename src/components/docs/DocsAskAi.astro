@@ -1,0 +1,224 @@
+---
+import Button from "@ui/Button.astro";
+import Icon from "@ui/Icon.astro";
+import Input from "@ui/Input.astro";
+
+export interface Props {
+  label?: string;
+  pageContent: string;
+  pageTitle?: string;
+}
+
+const { label = "", pageContent = "", pageTitle } = Astro.props;
+---
+
+<div class="ask-ai-component">
+  <div class="ask-ai-context hidden">{pageContent}</div>
+
+  <button
+    type="button"
+    class="ask-ai-trigger inline-flex w-full items-center gap-2 px-1.5 py-1 text-[13px] font-medium text-(--fg-muted) transition-colors hover:text-(--fg-strong)"
+  >
+    <span class="inline-flex h-4 w-4">
+      <Icon name="ai-agent" className="h-full w-full" />
+    </span>
+    <span>{label}</span>
+  </button>
+
+  <div
+    class="ask-ai-widget fixed right-12 bottom-8 z-50 hidden h-130 max-h-[70vh] w-95 max-w-[90vw] flex-col overflow-hidden rounded-2xl border border-(--border) bg-(--bg) shadow-2xl"
+  >
+    <div
+      class="flex items-center justify-between border-b border-(--border) px-4 py-3"
+    >
+      <div class="flex items-center gap-2">
+        <Icon name="ask-ai" className="h-6 w-6" />
+        <div>
+          <h3 class="text-[14px] font-semibold">Ask AI</h3>
+          {
+            pageTitle && (
+              <p class="text-[12px] text-(--fg-muted)">About: {pageTitle}</p>
+            )
+          }
+        </div>
+      </div>
+      <button
+        type="button"
+        class="ask-ai-close rounded p-1.5 hover:bg-(--bg-muted) active:bg-(--bg-muted)"
+      >
+        <Icon name="close" className="h-4 w-4" />
+      </button>
+    </div>
+
+    <div class="ask-ai-chat flex-1 space-y-3 overflow-y-auto px-4 py-3">
+      <div class="py-8 text-center text-sm text-(--fg-dim)">
+        Ask a question about this page
+      </div>
+    </div>
+
+    <div class="flex gap-2 border-t border-(--border) p-3">
+      <Input
+        type="text"
+        class="ask-ai-input h-10 w-full rounded-(--radius) border border-(--border) bg-(--bg) px-3 text-sm text-(--fg)"
+        placeholder="Ask a question..."
+      />
+      <Button type="button" class="ask-ai-submit" variant="primary" size="md"
+        >Send</Button
+      >
+    </div>
+
+    <p
+      class="ask-ai-hint hidden px-4 pb-2 text-center text-[12px] text-(--fg-muted)"
+    >
+      Please wait before asking again.
+    </p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"
+></script>
+
+<script is:inline>
+  (function () {
+    function initComponent(comp) {
+      if (comp.dataset.askAiReady) return;
+      comp.dataset.askAiReady = "true";
+
+      const trigger = comp.querySelector(".ask-ai-trigger");
+      const widget = comp.querySelector(".ask-ai-widget");
+      const closeBtn = comp.querySelector(".ask-ai-close");
+      const chat = comp.querySelector(".ask-ai-chat");
+      const submit = comp.querySelector(".ask-ai-submit");
+      const input = comp.querySelector(".ask-ai-input");
+      const hint = comp.querySelector(".ask-ai-hint");
+      const context = comp.querySelector(".ask-ai-context");
+
+      let lastRequest = 0;
+      const COOLDOWN = 2000;
+
+      function onEsc(e) {
+        if (e.key === "Escape") close();
+      }
+
+      function clearPlaceholder() {
+        chat?.querySelector(".text-center")?.remove();
+      }
+
+      function open() {
+        widget?.classList.remove("hidden");
+        widget?.classList.add("flex");
+        setTimeout(() => input?.focus(), 50);
+        document.addEventListener("keydown", onEsc);
+      }
+
+      function close() {
+        widget?.classList.add("hidden");
+        widget?.classList.remove("flex");
+        document.removeEventListener("keydown", onEsc);
+      }
+
+      function escapeHtml(str) {
+        return (str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function addMessage(role, content, html = false) {
+        clearPlaceholder();
+        const wrap = document.createElement("div");
+        wrap.className = `flex ${role === "user" ? "justify-end" : "justify-start"}`;
+        wrap.innerHTML = `
+        <div class="max-w-[85%] px-3 py-2 rounded-xl text-sm leading-relaxed
+          ${role === "user" ? "bg-(--accent) text-(--accent-fg)" : "bg-(--bg-muted) text-(--fg)"}">
+          ${html ? content : escapeHtml(content)}
+        </div>
+      `;
+        chat?.appendChild(wrap);
+        if (chat) chat.scrollTop = chat.scrollHeight;
+      }
+
+      function thinking() {
+        clearPlaceholder();
+        const el = document.createElement("div");
+        el.className = "flex items-center gap-2 text-(--fg-muted)";
+
+        el.innerHTML = `
+        <div class="flex space-x-1">
+          <div class="w-2 h-2 bg-(--accent) rounded-full animate-pulse" style="animation-duration: 1.2s;"></div>
+          <div class="w-2 h-2 bg-(--accent) rounded-full animate-pulse" style="animation-duration: 1.2s; animation-delay: 0.2s;"></div>
+          <div class="w-2 h-2 bg-(--accent) rounded-full animate-pulse" style="animation-duration: 1.2s; animation-delay: 0.4s;"></div>
+        </div>
+        <span class="text-sm font-medium">AI is thinking...</span>
+      `;
+
+        chat?.appendChild(el);
+        if (chat) chat.scrollTop = chat.scrollHeight;
+      }
+
+      function stopThinking() {
+        const thinkingEl = comp.querySelector(".flex.space-x-1");
+        if (
+          thinkingEl &&
+          thinkingEl.parentElement?.innerHTML.includes("AI is thinking")
+        ) {
+          thinkingEl.parentElement?.remove();
+        }
+      }
+
+      async function ask() {
+        const q = input?.value?.trim();
+        if (!q) return;
+
+        const now = Date.now();
+        if (now - lastRequest < COOLDOWN) {
+          hint?.classList.remove("hidden");
+          return;
+        }
+        lastRequest = now;
+        hint?.classList.add("hidden");
+
+        addMessage("user", q);
+        if (input) input.value = "";
+        thinking();
+
+        const raw = context?.textContent || "";
+        const cleanContext = raw
+          .replace(/```[\s\S]*?```/g, "")
+          .replace(/`{1,3}[^`]*`{1,3}/g, "")
+          .replace(/\n{3,}/g, "\n\n")
+          .slice(0, 5000);
+
+        try {
+          const res = await fetch("/api/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: q, context: cleanContext }),
+          });
+          if (!res.ok) throw new Error();
+          const data = await res.json();
+          stopThinking();
+          const html = DOMPurify.sanitize(marked.parse(data.answer || ""));
+          addMessage("ai", html, true);
+        } catch {
+          stopThinking();
+          addMessage("ai", "Connection error");
+        }
+      }
+
+      trigger?.addEventListener("click", open);
+      closeBtn?.addEventListener("click", close);
+      submit?.addEventListener("click", ask);
+      input?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          ask();
+        }
+      });
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".ask-ai-component").forEach(initComponent);
+    });
+  })();
+</script>
