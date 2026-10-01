@@ -1,0 +1,104 @@
+---
+import { SITE, NAV_LINKS } from '../constants';
+
+const currentPath = Astro.url.pathname;
+
+function isActive(href: string): boolean {
+  if (href === '/') return currentPath === '/';
+  return currentPath.startsWith(href);
+}
+---
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="logo">{SITE.name}</a>
+
+    <nav class="nav" aria-label="Navigasi utama">
+      {NAV_LINKS.map(({ label, href }) => (
+        <a
+          href={href}
+          class:list={['nav-link', { active: isActive(href) }]}
+          aria-current={isActive(href) ? 'page' : undefined}
+        >
+          {label}
+        </a>
+      ))}
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+    height: var(--header-height);
+    background: rgba(10, 10, 15, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    height: 100%;
+    max-width: var(--content-max-mobile);
+    margin-inline: auto;
+    padding-inline: var(--pad-x);
+  }
+
+  @media (min-width: 56rem) {
+    .header-inner {
+      max-width: var(--content-max-desktop);
+    }
+  }
+
+  .logo {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    transition: color var(--t-fast);
+  }
+
+  .logo:hover {
+    color: var(--accent);
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-link {
+    padding: var(--s-2) var(--s-3);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    transition: all var(--t-fast);
+  }
+
+  .nav-link:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+
+  .nav-link.active {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+</style>
