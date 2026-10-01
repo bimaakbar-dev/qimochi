@@ -1,0 +1,99 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { GENRES, URLS } from '../../constants';
+
+const allAnime = await getCollection('anime');
+
+// Hitung anime per genre
+const genreCounts: Record<string, number> = {};
+allAnime.forEach(a => {
+  a.data.genre.forEach(g => {
+    genreCounts[g] = (genreCounts[g] || 0) + 1;
+  });
+});
+
+// Urut: genre dengan anime terbanyak dulu
+const genres = GENRES
+  .map(name => ({ name, count: genreCounts[name] || 0 }))
+  .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+---
+
+<BaseLayout title="Semua Genre" description="Jelajahi anime berdasarkan genre.">
+  <div class="wrapper">
+    <header class="page-header">
+      <h1>🏷️ Semua Genre</h1>
+      <p class="subtitle">{genres.length} genre · {allAnime.length} anime</p>
+    </header>
+
+    <div class="genre-grid">
+      {genres.map(g => (
+        <a href={URLS.genre(g.name)} class="genre-card">
+          <span class="genre-name">{g.name}</span>
+          <span class="genre-count">{g.count} anime</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .wrapper {
+    padding-block: var(--s-8) var(--s-12);
+  }
+
+  .page-header {
+    margin-bottom: var(--s-8);
+  }
+
+  .page-header h1 {
+    margin: 0 0 var(--s-1);
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    margin: 0;
+  }
+
+  .genre-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s-3);
+  }
+
+  @media (min-width: 48rem) {
+    .genre-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-4);
+    }
+  }
+
+  .genre-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    padding: var(--s-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    transition: all var(--t-fast);
+  }
+
+  .genre-card:hover {
+    border-color: var(--accent);
+    background: var(--bg-surface);
+    transform: translateY(-2px);
+  }
+
+  .genre-name {
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    font-size: var(--fs-base);
+  }
+
+  .genre-count {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+</style>
