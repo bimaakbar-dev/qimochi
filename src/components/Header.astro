@@ -46,10 +46,8 @@ function isActive(href: string): boolean {
   if (menu) {
     const mobile = window.matchMedia('(max-width: 55.99rem)');
 
-    // Tutup saat pertama load di mobile
     if (mobile.matches) menu.removeAttribute('open');
 
-    // Sync saat resize
     mobile.addEventListener('change', (e) => {
       if (e.matches) {
         menu.removeAttribute('open');
@@ -58,7 +56,6 @@ function isActive(href: string): boolean {
       }
     });
 
-    // Klik di luar → tutup (mobile only)
     document.addEventListener('click', (e) => {
       if (!mobile.matches) return;
       if (!menu.hasAttribute('open')) return;
@@ -67,14 +64,12 @@ function isActive(href: string): boolean {
       }
     });
 
-    // Klik nav link → tutup (mobile only)
     menu.querySelectorAll('.nav-link').forEach((a) => {
       a.addEventListener('click', () => {
         if (mobile.matches) menu.removeAttribute('open');
       });
     });
 
-    // Escape → tutup (mobile only)
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && mobile.matches && menu.hasAttribute('open')) {
         menu.removeAttribute('open');
@@ -88,10 +83,11 @@ function isActive(href: string): boolean {
     position: sticky;
     top: 0;
     z-index: var(--z-header);
-    background: var(--bg-base);
+    background: hsl(0%, 0%, 10%);
   }
 
   .header-inner {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -133,9 +129,10 @@ function isActive(href: string): boolean {
     clip-path: polygon(0 0, 100% 0, 100% 60%, 60% 100%, 0 100%);
   }
 
-  /* ---------- DETAILS MENU ---------- */
+  /* ---------- MENU ---------- */
   .menu {
-    display: contents;
+    display: flex;
+    align-items: center;
   }
 
   .menu-btn {
@@ -206,6 +203,10 @@ function isActive(href: string): boolean {
 
   /* ---------- MOBILE ---------- */
   @media (max-width: 55.999rem) {
+    .menu {
+      display: block;
+    }
+
     .nav {
       position: absolute;
       top: 100%;
