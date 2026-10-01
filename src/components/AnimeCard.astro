@@ -3,7 +3,7 @@ import { URLS } from '../constants';
 
 interface Props {
   anime: {
-    slug: string;
+    id: string;
     data: {
       title: string;
       cover: string;
@@ -15,10 +15,10 @@ interface Props {
 }
 
 const { anime, featured = false } = Astro.props;
-const { slug, data } = anime;
+const { id, data } = anime;
 ---
 
-<a href={URLS.anime(slug)} class:list={['anime-card', { featured }]}>
+<a href={URLS.anime(id)} class:list={['anime-card', { featured }]}>
   <div class="cover">
     <img
       src={data.cover}
