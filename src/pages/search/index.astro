@@ -1,0 +1,318 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Cari Anime"
+  description="Cari anime di Qimochi."
+  noindex={true}
+>
+  <div class="wrapper">
+    <header class="search-header">
+      <h1>🔍 Cari Anime</h1>
+    </header>
+
+    <form class="search-form" id="search-form">
+      <input
+        type="search"
+        id="search-input"
+        class="search-input"
+        placeholder="Ketik judul anime..."
+        autocomplete="off"
+        autofocus
+      />
+      <button type="submit" class="search-btn">Cari</button>
+    </form>
+
+    <div id="search-status" class="search-status" hidden></div>
+    <div id="search-results" class="anime-grid"></div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { URLS } from '../../constants';
+
+  interface Anime {
+    id: string;
+    title: string;
+    cover: string;
+    status: string;
+    tahun: number;
+    rating: number;
+  }
+
+  // ----------------------------------------------------------
+  // Fuzzy search — Levenshtein distance
+  // ----------------------------------------------------------
+
+  function normalize(s: string): string {
+    return s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function levenshtein(a: string, b: string): number {
+    if (a === b) return 0;
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+
+    const matrix: number[][] = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        const cost = a[j - 1] === b[i - 1] ? 0 : 1;
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j - 1] + cost
+        );
+      }
+    }
+
+    return matrix[b.length][a.length];
+  }
+
+  function scoreTitle(query: string, title: string): number {
+    const q = normalize(query);
+    const t = normalize(title);
+    if (!q || !t) return 0;
+
+    // 1. Exact substring — skor tertinggi
+    if (t.includes(q)) {
+      const pos = t.indexOf(q);
+      return 1 - (pos / t.length) * 0.3;
+    }
+
+    // 2. Cocokkan query dengan tiap kata di title (fuzzy)
+    const words = t.split(' ');
+    let best = 0;
+
+    for (const word of words) {
+      const dist = levenshtein(q, word);
+      const maxLen = Math.max(q.length, word.length);
+      const similarity = 1 - dist / maxLen;
+      if (similarity > best) best = similarity;
+    }
+
+    // 3. Substring per kata — kalau query > 3 karakter
+    if (q.length >= 3) {
+      for (const word of words) {
+        if (word.includes(q) || q.includes(word)) {
+          best = Math.max(best, 0.85);
+        }
+      }
+    }
+
+    return best * 0.85; // penalty untuk fuzzy match
+  }
+
+  // ----------------------------------------------------------
+  // Init
+  // ----------------------------------------------------------
+
+  const form = document.getElementById('search-form') as HTMLFormElement;
+  const input = document.getElementById('search-input') as HTMLInputElement;
+  const status = document.getElementById('search-status')!;
+  const results = document.getElementById('search-results')!;
+
+  let allAnime: Anime[] = [];
+
+  // Baca query dari URL
+  const params = new URLSearchParams(window.location.search);
+  const initialQuery = params.get('q') || '';
+  input.value = initialQuery;
+
+  // Fetch data
+  async function loadData() {
+    if (allAnime.length > 0) return;
+    try {
+      const res = await fetch('/anime.json');
+      allAnime = await res.json();
+    } catch {
+      status.textContent = 'Gagal memuat data.';
+      status.hidden = false;
+    }
+  }
+
+  function renderResults(items: Anime[]) {
+    results.innerHTML = items
+      .map(
+        a => `
+      <a href="/anime/${a.id}/" class="anime-card">
+        <div class="cover">
+          <img src="${a.cover}" alt="Cover ${a.title}" width="300" height="450" loading="lazy" decoding="async" />
+        </div>
+        <div class="info">
+          <h3 class="title">${a.title}</h3>
+          <p class="meta">${a.status} · ${a.tahun}</p>
+        </div>
+      </a>
+    `
+      )
+      .join('');
+  }
+
+  async function runSearch(query: string) {
+    await loadData();
+
+    const q = query.trim();
+    if (q.length < 2) {
+      status.textContent = 'Ketik minimal 2 karakter.';
+      status.hidden = false;
+      results.innerHTML = '';
+      return;
+    }
+
+    const scored = allAnime
+      .map(a => ({ anime: a, score: scoreTitle(q, a.title) }))
+      .filter(r => r.score > 0.4)
+      .sort((a, b) => b.score - a.score);
+
+    if (scored.length === 0) {
+      status.textContent = `Tidak ada hasil untuk "${q}".`;
+      status.hidden = false;
+      results.innerHTML = '';
+      return;
+    }
+
+    status.textContent = `${scored.length} hasil untuk "${q}"`;
+    status.hidden = false;
+    renderResults(scored.map(r => r.anime));
+  }
+
+  // Submit form → update URL
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const q = input.value.trim();
+    if (!q) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('q', q);
+    window.history.pushState({}, '', url);
+    runSearch(q);
+  });
+
+  // Support back/forward navigation
+  window.addEventListener('popstate', () => {
+    const p = new URLSearchParams(window.location.search);
+    const q = p.get('q') || '';
+    input.value = q;
+    if (q) runSearch(q);
+  });
+
+  // Auto-search kalau ada query di URL
+  if (initialQuery) {
+    runSearch(initialQuery);
+  }
+</script>
+
+<style>
+  .wrapper {
+    padding-block: var(--s-8) var(--s-12);
+  }
+
+  .search-header {
+    margin-bottom: var(--s-6);
+  }
+
+  .search-header h1 {
+    margin: 0;
+  }
+
+  .search-form {
+    display: flex;
+    gap: var(--s-2);
+    margin-bottom: var(--s-4);
+  }
+
+  .search-input {
+    flex: 1;
+    padding: var(--s-3) var(--s-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    color: var(--text-primary);
+    font-size: var(--fs-base);
+    transition: border-color var(--t-fast);
+  }
+
+  .search-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .search-btn {
+    padding: var(--s-3) var(--s-5);
+    background: var(--accent);
+    color: var(--accent-text);
+    border-radius: var(--r-md);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    transition: background var(--t-fast);
+  }
+
+  .search-btn:hover {
+    background: var(--accent-hover);
+  }
+
+  .search-status {
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    margin-bottom: var(--s-4);
+  }
+
+  .anime-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s-3);
+  }
+
+  @media (min-width: 48rem) {
+    .anime-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-4);
+    }
+  }
+
+  /* Style card — copy dari AnimeCard.astro */
+  .anime-card {
+    display: block;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    background: var(--bg-elevated);
+    transition: transform var(--t-fast);
+  }
+  .anime-card:hover { transform: translateY(-2px); }
+  .cover {
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    background: var(--bg-surface);
+  }
+  .cover img { width: 100%; height: 100%; object-fit: cover; }
+  .info { padding: var(--s-2) var(--s-3) var(--s-3); }
+  .title {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--text-primary);
+    line-height: var(--lh-snug);
+    margin: 0 0 var(--s-1);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .meta {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    margin: 0;
+  }
+</style>
