@@ -1,0 +1,100 @@
+---
+import { URLS } from '../constants';
+
+interface Props {
+  anime: {
+    slug: string;
+    data: {
+      title: string;
+      cover: string;
+      status: string;
+      tahun?: number;
+    };
+  };
+  featured?: boolean;
+}
+
+const { anime, featured = false } = Astro.props;
+const { slug, data } = anime;
+---
+
+<a href={URLS.anime(slug)} class:list={['anime-card', { featured }]}>
+  <div class="cover">
+    <img
+      src={data.cover}
+      alt={`Cover ${data.title}`}
+      width="300"
+      height="450"
+      loading="lazy"
+      decoding="async"
+    />
+  </div>
+  <div class="info">
+    <h3 class="title">{data.title}</h3>
+    <p class="meta">
+      {data.status} {data.tahun && `· ${data.tahun}`}
+    </p>
+  </div>
+</a>
+
+<style>
+  .anime-card {
+    display: block;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    background: var(--bg-elevated);
+    transition: transform var(--t-fast);
+  }
+
+  .anime-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .cover {
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    background: var(--bg-surface);
+  }
+
+  .cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--t-base);
+  }
+
+  .anime-card:hover .cover img {
+    transform: scale(1.03);
+  }
+
+  .info {
+    padding: var(--s-2) var(--s-3) var(--s-3);
+  }
+
+  .title {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--text-primary);
+    line-height: var(--lh-snug);
+    margin: 0 0 var(--s-1);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .meta {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* Featured — untuk hero carousel */
+  .anime-card.featured {
+    background: transparent;
+  }
+
+  .anime-card.featured .info {
+    padding: var(--s-3) 0 0;
+  }
+</style>
