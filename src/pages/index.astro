@@ -42,7 +42,7 @@ const genres = GENRES
           {latest.map((anime, i) => (
             <article class="hero-slide" id={`slide-${i + 1}`}>
               <div class="hero-text">
-                <Badge class="hero-badge">Baru Ditambahkan</Badge>
+                <Badge variant="accent" class="hero-badge">Baru Ditambahkan</Badge>
                 <h2 class="hero-title">{anime.data.title}</h2>
                 <p class="hero-meta">
                   {anime.data.status} · {anime.data.tahun} · Rating {anime.data.rating}
