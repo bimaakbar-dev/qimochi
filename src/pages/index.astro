@@ -37,7 +37,7 @@ const genres = GENRES
 
 <BaseLayout title="Qimochi — Nonton & Download Anime Batch">
   <div class="wrapper">
-    
+
     <!-- 1. HERO CAROUSEL -->
     {latest.length > 0 && (
       <section class="hero-carousel" aria-label="Anime terbaru">
@@ -48,9 +48,9 @@ const genres = GENRES
                 <span class="hero-badge">Baru Ditambahkan</span>
                 <h2 class="hero-title">{anime.data.title}</h2>
                 <p class="hero-meta">
-                  {anime.data.status} · {anime.data.tahun} · ⭐ {anime.data.rating}
+                  {anime.data.status} · {anime.data.tahun} · Rating {anime.data.rating}
                 </p>
-                <a href={`/anime/${anime.slug}/`} class="hero-cta">▶ Tonton</a>
+                <a href={`/anime/${anime.id}/`} class="hero-cta">Tonton</a>
               </div>
               <div class="hero-cover">
                 <img
@@ -74,22 +74,25 @@ const genres = GENRES
       </section>
     )}
 
-    <!-- 2. SEARCH (placeholder, Pagefind nanti) -->
+    <!-- 2. SEARCH -->
     <section class="search-section">
-      <input
-        type="search"
-        placeholder="🔍 Cari anime..."
-        class="search-input"
-        aria-label="Cari anime"
-      />
+      <form action="/search/" method="get" class="search-form">
+        <input
+          type="search"
+          name="q"
+          placeholder="Cari anime..."
+          class="search-input"
+          aria-label="Cari anime"
+        />
+      </form>
     </section>
 
     <!-- 3. ONGOING -->
     {ongoing.length > 0 && (
       <section class="landing-section">
         <header class="section-header">
-          <h2 class="section-title">📺 Ongoing</h2>
-          <a href="/anime/ongoing/" class="section-link">Lihat Semua →</a>
+          <h2 class="section-title">Ongoing</h2>
+          <a href="/anime/ongoing/" class="section-link">Lihat Semua &rarr;</a>
         </header>
         <div class="anime-grid">
           {ongoing.map(anime => <AnimeCard anime={anime} />)}
@@ -101,8 +104,8 @@ const genres = GENRES
     {completed.length > 0 && (
       <section class="landing-section">
         <header class="section-header">
-          <h2 class="section-title">✅ Completed</h2>
-          <a href="/anime/complete/" class="section-link">Lihat Semua →</a>
+          <h2 class="section-title">Completed</h2>
+          <a href="/anime/complete/" class="section-link">Lihat Semua &rarr;</a>
         </header>
         <div class="anime-grid">
           {completed.map(anime => <AnimeCard anime={anime} />)}
@@ -114,12 +117,15 @@ const genres = GENRES
     {genres.length > 0 && (
       <section class="landing-section">
         <header class="section-header">
-          <h2 class="section-title">🏷️ Genre</h2>
-          <a href="/genre/" class="section-link">Lihat Semua →</a>
+          <h2 class="section-title">Genre</h2>
+          <a href="/genre/" class="section-link">Lihat Semua &rarr;</a>
         </header>
         <div class="genre-grid">
           {genres.map(g => (
-            <a href={`/genre/${g.name.toLowerCase().replace(/\s+/g, '-')}/`} class="genre-card">
+            <a
+              href={`/genre/${g.name.toLowerCase().replace(/\s+/g, '-')}/`}
+              class="genre-card"
+            >
               <span class="genre-name">{g.name}</span>
               <span class="genre-count">{g.count} anime</span>
             </a>
@@ -249,6 +255,10 @@ const genres = GENRES
   /* ----------------------------------------------------------
      SEARCH
      ---------------------------------------------------------- */
+  .search-form {
+    width: 100%;
+  }
+
   .search-input {
     width: 100%;
     padding: var(--s-3) var(--s-4);
@@ -294,6 +304,7 @@ const genres = GENRES
     font-size: var(--fs-sm);
     color: var(--text-secondary);
     white-space: nowrap;
+    transition: color var(--t-fast);
   }
 
   .section-link:hover {
