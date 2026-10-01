@@ -1,0 +1,255 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import EpisodeList from '../../../components/EpisodeList.astro';
+
+export async function getStaticPaths() {
+  const allAnime = await getCollection('anime');
+  return allAnime.map(anime => ({
+    params: { slug: anime.id },
+    props: { anime },
+  }));
+}
+
+const { anime } = Astro.props;
+const { data } = anime;
+const { Content } = await render(anime);
+
+const episodeNumbers = data.episodes.map(e => e.number).sort((a, b) => a - b);
+const firstEpisode = episodeNumbers[0] ?? 1;
+---
+
+<BaseLayout
+  title={data.title}
+  description={`Nonton dan download ${data.title} batch. ${data.studio}, ${data.tahun}.`}
+  image={data.cover}
+  type="video.other"
+>
+  <div class="wrapper">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-cover">
+        <img
+          src={data.cover}
+          alt={`Cover ${data.title}`}
+          width="200"
+          height="300"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </div>
+
+      <div class="hero-info">
+        <h1 class="hero-title">{data.title}</h1>
+
+        <p class="hero-meta">
+          <span>⭐ {data.rating}</span>
+          <span class="sep">·</span>
+          <span>{data.episodes.length} Episode</span>
+          <span class="sep">·</span>
+          <span>{data.tahun}</span>
+          <span class="sep">·</span>
+          <span>{data.studio}</span>
+        </p>
+
+        <ul class="hero-genres">
+          {data.genre.map(g => (
+            <li>
+              <a href={`/genre/${g.toLowerCase().replace(/\s+/g, '-')}/`}>{g}</a>
+            </li>
+          ))}
+        </ul>
+
+        <a href={`/watch/${anime.id}/${firstEpisode}/`} class="hero-cta">
+          ▶ Mulai dari Episode {firstEpisode}
+        </a>
+      </div>
+    </section>
+
+    <!-- 2 KOLOM -->
+    <div class="content-grid">
+      <div class="content-main">
+        <section class="synopsis-section">
+          <h2>📖 Sinopsis</h2>
+          <div class="markdown markdown--prose">
+            <Content />
+          </div>
+        </section>
+      </div>
+
+      <aside class="content-aside">
+        <EpisodeList
+          slug={anime.id}
+          episodes={episodeNumbers}
+          currentEpisode={null}
+        />
+      </aside>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .wrapper {
+    padding-block: var(--s-6) var(--s-12);
+  }
+
+  /* ----------------------------------------------------------
+     HERO
+     ---------------------------------------------------------- */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-4);
+    background: var(--bg-elevated);
+    border-radius: var(--r-lg);
+    padding: var(--s-5);
+    margin-bottom: var(--s-6);
+    text-align: center;
+    justify-items: center;
+  }
+
+  .hero-cover {
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .hero-cover img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: var(--r-md);
+    display: block;
+  }
+
+  .hero-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    align-items: center;
+  }
+
+  .hero-title {
+    font-size: var(--fs-xl);
+    margin: 0;
+    line-height: var(--lh-snug);
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--s-1) var(--s-2);
+    color: var(--text-secondary);
+    font-size: var(--fs-sm);
+    margin: 0;
+  }
+
+  .hero-meta .sep {
+    color: var(--text-muted);
+  }
+
+  .hero-genres {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--s-1);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .hero-genres a {
+    display: inline-block;
+    padding: var(--s-1) var(--s-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-full);
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+    transition: all var(--t-fast);
+  }
+
+  .hero-genres a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .hero-cta {
+    display: inline-block;
+    padding: var(--s-2) var(--s-5);
+    background: var(--accent);
+    color: var(--accent-text);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    transition: background var(--t-fast);
+  }
+
+  .hero-cta:hover {
+    background: var(--accent-hover);
+    color: var(--accent-text);
+  }
+
+  /* ----------------------------------------------------------
+     2 KOLOM
+     ---------------------------------------------------------- */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-6);
+    align-items: start;
+  }
+
+  .content-main {
+    min-width: 0;
+  }
+
+  .synopsis-section h2 {
+    font-size: var(--fs-lg);
+    margin: 0 0 var(--s-3);
+  }
+
+  /* ----------------------------------------------------------
+     DESKTOP
+     ---------------------------------------------------------- */
+  @media (min-width: 56rem) {
+    .hero {
+      grid-template-columns: 200px 1fr;
+      gap: var(--s-6);
+      padding: var(--s-6);
+      text-align: left;
+      justify-items: start;
+    }
+
+    .hero-cover {
+      max-width: none;
+    }
+
+    .hero-info {
+      align-items: flex-start;
+    }
+
+    .hero-title {
+      font-size: var(--fs-2xl);
+    }
+
+    .hero-meta,
+    .hero-genres {
+      justify-content: flex-start;
+    }
+
+    .content-grid {
+      grid-template-columns: 1fr var(--aside-width);
+      gap: var(--s-6);
+    }
+
+    .content-aside {
+      position: sticky;
+      top: var(--sticky-top);
+      max-height: calc(100vh - var(--sticky-top) - var(--s-4));
+      overflow-y: auto;
+    }
+  }
+</style>
