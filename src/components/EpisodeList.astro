@@ -6,14 +6,11 @@ interface Props {
 }
 
 const { slug, episodes, currentEpisode = null } = Astro.props;
-
-// Kalau tidak ada episode aktif (di detail page), tidak perlu scroll target
-const hasActive = currentEpisode !== null;
 ---
 
-<details class="episode-list" open>
+<details class="episode-list" id="episode-list" open>
   <summary>
-    <span class="icon">📺</span>
+    <span class="icon" aria-hidden="true">📺</span>
     <span class="label">Daftar Episode</span>
     <span class="count">({episodes.length})</span>
   </summary>
@@ -41,6 +38,7 @@ const hasActive = currentEpisode !== null;
     background: var(--bg-elevated);
     border-radius: var(--r-lg);
     padding: var(--s-4);
+    scroll-margin-top: calc(var(--header-height) + var(--s-4));
   }
 
   .episode-list summary {
@@ -56,16 +54,13 @@ const hasActive = currentEpisode !== null;
     margin-bottom: var(--s-3);
   }
 
-  .episode-list summary::-webkit-details-marker {
-    display: none;
-  }
+  .episode-list summary::-webkit-details-marker { display: none; }
 
   .episode-list summary .count {
     color: var(--text-muted);
     font-weight: var(--fw-normal);
   }
 
-  /* Grid chip — compact */
   .episode-items {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
