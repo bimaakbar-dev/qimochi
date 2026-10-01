@@ -1,0 +1,101 @@
+/* ==========================================================
+   GLOBAL — Entry Point
+   ========================================================== */
+
+/* 1. Tokens */
+@import './props.css';
+
+/* 2. Reset */
+@import './reset.css';
+
+/* 3. Markdown */
+@import './markdown.css';
+
+/* ----------------------------------------------------------
+   BASE — style default elemen
+   ---------------------------------------------------------- */
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
+  color: var(--text-primary);
+  background-color: var(--bg-base);
+}
+
+h1 { font-size: var(--fs-2xl); font-weight: var(--fw-semibold); line-height: var(--lh-tight); }
+h2 { font-size: var(--fs-xl);  font-weight: var(--fw-semibold); line-height: var(--lh-tight); }
+h3 { font-size: var(--fs-lg);  font-weight: var(--fw-semibold); line-height: var(--lh-snug); }
+h4, h5, h6 { font-size: var(--fs-base); font-weight: var(--fw-semibold); line-height: var(--lh-snug); }
+
+a { transition: color var(--t-fast); }
+p { line-height: var(--lh-relaxed); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+::selection {
+  background-color: var(--accent-soft);
+  color: var(--text-primary);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--r-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+
+* { scrollbar-width: thin; scrollbar-color: var(--border) var(--bg-base); }
+
+/* ----------------------------------------------------------
+   UTILITY
+   ---------------------------------------------------------- */
+.wrapper {
+  width: 100%;
+  max-width: var(--content-max-mobile);
+  margin-inline: auto;
+  padding-inline: var(--pad-x);
+}
+
+@media (min-width: 56rem) {
+  .wrapper { max-width: var(--content-max-desktop); }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -3rem;
+  left: var(--pad-x);
+  z-index: var(--z-toast);
+  padding: var(--s-2) var(--s-4);
+  background: var(--accent);
+  color: var(--accent-text);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  transition: top var(--t-fast);
+}
+
+.skip-link:focus { top: var(--s-2); }
+
+/* ----------------------------------------------------------
+   REDUCED MOTION
+   ---------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
