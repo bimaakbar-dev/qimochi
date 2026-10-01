@@ -1,0 +1,110 @@
+---
+interface Props {
+  slug: string;
+  episodeNumber: number;
+  totalEpisodes: number;
+}
+
+const { slug, episodeNumber, totalEpisodes } = Astro.props;
+
+const prevEp = episodeNumber > 1 ? episodeNumber - 1 : null;
+const nextEp = episodeNumber < totalEpisodes ? episodeNumber + 1 : null;
+---
+
+<nav class="action-bar" aria-label="Navigasi episode">
+  {prevEp ? (
+    <a href={`/watch/${slug}/${prevEp}/`} class="action-link action-prev" rel="prev">
+      <span class="arrow" aria-hidden="true">◀</span>
+      <span class="label">Ep {prevEp}</span>
+    </a>
+  ) : (
+    <span class="action-link action-disabled" aria-disabled="true">
+      <span class="arrow" aria-hidden="true">◀</span>
+      <span class="label">Ep —</span>
+    </span>
+  )}
+
+  <a href="#episode-list" class="action-link action-list">
+    <span aria-hidden="true">📺</span>
+    <span class="label">Daftar Episode</span>
+  </a>
+
+  {nextEp ? (
+    <a href={`/watch/${slug}/${nextEp}/`} class="action-link action-next" rel="next">
+      <span class="label">Ep {nextEp}</span>
+      <span class="arrow" aria-hidden="true">▶</span>
+    </a>
+  ) : (
+    <span class="action-link action-disabled" aria-disabled="true">
+      <span class="label">Ep —</span>
+      <span class="arrow" aria-hidden="true">▶</span>
+    </span>
+  )}
+</nav>
+
+<style>
+  .action-bar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: var(--s-2);
+    align-items: center;
+  }
+
+  .action-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-1);
+    padding: var(--s-3) var(--s-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    color: var(--text-primary);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    transition: all var(--t-fast);
+    min-height: 2.75rem;
+  }
+
+  .action-link:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+  }
+
+  .action-prev {
+    justify-self: start;
+  }
+
+  .action-next {
+    justify-self: end;
+  }
+
+  .action-list {
+    justify-self: center;
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-secondary);
+    padding-inline: var(--s-3);
+  }
+
+  .action-list:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .action-disabled {
+    color: var(--text-disabled);
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .action-list .label {
+    display: none;
+  }
+
+  @media (min-width: 48rem) {
+    .action-list .label {
+      display: inline;
+    }
+  }
+</style>
