@@ -4,6 +4,8 @@
   --bg-surface:  hsl(0, 0%, 95%);     /* Abu-abu sangat muda untuk elemen sekunder */
   --bg-hover:    hsl(0, 0%, 88%);     /* Warna saat elemen di-hover */
   
+  --bg-nav:     hsl(0, 0%, 10%);
+  
   --border:       hsl(0, 0%, 82%);    /* Garis pembatas tipis */
   --border-hover: hsl(0, 0%, 70%);    /* Garis pembatas saat di-hover */
 
