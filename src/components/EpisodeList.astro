@@ -1,0 +1,102 @@
+---
+interface Props {
+  slug: string;
+  episodes: number[];
+  currentEpisode?: number | null;
+}
+
+const { slug, episodes, currentEpisode = null } = Astro.props;
+
+// Kalau tidak ada episode aktif (di detail page), tidak perlu scroll target
+const hasActive = currentEpisode !== null;
+---
+
+<details class="episode-list" open>
+  <summary>
+    <span class="icon">📺</span>
+    <span class="label">Daftar Episode</span>
+    <span class="count">({episodes.length})</span>
+  </summary>
+
+  <ol class="episode-items">
+    {episodes.map(num => {
+      const isActive = num === currentEpisode;
+      return (
+        <li>
+          <a
+            href={`/watch/${slug}/${num}/`}
+            class:list={['episode-item', { active: isActive }]}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            <span class="num">{String(num).padStart(2, '0')}</span>
+          </a>
+        </li>
+      );
+    })}
+  </ol>
+</details>
+
+<style>
+  .episode-list {
+    background: var(--bg-elevated);
+    border-radius: var(--r-lg);
+    padding: var(--s-4);
+  }
+
+  .episode-list summary {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    cursor: pointer;
+    font-weight: var(--fw-medium);
+    font-size: var(--fs-sm);
+    list-style: none;
+    padding-bottom: var(--s-3);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: var(--s-3);
+  }
+
+  .episode-list summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .episode-list summary .count {
+    color: var(--text-muted);
+    font-weight: var(--fw-normal);
+  }
+
+  /* Grid chip — compact */
+  .episode-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
+    gap: var(--s-2);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .episode-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.5rem;
+    background: var(--bg-surface);
+    border-radius: var(--r-sm);
+    color: var(--text-secondary);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    font-variant-numeric: tabular-nums;
+    transition: all var(--t-fast);
+  }
+
+  .episode-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .episode-item.active {
+    background: var(--accent);
+    color: var(--accent-text);
+    pointer-events: none;
+  }
+</style>
