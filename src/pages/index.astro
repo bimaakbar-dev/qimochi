@@ -2,26 +2,23 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AnimeCard from '../components/AnimeCard.astro';
+import Badge from '~/user-components/Badge.astro;
 import { GENRES, PER_PAGE } from '../constants';
 
 const allAnime = await getCollection('anime');
 
-// Hero — 3 terbaru
 const latest = allAnime
   .sort((a, b) => b.data.addedAt.getTime() - a.data.addedAt.getTime())
   .slice(0, 3);
 
-// Ongoing — 8
 const ongoing = allAnime
   .filter(a => a.data.status === 'Ongoing')
   .slice(0, PER_PAGE - 1);
 
-// Completed — 8
 const completed = allAnime
   .filter(a => a.data.status === 'Completed')
   .slice(0, PER_PAGE - 1);
 
-// Genre — hitung dan ambil 8 teratas
 const genreCounts: Record<string, number> = {};
 allAnime.forEach(a => {
   a.data.genre.forEach(g => {
@@ -45,7 +42,7 @@ const genres = GENRES
           {latest.map((anime, i) => (
             <article class="hero-slide" id={`slide-${i + 1}`}>
               <div class="hero-text">
-                <span class="hero-badge">Baru Ditambahkan</span>
+                <Badge class="hero-badge">Baru Ditambahkan</Badge>
                 <h2 class="hero-title">{anime.data.title}</h2>
                 <p class="hero-meta">
                   {anime.data.status} · {anime.data.tahun} · Rating {anime.data.rating}
@@ -194,15 +191,8 @@ const genres = GENRES
   }
 
   .hero-badge {
-    display: inline-block;
-    padding: var(--s-1) var(--s-3);
-    background: var(--accent);
     color: var(--accent-text);
-    border-radius: var(--r-full);
     font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   .hero-title {
