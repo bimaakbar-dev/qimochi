@@ -1,23 +1,23 @@
 :root {
-  --bg-base:     hsl(0, 0%, 90%);     /* Abu-abu terang latar halaman (#E5E5E5) */
-  --bg-elevated: hsl(0, 0%, 100%);    /* Putih bersih untuk card, panel, hero */
-  --bg-surface:  hsl(0, 0%, 96%);     /* Abu-abu sangat muda untuk chip/tombol */
-  --bg-hover:    hsl(0, 0%, 85%);     /* Hover state lebih gelap dikit */
+  --bg-base:     hsl(0, 0%, 90%);     /* Latar belakang halaman abu-abu terang (#E5E5E5)[span_1](start_span)[span_1](end_span) */
+  --bg-elevated: hsl(0, 0%, 100%);    /* Putih bersih untuk card, header, dan area konten[span_2](start_span)[span_2](end_span) */
+  --bg-surface:  hsl(0, 0%, 95%);     /* Abu-abu sangat muda untuk elemen sekunder */
+  --bg-hover:    hsl(0, 0%, 88%);     /* Warna saat elemen di-hover */
   
-  --border:       hsl(0, 0%, 80%);    /* Garis batas elemen */
-  --border-hover: hsl(0, 0%, 70%);    /* Garis batas saat di-hover */
+  --border:       hsl(0, 0%, 82%);    /* Garis pembatas tipis */
+  --border-hover: hsl(0, 0%, 70%);    /* Garis pembatas saat di-hover */
 
-  --text-primary:   hsl(0, 0%, 10%);    /* Hitam arang untuk judul utama */
-  --text-secondary: hsl(0, 0%, 35%);    /* Abu-abu gelap untuk teks/meta */
-  --text-muted:     hsl(0, 0%, 50%);    /* Abu-abu sedang untuk label/placeholder */
-  --text-disabled:  hsl(0, 0%, 65%);    /* Dinonaktifkan */
+  --text-primary:   hsl(0, 0%, 13%);    /* Hitam arang untuk judul utama & teks tebal[span_3](start_span)[span_3](end_span) */
+  --text-secondary: hsl(0, 0%, 35%);    /* Abu-abu gelap untuk sub-teks dan deskripsi */
+  --text-muted:     hsl(0, 0%, 50%);    /* Abu-abu sedang untuk tanggal/meta (*"Jul 25, 2025"*)[span_4](start_span)[span_4](end_span) */
+  --text-disabled:  hsl(0, 0%, 65%);    /* Teks nonaktif */
 
-  --accent:       hsl(3, 81%, 48%);   /* Merah khas Riot Games (#DA291C) */
+  --accent:       hsl(3, 81%, 48%);   /* Merah Riot Tech Blog (#DA291C)[span_5](start_span)[span_5](end_span) */
   --accent-hover: hsl(3, 81%, 40%);   /* Merah lebih gelap saat hover */
-  --accent-soft:  hsla(3, 81%, 48%, 0.12);
-  --accent-text:  hsl(0, 0%, 100%);   /* Putih */
+  --accent-soft:  hsla(3, 81%, 48%, 0.12); /* Aksen transparan untuk badge/latar tipis */
+  --accent-text:  hsl(0, 0%, 100%);   /* Teks putih di atas aksen merah */
 
-  --gold:       hsl(40, 53%, 51%);    /* Aksen emas (opsional jika dibutuhkan) */
+  --gold:       hsl(40, 53%, 51%);    /* Aksen emas */
   --gold-hover: hsl(42, 60%, 57%);    
   --gold-soft:  hsla(40, 53%, 51%, 0.15);
 
@@ -30,17 +30,18 @@
   --danger:       hsl(3, 81%, 48%);   
   --danger-soft:  hsla(3, 81%, 48%, 0.15);
 
-  /* Variabel font, ukuran, spacing, dll tetap sama */
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto,
+               'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Monaco, 'Cascadia Code',
+               'Roboto Mono', monospace;
 
-  --fs-xs:   0.75rem;    
-  --fs-sm:   0.875rem;   
-  --fs-base: 1rem;       
-  --fs-lg:   1.125rem;   
-  --fs-xl:   1.25rem;    
-  --fs-2xl:  1.5rem;     
-  --fs-3xl:  1.875rem;   
+  --fs-xs:   0.75rem;    /* 12px */
+  --fs-sm:   0.875rem;   /* 14px */
+  --fs-base: 1rem;       /* 16px */
+  --fs-lg:   1.125rem;   /* 18px */
+  --fs-xl:   1.25rem;    /* 20px */
+  --fs-2xl:  1.5rem;     /* 24px */
+  --fs-3xl:  1.875rem;   /* 30px */
 
   --fw-normal:   400;
   --fw-medium:   500;
@@ -52,29 +53,29 @@
   --lh-normal:  1.5;
   --lh-relaxed: 1.65;
 
-  --s-1:  0.25rem;  
-  --s-2:  0.5rem;   
-  --s-3:  0.75rem;  
-  --s-4:  1rem;     
-  --s-5:  1.25rem;  
-  --s-6:  1.5rem;   
-  --s-8:  2rem;     
-  --s-10: 2.5rem;   
-  --s-12: 3rem;     
-  --s-16: 4rem;     
+  --s-1:  0.25rem;  /*  4px */
+  --s-2:  0.5rem;   /*  8px */
+  --s-3:  0.75rem;  /* 12px */
+  --s-4:  1rem;     /* 16px */
+  --s-5:  1.25rem;  /* 20px */
+  --s-6:  1.5rem;   /* 24px */
+  --s-8:  2rem;     /* 32px */
+  --s-10: 2.5rem;   /* 40px */
+  --s-12: 3rem;     /* 48px */
+  --s-16: 4rem;     /* 64px */
 
-  --r-sm:   0.375rem;  
-  --r-md:   0.625rem;  
-  --r-lg:   0.875rem;  
-  --r-full: 9999px;    
+  --r-sm:   0.375rem;  /*  6px — chip, badge */
+  --r-md:   0.625rem;  /* 10px — card, tombol */
+  --r-lg:   0.875rem;  /* 14px — panel, hero */
+  --r-full: 9999px;    /* pill */
 
   --shadow-sm: 0 1px 2px hsla(0, 0%, 0%, 0.05);
   --shadow-md: 0 4px 12px hsla(0, 0%, 0%, 0.08);
   --shadow-lg: 0 12px 32px hsla(0, 0%, 0%, 0.12);
 
-  --content-max-mobile:  48rem;   
-  --content-max-desktop: 72rem;   
-  --aside-width:         18rem;   
+  --content-max-mobile:  48rem;   /*  768px */
+  --content-max-desktop: 72rem;   /* 1152px */
+  --aside-width:         18rem;   /*  288px */
 
   --pad-x: 1rem;
 
