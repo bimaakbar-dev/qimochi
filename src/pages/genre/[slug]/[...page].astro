@@ -1,0 +1,111 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import AnimeCard from '../../../components/AnimeCard.astro';
+import Pagination from '../../../components/Pagination.astro';
+import { getGenreData, paginate, allGenreSlugs } from '../../../lib/genre';
+
+export async function getStaticPaths() {
+  const paths = [];
+
+  for (const { genre, slug } of allGenreSlugs()) {
+    const { anime, totalPages } = await getGenreData(genre);
+
+    // Halaman 1: page = undefined
+    paths.push({
+      params: { slug, page: undefined },
+      props: { genre, anime, totalPages, pageNumber: 1 },
+    });
+
+    // Halaman 2 sampai N
+    for (let page = 2; page <= totalPages; page++) {
+      paths.push({
+        params: { slug, page: String(page) },
+        props: { genre, anime, totalPages, pageNumber: page },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { genre, anime, totalPages, pageNumber } = Astro.props;
+const items = paginate(anime, pageNumber);
+const slug = Astro.params.slug;
+const isFirstPage = pageNumber === 1;
+---
+
+<BaseLayout
+  title={isFirstPage ? `Anime ${genre}` : `Anime ${genre} — Halaman ${pageNumber}`}
+  description={`Koleksi ${anime.length} anime genre ${genre}.`}
+  canonical={`/genre/${slug}/`}
+  noindex={!isFirstPage}
+>
+  <div class="wrapper">
+    <header class="page-header">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/genre/">← Semua Genre</a>
+      </nav>
+      <h1>{genre}</h1>
+      <p class="subtitle">
+        {anime.length} anime
+        {!isFirstPage && ` · Halaman ${pageNumber} dari ${totalPages}`}
+      </p>
+    </header>
+
+    <div class="anime-grid">
+      {items.map(a => <AnimeCard anime={a} />)}
+    </div>
+
+    <Pagination
+      current={pageNumber}
+      total={totalPages}
+      base={`/genre/${slug}`}
+    />
+  </div>
+</BaseLayout>
+
+<style>
+  .wrapper {
+    padding-block: var(--s-8) var(--s-12);
+  }
+
+  .page-header {
+    margin-bottom: var(--s-6);
+  }
+
+  .breadcrumb {
+    margin-bottom: var(--s-3);
+    font-size: var(--fs-sm);
+  }
+
+  .breadcrumb a {
+    color: var(--text-muted);
+  }
+
+  .breadcrumb a:hover {
+    color: var(--accent);
+  }
+
+  .page-header h1 {
+    margin: 0 0 var(--s-1);
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    margin: 0;
+  }
+
+  .anime-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s-3);
+  }
+
+  @media (min-width: 48rem) {
+    .anime-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--s-4);
+    }
+  }
+</style>
