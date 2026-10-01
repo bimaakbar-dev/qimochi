@@ -1,0 +1,216 @@
+---
+interface Server {
+  name: string;
+  url: string;
+}
+interface Stream {
+  quality: string;
+  servers: Server[];
+}
+
+interface Props {
+  streams: Stream[];
+}
+
+const { streams } = Astro.props;
+const defaultQuality = streams[0]?.quality ?? '';
+const defaultServer = streams[0]?.servers[0];
+---
+
+<details class="stream-picker" open>
+  <summary>
+    <span class="icon" aria-hidden="true">⚙️</span>
+    <span class="label">Server & Kualitas</span>
+    <span class="current" id="stream-current">
+      {defaultQuality} · {defaultServer?.name ?? '—'}
+    </span>
+  </summary>
+
+  <div class="stream-body">
+    <!-- Kualitas -->
+    <div class="row">
+      <span class="row-label">Kualitas</span>
+      <div class="chips">
+        {streams.map((s, i) => (
+          <>
+            <input
+              type="radio"
+              name="quality"
+              id={`q-${s.quality}`}
+              value={s.quality}
+              checked={i === 0}
+              hidden
+            />
+            <label for={`q-${s.quality}`} class="chip">{s.quality}</label>
+          </>
+        ))}
+      </div>
+    </div>
+
+    <!-- Server per kualitas -->
+    {streams.map((s, i) => (
+      <div class="row server-row" data-quality={s.quality} hidden={i !== 0}>
+        <span class="row-label">Server</span>
+        <div class="chips">
+          {s.servers.map((srv, j) => (
+            <>
+              <input
+                type="radio"
+                name={`server-${s.quality}`}
+                id={`s-${s.quality}-${j}`}
+                value={srv.url}
+                data-server-name={srv.name}
+                data-quality={s.quality}
+                checked={j === 0}
+                hidden
+              />
+              <label for={`s-${s.quality}-${j}`} class="chip">{srv.name}</label>
+            </>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</details>
+
+<script>
+  const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
+  const currentLabel = document.getElementById('stream-current');
+
+  function updatePlayer() {
+    const qualityInput = document.querySelector<HTMLInputElement>('input[name="quality"]:checked');
+    if (!qualityInput || !iframe) return;
+
+    const quality = qualityInput.value;
+    const serverInput = document.querySelector<HTMLInputElement>(
+      `input[name="server-${quality}"]:checked`
+    );
+    if (!serverInput) return;
+
+    iframe.classList.add('loading');
+    iframe.src = serverInput.value;
+    iframe.onload = () => iframe.classList.remove('loading');
+
+    if (currentLabel) {
+      currentLabel.textContent = `${quality} · ${serverInput.dataset.serverName}`;
+    }
+
+    // Show/hide server rows
+    document.querySelectorAll<HTMLElement>('.server-row').forEach(row => {
+      row.hidden = row.dataset.quality !== quality;
+    });
+
+    localStorage.setItem('qimochi:quality', quality);
+    localStorage.setItem('qimochi:server', serverInput.id);
+  }
+
+  document.querySelectorAll<HTMLInputElement>('.stream-picker input[type="radio"]').forEach(el => {
+    el.addEventListener('change', updatePlayer);
+  });
+
+  // Restore from localStorage
+  const savedQ = localStorage.getItem('qimochi:quality');
+  const savedS = localStorage.getItem('qimochi:server');
+  if (savedQ) {
+    const qEl = document.getElementById(`q-${savedQ}`) as HTMLInputElement | null;
+    if (qEl) {
+      qEl.checked = true;
+      if (savedS) {
+        const sEl = document.getElementById(savedS) as HTMLInputElement | null;
+        if (sEl) sEl.checked = true;
+      }
+      updatePlayer();
+    }
+  }
+</script>
+
+<style>
+  .stream-picker {
+    background: var(--bg-elevated);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+
+  .stream-picker summary {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: var(--s-3) var(--s-4);
+    cursor: pointer;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    list-style: none;
+    user-select: none;
+  }
+
+  .stream-picker summary::-webkit-details-marker { display: none; }
+
+  .stream-picker summary .current {
+    margin-left: auto;
+    padding: var(--s-1) var(--s-3);
+    background: var(--bg-surface);
+    border-radius: var(--r-sm);
+    color: var(--accent);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+  }
+
+  .stream-body {
+    padding: 0 var(--s-4) var(--s-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+  }
+
+  .row-label {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    min-width: 4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+
+  .chip {
+    display: inline-block;
+    padding: var(--s-1) var(--s-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .chip:hover {
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+  }
+
+  .stream-picker input[type='radio']:checked + .chip {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+
+  @media (max-width: 30rem) {
+    .row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--s-2);
+    }
+  }
+</style>
