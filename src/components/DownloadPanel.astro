@@ -1,0 +1,123 @@
+---
+interface Server {
+  name: string;
+  url: string;
+}
+interface Download {
+  quality: string;
+  size: string;
+  servers: Server[];
+}
+
+interface Props {
+  downloads: Download[];
+}
+
+const { downloads } = Astro.props;
+
+if (!downloads || downloads.length === 0) return null;
+---
+
+<section class="download-panel">
+  <h3 class="panel-title">📥 Download Batch</h3>
+
+  {downloads.map((d, i) => (
+    <details class="quality-item" open={i === 0}>
+      <summary>
+        <span class="quality">{d.quality}</span>
+        <span class="size">· {d.size}</span>
+      </summary>
+      <div class="servers">
+        {d.servers.map(srv => (
+          <a
+            href={srv.url}
+            target="_blank"
+            rel="nofollow noopener"
+            class="dl-link"
+          >
+            {srv.name}
+          </a>
+        ))}
+      </div>
+    </details>
+  ))}
+</section>
+
+<style>
+  .download-panel {
+    background: var(--bg-elevated);
+    border-radius: var(--r-lg);
+    padding: var(--s-4);
+  }
+
+  .panel-title {
+    font-size: var(--fs-base);
+    font-weight: var(--fw-semibold);
+    margin: 0 0 var(--s-3);
+  }
+
+  .quality-item {
+    border-top: 1px solid var(--border);
+  }
+
+  .quality-item:first-of-type {
+    border-top: none;
+  }
+
+  .quality-item summary {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: var(--s-3) 0;
+    cursor: pointer;
+    list-style: none;
+    font-size: var(--fs-sm);
+    user-select: none;
+  }
+
+  .quality-item summary::-webkit-details-marker { display: none; }
+
+  .quality-item summary::before {
+    content: '▶';
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    transition: transform var(--t-fast);
+    display: inline-block;
+  }
+
+  .quality-item[open] summary::before {
+    transform: rotate(90deg);
+  }
+
+  .quality {
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+  }
+
+  .size {
+    color: var(--text-muted);
+  }
+
+  .servers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    padding: 0 0 var(--s-3) var(--s-5);
+  }
+
+  .dl-link {
+    display: inline-block;
+    padding: var(--s-1) var(--s-3);
+    background: var(--bg-surface);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+    transition: all var(--t-fast);
+  }
+
+  .dl-link:hover {
+    background: var(--accent);
+    color: var(--accent-text);
+  }
+</style>
