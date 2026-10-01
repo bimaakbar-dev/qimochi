@@ -1,0 +1,392 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AnimeCard from '../components/AnimeCard.astro';
+import { GENRES, PER_PAGE } from '../constants';
+
+const allAnime = await getCollection('anime');
+
+// Hero — 3 terbaru
+const latest = allAnime
+  .sort((a, b) => b.data.addedAt.getTime() - a.data.addedAt.getTime())
+  .slice(0, 3);
+
+// Ongoing — 8
+const ongoing = allAnime
+  .filter(a => a.data.status === 'Ongoing')
+  .slice(0, PER_PAGE - 1);
+
+// Completed — 8
+const completed = allAnime
+  .filter(a => a.data.status === 'Completed')
+  .slice(0, PER_PAGE - 1);
+
+// Genre — hitung dan ambil 8 teratas
+const genreCounts: Record<string, number> = {};
+allAnime.forEach(a => {
+  a.data.genre.forEach(g => {
+    genreCounts[g] = (genreCounts[g] || 0) + 1;
+  });
+});
+const genres = GENRES
+  .map(name => ({ name, count: genreCounts[name] || 0 }))
+  .filter(g => g.count > 0)
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 8);
+---
+
+<BaseLayout title="Qimochi — Nonton & Download Anime Batch">
+  <div class="wrapper">
+    
+    <!-- 1. HERO CAROUSEL -->
+    {latest.length > 0 && (
+      <section class="hero-carousel" aria-label="Anime terbaru">
+        <div class="hero-track">
+          {latest.map((anime, i) => (
+            <article class="hero-slide" id={`slide-${i + 1}`}>
+              <div class="hero-text">
+                <span class="hero-badge">Baru Ditambahkan</span>
+                <h2 class="hero-title">{anime.data.title}</h2>
+                <p class="hero-meta">
+                  {anime.data.status} · {anime.data.tahun} · ⭐ {anime.data.rating}
+                </p>
+                <a href={`/anime/${anime.slug}/`} class="hero-cta">▶ Tonton</a>
+              </div>
+              <div class="hero-cover">
+                <img
+                  src={anime.data.cover}
+                  alt={`Cover ${anime.data.title}`}
+                  width="300"
+                  height="450"
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  fetchpriority={i === 0 ? 'high' : 'auto'}
+                  decoding="async"
+                />
+              </div>
+            </article>
+          ))}
+        </div>
+        <nav class="hero-dots" aria-label="Navigasi slide">
+          {latest.map((_, i) => (
+            <a href={`#slide-${i + 1}`} class="hero-dot" aria-label={`Slide ${i + 1}`}></a>
+          ))}
+        </nav>
+      </section>
+    )}
+
+    <!-- 2. SEARCH (placeholder, Pagefind nanti) -->
+    <section class="search-section">
+      <input
+        type="search"
+        placeholder="🔍 Cari anime..."
+        class="search-input"
+        aria-label="Cari anime"
+      />
+    </section>
+
+    <!-- 3. ONGOING -->
+    {ongoing.length > 0 && (
+      <section class="landing-section">
+        <header class="section-header">
+          <h2 class="section-title">📺 Ongoing</h2>
+          <a href="/anime/ongoing/" class="section-link">Lihat Semua →</a>
+        </header>
+        <div class="anime-grid">
+          {ongoing.map(anime => <AnimeCard anime={anime} />)}
+        </div>
+      </section>
+    )}
+
+    <!-- 4. COMPLETED -->
+    {completed.length > 0 && (
+      <section class="landing-section">
+        <header class="section-header">
+          <h2 class="section-title">✅ Completed</h2>
+          <a href="/anime/complete/" class="section-link">Lihat Semua →</a>
+        </header>
+        <div class="anime-grid">
+          {completed.map(anime => <AnimeCard anime={anime} />)}
+        </div>
+      </section>
+    )}
+
+    <!-- 5. GENRE -->
+    {genres.length > 0 && (
+      <section class="landing-section">
+        <header class="section-header">
+          <h2 class="section-title">🏷️ Genre</h2>
+          <a href="/genre/" class="section-link">Lihat Semua →</a>
+        </header>
+        <div class="genre-grid">
+          {genres.map(g => (
+            <a href={`/genre/${g.name.toLowerCase().replace(/\s+/g, '-')}/`} class="genre-card">
+              <span class="genre-name">{g.name}</span>
+              <span class="genre-count">{g.count} anime</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+  </div>
+</BaseLayout>
+
+<style>
+  /* Spacing antar section */
+  .wrapper {
+    padding-block: var(--s-6) var(--s-12);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-10);
+  }
+
+  /* ----------------------------------------------------------
+     HERO
+     ---------------------------------------------------------- */
+  .hero-track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    border-radius: var(--r-lg);
+    background: var(--bg-elevated);
+    scrollbar-width: none;
+  }
+
+  .hero-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hero-slide {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-4);
+    padding: var(--s-5);
+    align-items: center;
+  }
+
+  .hero-cover {
+    order: -1;
+    width: 100%;
+  }
+
+  .hero-cover img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: var(--r-md);
+  }
+
+  .hero-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    text-align: center;
+    align-items: center;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    padding: var(--s-1) var(--s-3);
+    background: var(--accent);
+    color: var(--accent-text);
+    border-radius: var(--r-full);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .hero-title {
+    font-size: var(--fs-xl);
+    margin: 0;
+  }
+
+  .hero-meta {
+    color: var(--text-secondary);
+    font-size: var(--fs-sm);
+    margin: 0;
+  }
+
+  .hero-cta {
+    padding: var(--s-2) var(--s-5);
+    background: var(--accent);
+    color: var(--accent-text);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    transition: background var(--t-fast);
+  }
+
+  .hero-cta:hover {
+    background: var(--accent-hover);
+    color: var(--accent-text);
+  }
+
+  .hero-dots {
+    display: flex;
+    justify-content: center;
+    gap: var(--s-2);
+    margin-top: var(--s-4);
+  }
+
+  .hero-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--r-full);
+    background: var(--border);
+    transition: background var(--t-fast), transform var(--t-fast);
+  }
+
+  .hero-dot:hover,
+  .hero-dot:target {
+    background: var(--accent);
+    transform: scale(1.3);
+  }
+
+  /* ----------------------------------------------------------
+     SEARCH
+     ---------------------------------------------------------- */
+  .search-input {
+    width: 100%;
+    padding: var(--s-3) var(--s-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    color: var(--text-primary);
+    font-size: var(--fs-base);
+    transition: border-color var(--t-fast);
+  }
+
+  .search-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* ----------------------------------------------------------
+     SECTION
+     ---------------------------------------------------------- */
+  .landing-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+  }
+
+  .section-title {
+    font-size: var(--fs-lg);
+    margin: 0;
+  }
+
+  .section-link {
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .section-link:hover {
+    color: var(--accent);
+  }
+
+  /* ----------------------------------------------------------
+     ANIME GRID
+     ---------------------------------------------------------- */
+  .anime-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s-3);
+  }
+
+  @media (min-width: 48rem) {
+    .anime-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-4);
+    }
+  }
+
+  /* ----------------------------------------------------------
+     GENRE GRID
+     ---------------------------------------------------------- */
+  .genre-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s-3);
+  }
+
+  @media (min-width: 48rem) {
+    .genre-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-4);
+    }
+  }
+
+  .genre-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    padding: var(--s-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    transition: all var(--t-fast);
+  }
+
+  .genre-card:hover {
+    border-color: var(--accent);
+    background: var(--bg-surface);
+  }
+
+  .genre-name {
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+  }
+
+  .genre-count {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  /* ----------------------------------------------------------
+     DESKTOP — HERO SIDE-BY-SIDE
+     ---------------------------------------------------------- */
+  @media (min-width: 48rem) {
+    .hero-slide {
+      grid-template-columns: 1.2fr 1fr;
+      gap: var(--s-8);
+      padding: var(--s-8);
+      min-height: 320px;
+    }
+
+    .hero-cover {
+      order: 0;
+      width: auto;
+    }
+
+    .hero-cover img {
+      max-height: 280px;
+      width: auto;
+      margin-inline: auto;
+    }
+
+    .hero-text {
+      text-align: left;
+      align-items: flex-start;
+    }
+
+    .hero-title {
+      font-size: var(--fs-2xl);
+    }
+  }
+</style>
