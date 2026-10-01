@@ -13,6 +13,7 @@
   --text-secondary: hsl(0, 0%, 35%);    /* Abu-abu gelap untuk sub-teks dan deskripsi */
   --text-muted:     hsl(0, 0%, 50%);    /* Abu-abu sedang untuk tanggal/meta (*"Jul 25, 2025"*)[span_4](start_span)[span_4](end_span) */
   --text-disabled:  hsl(0, 0%, 65%);    /* Teks nonaktif */
+  --text-inverted: hsl(0, 0%, 100%);
 
   --accent:       hsl(3, 81%, 48%);   /* Merah Riot Tech Blog (#DA291C)[span_5](start_span)[span_5](end_span) */
   --accent-hover: hsl(3, 81%, 40%);   /* Merah lebih gelap saat hover */
