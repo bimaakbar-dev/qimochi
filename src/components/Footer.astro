@@ -1,0 +1,38 @@
+---
+import { SITE } from '../constants';
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p class="copyright">
+      © {year} {SITE.name}. All rights reserved.
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--border);
+    margin-top: var(--s-16);
+  }
+
+  .footer-inner {
+    max-width: var(--content-max-mobile);
+    margin-inline: auto;
+    padding: var(--s-6) var(--pad-x);
+    text-align: center;
+  }
+
+  @media (min-width: 56rem) {
+    .footer-inner {
+      max-width: var(--content-max-desktop);
+    }
+  }
+
+  .copyright {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    margin: 0;
+  }
+</style>
