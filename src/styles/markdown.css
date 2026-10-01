@@ -1,0 +1,226 @@
+/* ==========================================================
+   MARKDOWN
+   Style untuk konten yang di-render dari markdown.
+   Dipakai di: sinopsis anime, halaman statis (about, FAQ).
+   Semua pakai token dari props.css.
+   ========================================================== */
+
+/* Container — batasi lebar baca */
+.markdown {
+  color: var(--text-secondary);
+  font-size: var(--fs-base);
+  line-height: var(--lh-relaxed);
+}
+
+/* ----------------------------------------------------------
+   PARAGRAF
+   ---------------------------------------------------------- */
+.markdown p {
+  margin: 0 0 var(--s-4);
+}
+
+.markdown p:last-child {
+  margin-bottom: 0;
+}
+
+/* ----------------------------------------------------------
+   HEADING
+   Di dalam body, mulai dari h2 (h1 sudah dipakai judul halaman)
+   ---------------------------------------------------------- */
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  color: var(--text-primary);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  margin: var(--s-6) 0 var(--s-3);
+}
+
+.markdown h1 { font-size: var(--fs-2xl); }
+.markdown h2 { font-size: var(--fs-xl); }
+.markdown h3 { font-size: var(--fs-lg); }
+.markdown h4 { font-size: var(--fs-base); }
+.markdown h5,
+.markdown h6 { font-size: var(--fs-sm); }
+
+/* Heading pertama tidak perlu margin-top */
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+/* ----------------------------------------------------------
+   LINK
+   ---------------------------------------------------------- */
+.markdown a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-soft);
+  text-underline-offset: 3px;
+  transition: all var(--t-fast);
+}
+
+.markdown a:hover {
+  color: var(--accent-hover);
+  text-decoration-color: currentColor;
+}
+
+/* ----------------------------------------------------------
+   STRONG & EM
+   ---------------------------------------------------------- */
+.markdown strong {
+  color: var(--text-primary);
+  font-weight: var(--fw-semibold);
+}
+
+.markdown em {
+  font-style: italic;
+}
+
+/* ----------------------------------------------------------
+   LIST — unordered & ordered
+   ---------------------------------------------------------- */
+.markdown ul,
+.markdown ol {
+  margin: 0 0 var(--s-4);
+  padding-left: var(--s-6);
+}
+
+.markdown ul {
+  list-style: disc;
+}
+
+.markdown ol {
+  list-style: decimal;
+}
+
+.markdown li {
+  margin-bottom: var(--s-2);
+  padding-left: var(--s-1);
+}
+
+.markdown li::marker {
+  color: var(--text-muted);
+}
+
+.markdown li:last-child {
+  margin-bottom: 0;
+}
+
+/* Nested list */
+.markdown ul ul,
+.markdown ol ol,
+.markdown ul ol,
+.markdown ol ul {
+  margin-top: var(--s-2);
+  margin-bottom: 0;
+}
+
+/* ----------------------------------------------------------
+   BLOCKQUOTE
+   ---------------------------------------------------------- */
+.markdown blockquote {
+  margin: var(--s-4) 0;
+  padding: var(--s-2) var(--s-4);
+  border-left: 3px solid var(--accent);
+  background: var(--bg-surface);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.markdown blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* ----------------------------------------------------------
+   CODE — inline & block
+   ---------------------------------------------------------- */
+.markdown code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.125em 0.375em;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-primary);
+}
+
+.markdown pre {
+  margin: var(--s-4) 0;
+  padding: var(--s-4);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow-x: auto;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+}
+
+.markdown pre code {
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: inherit;
+}
+
+/* ----------------------------------------------------------
+   IMAGE
+   ---------------------------------------------------------- */
+.markdown img {
+  margin: var(--s-4) 0;
+  border-radius: var(--r-md);
+  max-width: 100%;
+  height: auto;
+}
+
+/* ----------------------------------------------------------
+   HR
+   ---------------------------------------------------------- */
+.markdown hr {
+  margin: var(--s-6) 0;
+  height: 1px;
+  background: var(--border);
+  border: none;
+}
+
+/* ----------------------------------------------------------
+   TABLE (kalau ada)
+   ---------------------------------------------------------- */
+.markdown table {
+  width: 100%;
+  margin: var(--s-4) 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  font-size: var(--fs-sm);
+}
+
+.markdown thead {
+  background: var(--bg-surface);
+}
+
+.markdown th,
+.markdown td {
+  padding: var(--s-3) var(--s-4);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.markdown th {
+  color: var(--text-primary);
+  font-weight: var(--fw-semibold);
+}
+
+.markdown tr:last-child td {
+  border-bottom: none;
+}
+
+/* ----------------------------------------------------------
+   UTILITY — lebar baca nyaman (60-75 karakter)
+   ---------------------------------------------------------- */
+.markdown--prose {
+  max-width: 65ch;
+}
