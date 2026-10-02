@@ -10,7 +10,7 @@ export const SITE = {
 export const NAV_LINKS = [
   { label: 'Home',     href: '/' },
   { label: 'Ongoing',  href: '/anime/ongoing/' },
-  { label: 'Complete', href: '/anime/complete/' },
+  { label: 'Completed', href: '/anime/completed/' },
   { label: 'Archive',  href: '/anime/' },
   { label: 'Genre',    href: '/genre/' },
 ] as const;
