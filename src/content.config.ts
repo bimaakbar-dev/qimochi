@@ -10,15 +10,9 @@ const anime = defineCollection({
     status: z.enum(['Ongoing', 'Completed', 'Hiatus']),
     genre: z.array(z.string()).min(1),
     studio: z.string(),
-
-    // Tanggal rilis resmi anime — FIXED, isi sekali
     releaseDate: z.coerce.date(),
-
-    // Tanggal update terakhir — DINAMIS, update manual tiap tambah episode
     addedAt: z.coerce.date(),
-
     rating: z.number().min(0).max(10),
-
     episodes: z.array(
       z.object({
         number: z.number().int().positive(),
@@ -68,4 +62,19 @@ const anime = defineCollection({
   }),
 });
 
-export const collections = { anime };
+const blog = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
+  schema: z.object({
+    title: z.string().max(120),
+    description: z.string().max(200),
+    cover: z.url().optional(),
+    date: z.coerce.date(),
+    updatedAt: z.coerce.date().optional(),
+    author: z.string().default('Admin'),
+    category: z.enum(['News', 'Review', 'List', 'Guide', 'Update']),
+    tags: z.array(z.string()).default([]),
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { anime, blog };
