@@ -1,11 +1,12 @@
 ---
 import { getCollection, render } from 'astro:content';
-import BaseLayout from '../../../layouts/BaseLayout.astro';
-import EpisodeList from '../../../components/EpisodeList.astro';
-import Badge from '../../../user-components/Badge.astro';
-import LinkButton from '../../../user-components/LinkButton.astro';
-import LinkCard from '../../../user-components/LinkCard.astro';
-import { URLS, STATUS_VARIANT, type Status } from '../../../constants';
+import { URLS, STATUS_VARIANT, type Status } from '~/constants';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumb from '~/components/Breadcrumb.astro';
+import EpisodeList from '~/components/EpisodeList.astro';
+import Badge from '~/user-components/Badge.astro';
+import LinkButton from '~/user-components/LinkButton.astro';
+import LinkCard from '~/user-components/LinkCard.astro';
 
 export async function getStaticPaths() {
   const allAnime = await getCollection('anime');
@@ -25,6 +26,9 @@ const episodeNumbers = data.episodes
 
 const firstEpisode = episodeNumbers[0] ?? 1;
 const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
+
+const statusSlug = data.status.toLowerCase().replace('completed', 'complete');
+const statusUrl = `/anime/${statusSlug}/`;
 ---
 
 <BaseLayout
@@ -35,7 +39,14 @@ const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
 >
   <div class="wrapper">
 
-    <!-- HERO -->
+    <div class="breadcrumb-wrap">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: data.status, href: statusUrl },
+        { label: data.title },
+      ]} />
+    </div>
+
     <section class="hero">
       <div class="hero-cover">
         <img
@@ -117,9 +128,10 @@ const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
     padding-block: var(--s-6) var(--s-12);
   }
 
-  /* ----------------------------------------------------------
-     HERO
-     ---------------------------------------------------------- */
+  .breadcrumb-wrap {
+    margin-bottom: var(--s-5);
+  }
+
   .hero {
     display: grid;
     grid-template-columns: 1fr;
@@ -204,9 +216,6 @@ const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
     margin: 0;
   }
 
-  /* ----------------------------------------------------------
-     2 KOLOM
-     ---------------------------------------------------------- */
   .content-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -223,10 +232,7 @@ const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
     margin: 0 0 var(--s-3);
   }
 
-  /* ----------------------------------------------------------
-     DESKTOP
-     ---------------------------------------------------------- */
-  @media (min-width: 56rem) {
+  @media (min-width: 50rem) {
     .hero {
       grid-template-columns: 200px 1fr;
       gap: var(--s-6);
@@ -270,7 +276,6 @@ const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
 </style>
 
 <style is:global>
-  /* Style tambahan untuk LinkCard yang dipakai sebagai genre chip */
   .genre-chip {
     font-size: var(--fs-xs);
     color: var(--text-secondary);
