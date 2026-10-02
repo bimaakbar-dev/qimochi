@@ -70,7 +70,7 @@ import Icon from '~/user-components/Icons.astro';
     title: string;
     cover: string;
     status: string;
-    tahun: number;
+    releaseDate: string;   // ← ISO string dari JSON
     rating: number;
     episodes: { number: number }[];
   }
@@ -494,7 +494,8 @@ import Icon from '~/user-components/Icons.astro';
     color: var(--warning);
   }
 
-  @media (max-width: 50rem) {
+  /* Desktop — form jadi row */
+  @media (min-width: 30rem) {
     .search-form {
       flex-direction: row;
     }
