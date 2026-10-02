@@ -10,9 +10,14 @@ const anime = defineCollection({
     status: z.enum(['Ongoing', 'Completed', 'Hiatus']),
     genre: z.array(z.string()).min(1),
     studio: z.string(),
-    tahun: z.number().int().min(1900),
-    rating: z.number().min(0).max(10),
+
+    // Tanggal rilis resmi anime — FIXED, isi sekali
+    releaseDate: z.coerce.date(),
+
+    // Tanggal update terakhir — DINAMIS, update manual tiap tambah episode
     addedAt: z.coerce.date(),
+
+    rating: z.number().min(0).max(10),
 
     episodes: z.array(
       z.object({
@@ -37,7 +42,7 @@ const anime = defineCollection({
               servers: z.array(
                 z.object({
                   name: z.string(),
-                  url: z.url(),                        // ← Zod 4
+                  url: z.url(),
                 })
               ),
             })
@@ -54,7 +59,7 @@ const anime = defineCollection({
           servers: z.array(
             z.object({
               name: z.string(),
-              url: z.url(),                              // ← Zod 4
+              url: z.url(),
             })
           ),
         })
