@@ -1,6 +1,7 @@
 ---
-import LinkButton from '../user-components/LinkButton.astro';
-import { URLS } from '../constants';
+import { URLS } from '~/constants';
+import LinkButton from '~/user-components/LinkButton.astro';
+import Icon from '~/user-components/Icons.astro';
 
 interface Props {
   slug: string;
@@ -21,13 +22,12 @@ const nextEp = episodeNumber < totalEpisodes ? episodeNumber + 1 : null;
       variant="outline"
       size="md"
       icon="arrow-left"
-      class="action-prev"
     >
       Ep {prevEp}
     </LinkButton>
   ) : (
     <span class="action-disabled" aria-disabled="true">
-      <span class="arrow" aria-hidden="true">◀</span>
+      <Icon name="arrow-left" />
       <span>Ep —</span>
     </span>
   )}
@@ -39,14 +39,13 @@ const nextEp = episodeNumber < totalEpisodes ? episodeNumber + 1 : null;
       size="md"
       icon="arrow-right"
       iconPos="suffix"
-      class="action-next"
     >
       Ep {nextEp}
     </LinkButton>
   ) : (
     <span class="action-disabled" aria-disabled="true">
       <span>Ep —</span>
-      <span class="arrow" aria-hidden="true">▶</span>
+      <Icon name="arrow-right" />
     </span>
   )}
 </nav>
@@ -59,15 +58,6 @@ const nextEp = episodeNumber < totalEpisodes ? episodeNumber + 1 : null;
     gap: var(--s-2);
   }
 
-  .action-prev {
-    justify-self: start;
-  }
-
-  .action-next {
-    justify-self: end;
-  }
-
-  /* Disabled state */
   .action-disabled {
     display: inline-flex;
     align-items: center;
@@ -82,7 +72,9 @@ const nextEp = episodeNumber < totalEpisodes ? episodeNumber + 1 : null;
     pointer-events: none;
   }
 
-  .action-disabled .arrow {
-    font-size: 0.65em;
+  .action-disabled :global(svg) {
+    width: 1.1em;
+    height: 1.1em;
+    flex-shrink: 0;
   }
 </style>
