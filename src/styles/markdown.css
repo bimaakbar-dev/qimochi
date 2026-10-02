@@ -35,9 +35,6 @@
   margin-top: 0;
 }
 
-/* ----------------------------------------------------------
-   LINK — brush stroke underline (kaligrafi Jepang)
-   ---------------------------------------------------------- */
 .markdown a {
   position: relative;
   color: var(--accent);
@@ -103,7 +100,7 @@
 }
 
 .markdown li::marker {
-  color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 .markdown li:last-child {
