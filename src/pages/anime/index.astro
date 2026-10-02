@@ -1,0 +1,242 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumb from '~/components/Breadcrumb.astro';
+import { URLS } from '~/constants';
+
+const allAnime = await getCollection('anime');
+
+// Sort alfabetis by title
+const sorted = [...allAnime].sort((a, b) =>
+  a.data.title.localeCompare(b.data.title, 'id-ID')
+);
+
+// Ambil huruf awal — handle non-alfabet jadi '#'
+function getFirstLetter(title: string): string {
+  const first = title[0]?.toUpperCase() ?? '';
+  if (/[A-Z]/.test(first)) return first;
+  return '#';
+}
+
+// Huruf unik yang ada anime-nya
+const letters = new Set<string>();
+sorted.forEach(a => letters.add(getFirstLetter(a.data.title)));
+
+// Sort: A-Z dulu, '#' di akhir
+const activeLetters = Array.from(letters).sort((a, b) => {
+  if (a === '#') return 1;
+  if (b === '#') return -1;
+  return a.localeCompare(b);
+});
+
+const totalAnime = allAnime.length;
+
+// Pre-group per huruf untuk render
+const groups = activeLetters.map(letter => ({
+  letter,
+  items: sorted.filter(a => getFirstLetter(a.data.title) === letter),
+}));
+---
+
+<BaseLayout
+  title="Archive Anime"
+  description={`Daftar lengkap ${totalAnime} anime di Qimochi, diurutkan alfabetis.`}
+  canonical="/anime/"
+>
+  <div class="wrapper">
+    <header class="page-header">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Archive' },
+      ]} />
+
+      <h1>Archive Anime</h1>
+      <p class="subtitle">{totalAnime} anime</p>
+    </header>
+
+    <!-- Sticky letter nav -->
+    {activeLetters.length > 1 && (
+      <nav class="letter-nav" aria-label="Navigasi huruf">
+        <ul class="letter-list">
+          {activeLetters.map(letter => (
+            <li>
+              <a href={`#letter-${letter}`}>{letter}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+
+    <!-- Groups -->
+    {groups.map(({ letter, items }) => (
+      <section class="letter-group" id={`letter-${letter}`}>
+        <h2 class="letter-heading">{letter}</h2>
+
+        <ol class="anime-list">
+          {items.map(anime => (
+            <li>
+              <a href={URLS.anime(anime.id)} class="anime-link">
+                <span class="anime-title">{anime.data.title}</span>
+                <span class="anime-meta">
+                  {anime.data.status}
+                  {anime.data.episodes.length > 0 && (
+                    <> · {anime.data.episodes.length} Ep</>
+                  )}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ))}
+
+    {totalAnime === 0 && (
+      <p class="empty">Belum ada anime di database.</p>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .wrapper {
+    padding-block: var(--s-8) var(--s-12);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-6);
+  }
+
+  .page-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .page-header h1 {
+    margin: 0;
+    font-size: var(--fs-2xl);
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    margin: 0;
+  }
+
+  /* ----------------------------------------------------------
+     LETTER NAV — sticky di atas
+     ---------------------------------------------------------- */
+  .letter-nav {
+    position: sticky;
+    top: var(--header-height);
+    z-index: var(--z-overlay);
+    background: var(--bg-base);
+
+    /* Bleed ke tepi wrapper */
+    margin-inline: calc(var(--pad-x) * -1);
+    padding-block: var(--s-3);
+    padding-inline: var(--pad-x);
+  }
+
+  .letter-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .letter-list a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 var(--s-2);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    color: var(--text-secondary);
+    transition: all var(--t-fast);
+  }
+
+  .letter-list a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ----------------------------------------------------------
+     LETTER GROUP
+     ---------------------------------------------------------- */
+  .letter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+
+    /* Kompensasi header + letter nav sticky */
+    scroll-margin-top: calc(var(--header-height) + 4rem);
+  }
+
+  .letter-heading {
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-bold);
+    color: var(--accent);
+    margin: 0;
+    padding-bottom: var(--s-2);
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.05em;
+  }
+
+  /* ----------------------------------------------------------
+     ANIME LIST
+     ---------------------------------------------------------- */
+  .anime-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .anime-link {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-2) var(--s-4);
+    padding: var(--s-3) var(--s-4);
+    background: transparent;
+    border: 1px solid transparent;
+    transition: all var(--t-fast);
+  }
+
+  .anime-link:hover {
+    background: var(--bg-elevated);
+    border-color: var(--border);
+  }
+
+  .anime-title {
+    font-size: var(--fs-sm);
+    color: var(--text-primary);
+    font-weight: var(--fw-medium);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .anime-link:hover .anime-title {
+    color: var(--accent);
+  }
+
+  .anime-meta {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .empty {
+    color: var(--text-muted);
+    text-align: center;
+    padding: var(--s-12) 0;
+  }
+</style>
