@@ -8,7 +8,6 @@ const currentPath = Astro.url.pathname;
 
 <footer class="site-footer">
   <div class="footer-inner">
-    <!-- Brand + disclaimer -->
     <div class="footer-brand">
       <a href="/" class="footer-logo">
         <span class="logo-mark" aria-hidden="true"></span>
@@ -16,8 +15,6 @@ const currentPath = Astro.url.pathname;
       </a>
       <p class="footer-tagline">{SITE.description}</p>
     </div>
-
-    <!-- Navigasi -->
     <nav class="footer-nav" aria-label="Navigasi footer">
       <h2 class="footer-heading">Jelajahi</h2>
       <ul>
@@ -27,7 +24,6 @@ const currentPath = Astro.url.pathname;
       </ul>
     </nav>
 
-    <!-- Legal -->
     <nav class="footer-nav" aria-label="Legal">
       <h2 class="footer-heading">Legal</h2>
       <ul>
@@ -37,7 +33,6 @@ const currentPath = Astro.url.pathname;
     </nav>
   </div>
 
-  <!-- Disclaimer -->
   <div class="footer-disclaimer">
     <div class="footer-disclaimer-inner">
       <h2 class="footer-heading">Disclaimer</h2>
@@ -50,13 +45,12 @@ const currentPath = Astro.url.pathname;
       </p>
       <p>
         Jika kamu adalah pemilik hak cipta dan menemukan konten yang
-        melanggar, silakan hubungi kami melalui halaman
+        melanggar, silakan hubungi kami melalui halaman 
         <a href="/dmca/">DMCA</a> untuk permintaan penghapusan.
       </p>
     </div>
   </div>
 
-  <!-- Copyright -->
   <div class="footer-bottom">
     <div class="footer-bottom-inner">
       <p class="copyright">
@@ -72,9 +66,6 @@ const currentPath = Astro.url.pathname;
     margin-top: var(--s-16);
   }
 
-  /* ----------------------------------------------------------
-     MAIN — grid 3 kolom di desktop
-     ---------------------------------------------------------- */
   .footer-inner {
     max-width: var(--content-max-mobile);
     margin-inline: auto;
@@ -92,9 +83,6 @@ const currentPath = Astro.url.pathname;
     }
   }
 
-  /* ----------------------------------------------------------
-     BRAND
-     ---------------------------------------------------------- */
   .footer-brand {
     display: flex;
     flex-direction: column;
@@ -133,9 +121,6 @@ const currentPath = Astro.url.pathname;
     max-width: 40ch;
   }
 
-  /* ----------------------------------------------------------
-     NAV
-     ---------------------------------------------------------- */
   .footer-nav ul {
     list-style: none;
     padding: 0;
@@ -164,9 +149,6 @@ const currentPath = Astro.url.pathname;
     margin: 0 0 var(--s-3);
   }
 
-  /* ----------------------------------------------------------
-     DISCLAIMER
-     ---------------------------------------------------------- */
   .footer-disclaimer {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
@@ -203,9 +185,6 @@ const currentPath = Astro.url.pathname;
     color: var(--accent-hover);
   }
 
-  /* ----------------------------------------------------------
-     BOTTOM — copyright
-     ---------------------------------------------------------- */
   .footer-bottom {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
