@@ -1,0 +1,287 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumb from '~/components/Breadcrumb.astro';
+import PostCard from '~/components/PostCard.astro';
+import Badge from '~/user-components/Badge.astro';
+import {
+  getPublishedPostBySlug,
+  getAllPostSlugs,
+  getPublishedPosts,
+  getRelatedPosts,
+  formatDate,
+} from '~/lib/blog';
+
+export async function getStaticPaths() {
+  const slugs = await getAllPostSlugs();
+  return slugs.map(slug => ({
+    params: { slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const post = await getPublishedPostBySlug(slug!);
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+const { data } = post;
+const { Content } = await render(post);
+
+// Tanggal
+const dateText = formatDate(data.date);
+const updatedText = data.updatedAt ? formatDate(data.updatedAt) : null;
+
+// Related posts — by tag match
+const allPosts = await getPublishedPosts();
+const related = getRelatedPosts(post, allPosts, 3);
+---
+
+<BaseLayout
+  title={data.title}
+  description={data.description}
+  image={data.cover}
+  type="article"
+  publishedTime={data.date.toISOString()}
+  canonical={`/blog/${post.id}/`}
+>
+  <div class="wrapper">
+
+    <div class="breadcrumb-wrap">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Blog', href: '/blog/' },
+        { label: data.title },
+      ]} />
+    </div>
+
+    <article class="post">
+      <!-- HEADER -->
+      <header class="post-header">
+        <div class="meta-top">
+          <Badge variant="accent" size="sm">{data.category}</Badge>
+          <time datetime={data.date.toISOString()}>{dateText}</time>
+          {data.author && (
+            <>
+              <span class="sep" aria-hidden="true">·</span>
+              <span>{data.author}</span>
+            </>
+          )}
+        </div>
+
+        <h1 class="post-title">{data.title}</h1>
+
+        {data.description && (
+          <p class="post-description">{data.description}</p>
+        )}
+
+        {updatedText && (
+          <p class="post-updated">
+            Diperbarui: {updatedText}
+          </p>
+        )}
+      </header>
+
+      <!-- COVER -->
+      {data.cover && (
+        <div class="post-cover">
+          <img
+            src={data.cover}
+            alt={`Cover ${data.title}`}
+            width="1200"
+            height="675"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </div>
+      )}
+
+      <!-- BODY -->
+      <div class="markdown markdown--prose post-body">
+        <Content />
+      </div>
+
+      <!-- TAGS -->
+      {data.tags.length > 0 && (
+        <footer class="post-footer">
+          <div class="post-tags">
+            <span class="tags-label">Tags:</span>
+            {data.tags.map(tag => (
+              <span class="tag">{tag}</span>
+            ))}
+          </div>
+        </footer>
+      )}
+    </article>
+
+    <!-- RELATED POSTS -->
+    {related.length > 0 && (
+      <section class="related-section">
+        <h2 class="related-title">Artikel Terkait</h2>
+        <div class="related-grid">
+          {related.map(p => <PostCard post={p} />)}
+        </div>
+      </section>
+    )}
+
+  </div>
+</BaseLayout>
+
+<style>
+  .wrapper {
+    padding-block: var(--s-6) var(--s-12);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-8);
+  }
+
+  .breadcrumb-wrap {
+    margin-bottom: var(--s-2);
+  }
+
+  /* ----------------------------------------------------------
+     POST — artikel
+     ---------------------------------------------------------- */
+  .post {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-6);
+  }
+
+  /* HEADER */
+  .post-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .meta-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-2);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: var(--fw-medium);
+  }
+
+  .meta-top time {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .meta-top .sep {
+    color: var(--text-disabled);
+  }
+
+  .post-title {
+    font-size: var(--fs-3xl);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-tight);
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  .post-description {
+    font-size: var(--fs-lg);
+    line-height: var(--lh-relaxed);
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .post-updated {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* COVER */
+  .post-cover {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+  }
+
+  .post-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* BODY */
+  .post-body {
+    margin: 0;
+  }
+
+  /* FOOTER — tags */
+  .post-footer {
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--border);
+  }
+
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  .tags-label {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: var(--fw-semibold);
+  }
+
+  .tag {
+    display: inline-block;
+    padding: var(--s-1) var(--s-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+  }
+
+  /* ----------------------------------------------------------
+     RELATED
+     ---------------------------------------------------------- */
+  .related-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    padding-top: var(--s-6);
+    border-top: 1px solid var(--border);
+  }
+
+  .related-title {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-semibold);
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-4);
+  }
+
+  @media (min-width: 30rem) {
+    .related-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 50rem) {
+    .related-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>
