@@ -11,6 +11,9 @@ export const GET: APIRoute = async () => {
     status: a.data.status,
     tahun: a.data.tahun,
     rating: a.data.rating,
+    genre: a.data.genre,
+    studio: a.data.studio,
+    episodes: a.data.episodes.map(e => ({ number: e.number })),
   }));
 
   return new Response(JSON.stringify(data), {
