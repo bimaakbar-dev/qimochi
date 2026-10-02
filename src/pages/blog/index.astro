@@ -13,65 +13,213 @@ const posts = await getPublishedPosts();
   canonical="/blog/"
 >
   <div class="wrapper">
-    <header class="page-header">
+
+    <!-- HERO -->
+    <header class="blog-hero">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: 'Blog' },
       ]} />
 
-      <h1>Blog</h1>
-      <p class="subtitle">{posts.length} artikel</p>
+      <div class="hero-content">
+        <h1 class="hero-title">Blog</h1>
+        <p class="hero-desc">
+          Berita, review, dan update seputar anime — ditulis untuk kamu
+          yang ingin tahu lebih dalam.
+        </p>
+      </div>
     </header>
 
-    {posts.length > 0 ? (
-      <div class="post-grid">
-        {posts.map(post => <PostCard post={post} />)}
-      </div>
-    ) : (
-      <p class="empty">Belum ada artikel.</p>
-    )}
+    <!-- 2 KOLOM -->
+    <div class="content-grid">
+      <main class="content-main">
+        {posts.length > 0 ? (
+          <div class="post-list">
+            {posts.map(post => <PostCard post={post} />)}
+          </div>
+        ) : (
+          <p class="empty">Belum ada artikel.</p>
+        )}
+      </main>
+
+      <aside class="content-aside">
+        <section class="aside-section">
+          <h2 class="aside-title">RSS Feed</h2>
+          <p class="aside-desc">
+            Dapatkan notifikasi saat ada artikel baru tanpa harus buka situs.
+          </p>
+          <a href="/rss.xml" class="aside-btn">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <circle cx="3" cy="13" r="2"/>
+              <path d="M1 6v3a6 6 0 0 1 6 6h3a9 9 0 0 0-9-9zM1 1v3a11 11 0 0 1 11 11h3A14 14 0 0 0 1 1z"/>
+            </svg>
+            <span>Subscribe</span>
+          </a>
+        </section>
+      </aside>
+    </div>
+
   </div>
 </BaseLayout>
 
 <style>
   .wrapper {
-    padding-block: var(--s-8) var(--s-12);
-  }
-
-  .page-header {
-    margin-bottom: var(--s-6);
+    padding-block: var(--s-6) var(--s-12);
     display: flex;
     flex-direction: column;
-    gap: var(--s-3);
+    gap: var(--s-6);
   }
 
-  .page-header h1 {
-    margin: 0;
-    font-size: var(--fs-2xl);
-  }
-
-  .subtitle {
-    color: var(--text-muted);
-    font-size: var(--fs-sm);
-    margin: 0;
-  }
-
-  .post-grid {
-    display: grid;
-    grid-template-columns: 1fr;
+  /* ----------------------------------------------------------
+     HERO — semua centered
+     ---------------------------------------------------------- */
+  .blog-hero {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    padding: var(--s-5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
     gap: var(--s-4);
   }
 
-  @media (min-width: 30rem) {
-    .post-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--s-5);
+  /* Breadcrumb centered */
+  .blog-hero :global(.breadcrumb ol) {
+    justify-content: center;
+  }
+
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s-2);
+    padding-block: var(--s-2);
+  }
+
+  .hero-title {
+    font-size: var(--fs-3xl);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-tight);
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  .hero-desc {
+    font-size: var(--fs-base);
+    color: var(--text-secondary);
+    line-height: var(--lh-relaxed);
+    margin: 0;
+    max-width: 55ch;
+  }
+
+  @media (min-width: 50rem) {
+    .blog-hero {
+      padding: var(--s-6) var(--s-8);
     }
+  }
+
+  /* ----------------------------------------------------------
+     GRID
+     ---------------------------------------------------------- */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-6);
+    align-items: start;
+  }
+
+  @media (min-width: 56rem) {
+    .content-grid {
+      grid-template-columns: 1fr var(--aside-width);
+      gap: var(--s-6);
+    }
+
+    .content-aside {
+      position: sticky;
+      top: var(--sticky-top);
+      max-height: calc(100vh - var(--sticky-top) - var(--s-4));
+      overflow-y: auto;
+    }
+  }
+
+  /* ----------------------------------------------------------
+     MAIN
+     ---------------------------------------------------------- */
+  .content-main {
+    min-width: 0;
+  }
+
+  .post-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
   }
 
   .empty {
     color: var(--text-muted);
     text-align: center;
     padding: var(--s-12) 0;
+    font-size: var(--fs-sm);
+  }
+
+  /* ----------------------------------------------------------
+     ASIDE
+     ---------------------------------------------------------- */
+  .content-aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .aside-section {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    padding: var(--s-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .aside-title {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0;
+  }
+
+  .aside-desc {
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+    line-height: var(--lh-relaxed);
+    margin: 0;
+  }
+
+  .aside-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
+    padding: var(--s-2) var(--s-4);
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: background var(--t-fast);
+    align-self: flex-start;
+  }
+
+  .aside-btn:hover {
+    background: var(--accent-hover);
+    color: var(--accent-text);
+  }
+
+  .aside-btn svg {
+    width: 0.9em;
+    height: 0.9em;
   }
 </style>
