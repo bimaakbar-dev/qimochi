@@ -29,11 +29,9 @@ if (!post) {
 const { data } = post;
 const { Content } = await render(post);
 
-// Tanggal
 const dateText = formatDate(data.date);
 const updatedText = data.updatedAt ? formatDate(data.updatedAt) : null;
 
-// Related posts — by tag match
 const allPosts = await getPublishedPosts();
 const related = getRelatedPosts(post, allPosts, 3);
 ---
@@ -57,30 +55,22 @@ const related = getRelatedPosts(post, allPosts, 3);
     </div>
 
     <article class="post">
-      <!-- HEADER -->
+      <!-- HEADER — centered -->
       <header class="post-header">
-        <div class="meta-top">
-          <Badge variant="accent" size="sm">{data.category}</Badge>
-          <time datetime={data.date.toISOString()}>{dateText}</time>
-          {data.author && (
-            <>
-              <span class="sep" aria-hidden="true">·</span>
-              <span>{data.author}</span>
-            </>
-          )}
-        </div>
+        <Badge variant="accent" size="sm">{data.category}</Badge>
 
         <h1 class="post-title">{data.title}</h1>
 
-        {data.description && (
-          <p class="post-description">{data.description}</p>
+        {data.author && (
+          <p class="post-author">{data.author}</p>
         )}
 
-        {updatedText && (
-          <p class="post-updated">
-            Diperbarui: {updatedText}
-          </p>
-        )}
+        <p class="post-date">
+          <time datetime={data.date.toISOString()}>{dateText}</time>
+          {updatedText && (
+            <span class="updated"> · Diperbarui {updatedText}</span>
+          )}
+        </p>
       </header>
 
       <!-- COVER -->
@@ -142,7 +132,7 @@ const related = getRelatedPosts(post, allPosts, 3);
   }
 
   /* ----------------------------------------------------------
-     POST — artikel
+     POST
      ---------------------------------------------------------- */
   .post {
     display: flex;
@@ -150,31 +140,16 @@ const related = getRelatedPosts(post, allPosts, 3);
     gap: var(--s-6);
   }
 
-  /* HEADER */
+  /* ----------------------------------------------------------
+     HEADER — centered
+     ---------------------------------------------------------- */
   .post-header {
     display: flex;
     flex-direction: column;
-    gap: var(--s-3);
-  }
-
-  .meta-top {
-    display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: var(--s-2);
-    font-size: var(--fs-xs);
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: var(--fw-medium);
-  }
-
-  .meta-top time {
-    font-variant-numeric: tabular-nums;
-  }
-
-  .meta-top .sep {
-    color: var(--text-disabled);
+    text-align: center;
+    gap: var(--s-3);
+    padding-block: var(--s-4);
   }
 
   .post-title {
@@ -183,22 +158,33 @@ const related = getRelatedPosts(post, allPosts, 3);
     line-height: var(--lh-tight);
     margin: 0;
     color: var(--text-primary);
+    max-width: 30ch;
   }
 
-  .post-description {
-    font-size: var(--fs-lg);
-    line-height: var(--lh-relaxed);
+  .post-author {
+    font-size: var(--fs-sm);
     color: var(--text-secondary);
+    font-weight: var(--fw-medium);
     margin: 0;
   }
 
-  .post-updated {
+  .post-date {
     font-size: var(--fs-xs);
     color: var(--text-muted);
     margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: var(--fw-medium);
+    font-variant-numeric: tabular-nums;
   }
 
-  /* COVER */
+  .post-date .updated {
+    color: var(--text-disabled);
+  }
+
+  /* ----------------------------------------------------------
+     COVER
+     ---------------------------------------------------------- */
   .post-cover {
     aspect-ratio: 16 / 9;
     overflow: hidden;
@@ -213,12 +199,16 @@ const related = getRelatedPosts(post, allPosts, 3);
     display: block;
   }
 
-  /* BODY */
+  /* ----------------------------------------------------------
+     BODY
+     ---------------------------------------------------------- */
   .post-body {
     margin: 0;
   }
 
-  /* FOOTER — tags */
+  /* ----------------------------------------------------------
+     FOOTER — tags
+     ---------------------------------------------------------- */
   .post-footer {
     padding-top: var(--s-4);
     border-top: 1px solid var(--border);
