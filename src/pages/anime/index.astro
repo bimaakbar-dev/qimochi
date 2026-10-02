@@ -100,7 +100,7 @@ const groups = activeLetters.map(letter => ({
   .letter-nav {
     position: sticky;
     top: var(--header-height);
-    z-index: var(--z-overlay);
+    z-index: 50;
     background: var(--bg-base);
 
     margin-inline: calc(var(--pad-x) * -1);
@@ -125,6 +125,7 @@ const groups = activeLetters.map(letter => ({
     height: 2rem;
     padding: 0 var(--s-2);
     background: var(--bg-surface);
+    border: 1px solid transparent;
     font-size: var(--fs-xs);
     font-weight: var(--fw-semibold);
     color: var(--text-secondary);
@@ -168,15 +169,8 @@ const groups = activeLetters.map(letter => ({
     align-items: center;
     justify-content: space-between;
     gap: var(--s-2) var(--s-4);
-    padding: var(--s-3) var(--s-4);
-    background: transparent;
-    border: 1px solid transparent;
+    padding-block: var(--s-3);
     transition: all var(--t-fast);
-  }
-
-  .anime-link:hover {
-    background: var(--bg-elevated);
-    border-color: var(--border);
   }
 
   .anime-title {
