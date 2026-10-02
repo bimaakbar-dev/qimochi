@@ -1,6 +1,6 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Icon from '../../user-components/Icons.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Icon from '~/user-components/Icons.astro';
 ---
 
 <BaseLayout
@@ -33,6 +33,21 @@ import Icon from '../../user-components/Icons.astro';
   </div>
 </BaseLayout>
 
+<template id="card-template">
+  <a class="anime-card" href="">
+    <div class="cover">
+      <img src="" alt="" width="300" height="450" loading="lazy" decoding="async" />
+    </div>
+    <div class="info">
+      <h3 class="title"></h3>
+      <div class="meta">
+        <span class="badge"></span>
+        <span class="episodes"></span>
+      </div>
+    </div>
+  </a>
+</template>
+
 <script>
   import { STATUS_VARIANT, type Status } from '../../constants';
 
@@ -43,11 +58,8 @@ import Icon from '../../user-components/Icons.astro';
     status: string;
     tahun: number;
     rating: number;
+    episodes: { number: number }[];
   }
-
-  /* ----------------------------------------------------------
-     FUZZY SEARCH
-     ---------------------------------------------------------- */
 
   function normalize(s: string): string {
     return s
@@ -113,31 +125,39 @@ import Icon from '../../user-components/Icons.astro';
     return best * 0.85;
   }
 
-  /* ----------------------------------------------------------
-     RENDER CARD
-     ---------------------------------------------------------- */
+  const template = document.getElementById('card-template') as HTMLTemplateElement;
 
-  function renderCard(a: Anime): string {
+  function renderCard(a: Anime): DocumentFragment {
+    const clone = template.content.cloneNode(true) as DocumentFragment;
+
+    const link = clone.querySelector('.anime-card') as HTMLAnchorElement;
+    link.href = `/anime/${a.id}/`;
+
+    const img = clone.querySelector('.cover img') as HTMLImageElement;
+    img.src = a.cover;
+    img.alt = `Cover ${a.title}`;
+
+    const title = clone.querySelector('.title') as HTMLElement;
+    title.textContent = a.title;
+
+    const badge = clone.querySelector('.badge') as HTMLElement;
     const variant = STATUS_VARIANT[a.status as Status] ?? 'default';
-    return `
-      <a href="/anime/${a.id}/" class="anime-card">
-        <div class="cover">
-          <img src="${a.cover}" alt="Cover ${a.title}" width="300" height="450" loading="lazy" decoding="async" />
-        </div>
-        <div class="info">
-          <h3 class="title">${a.title}</h3>
-          <div class="meta">
-            <span class="badge badge-${variant}">${a.status}</span>
-            ${a.tahun ? `<span class="year">${a.tahun}</span>` : ''}
-          </div>
-        </div>
-      </a>
-    `;
-  }
+    badge.textContent = a.status;
+    badge.classList.add(`badge-${variant}`);
 
-  /* ----------------------------------------------------------
-     INIT
-     ---------------------------------------------------------- */
+    const lastEpisode = a.episodes?.length
+      ? Math.max(...a.episodes.map(e => e.number))
+      : 0;
+
+    const epEl = clone.querySelector('.episodes') as HTMLElement;
+    if (lastEpisode > 0) {
+      epEl.textContent = `Ep ${lastEpisode}`;
+    } else {
+      epEl.remove();
+    }
+
+    return clone;
+  }
 
   const form = document.getElementById('search-form') as HTMLFormElement;
   const input = document.getElementById('search-input') as HTMLInputElement;
@@ -162,7 +182,10 @@ import Icon from '../../user-components/Icons.astro';
   }
 
   function renderResults(items: Anime[]) {
-    results.innerHTML = items.map(renderCard).join('');
+    results.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    items.forEach(a => fragment.appendChild(renderCard(a)));
+    results.appendChild(fragment);
   }
 
   async function runSearch(query: string) {
@@ -228,9 +251,6 @@ import Icon from '../../user-components/Icons.astro';
     margin: 0;
   }
 
-  /* ----------------------------------------------------------
-     FORM
-     ---------------------------------------------------------- */
   .search-form {
     display: flex;
     gap: var(--s-2);
@@ -289,26 +309,20 @@ import Icon from '../../user-components/Icons.astro';
     margin-bottom: var(--s-4);
   }
 
-  /* ----------------------------------------------------------
-     GRID
-     ---------------------------------------------------------- */
   .anime-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--s-3);
   }
 
-  @media (min-width: 48rem) {
+  @media (min-width: 50rem) {
     .anime-grid {
       grid-template-columns: repeat(4, 1fr);
       gap: var(--s-4);
     }
   }
 
-  /* ----------------------------------------------------------
-     CARD — match AnimeCard.astro
-     ---------------------------------------------------------- */
-  .anime-grid :global(.anime-card) {
+  .anime-card {
     display: block;
     background: var(--bg-elevated);
     border: 1px solid transparent;
@@ -316,36 +330,36 @@ import Icon from '../../user-components/Icons.astro';
     transition: transform var(--t-fast), background var(--t-fast);
   }
 
-  .anime-grid :global(.anime-card:hover) {
+  .anime-card:hover {
     background: var(--bg-surface);
     transform: translateY(-2px);
   }
 
-  .anime-grid :global(.cover) {
+  .cover {
     aspect-ratio: 2 / 3;
     overflow: hidden;
     background: var(--bg-surface);
   }
 
-  .anime-grid :global(.cover img) {
+  .cover img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform var(--t-base);
   }
 
-  .anime-grid :global(.anime-card:hover .cover img) {
+  .anime-card:hover .cover img {
     transform: scale(1.03);
   }
 
-  .anime-grid :global(.info) {
+  .info {
     padding: var(--s-2) var(--s-3) var(--s-3);
     display: flex;
     flex-direction: column;
     gap: var(--s-2);
   }
 
-  .anime-grid :global(.title) {
+  .title {
     font-size: var(--fs-sm);
     font-weight: var(--fw-medium);
     color: var(--text-primary);
@@ -357,21 +371,20 @@ import Icon from '../../user-components/Icons.astro';
     overflow: hidden;
   }
 
-  .anime-grid :global(.meta) {
+  .meta {
     display: flex;
     align-items: center;
     gap: var(--s-2);
   }
 
-  .anime-grid :global(.year) {
+  .episodes {
     font-size: var(--fs-xs);
     color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--fw-medium);
   }
 
-  /* ----------------------------------------------------------
-     BADGE — match Badge.astro
-     ---------------------------------------------------------- */
-  .anime-grid :global(.badge) {
+  .badge {
     display: inline-flex;
     align-items: center;
     padding: 0.1875rem var(--s-2);
@@ -384,17 +397,17 @@ import Icon from '../../user-components/Icons.astro';
     line-height: 1;
   }
 
-  .anime-grid :global(.badge-default) {
+  .badge-default {
     background: var(--bg-surface);
     color: var(--text-secondary);
   }
 
-  .anime-grid :global(.badge-success) {
+  .badge-success {
     background: var(--success-soft);
     color: var(--success);
   }
 
-  .anime-grid :global(.badge-warning) {
+  .badge-warning {
     background: var(--warning-soft);
     color: var(--warning);
   }
