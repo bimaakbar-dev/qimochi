@@ -59,6 +59,9 @@ const dateText = formatDateShort(data.date);
     background: var(--bg-elevated);
   }
 
+  /* ----------------------------------------------------------
+     COVER
+     ---------------------------------------------------------- */
   .cover {
     aspect-ratio: 16 / 9;
     overflow: hidden;
@@ -91,6 +94,9 @@ const dateText = formatDateShort(data.date);
     text-transform: uppercase;
   }
 
+  /* ----------------------------------------------------------
+     BODY — grid: tanggal | konten
+     ---------------------------------------------------------- */
   .body {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -100,6 +106,9 @@ const dateText = formatDateShort(data.date);
     min-width: 0;
   }
 
+  /* ----------------------------------------------------------
+     DATE — vertical, minimal
+     ---------------------------------------------------------- */
   .date {
     writing-mode: vertical-rl;
     transform: rotate(180deg);
@@ -108,28 +117,33 @@ const dateText = formatDateShort(data.date);
     align-items: center;
     justify-content: center;
 
-    padding: var(--s-3) var(--s-2);
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
+    /* Hapus bg, border, padding */
+    background: none;
+    border: none;
+    padding: 0;
 
     font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    color: var(--accent);
-    letter-spacing: 0.08em;
+    font-weight: var(--fw-medium);
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
 
+  /* ----------------------------------------------------------
+     CONTENT — badge + title
+     ---------------------------------------------------------- */
   .content {
     display: flex;
     flex-direction: column;
     gap: var(--s-2);
     min-width: 0;
+    align-items: flex-start;   /* ← badge tidak full width */
   }
 
   .title {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-base);   /* ← naik dari fs-sm */
     font-weight: var(--fw-medium);
     color: var(--text-primary);
     line-height: var(--lh-snug);
