@@ -209,11 +209,14 @@ const genres = GENRES
   }
 
   /* ----------------------------------------------------------
-     HERO — full-bleed background
+     HERO — full-bleed + nempel header
      ---------------------------------------------------------- */
   .hero-carousel {
-    /* Break out dari wrapper — full viewport width */
+    /* Full-bleed horizontal */
     margin-inline: calc(50% - 50vw);
+
+    /* Hapus padding-top wrapper — nempel header */
+    margin-block-start: calc(var(--s-6) * -1);
   }
 
   .hero-track {
@@ -221,10 +224,12 @@ const genres = GENRES
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
-    background: var(--bg-elevated);
 
-    /* Border hanya atas-bawah — full-bleed, kiri-kanan tidak perlu */
-    border-block: 1px solid var(--border);
+    /* Warna sama dengan footer */
+    background: var(--bg-footer);
+
+    /* Border hanya bawah */
+    border-block-end: 1px solid var(--border);
 
     scrollbar-width: none;
   }
@@ -238,7 +243,6 @@ const genres = GENRES
     scroll-snap-align: start;
   }
 
-  /* Inner wrapper — align dengan konten wrapper */
   .hero-slide-inner {
     max-width: var(--content-max-mobile);
     margin-inline: auto;
@@ -256,6 +260,8 @@ const genres = GENRES
   .hero-cover {
     order: -1;
     width: 100%;
+    max-width: 200px;
+    margin-inline: auto;
   }
 
   .hero-cover img {
@@ -263,6 +269,10 @@ const genres = GENRES
     height: auto;
     display: block;
     object-fit: cover;
+    aspect-ratio: 2 / 3;
+
+    /* Sedikit sharp untuk gambar upscaled */
+    image-rendering: -webkit-optimize-contrast;
   }
 
   .hero-text {
@@ -369,7 +379,7 @@ const genres = GENRES
   }
 
   /* ----------------------------------------------------------
-     DESKTOP — hero content align dengan wrapper
+     DESKTOP
      ---------------------------------------------------------- */
   @media (min-width: 50rem) {
     .hero-slide-inner {
@@ -383,7 +393,9 @@ const genres = GENRES
     .hero-cover {
       order: 0;
       width: auto;
+      max-width: none;
       justify-self: end;
+      margin-inline: 0;
     }
 
     .hero-cover img {
