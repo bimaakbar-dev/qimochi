@@ -1,8 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import LinkCard from '../../user-components/LinkCard.astro';
-import { GENRES, URLS } from '../../constants';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Hero from '~/components/Hero.astro';
+import LinkCard from '~/user-components/LinkCard.astro';
+import { GENRES, URLS } from '~/constants';
 
 const allAnime = await getCollection('anime');
 
@@ -22,12 +23,14 @@ const genres = GENRES
 <BaseLayout
   title="Semua Genre"
   description="Jelajahi anime berdasarkan genre."
+  canonical="/genre/"
 >
   <div class="wrapper">
-    <header class="page-header">
-      <h1>Semua Genre</h1>
-      <p class="subtitle">{genres.length} genre · {allAnime.length} anime</p>
-    </header>
+
+    <Hero
+      title="Semua Genre"
+      description={`${genres.length} genre · ${allAnime.length} anime`}
+    />
 
     <div class="genre-grid">
       {genres.map(g => (
@@ -43,58 +46,60 @@ const genres = GENRES
         </LinkCard>
       ))}
     </div>
+
   </div>
 </BaseLayout>
 
 <style>
+  /* ----------------------------------------------------------
+     WRAPPER
+     ---------------------------------------------------------- */
   .wrapper {
-    padding-block: var(--s-8) var(--s-12);
+    padding-block: var(--s-6) var(--s-12);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-6);
   }
 
-  .page-header {
-    margin-bottom: var(--s-8);
-  }
-
-  .page-header h1 {
-    margin: 0 0 var(--s-1);
-  }
-
-  .subtitle {
-    color: var(--text-muted);
-    font-size: var(--fs-sm);
-    margin: 0;
-  }
-
+  /* ----------------------------------------------------------
+     GRID
+     ---------------------------------------------------------- */
   .genre-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-3);
   }
 
   @media (min-width: 48rem) {
     .genre-grid {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: var(--s-4);
     }
   }
 
-  /* Space-between: nama kiri, count kanan */
+  /* ----------------------------------------------------------
+     CONTENT — space-between: nama kiri, count kanan
+     ---------------------------------------------------------- */
   .genre-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--s-3);
+    min-width: 0;
   }
 
   .genre-name {
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
     font-size: var(--fs-base);
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .genre-count {
     font-size: var(--fs-xs);
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
   }
 </style>
