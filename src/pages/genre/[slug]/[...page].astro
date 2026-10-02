@@ -1,9 +1,10 @@
 ---
-import BaseLayout from '../../../layouts/BaseLayout.astro';
-import AnimeCard from '../../../components/AnimeCard.astro';
-import Pagination from '../../../components/Pagination.astro';
-import LinkButton from '../../../user-components/LinkButton.astro';
-import { getGenreData, paginate, allGenreSlugs } from '../../../lib/genre';
+import { getGenreData, paginate, allGenreSlugs } from '~/lib/genre';
+
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import AnimeCard from '~/components/AnimeCard.astro';
+import Pagination from '~/components/Pagination.astro';
+import Breadcrumb from '~/components/Breadcrumb.astro';
 
 export async function getStaticPaths() {
   const paths = [];
@@ -11,16 +12,13 @@ export async function getStaticPaths() {
   for (const { genre, slug } of allGenreSlugs()) {
     const { anime, totalPages } = await getGenreData(genre);
 
-    // Skip kalau tidak ada anime
     if (anime.length === 0) continue;
 
-    // Halaman 1: page = undefined
     paths.push({
       params: { slug, page: undefined },
       props: { genre, anime, totalPages, pageNumber: 1 },
     });
 
-    // Halaman 2 sampai N
     for (let page = 2; page <= totalPages; page++) {
       paths.push({
         params: { slug, page: String(page) },
@@ -46,14 +44,10 @@ const isFirstPage = pageNumber === 1;
 >
   <div class="wrapper">
     <header class="page-header">
-      <LinkButton
-        href="/genre/"
-        variant="ghost"
-        size="md"
-        icon="arrow-left"
-      >
-        Semua Genre
-      </LinkButton>
+      <Breadcrumb items={[
+        { label: 'Genre', href: '/genre/' },
+        { label: genre },
+      ]} />
 
       <h1>{genre}</h1>
       <p class="subtitle">
