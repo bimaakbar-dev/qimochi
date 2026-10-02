@@ -66,8 +66,10 @@ const related = getRelatedPosts(post, allPosts, 3);
           <Icon name="book" size={24} />
         </span>
 
-        <p class="post-meta">
-          Oleh {data.author} · {dateText}
+        <p class="post-author">Oleh {data.author}</p>
+
+        <p class="post-date">
+          <time datetime={data.date.toISOString()}>{dateText}</time>
           {updatedText && (
             <span class="updated"> · Diperbarui {updatedText}</span>
           )}
@@ -142,7 +144,7 @@ const related = getRelatedPosts(post, allPosts, 3);
   }
 
   /* ----------------------------------------------------------
-     HEADER — centered
+     HEADER — centered, stacked
      ---------------------------------------------------------- */
   .post-header {
     display: flex;
@@ -163,16 +165,12 @@ const related = getRelatedPosts(post, allPosts, 3);
   }
 
   /* ----------------------------------------------------------
-     DECORATIVE ICON — cuma 1
+     DECORATIVE ICON — tanpa bg/border
      ---------------------------------------------------------- */
   .post-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
     color: var(--accent);
     margin-block: var(--s-1);
   }
@@ -183,9 +181,19 @@ const related = getRelatedPosts(post, allPosts, 3);
   }
 
   /* ----------------------------------------------------------
-     META — author + date inline
+     AUTHOR
      ---------------------------------------------------------- */
-  .post-meta {
+  .post-author {
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+    font-weight: var(--fw-medium);
+    margin: 0;
+  }
+
+  /* ----------------------------------------------------------
+     DATE
+     ---------------------------------------------------------- */
+  .post-date {
     font-size: var(--fs-xs);
     color: var(--text-muted);
     margin: 0;
@@ -195,7 +203,7 @@ const related = getRelatedPosts(post, allPosts, 3);
     font-variant-numeric: tabular-nums;
   }
 
-  .post-meta .updated {
+  .post-date .updated {
     color: var(--text-disabled);
   }
 
