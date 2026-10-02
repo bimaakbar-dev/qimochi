@@ -165,7 +165,7 @@ const related = getRelatedPosts(post, allPosts, 3);
   }
 
   /* ----------------------------------------------------------
-     DECORATIVE ICON — tanpa bg/border
+     DECORATIVE ICON
      ---------------------------------------------------------- */
   .post-icon {
     display: inline-flex;
@@ -208,13 +208,21 @@ const related = getRelatedPosts(post, allPosts, 3);
   }
 
   /* ----------------------------------------------------------
-     COVER
+     COVER — full-bleed di mobile, dalam wrapper di desktop
      ---------------------------------------------------------- */
   .post-cover {
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background: var(--bg-surface);
-    border: 1px solid var(--border);
+
+    /* Full-bleed: keluar dari padding wrapper */
+    margin-inline: calc(var(--pad-x) * -1);
+  }
+
+  @media (min-width: 40rem) {
+    .post-cover {
+      margin-inline: 0;
+    }
   }
 
   .post-cover img {
