@@ -30,6 +30,13 @@ const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
 const statusSlug = data.status.toLowerCase().replace('completed', 'complete');
 const statusUrl = `/anime/${statusSlug}/`;
 
+// Format tanggal Indonesia
+const releaseDate = new Intl.DateTimeFormat('id-ID', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+}).format(data.releaseDate);
+
 const year = data.releaseDate.getFullYear();
 ---
 
@@ -68,12 +75,24 @@ const year = data.releaseDate.getFullYear();
           <Badge variant={statusVariant} size="sm">{data.status}</Badge>
         </div>
 
-        <ul class="hero-meta">
-          <li>Rating {data.rating}</li>
-          <li>{data.episodes.length} Episode</li>
-          <li>{year}</li>
-          <li>{data.studio}</li>
-        </ul>
+        <dl class="hero-meta">
+          <div class="meta-item">
+            <dt>Rating</dt>
+            <dd>{data.rating} / 10</dd>
+          </div>
+          <div class="meta-item">
+            <dt>Episode</dt>
+            <dd>{data.episodes.length}</dd>
+          </div>
+          <div class="meta-item">
+            <dt>Rilis</dt>
+            <dd>{releaseDate}</dd>
+          </div>
+          <div class="meta-item">
+            <dt>Studio</dt>
+            <dd>{data.studio}</dd>
+          </div>
+        </dl>
 
         <ul class="hero-genres">
           {data.genre.map(g => (
@@ -134,10 +153,13 @@ const year = data.releaseDate.getFullYear();
     margin-bottom: var(--s-5);
   }
 
+  /* ----------------------------------------------------------
+     HERO
+     ---------------------------------------------------------- */
   .hero {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--s-4);
+    gap: var(--s-5);
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     padding: var(--s-5);
@@ -181,33 +203,42 @@ const year = data.releaseDate.getFullYear();
     line-height: var(--lh-snug);
   }
 
+  /* ----------------------------------------------------------
+     META — dl grid
+     ---------------------------------------------------------- */
   .hero-meta {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--s-2) var(--s-4);
-    list-style: none;
-    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s-3) var(--s-4);
+    width: 100%;
     margin: 0;
-    color: var(--text-secondary);
+    text-align: left;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+  }
+
+  .hero-meta dt {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .hero-meta dd {
     font-size: var(--fs-sm);
+    color: var(--text-primary);
+    margin: 0;
+    line-height: var(--lh-snug);
   }
 
-  .hero-meta li {
-    position: relative;
-  }
-
-  .hero-meta li:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    right: calc(var(--s-4) / -2 - 0.5px);
-    top: 50%;
-    width: 3px;
-    height: 3px;
-    transform: translateY(-50%);
-    background: var(--text-muted);
-  }
-
+  /* ----------------------------------------------------------
+     GENRES
+     ---------------------------------------------------------- */
   .hero-genres {
     display: flex;
     flex-wrap: wrap;
@@ -218,6 +249,9 @@ const year = data.releaseDate.getFullYear();
     margin: 0;
   }
 
+  /* ----------------------------------------------------------
+     2 KOLOM
+     ---------------------------------------------------------- */
   .content-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -234,6 +268,9 @@ const year = data.releaseDate.getFullYear();
     margin: 0 0 var(--s-3);
   }
 
+  /* ----------------------------------------------------------
+     DESKTOP
+     ---------------------------------------------------------- */
   @media (min-width: 50rem) {
     .hero {
       grid-template-columns: 200px 1fr;
@@ -259,7 +296,10 @@ const year = data.releaseDate.getFullYear();
       font-size: var(--fs-2xl);
     }
 
-    .hero-meta,
+    .hero-meta {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
     .hero-genres {
       justify-content: flex-start;
     }
