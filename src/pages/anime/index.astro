@@ -1,28 +1,24 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import Breadcrumb from '~/components/Breadcrumb.astro';
+import Hero from '~/components/Hero.astro';
 import { URLS } from '~/constants';
 
 const allAnime = await getCollection('anime');
 
-// Sort alfabetis by title
 const sorted = [...allAnime].sort((a, b) =>
   a.data.title.localeCompare(b.data.title, 'id-ID')
 );
 
-// Ambil huruf awal — handle non-alfabet jadi '#'
 function getFirstLetter(title: string): string {
   const first = title[0]?.toUpperCase() ?? '';
   if (/[A-Z]/.test(first)) return first;
   return '#';
 }
 
-// Huruf unik yang ada anime-nya
 const letters = new Set<string>();
 sorted.forEach(a => letters.add(getFirstLetter(a.data.title)));
 
-// Sort: A-Z dulu, '#' di akhir
 const activeLetters = Array.from(letters).sort((a, b) => {
   if (a === '#') return 1;
   if (b === '#') return -1;
@@ -31,7 +27,6 @@ const activeLetters = Array.from(letters).sort((a, b) => {
 
 const totalAnime = allAnime.length;
 
-// Pre-group per huruf untuk render
 const groups = activeLetters.map(letter => ({
   letter,
   items: sorted.filter(a => getFirstLetter(a.data.title) === letter),
@@ -44,17 +39,12 @@ const groups = activeLetters.map(letter => ({
   canonical="/anime/"
 >
   <div class="wrapper">
-    <header class="page-header">
-      <Breadcrumb items={[
-        { label: 'Home', href: '/' },
-        { label: 'Archive' },
-      ]} />
 
-      <h1>Archive Anime</h1>
-      <p class="subtitle">{totalAnime} anime</p>
-    </header>
+    <Hero
+      title="Archive Anime"
+      description={`Daftar lengkap ${totalAnime} anime di Qimochi, diurutkan alfabetis.`}
+    />
 
-    <!-- Sticky letter nav -->
     {activeLetters.length > 1 && (
       <nav class="letter-nav" aria-label="Navigasi huruf">
         <ul class="letter-list">
@@ -67,7 +57,6 @@ const groups = activeLetters.map(letter => ({
       </nav>
     )}
 
-    <!-- Groups -->
     {groups.map(({ letter, items }) => (
       <section class="letter-group" id={`letter-${letter}`}>
         <h2 class="letter-heading">{letter}</h2>
@@ -77,12 +66,15 @@ const groups = activeLetters.map(letter => ({
             <li>
               <a href={URLS.anime(anime.id)} class="anime-link">
                 <span class="anime-title">{anime.data.title}</span>
-                <span class="anime-meta">
-                  {anime.data.status}
-                  {anime.data.episodes.length > 0 && (
-                    <> · {anime.data.episodes.length} Ep</>
-                  )}
-                </span>
+
+                {anime.data.status !== 'Completed' && (
+                  <span class:list={[
+                    'anime-status',
+                    `anime-status-${anime.data.status.toLowerCase()}`
+                  ]}>
+                    {anime.data.status}
+                  </span>
+                )}
               </a>
             </li>
           ))}
@@ -97,32 +89,18 @@ const groups = activeLetters.map(letter => ({
 </BaseLayout>
 
 <style>
+  /* ----------------------------------------------------------
+     WRAPPER
+     ---------------------------------------------------------- */
   .wrapper {
-    padding-block: var(--s-8) var(--s-12);
+    padding-block: var(--s-6) var(--s-12);
     display: flex;
     flex-direction: column;
     gap: var(--s-6);
   }
 
-  .page-header {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-3);
-  }
-
-  .page-header h1 {
-    margin: 0;
-    font-size: var(--fs-2xl);
-  }
-
-  .subtitle {
-    color: var(--text-muted);
-    font-size: var(--fs-sm);
-    margin: 0;
-  }
-
   /* ----------------------------------------------------------
-     LETTER NAV — sticky di atas
+     LETTER NAV — sticky
      ---------------------------------------------------------- */
   .letter-nav {
     position: sticky;
@@ -130,7 +108,6 @@ const groups = activeLetters.map(letter => ({
     z-index: var(--z-overlay);
     background: var(--bg-base);
 
-    /* Bleed ke tepi wrapper */
     margin-inline: calc(var(--pad-x) * -1);
     padding-block: var(--s-3);
     padding-inline: var(--pad-x);
@@ -172,8 +149,6 @@ const groups = activeLetters.map(letter => ({
     display: flex;
     flex-direction: column;
     gap: var(--s-2);
-
-    /* Kompensasi header + letter nav sticky */
     scroll-margin-top: calc(var(--header-height) + 4rem);
   }
 
@@ -228,15 +203,33 @@ const groups = activeLetters.map(letter => ({
     color: var(--accent);
   }
 
-  .anime-meta {
+  /* ----------------------------------------------------------
+     STATUS — hanya untuk non-complete
+     ---------------------------------------------------------- */
+  .anime-status {
     font-size: var(--fs-xs);
-    color: var(--text-muted);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
   }
 
+  .anime-status-ongoing {
+    color: var(--success);
+  }
+
+  .anime-status-hiatus {
+    color: var(--warning);
+  }
+
+  /* ----------------------------------------------------------
+     EMPTY
+     ---------------------------------------------------------- */
   .empty {
     color: var(--text-muted);
     text-align: center;
     padding: var(--s-12) 0;
+    font-size: var(--fs-sm);
   }
 </style>
