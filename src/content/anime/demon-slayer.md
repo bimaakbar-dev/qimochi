@@ -1,12 +1,12 @@
 ---
-title: 'Demon Slayer: Kimetsu no Yaiba'
+title: Demon Slayer Kimetsu no Yaiba
 cover: https://cdn.myanimelist.net/images/anime/1286/99889.jpg
 status: Ongoing
 genre: [Action, Supernatural, Drama]
 studio: ufotable
-tahun: 2019
+releaseDate: 2019-04-06
+addedAt: 2026-02-25
 rating: 8.7
-addedAt: 2026-01-25
 
 episodes:
   - number: 1
