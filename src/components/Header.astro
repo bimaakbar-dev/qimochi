@@ -8,7 +8,18 @@ const currentPath = Astro.url.pathname;
 
 function isActive(href: string): boolean {
   if (href === '/') return currentPath === '/';
-  return currentPath.startsWith(href);
+
+  const matches = currentPath === href || currentPath.startsWith(href);
+  if (!matches) return false;
+
+  const hasMoreSpecific = NAV_LINKS.some(({ href: otherHref }) => {
+    if (otherHref === href) return false;
+    if (otherHref === '/') return false;
+    if (otherHref.length <= href.length) return false;
+    return currentPath === otherHref || currentPath.startsWith(otherHref);
+  });
+
+  return !hasMoreSpecific;
 }
 ---
 
