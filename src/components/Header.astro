@@ -1,5 +1,7 @@
 ---
 import { SITE, NAV_LINKS } from '../constants';
+import { Image } from 'astro:assets';
+import logoImg from '../assets/images/logo/logo.png';
 import Icon from '../user-components/Icons.astro';
 
 const currentPath = Astro.url.pathname;
@@ -12,9 +14,17 @@ function isActive(href: string): boolean {
 
 <header class="site-header">
   <div class="header-inner">
-    <a href="/" class="logo">
-      <span class="logo-mark" aria-hidden="true"></span>
-      <span class="logo-text">{SITE.name}</span>
+    <a href="/" class="logo" aria-label={`${SITE.name} — Home`}>
+      <Image
+        src={logoImg}
+        alt={SITE.name}
+        width={64}
+        height={64}
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+        class="logo-img"
+      />
     </a>
 
     <div class="header-actions">
@@ -111,32 +121,23 @@ function isActive(href: string): boolean {
     }
   }
 
-  /* ---------- LOGO ---------- */
   .logo {
     display: inline-flex;
     align-items: center;
-    gap: var(--s-2);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
-    color: var(--text-inverted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    transition: color var(--t-fast);
+    transition: opacity var(--t-fast);
   }
 
   .logo:hover {
-    color: var(--accent);
+    opacity: 0.85;
   }
 
-  .logo-mark {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    background: var(--accent);
-    clip-path: polygon(0 0, 100% 0, 100% 60%, 60% 100%, 0 100%);
+  .logo-img {
+    display: block;
+    width: 2rem;
+    height: 2rem;
+    object-fit: contain;
   }
 
-  /* ---------- HEADER ACTIONS ---------- */
   .header-actions {
     display: flex;
     align-items: center;
@@ -157,7 +158,6 @@ function isActive(href: string): boolean {
     color: var(--accent);
   }
 
-  /* ---------- MENU ---------- */
   .menu {
     display: flex;
     align-items: center;
@@ -198,7 +198,6 @@ function isActive(href: string): boolean {
     display: inline-flex;
   }
 
-  /* ---------- NAV ---------- */
   .nav {
     display: flex;
     align-items: center;
@@ -221,7 +220,6 @@ function isActive(href: string): boolean {
     color: var(--accent);
   }
 
-  /* ---------- MOBILE ---------- */
   @media (max-width: 50rem) {
     .menu {
       display: block;
@@ -268,7 +266,6 @@ function isActive(href: string): boolean {
     }
   }
 
-  /* ---------- DESKTOP ---------- */
   @media (min-width: 50rem) {
     .menu-btn {
       display: none;
