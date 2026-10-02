@@ -11,6 +11,7 @@ interface Props {
       cover: string;
       status: string;
       tahun?: number;
+      episodes?: { number: number }[];
     };
   };
   featured?: boolean;
@@ -20,6 +21,10 @@ const { anime, featured = false } = Astro.props;
 const { id, data } = anime;
 
 const variant = STATUS_VARIANT[data.status as Status] ?? 'default';
+
+const lastEpisode = data.episodes?.length
+  ? Math.max(...data.episodes.map(e => e.number))
+  : 0;
 ---
 
 <LinkCard
@@ -41,7 +46,7 @@ const variant = STATUS_VARIANT[data.status as Status] ?? 'default';
     <h3 class="title">{data.title}</h3>
     <div class="meta">
       <Badge variant={variant} size="sm">{data.status}</Badge>
-      {data.tahun && <span class="year">{data.tahun}</span>}
+      {lastEpisode > 0 && <span class="episodes">Ep {lastEpisode}</span>}
     </div>
   </div>
 </LinkCard>
@@ -93,9 +98,11 @@ const variant = STATUS_VARIANT[data.status as Status] ?? 'default';
     gap: var(--s-2);
   }
 
-  .year {
+  .episodes {
     font-size: var(--fs-xs);
     color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--fw-medium);
   }
 
   .anime-card-featured {
