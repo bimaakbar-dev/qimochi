@@ -1,4 +1,5 @@
-:root {
+:root,
+::backdrop {
   --bg-base:     hsl(39, 6%, 85%);
   --bg-elevated: hsl(39, 8%, 92%);
   --bg-surface:  hsl(39, 6%, 78%);
@@ -39,13 +40,16 @@
   --font-mono: var(--font-inter), ui-monospace, 'SF Mono', Monaco, 'Cascadia Code',
                'Roboto Mono', monospace;
 
-  --fs-xs:   0.75rem;    /* 12px */
-  --fs-sm:   0.875rem;   /* 14px */
-  --fs-base: 1rem;       /* 16px */
-  --fs-lg:   1.125rem;   /* 18px */
-  --fs-xl:   1.25rem;    /* 20px */
-  --fs-2xl:  1.5rem;     /* 24px */
-  --fs-3xl:  1.875rem;   /* 30px */
+  --fs-xs:   0.8125rem;
+  --fs-sm:   0.875rem;
+  --fs-base: 1rem;
+  --fs-lg:   1.125rem;
+  --fs-xl:   1.25rem;
+  --fs-2xl:  1.5rem;
+  --fs-3xl:  1.8125rem;
+  --fs-4xl: 2.1875rem;
+	--fs-5xl: 2.625rem;
+	--fs-6xl: 4rem;
 
   --fw-normal:   400;
   --fw-medium:   500;
@@ -54,7 +58,7 @@
 
   --lh-tight:   1.2;
   --lh-snug:    1.35;
-  --lh-normal:  1.5;
+  --lh-normal:  1.75;
   --lh-relaxed: 1.65;
 
   --s-1:  0.25rem;  /*  4px */
@@ -68,18 +72,18 @@
   --s-12: 3rem;     /* 48px */
   --s-16: 4rem;     /* 64px */
 
-  --r-sm:   0.375rem;  /*  6px — chip, badge */
-  --r-md:   0.625rem;  /* 10px — card, tombol */
-  --r-lg:   0.875rem;  /* 14px — panel, hero */
-  --r-full: 9999px;    /* pill */
+  --r-sm:   0.375rem;
+  --r-md:   0.625rem;
+  --r-lg:   0.875rem;
+  --r-full: 9999px;
 
   --shadow-sm: 0 1px 2px hsla(0, 0%, 0%, 0.05);
   --shadow-md: 0 4px 12px hsla(0, 0%, 0%, 0.08);
   --shadow-lg: 0 12px 32px hsla(0, 0%, 0%, 0.12);
 
-  --content-max-mobile:  48rem;   /*  768px */
-  --content-max-desktop: 72rem;   /* 1152px */
-  --aside-width:         18rem;   /*  288px */
+  --content-max-mobile:  48rem;
+  --content-max-desktop: 72rem;
+  --aside-width:         18rem;
 
   --pad-x: 1rem;
 

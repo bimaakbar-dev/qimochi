@@ -1,5 +1,5 @@
 ---
-import Badge from '../user-components/Badge.astro';
+import Badge from '~/user-components/Badge.astro';
 
 interface Props {
   title: string;
@@ -12,7 +12,7 @@ const { title, episodeNumber } = Astro.props;
 <header class="watch-title">
   <h1>
     {title}
-    <Badge variant="accent" size="sm">Ep {episodeNumber}</Badge>
+    <Badge variant="accent" size="md">Ep {episodeNumber}</Badge>
   </h1>
 </header>
 
@@ -22,7 +22,7 @@ const { title, episodeNumber } = Astro.props;
     align-items: center;
     flex-wrap: wrap;
     gap: var(--s-2);
-    font-size: var(--fs-lg);
+    font-size: var(--fs-2xl);
     font-weight: var(--fw-semibold);
     line-height: var(--lh-snug);
     margin: 0;

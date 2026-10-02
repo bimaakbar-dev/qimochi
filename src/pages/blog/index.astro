@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import Breadcrumb from '~/components/Breadcrumb.astro';
 import PostCard from '~/components/PostCard.astro';
 import { getPublishedPosts } from '~/lib/blog';
 
@@ -13,15 +12,11 @@ const posts = await getPublishedPosts();
   canonical="/blog/"
 >
   <div class="wrapper">
-
     <header class="blog-header">
-      <Breadcrumb items={[
-        { label: 'Home', href: '/' },
-        { label: 'Blog' },
-      ]} />
-      <h1 class="blog-title">Blog</h1>
+      <div class="blog-title">
+        <h1>Blog</h1>
+      </div>
     </header>
-
     <div class="content-grid">
       <section class="content-main">
         {posts.length > 0 ? (
@@ -63,82 +58,68 @@ const posts = await getPublishedPosts();
     gap: var(--s-6);
   }
 
-  /* ----------------------------------------------------------
-     COMPACT HEADER
-     ---------------------------------------------------------- */
   .blog-header {
     display: flex;
     flex-direction: column;
     gap: var(--s-2);
+    background: var(--bg-footer);
+    margin-inline: calc(50% - 50vw);
+    margin-block-start: calc(var(--s-6) * -1);
+    & .blog-title {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: var(--content-max-mobile);
+      min-height: 6rem;
+      margin-inline: auto;
+      padding-inline: var(--s-4);
+      & h1 {
+        font-size: var(--fs-5xl);
+        font-weight: var(--fw-bold);
+        line-height: var(--lh-tight);
+        margin: 0;
+        color: var(--text-inverted);
+      }
+    }
   }
-
-  .blog-title {
-    font-size: var(--fs-2xl);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-tight);
-    margin: 0;
-    color: var(--text-primary);
-  }
-
-  /* ----------------------------------------------------------
-     GRID — main + aside
-     ---------------------------------------------------------- */
   .content-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--s-6);
     align-items: start;
   }
+  .content-main {
+    min-width: 0;
+  }
 
-  @media (min-width: 56rem) {
+  .post-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-4);
+    margin-inline: calc(var(--pad-x) * -1);
+  }
+
+  @media (min-width: 50rem) {
+    .blog-header .blog-title {
+      max-width: var(--content-max-desktop);
+    }
     .content-grid {
       grid-template-columns: 1fr var(--aside-width);
     }
-
     .content-aside {
       position: sticky;
       top: var(--sticky-top);
       max-height: calc(100vh - var(--sticky-top) - var(--s-4));
       overflow-y: auto;
     }
-  }
-
-  .content-main {
-    min-width: 0;
-  }
-
-  /* ----------------------------------------------------------
-     BENTO GRID
-     - Mobile: 1 kolom, full-bleed (edge to edge)
-     - Desktop: 2 kolom
-     - Item pertama: span full width (di semua ukuran)
-     ---------------------------------------------------------- */
-  .post-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s-4);
-
-    /* Full-bleed di mobile */
-    margin-inline: calc(var(--pad-x) * -1);
-  }
-
-  @media (min-width: 40rem) {
     .post-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-
-      /* Kembalikan margin di desktop */
       margin-inline: 0;
     }
-
-    /* Featured span 2 kolom — pakai :global untuk tembus ke PostCard */
     .post-grid > :global(:first-child) {
       grid-column: 1 / -1;
     }
   }
-
-  /* ----------------------------------------------------------
-     EMPTY
-     ---------------------------------------------------------- */
   .empty {
     color: var(--text-muted);
     text-align: center;
@@ -146,9 +127,6 @@ const posts = await getPublishedPosts();
     font-size: var(--fs-sm);
   }
 
-  /* ----------------------------------------------------------
-     ASIDE
-     ---------------------------------------------------------- */
   .content-aside {
     display: flex;
     flex-direction: column;

@@ -37,12 +37,11 @@ function isActive(href: string): boolean {
         class="logo-img"
       />
     </a>
-
+    
     <div class="header-actions">
       <a href="/search/" class="icon-btn" aria-label="Cari anime">
         <Icon name="search" size={20} />
       </a>
-
       <details class="menu" open>
         <summary class="menu-btn" aria-label="Menu navigasi">
           <span class="icon-menu">
@@ -255,10 +254,11 @@ function isActive(href: string): boolean {
       text-transform: none;
       letter-spacing: normal;
       border-radius: var(--r-sm);
+      font-family: var(--font-montserrat);
     }
 
     .nav-link:hover {
-      background: var(--bg-hover);
+      background: var(--bg-footer);
     }
 
     .nav-link.active {

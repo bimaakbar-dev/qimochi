@@ -46,7 +46,6 @@ import Icon from '~/user-components/Icons.astro';
   </div>
 </BaseLayout>
 
-<!-- TEMPLATE CARD -->
 <template id="card-template">
   <a class="anime-card" href="">
     <div class="cover">
@@ -56,7 +55,7 @@ import Icon from '~/user-components/Icons.astro';
       <h3 class="title"></h3>
       <div class="meta">
         <span class="badge"></span>
-        <span class="episodes"></span>
+        <span class="details"></span>
       </div>
     </div>
   </a>
@@ -69,8 +68,9 @@ import Icon from '~/user-components/Icons.astro';
     id: string;
     title: string;
     cover: string;
+    type: string;
     status: string;
-    releaseDate: string;   // ← ISO string dari JSON
+    releaseDate: string;
     rating: number;
     episodes: { number: number }[];
   }
@@ -163,12 +163,10 @@ import Icon from '~/user-components/Icons.astro';
       ? Math.max(...a.episodes.map(e => e.number))
       : 0;
 
-    const epEl = clone.querySelector('.episodes') as HTMLElement;
-    if (lastEpisode > 0) {
-      epEl.textContent = `Ep ${lastEpisode}`;
-    } else {
-      epEl.remove();
-    }
+    const details = clone.querySelector('.details') as HTMLElement;
+    const parts: string[] = [a.type];
+    if (lastEpisode > 0) parts.push(`Ep ${lastEpisode}`);
+    details.textContent = parts.join(' · ');
 
     return clone;
   }
@@ -282,6 +280,9 @@ import Icon from '~/user-components/Icons.astro';
     margin: 0;
   }
 
+  /* ----------------------------------------------------------
+     FORM
+     ---------------------------------------------------------- */
   .search-form {
     display: flex;
     flex-direction: column;
@@ -459,13 +460,16 @@ import Icon from '~/user-components/Icons.astro';
     flex-wrap: wrap;
   }
 
-  .episodes {
+  .details {
     font-size: var(--fs-xs);
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
     font-weight: var(--fw-medium);
   }
 
+  /* ----------------------------------------------------------
+     BADGE — match Badge.astro
+     ---------------------------------------------------------- */
   .badge {
     display: inline-flex;
     align-items: center;
@@ -494,8 +498,7 @@ import Icon from '~/user-components/Icons.astro';
     color: var(--warning);
   }
 
-  /* Desktop — form jadi row */
-  @media (min-width: 30rem) {
+  @media (min-width: 50rem) {
     .search-form {
       flex-direction: row;
     }

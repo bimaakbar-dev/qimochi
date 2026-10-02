@@ -1,19 +1,26 @@
 ---
 import { SITE, NAV_LINKS } from '~/constants';
+import { Image } from 'astro:assets';
+import logoImg from '../assets/images/logo/logo.png';
 
 const year = new Date().getFullYear();
-
-const currentPath = Astro.url.pathname;
 ---
 
 <footer class="site-footer">
   <div class="footer-inner">
     <div class="footer-brand">
-      <a href="/" class="footer-logo">
-        <span class="logo-mark" aria-hidden="true"></span>
-        <span>{SITE.name}</span>
+      <a href="/" class="logo" aria-label={`${SITE.name} — Home`}>
+        <Image
+          src={logoImg}
+          alt={SITE.name}
+          width={64}
+          height={64}
+          loading="lazy"
+          fetchpriority="low"
+          decoding="async"
+          class="logo-img"
+        />
       </a>
-      <p class="footer-tagline">{SITE.description}</p>
     </div>
     <nav class="footer-nav" aria-label="Navigasi footer">
       <h2 class="footer-heading">Jelajahi</h2>
@@ -42,10 +49,6 @@ const currentPath = Astro.url.pathname;
         secara publik di internet. Kami hanya menyediakan tautan untuk
         keperluan referensi dan tidak bertanggung jawab atas konten
         yang di-host oleh pihak ketiga.
-      </p>
-      <p>
-        Jika kamu adalah pemilik hak cipta dan menemukan konten yang
-        melanggar, silakan hubungi kami melalui halaman <a href="/dmca/">DMCA</a> untuk permintaan penghapusan.
       </p>
     </div>
   </div>
@@ -84,40 +87,7 @@ const currentPath = Astro.url.pathname;
 
   .footer-brand {
     display: flex;
-    flex-direction: column;
-    gap: var(--s-3);
-  }
-
-  .footer-logo {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-2);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-inverted);
-    transition: color var(--t-fast);
-  }
-
-  .footer-logo:hover {
-    color: var(--accent);
-  }
-
-  .logo-mark {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    background: var(--accent);
-    clip-path: polygon(0 0, 100% 0, 100% 60%, 60% 100%, 0 100%);
-  }
-
-  .footer-tagline {
-    font-size: var(--fs-sm);
-    color: var(--text-secondary);
-    line-height: var(--lh-relaxed);
-    margin: 0;
-    max-width: 40ch;
+    align-items: start;
   }
 
   .footer-nav ul {
@@ -131,7 +101,7 @@ const currentPath = Astro.url.pathname;
 
   .footer-nav a {
     font-size: var(--fs-sm);
-    color: var(--text-secondary);
+    color: var(--text-inverted);
     transition: color var(--t-fast);
   }
 

@@ -13,8 +13,9 @@ html {
   -webkit-text-size-adjust: 100%;
   -moz-tab-size: 4;
   tab-size: 4;
-  line-height: 1.6;
   -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  accent-color: var(--accent);
 }
 
 body {
@@ -25,6 +26,8 @@ body {
   text-rendering: optimizeLegibility;
   background: var(--bg-base);
   color: var(--text-primary);
+  hanging-punctuation: first last;
+  scroll-behavior: smooth;
 }
 
 main {
@@ -72,6 +75,7 @@ ol {
 h1, h2, h3, h4, h5, h6 {
   font-size: inherit;
   font-weight: inherit;
+  font-family: var(--font-montserrat);
 }
 
 table {

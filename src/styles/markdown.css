@@ -22,11 +22,12 @@
   font-weight: var(--fw-semibold);
   line-height: var(--lh-snug);
   margin: var(--s-6) 0 var(--s-3);
+  font-family: var(--font-montserrat);
 }
 
-.markdown h1 { font-size: var(--fs-2xl); }
-.markdown h2 { font-size: var(--fs-xl); }
-.markdown h3 { font-size: var(--fs-lg); }
+.markdown h1 { font-size: var(--fs-4xl); }
+.markdown h2 { font-size: var(--fs-3xl); }
+.markdown h3 { font-size: var(--fs-xl); }
 .markdown h4 { font-size: var(--fs-base); }
 .markdown h5,
 .markdown h6 { font-size: var(--fs-sm); }

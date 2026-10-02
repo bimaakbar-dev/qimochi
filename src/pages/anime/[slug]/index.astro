@@ -2,11 +2,9 @@
 import { getCollection, render } from 'astro:content';
 import { SITE, URLS, STATUS_VARIANT, type Status } from '~/constants';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import Breadcrumb from '~/components/Breadcrumb.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
 import Badge from '~/user-components/Badge.astro';
 import LinkButton from '~/user-components/LinkButton.astro';
-import LinkCard from '~/user-components/LinkCard.astro';
 
 export async function getStaticPaths() {
   const allAnime = await getCollection('anime');
@@ -27,10 +25,7 @@ const episodeNumbers = data.episodes
 const firstEpisode = episodeNumbers[0] ?? 1;
 const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
 
-const statusSlug = data.status.toLowerCase().replace('completed', 'complete');
-const statusUrl = `/anime/${statusSlug}/`;
-
-const releaseDate = new Intl.DateTimeFormat(`${SITE.locale}`, {
+const releaseDate = new Intl.DateTimeFormat(SITE.locale, {
   day: 'numeric',
   month: 'long',
   year: 'numeric',
@@ -45,18 +40,9 @@ const year = data.releaseDate.getFullYear();
   image={data.cover}
   type="video.other"
 >
-  <div class="wrapper">
-
-    <div class="breadcrumb-wrap">
-      <Breadcrumb items={[
-        { label: 'Home', href: '/' },
-        { label: data.status, href: statusUrl },
-        { label: data.title },
-      ]} />
-    </div>
-
+  <article>
     <section class="hero">
-      <div class="hero-cover">
+      <div class="cover">
         <img
           src={data.cover}
           alt={`Cover ${data.title}`}
@@ -69,12 +55,15 @@ const year = data.releaseDate.getFullYear();
       </div>
 
       <div class="hero-info">
-        <div class="hero-head">
-          <Badge variant={statusVariant} size="sm">{data.status}</Badge>
-          <h1 class="hero-title">{data.title}</h1>
-        </div>
+        <Badge variant={statusVariant} size="md">{data.status}</Badge>
+
+        <h1>{data.title}</h1>
 
         <dl class="hero-meta">
+          <div class="meta-item">
+            <dt>Tipe</dt>
+            <dd>{data.type}</dd>
+          </div>
           <div class="meta-item">
             <dt>Rating</dt>
             <dd>{data.rating} / 10</dd>
@@ -91,23 +80,18 @@ const year = data.releaseDate.getFullYear();
             <dt>Studio</dt>
             <dd>{data.studio}</dd>
           </div>
+          <div class="meta-item">
+            <dt>Genre</dt>
+            <dd class="genre-list">
+              {data.genre.map((g, i) => (
+                <>
+                  <a href={URLS.genre(g)}>{g}</a>
+                  {i < data.genre.length - 1 && ', '}
+                </>
+              ))}
+            </dd>
+          </div>
         </dl>
-
-        <ul class="hero-genres">
-          {data.genre.map(g => (
-            <li>
-              <LinkCard
-                href={URLS.genre(g)}
-                variant="outline"
-                padding="sm"
-                lift={false}
-                class="genre-chip"
-              >
-                {g}
-              </LinkCard>
-            </li>
-          ))}
-        </ul>
 
         <LinkButton
           href={URLS.watch(anime.id, firstEpisode)}
@@ -120,7 +104,6 @@ const year = data.releaseDate.getFullYear();
       </div>
     </section>
 
-    <!-- 2 KOLOM -->
     <div class="content-grid">
       <div class="content-main">
         <section class="synopsis-section">
@@ -139,17 +122,16 @@ const year = data.releaseDate.getFullYear();
         />
       </aside>
     </div>
-
-  </div>
+  </article>
 </BaseLayout>
 
 <style>
-  .wrapper {
+  article {
+    max-width: var(--content-max-mobile);
+    margin-inline: auto;
     padding-block: var(--s-6) var(--s-12);
-  }
-
-  .breadcrumb-wrap {
-    margin-bottom: var(--s-5);
+    padding-inline: var(--pad-x);
+    isolation: isolate;
   }
 
   .hero {
@@ -157,19 +139,19 @@ const year = data.releaseDate.getFullYear();
     grid-template-columns: 1fr;
     gap: var(--s-5);
     background: var(--bg-elevated);
-    border: 1px solid var(--border);
     padding: var(--s-5);
     margin-bottom: var(--s-6);
     text-align: center;
+    align-items: center;
     justify-items: center;
   }
 
-  .hero-cover {
+  .cover {
     width: 100%;
     max-width: 200px;
   }
 
-  .hero-cover img {
+  .cover img {
     width: 100%;
     height: auto;
     aspect-ratio: 2 / 3;
@@ -183,110 +165,102 @@ const year = data.releaseDate.getFullYear();
     gap: var(--s-4);
     align-items: center;
     width: 100%;
-  }
 
-  .hero-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: var(--s-3);
-  }
+    & h1 {
+      font-size: var(--fs-3xl);
+      line-height: var(--lh-snug);
+      font-weight: var(--fw-bold);
+      margin: 0;
+      color: var(--text-primary);
+    }
 
-  .hero-title {
-    font-size: var(--fs-xl);
-    margin: 0;
-    line-height: var(--lh-snug);
-  }
+    & .hero-meta {
+      display: grid;
+      /* Mobile: 2 kolom × 3 baris */
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--s-4);
+      width: 100%;
+      margin: 0;
+      text-align: center;
+      justify-items: center;
 
-  .hero-meta {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--s-3) var(--s-4);
-    width: 100%;
-    margin: 0;
-    text-align: left;
-    align-items: center;
-  }
+      & .meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: var(--s-1);
+        align-items: center;
+        min-width: 0;
+      }
 
-  .meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-1);
-  }
+      & dt {
+        font-size: var(--fs-xs);
+        font-weight: var(--fw-semibold);
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
 
-  .hero-meta dt {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+      & dd {
+        font-size: var(--fs-sm);
+        color: var(--text-primary);
+        margin: 0;
+        line-height: var(--lh-snug);
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+    }
   }
+  .genre-list {
+    & a {
+      color: var(--accent);
+      transition: color var(--t-fast);
 
-  .hero-meta dd {
-    font-size: var(--fs-sm);
-    color: var(--text-primary);
-    margin: 0;
-    line-height: var(--lh-snug);
+      &:hover {
+        color: var(--accent-hover);
+      }
+    }
   }
-
-  .hero-genres {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--s-2);
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
   .content-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--s-6);
     align-items: start;
   }
-
   .content-main {
     min-width: 0;
   }
-
   .section-title {
     font-size: var(--fs-lg);
     margin: 0 0 var(--s-3);
+    color: var(--text-primary);
   }
 
   @media (min-width: 50rem) {
+    article {
+      max-width: var(--content-max-desktop);
+    }
     .hero {
       grid-template-columns: 200px 1fr;
       gap: var(--s-6);
       padding: var(--s-6);
-      text-align: left;
+      text-align: start;
       justify-items: start;
     }
-
-    .hero-cover {
+    .cover {
       max-width: none;
     }
-
     .hero-info {
       align-items: flex-start;
-    }
+      & .hero-meta {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--s-4) var(--s-6);
+        text-align: start;
+        justify-items: start;
 
-    .hero-head {
-      justify-content: flex-start;
-    }
-
-    .hero-title {
-      font-size: var(--fs-2xl);
-    }
-
-    .hero-meta {
-      grid-template-columns: repeat(4, 1fr);
-    }
-
-    .hero-genres {
-      justify-content: flex-start;
+        & .meta-item {
+          align-items: flex-start;
+        }
+      }
     }
 
     .content-grid {
@@ -299,16 +273,5 @@ const year = data.releaseDate.getFullYear();
       max-height: calc(100vh - var(--sticky-top) - var(--s-4));
       overflow-y: auto;
     }
-  }
-</style>
-
-<style is:global>
-  .genre-chip {
-    font-size: var(--fs-xs);
-    color: var(--text-secondary);
-    line-height: 1;
-  }
-  .genre-chip:hover {
-    color: var(--accent) !important;
   }
 </style>

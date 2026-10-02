@@ -1,19 +1,7 @@
-/* ==========================================================
-   GLOBAL — Entry Point
-   ========================================================== */
-
-/* 1. Tokens */
 @import './props.css';
-
-/* 2. Reset */
 @import './reset.css';
-
-/* 3. Markdown */
 @import './markdown.css';
 
-/* ----------------------------------------------------------
-   BASE — style default elemen
-   ---------------------------------------------------------- */
 body {
   font-family: var(--font-sans);
   font-size: var(--fs-base);

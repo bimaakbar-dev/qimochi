@@ -8,6 +8,7 @@ const anime = defineCollection({
     title: z.string(),
     cover: z.url(),
     status: z.enum(['Ongoing', 'Completed', 'Hiatus']),
+    type: z.enum(['TV', 'Movie', 'OVA', 'ONA', 'Special']),
     genre: z.array(z.string()).min(1),
     studio: z.string(),
     releaseDate: z.coerce.date(),
