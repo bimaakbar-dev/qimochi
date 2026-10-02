@@ -42,35 +42,37 @@ const genres = GENRES
         <div class="hero-track">
           {latest.map((anime, i) => (
             <article class="hero-slide" id={`slide-${i + 1}`}>
-              <div class="hero-text">
-                <Badge variant="accent" mark>Baru Ditambahkan</Badge>
+              <div class="hero-slide-inner">
+                <div class="hero-text">
+                  <Badge variant="accent" mark>Baru Ditambahkan</Badge>
 
-                <h2 class="hero-title">{anime.data.title}</h2>
+                  <h2 class="hero-title">{anime.data.title}</h2>
 
-                <p class="hero-meta">
-                  {anime.data.status} · {anime.data.releaseDate.getFullYear()} · Rating {anime.data.rating}
-                </p>
+                  <p class="hero-meta">
+                    {anime.data.status} · {anime.data.releaseDate.getFullYear()} · Rating {anime.data.rating}
+                  </p>
 
-                <LinkButton
-                  href={URLS.anime(anime.id)}
-                  variant="accent"
-                  size="lg"
-                  icon="play"
-                >
-                  Tonton
-                </LinkButton>
-              </div>
+                  <LinkButton
+                    href={URLS.anime(anime.id)}
+                    variant="accent"
+                    size="lg"
+                    icon="play"
+                  >
+                    Tonton
+                  </LinkButton>
+                </div>
 
-              <div class="hero-cover">
-                <img
-                  src={anime.data.cover}
-                  alt={`Cover ${anime.data.title}`}
-                  width="300"
-                  height="450"
-                  loading={i === 0 ? 'eager' : 'lazy'}
-                  fetchpriority={i === 0 ? 'high' : 'auto'}
-                  decoding="async"
-                />
+                <div class="hero-cover">
+                  <img
+                    src={anime.data.cover}
+                    alt={`Cover ${anime.data.title}`}
+                    width="300"
+                    height="450"
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    fetchpriority={i === 0 ? 'high' : 'auto'}
+                    decoding="async"
+                  />
+                </div>
               </div>
             </article>
           ))}
@@ -206,13 +208,24 @@ const genres = GENRES
     gap: var(--s-10);
   }
 
+  /* ----------------------------------------------------------
+     HERO — full-bleed background
+     ---------------------------------------------------------- */
+  .hero-carousel {
+    /* Break out dari wrapper — full viewport width */
+    margin-inline: calc(50% - 50vw);
+  }
+
   .hero-track {
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
     background: var(--bg-elevated);
-    border: 1px solid var(--border);
+
+    /* Border hanya atas-bawah — full-bleed, kiri-kanan tidak perlu */
+    border-block: 1px solid var(--border);
+
     scrollbar-width: none;
   }
 
@@ -223,13 +236,23 @@ const genres = GENRES
   .hero-slide {
     flex: 0 0 100%;
     scroll-snap-align: start;
+  }
+
+  /* Inner wrapper — align dengan konten wrapper */
+  .hero-slide-inner {
+    max-width: var(--content-max-mobile);
+    margin-inline: auto;
+    padding: var(--s-5) var(--pad-x);
+
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--s-4);
-    padding: var(--s-5);
     align-items: center;
   }
 
+  /* ----------------------------------------------------------
+     HERO CONTENT
+     ---------------------------------------------------------- */
   .hero-cover {
     order: -1;
     width: 100%;
@@ -263,6 +286,16 @@ const genres = GENRES
     margin: 0;
   }
 
+  /* ----------------------------------------------------------
+     DOTS
+     ---------------------------------------------------------- */
+  .hero-dots {
+    display: flex;
+    justify-content: center;
+    gap: var(--s-2);
+    margin-top: var(--s-4);
+  }
+
   .hero-dot {
     width: 8px;
     height: 8px;
@@ -282,6 +315,9 @@ const genres = GENRES
     transform: scale(1.3);
   }
 
+  /* ----------------------------------------------------------
+     SECTION
+     ---------------------------------------------------------- */
   .landing-section {
     display: flex;
     flex-direction: column;
@@ -332,32 +368,32 @@ const genres = GENRES
     color: var(--text-primary);
   }
 
+  /* ----------------------------------------------------------
+     DESKTOP — hero content align dengan wrapper
+     ---------------------------------------------------------- */
   @media (min-width: 50rem) {
-    .hero-slide {
+    .hero-slide-inner {
+      max-width: var(--content-max-desktop);
       grid-template-columns: 1.2fr 1fr;
       gap: var(--s-8);
-      padding: var(--s-8);
+      padding: var(--s-8) var(--pad-x);
       min-height: 320px;
     }
 
     .hero-cover {
       order: 0;
       width: auto;
+      justify-self: end;
     }
 
     .hero-cover img {
       max-height: 280px;
       width: auto;
-      margin-inline: auto;
     }
 
     .hero-text {
       text-align: left;
       align-items: flex-start;
-    }
-
-    .hero-title {
-      font-size: var(--fs-2xl);
     }
   }
 </style>
