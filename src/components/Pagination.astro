@@ -1,5 +1,5 @@
 ---
-import Icon from '../user-components/Icons.astro';
+import Icon from '~/user-components/Icons.astro';
 
 interface Props {
   current: number;
@@ -15,7 +15,6 @@ function urlFor(page: number): string {
   return page === 1 ? `${base}/` : `${base}/${page}/`;
 }
 
-// Bangun array halaman dengan ellipsis
 function buildPages(): (number | '...')[] {
   if (total <= 7) {
     return Array.from({ length: total }, (_, i) => i + 1);
@@ -126,7 +125,6 @@ const pages = buildPages();
     color: var(--text-muted);
   }
 
-  /* Icon ukuran konsisten */
   .page-btn :global(svg) {
     width: 1em;
     height: 1em;
