@@ -4,7 +4,6 @@ import { sortByRecent, type AnimeEntry } from './anime';
 
 export type { AnimeEntry };
 
-// Mapping URL slug → status value di frontmatter
 export const STATUS_MAP = {
   ongoing: 'Ongoing',
   complete: 'Completed',
