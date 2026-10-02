@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import Hero from '~/components/Hero.astro';
 import PostCard from '~/components/PostCard.astro';
 import { getPublishedPosts } from '~/lib/blog';
 
@@ -12,11 +13,12 @@ const posts = await getPublishedPosts();
   canonical="/blog/"
 >
   <div class="wrapper">
-    <header class="blog-header">
-      <div class="blog-title">
-        <h1>Blog</h1>
-      </div>
-    </header>
+
+    <Hero
+      title="Blog"
+      description="Artikel, berita, dan review anime terbaru dari Qimochi."
+    />
+
     <div class="content-grid">
       <section class="content-main">
         {posts.length > 0 ? (
@@ -58,40 +60,16 @@ const posts = await getPublishedPosts();
     gap: var(--s-6);
   }
 
-  .blog-header {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-2);
-    background: var(--bg-footer);
-    margin-inline: calc(50% - 50vw);
-    margin-block-start: calc(var(--s-6) * -1);
-    & .blog-title {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      max-width: var(--content-max-mobile);
-      min-height: 6rem;
-      margin-inline: auto;
-      padding-inline: var(--s-4);
-      & h1 {
-        font-size: var(--fs-5xl);
-        font-weight: var(--fw-bold);
-        line-height: var(--lh-tight);
-        margin: 0;
-        color: var(--text-inverted);
-      }
-    }
-  }
   .content-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--s-6);
     align-items: start;
   }
+
   .content-main {
     min-width: 0;
   }
-
   .post-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -100,26 +78,27 @@ const posts = await getPublishedPosts();
   }
 
   @media (min-width: 50rem) {
-    .blog-header .blog-title {
-      max-width: var(--content-max-desktop);
-    }
     .content-grid {
       grid-template-columns: 1fr var(--aside-width);
     }
+
     .content-aside {
       position: sticky;
       top: var(--sticky-top);
       max-height: calc(100vh - var(--sticky-top) - var(--s-4));
       overflow-y: auto;
     }
+
     .post-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       margin-inline: 0;
     }
+
     .post-grid > :global(:first-child) {
       grid-column: 1 / -1;
     }
   }
+
   .empty {
     color: var(--text-muted);
     text-align: center;
@@ -182,5 +161,6 @@ const posts = await getPublishedPosts();
   .aside-btn svg {
     width: 0.9em;
     height: 0.9em;
+    flex-shrink: 0;
   }
 </style>
