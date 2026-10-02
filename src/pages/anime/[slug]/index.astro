@@ -30,7 +30,7 @@ const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
 const statusSlug = data.status.toLowerCase().replace('completed', 'complete');
 const statusUrl = `/anime/${statusSlug}/`;
 
-const releaseDate = new Intl.DateTimeFormat({SITE.locale}, {
+const releaseDate = new Intl.DateTimeFormat({SITE.locale} {
   day: 'numeric',
   month: 'long',
   year: 'numeric',
