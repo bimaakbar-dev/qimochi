@@ -2,23 +2,29 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AnimeCard from '../components/AnimeCard.astro';
-import Badge from '~/user-components/Badge.astro';
-import { GENRES, PER_PAGE } from '../constants';
+import Badge from '../user-components/Badge.astro';
+import LinkButton from '../user-components/LinkButton.astro';
+import LinkCard from '../user-components/LinkCard.astro';
+import { GENRES, PER_PAGE, URLS } from '../constants';
 
 const allAnime = await getCollection('anime');
 
+// Hero — 3 terbaru
 const latest = allAnime
   .sort((a, b) => b.data.addedAt.getTime() - a.data.addedAt.getTime())
   .slice(0, 3);
 
+// Ongoing — 8
 const ongoing = allAnime
   .filter(a => a.data.status === 'Ongoing')
   .slice(0, PER_PAGE - 1);
 
+// Completed — 8
 const completed = allAnime
   .filter(a => a.data.status === 'Completed')
   .slice(0, PER_PAGE - 1);
 
+// Genre — ambil 8 teratas berdasarkan jumlah anime
 const genreCounts: Record<string, number> = {};
 allAnime.forEach(a => {
   a.data.genre.forEach(g => {
@@ -42,13 +48,24 @@ const genres = GENRES
           {latest.map((anime, i) => (
             <article class="hero-slide" id={`slide-${i + 1}`}>
               <div class="hero-text">
-                <Badge variant="accent" class="hero-badge">Baru Ditambahkan</Badge>
+                <Badge variant="accent" mark>Baru Ditambahkan</Badge>
+
                 <h2 class="hero-title">{anime.data.title}</h2>
+
                 <p class="hero-meta">
                   {anime.data.status} · {anime.data.tahun} · Rating {anime.data.rating}
                 </p>
-                <a href={`/anime/${anime.id}/`} class="hero-cta">Tonton</a>
+
+                <LinkButton
+                  href={URLS.anime(anime.id)}
+                  variant="accent"
+                  size="lg"
+                  icon="play"
+                >
+                  Tonton
+                </LinkButton>
               </div>
+
               <div class="hero-cover">
                 <img
                   src={anime.data.cover}
@@ -63,9 +80,14 @@ const genres = GENRES
             </article>
           ))}
         </div>
+
         <nav class="hero-dots" aria-label="Navigasi slide">
           {latest.map((_, i) => (
-            <a href={`#slide-${i + 1}`} class="hero-dot" aria-label={`Slide ${i + 1}`}></a>
+            <a
+              href={`#slide-${i + 1}`}
+              class:list={['hero-dot', { active: i === 0 }]}
+              aria-label={`Slide ${i + 1}`}
+            ></a>
           ))}
         </nav>
       </section>
@@ -89,7 +111,15 @@ const genres = GENRES
       <section class="landing-section">
         <header class="section-header">
           <h2 class="section-title">Ongoing</h2>
-          <a href="/anime/ongoing/" class="section-link">Lihat Semua &rarr;</a>
+          <LinkButton
+            href={URLS.status('Ongoing')}
+            variant="ghost"
+            size="sm"
+            icon="arrow-right"
+            iconPos="suffix"
+          >
+            Lihat Semua
+          </LinkButton>
         </header>
         <div class="anime-grid">
           {ongoing.map(anime => <AnimeCard anime={anime} />)}
@@ -102,7 +132,15 @@ const genres = GENRES
       <section class="landing-section">
         <header class="section-header">
           <h2 class="section-title">Completed</h2>
-          <a href="/anime/complete/" class="section-link">Lihat Semua &rarr;</a>
+          <LinkButton
+            href={URLS.status('Completed')}
+            variant="ghost"
+            size="sm"
+            icon="arrow-right"
+            iconPos="suffix"
+          >
+            Lihat Semua
+          </LinkButton>
         </header>
         <div class="anime-grid">
           {completed.map(anime => <AnimeCard anime={anime} />)}
@@ -115,17 +153,25 @@ const genres = GENRES
       <section class="landing-section">
         <header class="section-header">
           <h2 class="section-title">Genre</h2>
-          <a href="/genre/" class="section-link">Lihat Semua &rarr;</a>
+          <LinkButton
+            href="/genre/"
+            variant="ghost"
+            size="sm"
+            icon="arrow-right"
+            iconPos="suffix"
+          >
+            Lihat Semua
+          </LinkButton>
         </header>
         <div class="genre-grid">
           {genres.map(g => (
-            <a
-              href={`/genre/${g.name.toLowerCase().replace(/\s+/g, '-')}/`}
-              class="genre-card"
+            <LinkCard
+              href={URLS.genre(g.name)}
+              variant="outline"
+              padding="md"
             >
               <span class="genre-name">{g.name}</span>
-              <span class="genre-count">{g.count} anime</span>
-            </a>
+            </LinkCard>
           ))}
         </div>
       </section>
@@ -134,8 +180,32 @@ const genres = GENRES
   </div>
 </BaseLayout>
 
+<script>
+  const track = document.querySelector<HTMLElement>('.hero-track');
+  const dots = document.querySelectorAll<HTMLElement>('.hero-dot');
+
+  if (track && dots.length > 0) {
+    const slides = track.querySelectorAll<HTMLElement>('.hero-slide');
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = Array.from(slides).indexOf(entry.target as HTMLElement);
+            dots.forEach((dot, i) => {
+              dot.classList.toggle('active', i === index);
+            });
+          }
+        });
+      },
+      { root: track, threshold: 0.6 }
+    );
+
+    slides.forEach((slide) => observer.observe(slide));
+  }
+</script>
+
 <style>
-  /* Spacing antar section */
   .wrapper {
     padding-block: var(--s-6) var(--s-12);
     display: flex;
@@ -151,8 +221,8 @@ const genres = GENRES
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
-    border-radius: var(--r-lg);
     background: var(--bg-elevated);
+    border: 1px solid var(--border);
     scrollbar-width: none;
   }
 
@@ -179,7 +249,6 @@ const genres = GENRES
     width: 100%;
     height: auto;
     display: block;
-    border-radius: var(--r-md);
   }
 
   .hero-text {
@@ -190,35 +259,16 @@ const genres = GENRES
     align-items: center;
   }
 
-  .hero-badge {
-    color: var(--accent-text);
-    font-size: var(--fs-xs);
-  }
-
   .hero-title {
-    font-size: var(--fs-xl);
+    font-size: var(--fs-2xl);
     margin: 0;
+    color: var(--text-primary);
   }
 
   .hero-meta {
     color: var(--text-secondary);
     font-size: var(--fs-sm);
     margin: 0;
-  }
-
-  .hero-cta {
-    padding: var(--s-2) var(--s-5);
-    background: var(--accent);
-    color: var(--accent-text);
-    border-radius: var(--r-sm);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-medium);
-    transition: background var(--t-fast);
-  }
-
-  .hero-cta:hover {
-    background: var(--accent-hover);
-    color: var(--accent-text);
   }
 
   .hero-dots {
@@ -231,13 +281,15 @@ const genres = GENRES
   .hero-dot {
     width: 8px;
     height: 8px;
-    border-radius: var(--r-full);
     background: var(--border);
     transition: background var(--t-fast), transform var(--t-fast);
   }
 
-  .hero-dot:hover,
-  .hero-dot:target {
+  .hero-dot:hover {
+    background: var(--border-hover);
+  }
+
+  .hero-dot.active {
     background: var(--accent);
     transform: scale(1.3);
   }
@@ -254,7 +306,6 @@ const genres = GENRES
     padding: var(--s-3) var(--s-4);
     background: var(--bg-elevated);
     border: 1px solid var(--border);
-    border-radius: var(--r-md);
     color: var(--text-primary);
     font-size: var(--fs-base);
     transition: border-color var(--t-fast);
@@ -288,17 +339,7 @@ const genres = GENRES
   .section-title {
     font-size: var(--fs-lg);
     margin: 0;
-  }
-
-  .section-link {
-    font-size: var(--fs-sm);
-    color: var(--text-secondary);
-    white-space: nowrap;
-    transition: color var(--t-fast);
-  }
-
-  .section-link:hover {
-    color: var(--accent);
+    color: var(--text-primary);
   }
 
   /* ----------------------------------------------------------
@@ -333,30 +374,9 @@ const genres = GENRES
     }
   }
 
-  .genre-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-1);
-    padding: var(--s-4);
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--r-md);
-    transition: all var(--t-fast);
-  }
-
-  .genre-card:hover {
-    border-color: var(--accent);
-    background: var(--bg-surface);
-  }
-
   .genre-name {
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
-  }
-
-  .genre-count {
-    font-size: var(--fs-xs);
-    color: var(--text-muted);
   }
 
   /* ----------------------------------------------------------

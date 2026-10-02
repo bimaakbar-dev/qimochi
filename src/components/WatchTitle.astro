@@ -1,4 +1,6 @@
 ---
+import Badge from '../user-components/Badge.astro';
+
 interface Props {
   title: string;
   episodeNumber: number;
@@ -10,7 +12,7 @@ const { title, episodeNumber } = Astro.props;
 <header class="watch-title">
   <h1>
     {title}
-    <span class="badge">Ep {episodeNumber}</span>
+    <Badge variant="accent" size="sm">Ep {episodeNumber}</Badge>
   </h1>
 </header>
 
@@ -24,17 +26,6 @@ const { title, episodeNumber } = Astro.props;
     font-weight: var(--fw-semibold);
     line-height: var(--lh-snug);
     margin: 0;
-  }
-
-  .badge {
-    display: inline-block;
-    padding: var(--s-1) var(--s-3);
-    background: var(--accent);
-    color: var(--accent-text);
-    border-radius: var(--r-sm);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    letter-spacing: 0.3px;
-    white-space: nowrap;
+    color: var(--text-primary);
   }
 </style>

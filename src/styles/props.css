@@ -1,26 +1,26 @@
 :root {
-  --bg-base:     hsl(0, 0%, 90%);     /* Latar belakang halaman abu-abu terang (#E5E5E5)[span_1](start_span)[span_1](end_span) */
-  --bg-elevated: hsl(0, 0%, 100%);    /* Putih bersih untuk card, header, dan area konten[span_2](start_span)[span_2](end_span) */
-  --bg-surface:  hsl(0, 0%, 95%);     /* Abu-abu sangat muda untuk elemen sekunder */
-  --bg-hover:    hsl(0, 0%, 88%);     /* Warna saat elemen di-hover */
+  --bg-base:     hsl(39, 6%, 85%);
+  --bg-elevated: hsl(39, 8%, 92%);
+  --bg-surface:  hsl(39, 6%, 78%);
+  --bg-hover:    hsl(39, 6%, 72%);
   
-  --bg-nav:     hsl(0, 0%, 10%);
+  --bg-nav:     hsl(30, 3%, 16%);
   
-  --border:       hsl(0, 0%, 82%);    /* Garis pembatas tipis */
-  --border-hover: hsl(0, 0%, 70%);    /* Garis pembatas saat di-hover */
+  --border:       hsl(30, 4%, 70%);
+  --border-hover: hsl(30, 4%, 55%);
 
-  --text-primary:   hsl(0, 0%, 13%);    /* Hitam arang untuk judul utama & teks tebal[span_3](start_span)[span_3](end_span) */
-  --text-secondary: hsl(0, 0%, 35%);    /* Abu-abu gelap untuk sub-teks dan deskripsi */
-  --text-muted:     hsl(0, 0%, 50%);    /* Abu-abu sedang untuk tanggal/meta (*"Jul 25, 2025"*)[span_4](start_span)[span_4](end_span) */
-  --text-disabled:  hsl(0, 0%, 65%);    /* Teks nonaktif */
+  --text-primary:   hsl(30, 3%, 16%);
+  --text-secondary: hsl(30, 3%, 38%);
+  --text-muted:     hsl(30, 3%, 55%);
+  --text-disabled:  hsl(30, 3%, 68%);
   --text-inverted: hsl(0, 0%, 100%);
 
-  --accent:       hsl(3, 81%, 48%);   /* Merah Riot Tech Blog (#DA291C)[span_5](start_span)[span_5](end_span) */
-  --accent-hover: hsl(3, 81%, 40%);   /* Merah lebih gelap saat hover */
-  --accent-soft:  hsla(3, 81%, 48%, 0.12); /* Aksen transparan untuk badge/latar tipis */
-  --accent-text:  hsl(0, 0%, 100%);   /* Teks putih di atas aksen merah */
+  --accent:       hsl(3, 81%, 48%);
+  --accent-hover: hsl(3, 81%, 40%);
+  --accent-soft:  hsla(3, 81%, 48%, 0.12);
+  --accent-text:  hsl(0, 0%, 100%);
 
-  --gold:       hsl(40, 53%, 51%);    /* Aksen emas */
+  --gold:       hsl(40, 53%, 51%);
   --gold-hover: hsl(42, 60%, 57%);    
   --gold-soft:  hsla(40, 53%, 51%, 0.15);
 
@@ -33,9 +33,9 @@
   --danger:       hsl(3, 81%, 48%);   
   --danger-soft:  hsla(3, 81%, 48%, 0.15);
 
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto,
+  --font-sans: var(--font-inter), system-ui, -apple-system, 'Segoe UI', Roboto,
                'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', Monaco, 'Cascadia Code',
+  --font-mono: var(--font-inter), ui-monospace, 'SF Mono', Monaco, 'Cascadia Code',
                'Roboto Mono', monospace;
 
   --fs-xs:   0.75rem;    /* 12px */
@@ -82,7 +82,7 @@
 
   --pad-x: 1rem;
 
-  --header-height: 3.5rem;
+  --header-height: 4rem;
   --sticky-top:    calc(var(--header-height) + var(--s-6));
 
   --t-fast: 0.15s ease;

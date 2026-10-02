@@ -7,30 +7,23 @@ interface Props {
 const { src, title } = Astro.props;
 ---
 
-<div class="player-wrapper" id="player-wrapper">
-  <iframe
-    id="player-iframe"
-    src={src}
-    title={title}
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-    allowfullscreen
-    loading="eager"
-    referrerpolicy="no-referrer"
-  ></iframe>
+<div class="player-wrapper">
+  {src ? (
+    <iframe
+      id="player-iframe"
+      src={src}
+      title={title}
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+      allowfullscreen
+      loading="eager"
+      referrerpolicy="no-referrer"
+    ></iframe>
+  ) : (
+    <div class="player-empty">
+      <p>Video belum tersedia.</p>
+    </div>
+  )}
 </div>
-
-<script>
-  const wrapper = document.getElementById('player-wrapper');
-  if (wrapper) {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        wrapper.classList.toggle('mini', !entry.isIntersecting);
-      },
-      { threshold: 0.4 }
-    );
-    observer.observe(wrapper);
-  }
-</script>
 
 <style>
   .player-wrapper {
@@ -38,9 +31,8 @@ const { src, title } = Astro.props;
     width: 100%;
     aspect-ratio: 16 / 9;
     background: #000;
-    border-radius: var(--r-md);
+    border: 1px solid var(--border);
     overflow: hidden;
-    transition: box-shadow var(--t-base);
   }
 
   .player-wrapper iframe {
@@ -50,22 +42,13 @@ const { src, title } = Astro.props;
     display: block;
   }
 
-  /* Miniplayer — muncul saat scroll melewati player */
-  .player-wrapper.mini {
-    position: fixed;
-    right: var(--s-4);
-    bottom: var(--s-4);
-    width: min(320px, 45vw);
-    z-index: var(--z-overlay);
-    box-shadow: var(--shadow-lg);
-    border-radius: var(--r-md);
-  }
-
-  @media (max-width: 30rem) {
-    .player-wrapper.mini {
-      right: var(--s-2);
-      bottom: var(--s-2);
-      width: min(240px, 60vw);
-    }
+  .player-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
   }
 </style>

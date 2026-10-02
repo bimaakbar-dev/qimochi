@@ -1,5 +1,7 @@
 ---
-import { URLS } from '../constants';
+import LinkCard from '../user-components/LinkCard.astro';
+import Badge from '../user-components/Badge.astro';
+import { URLS, STATUS_VARIANT, type Status } from '../constants';
 
 interface Props {
   anime: {
@@ -16,9 +18,14 @@ interface Props {
 
 const { anime, featured = false } = Astro.props;
 const { id, data } = anime;
+
+const variant = STATUS_VARIANT[data.status as Status] ?? 'default';
 ---
 
-<a href={URLS.anime(id)} class:list={['anime-card', { featured }]}>
+<LinkCard
+  href={URLS.anime(id)}
+  class:list={['anime-card', { 'anime-card-featured': featured }]}
+>
   <div class="cover">
     <img
       src={data.cover}
@@ -29,25 +36,19 @@ const { id, data } = anime;
       decoding="async"
     />
   </div>
+
   <div class="info">
     <h3 class="title">{data.title}</h3>
-    <p class="meta">
-      {data.status} {data.tahun && `· ${data.tahun}`}
-    </p>
+    <div class="meta">
+      <Badge variant={variant} size="sm">{data.status}</Badge>
+      {data.tahun && <span class="year">{data.tahun}</span>}
+    </div>
   </div>
-</a>
+</LinkCard>
 
 <style>
   .anime-card {
-    display: block;
-    border-radius: var(--r-md);
-    overflow: hidden;
     background: var(--bg-elevated);
-    transition: transform var(--t-fast);
-  }
-
-  .anime-card:hover {
-    transform: translateY(-2px);
   }
 
   .cover {
@@ -69,6 +70,9 @@ const { id, data } = anime;
 
   .info {
     padding: var(--s-2) var(--s-3) var(--s-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
   }
 
   .title {
@@ -76,7 +80,7 @@ const { id, data } = anime;
     font-weight: var(--fw-medium);
     color: var(--text-primary);
     line-height: var(--lh-snug);
-    margin: 0 0 var(--s-1);
+    margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -84,17 +88,21 @@ const { id, data } = anime;
   }
 
   .meta {
-    font-size: var(--fs-xs);
-    color: var(--text-muted);
-    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
   }
 
-  /* Featured — untuk hero carousel */
-  .anime-card.featured {
+  .year {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  .anime-card-featured {
     background: transparent;
   }
 
-  .anime-card.featured .info {
+  .anime-card-featured .info {
     padding: var(--s-3) 0 0;
   }
 </style>

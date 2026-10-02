@@ -2,6 +2,10 @@
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import EpisodeList from '../../../components/EpisodeList.astro';
+import Badge from '../../../user-components/Badge.astro';
+import LinkButton from '../../../user-components/LinkButton.astro';
+import LinkCard from '../../../user-components/LinkCard.astro';
+import { URLS, STATUS_VARIANT, type Status } from '../../../constants';
 
 export async function getStaticPaths() {
   const allAnime = await getCollection('anime');
@@ -15,8 +19,12 @@ const { anime } = Astro.props;
 const { data } = anime;
 const { Content } = await render(anime);
 
-const episodeNumbers = data.episodes.map(e => e.number).sort((a, b) => a - b);
+const episodeNumbers = data.episodes
+  .map(e => e.number)
+  .sort((a, b) => a - b);
+
 const firstEpisode = episodeNumbers[0] ?? 1;
+const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
 ---
 
 <BaseLayout
@@ -26,6 +34,7 @@ const firstEpisode = episodeNumbers[0] ?? 1;
   type="video.other"
 >
   <div class="wrapper">
+
     <!-- HERO -->
     <section class="hero">
       <div class="hero-cover">
@@ -41,29 +50,42 @@ const firstEpisode = episodeNumbers[0] ?? 1;
       </div>
 
       <div class="hero-info">
-        <h1 class="hero-title">{data.title}</h1>
+        <div class="hero-head">
+          <h1 class="hero-title">{data.title}</h1>
+          <Badge variant={statusVariant} size="sm">{data.status}</Badge>
+        </div>
 
-        <p class="hero-meta">
-          <span>⭐ {data.rating}</span>
-          <span class="sep">·</span>
-          <span>{data.episodes.length} Episode</span>
-          <span class="sep">·</span>
-          <span>{data.tahun}</span>
-          <span class="sep">·</span>
-          <span>{data.studio}</span>
-        </p>
+        <ul class="hero-meta">
+          <li>Rating {data.rating}</li>
+          <li>{data.episodes.length} Episode</li>
+          <li>{data.tahun}</li>
+          <li>{data.studio}</li>
+        </ul>
 
         <ul class="hero-genres">
           {data.genre.map(g => (
             <li>
-              <a href={`/genre/${g.toLowerCase().replace(/\s+/g, '-')}/`}>{g}</a>
+              <LinkCard
+                href={URLS.genre(g)}
+                variant="outline"
+                padding="sm"
+                lift={false}
+                class="genre-chip"
+              >
+                {g}
+              </LinkCard>
             </li>
           ))}
         </ul>
 
-        <a href={`/watch/${anime.id}/${firstEpisode}/`} class="hero-cta">
-          ▶ Mulai dari Episode {firstEpisode}
-        </a>
+        <LinkButton
+          href={URLS.watch(anime.id, firstEpisode)}
+          variant="accent"
+          size="lg"
+          icon="play"
+        >
+          Mulai dari Episode {firstEpisode}
+        </LinkButton>
       </div>
     </section>
 
@@ -71,7 +93,7 @@ const firstEpisode = episodeNumbers[0] ?? 1;
     <div class="content-grid">
       <div class="content-main">
         <section class="synopsis-section">
-          <h2>📖 Sinopsis</h2>
+          <h2 class="section-title">Sinopsis</h2>
           <div class="markdown markdown--prose">
             <Content />
           </div>
@@ -86,6 +108,7 @@ const firstEpisode = episodeNumbers[0] ?? 1;
         />
       </aside>
     </div>
+
   </div>
 </BaseLayout>
 
@@ -102,7 +125,7 @@ const firstEpisode = episodeNumbers[0] ?? 1;
     grid-template-columns: 1fr;
     gap: var(--s-4);
     background: var(--bg-elevated);
-    border-radius: var(--r-lg);
+    border: 1px solid var(--border);
     padding: var(--s-5);
     margin-bottom: var(--s-6);
     text-align: center;
@@ -119,15 +142,23 @@ const firstEpisode = episodeNumbers[0] ?? 1;
     height: auto;
     aspect-ratio: 2 / 3;
     object-fit: cover;
-    border-radius: var(--r-md);
     display: block;
   }
 
   .hero-info {
     display: flex;
     flex-direction: column;
-    gap: var(--s-3);
+    gap: var(--s-4);
     align-items: center;
+    width: 100%;
+  }
+
+  .hero-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-3);
   }
 
   .hero-title {
@@ -140,56 +171,37 @@ const firstEpisode = episodeNumbers[0] ?? 1;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: var(--s-1) var(--s-2);
+    gap: var(--s-2) var(--s-4);
+    list-style: none;
+    padding: 0;
+    margin: 0;
     color: var(--text-secondary);
     font-size: var(--fs-sm);
-    margin: 0;
   }
 
-  .hero-meta .sep {
-    color: var(--text-muted);
+  .hero-meta li {
+    position: relative;
+  }
+
+  .hero-meta li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: calc(var(--s-4) / -2 - 0.5px);
+    top: 50%;
+    width: 3px;
+    height: 3px;
+    transform: translateY(-50%);
+    background: var(--text-muted);
   }
 
   .hero-genres {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: var(--s-1);
+    gap: var(--s-2);
     list-style: none;
     padding: 0;
     margin: 0;
-  }
-
-  .hero-genres a {
-    display: inline-block;
-    padding: var(--s-1) var(--s-3);
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--r-full);
-    font-size: var(--fs-xs);
-    color: var(--text-secondary);
-    transition: all var(--t-fast);
-  }
-
-  .hero-genres a:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .hero-cta {
-    display: inline-block;
-    padding: var(--s-2) var(--s-5);
-    background: var(--accent);
-    color: var(--accent-text);
-    border-radius: var(--r-sm);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-medium);
-    transition: background var(--t-fast);
-  }
-
-  .hero-cta:hover {
-    background: var(--accent-hover);
-    color: var(--accent-text);
   }
 
   /* ----------------------------------------------------------
@@ -206,7 +218,7 @@ const firstEpisode = episodeNumbers[0] ?? 1;
     min-width: 0;
   }
 
-  .synopsis-section h2 {
+  .section-title {
     font-size: var(--fs-lg);
     margin: 0 0 var(--s-3);
   }
@@ -231,6 +243,10 @@ const firstEpisode = episodeNumbers[0] ?? 1;
       align-items: flex-start;
     }
 
+    .hero-head {
+      justify-content: flex-start;
+    }
+
     .hero-title {
       font-size: var(--fs-2xl);
     }
@@ -242,7 +258,6 @@ const firstEpisode = episodeNumbers[0] ?? 1;
 
     .content-grid {
       grid-template-columns: 1fr var(--aside-width);
-      gap: var(--s-6);
     }
 
     .content-aside {
@@ -251,5 +266,17 @@ const firstEpisode = episodeNumbers[0] ?? 1;
       max-height: calc(100vh - var(--sticky-top) - var(--s-4));
       overflow-y: auto;
     }
+  }
+</style>
+
+<style is:global>
+  /* Style tambahan untuk LinkCard yang dipakai sebagai genre chip */
+  .genre-chip {
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+    line-height: 1;
+  }
+  .genre-chip:hover {
+    color: var(--accent) !important;
   }
 </style>

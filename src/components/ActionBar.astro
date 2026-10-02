@@ -1,4 +1,7 @@
 ---
+import LinkButton from '../user-components/LinkButton.astro';
+import { URLS } from '../constants';
+
 interface Props {
   slug: string;
   episodeNumber: number;
@@ -13,30 +16,36 @@ const nextEp = episodeNumber < totalEpisodes ? episodeNumber + 1 : null;
 
 <nav class="action-bar" aria-label="Navigasi episode">
   {prevEp ? (
-    <a href={`/watch/${slug}/${prevEp}/`} class="action-link action-prev" rel="prev">
-      <span class="arrow" aria-hidden="true">◀</span>
-      <span class="label">Ep {prevEp}</span>
-    </a>
+    <LinkButton
+      href={URLS.watch(slug, prevEp)}
+      variant="outline"
+      size="md"
+      icon="arrow-left"
+      class="action-prev"
+    >
+      Ep {prevEp}
+    </LinkButton>
   ) : (
-    <span class="action-link action-disabled" aria-disabled="true">
+    <span class="action-disabled" aria-disabled="true">
       <span class="arrow" aria-hidden="true">◀</span>
-      <span class="label">Ep —</span>
+      <span>Ep —</span>
     </span>
   )}
 
-  <a href="#episode-list" class="action-link action-list">
-    <span aria-hidden="true">📺</span>
-    <span class="label">Daftar Episode</span>
-  </a>
-
   {nextEp ? (
-    <a href={`/watch/${slug}/${nextEp}/`} class="action-link action-next" rel="next">
-      <span class="label">Ep {nextEp}</span>
-      <span class="arrow" aria-hidden="true">▶</span>
-    </a>
+    <LinkButton
+      href={URLS.watch(slug, nextEp)}
+      variant="outline"
+      size="md"
+      icon="arrow-right"
+      iconPos="suffix"
+      class="action-next"
+    >
+      Ep {nextEp}
+    </LinkButton>
   ) : (
-    <span class="action-link action-disabled" aria-disabled="true">
-      <span class="label">Ep —</span>
+    <span class="action-disabled" aria-disabled="true">
+      <span>Ep —</span>
       <span class="arrow" aria-hidden="true">▶</span>
     </span>
   )}
@@ -44,31 +53,10 @@ const nextEp = episodeNumber < totalEpisodes ? episodeNumber + 1 : null;
 
 <style>
   .action-bar {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: var(--s-2);
-    align-items: center;
-  }
-
-  .action-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--s-1);
-    padding: var(--s-3) var(--s-4);
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--r-md);
-    color: var(--text-primary);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-medium);
-    transition: all var(--t-fast);
-    min-height: 2.75rem;
-  }
-
-  .action-link:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-hover);
   }
 
   .action-prev {
@@ -79,32 +67,22 @@ const nextEp = episodeNumber < totalEpisodes ? episodeNumber + 1 : null;
     justify-self: end;
   }
 
-  .action-list {
-    justify-self: center;
-    background: transparent;
-    border-color: transparent;
-    color: var(--text-secondary);
-    padding-inline: var(--s-3);
-  }
-
-  .action-list:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-  }
-
+  /* Disabled state */
   .action-disabled {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: var(--s-2) var(--s-4);
+    min-height: 2.25rem;
     color: var(--text-disabled);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     pointer-events: none;
-    opacity: 0.5;
   }
 
-  .action-list .label {
-    display: none;
-  }
-
-  @media (min-width: 48rem) {
-    .action-list .label {
-      display: inline;
-    }
+  .action-disabled .arrow {
+    font-size: 0.65em;
   }
 </style>

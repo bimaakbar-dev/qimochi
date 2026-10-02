@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../user-components/Icons.astro';
 ---
 
 <BaseLayout
@@ -8,8 +9,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   noindex={true}
 >
   <div class="wrapper">
-    <header class="search-header">
-      <h1>🔍 Cari Anime</h1>
+    <header class="page-header">
+      <h1>Cari Anime</h1>
     </header>
 
     <form class="search-form" id="search-form">
@@ -21,7 +22,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         autocomplete="off"
         autofocus
       />
-      <button type="submit" class="search-btn">Cari</button>
+      <button type="submit" class="search-btn">
+        <Icon name="search" />
+        <span>Cari</span>
+      </button>
     </form>
 
     <div id="search-status" class="search-status" hidden></div>
@@ -30,7 +34,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 </BaseLayout>
 
 <script>
-  import { URLS } from '../../constants';
+  import { STATUS_VARIANT, type Status } from '../../constants';
 
   interface Anime {
     id: string;
@@ -41,9 +45,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     rating: number;
   }
 
-  // ----------------------------------------------------------
-  // Fuzzy search — Levenshtein distance
-  // ----------------------------------------------------------
+  /* ----------------------------------------------------------
+     FUZZY SEARCH
+     ---------------------------------------------------------- */
 
   function normalize(s: string): string {
     return s
@@ -83,13 +87,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const t = normalize(title);
     if (!q || !t) return 0;
 
-    // 1. Exact substring — skor tertinggi
     if (t.includes(q)) {
       const pos = t.indexOf(q);
       return 1 - (pos / t.length) * 0.3;
     }
 
-    // 2. Cocokkan query dengan tiap kata di title (fuzzy)
     const words = t.split(' ');
     let best = 0;
 
@@ -100,7 +102,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (similarity > best) best = similarity;
     }
 
-    // 3. Substring per kata — kalau query > 3 karakter
     if (q.length >= 3) {
       for (const word of words) {
         if (word.includes(q) || q.includes(word)) {
@@ -109,12 +110,34 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     }
 
-    return best * 0.85; // penalty untuk fuzzy match
+    return best * 0.85;
   }
 
-  // ----------------------------------------------------------
-  // Init
-  // ----------------------------------------------------------
+  /* ----------------------------------------------------------
+     RENDER CARD
+     ---------------------------------------------------------- */
+
+  function renderCard(a: Anime): string {
+    const variant = STATUS_VARIANT[a.status as Status] ?? 'default';
+    return `
+      <a href="/anime/${a.id}/" class="anime-card">
+        <div class="cover">
+          <img src="${a.cover}" alt="Cover ${a.title}" width="300" height="450" loading="lazy" decoding="async" />
+        </div>
+        <div class="info">
+          <h3 class="title">${a.title}</h3>
+          <div class="meta">
+            <span class="badge badge-${variant}">${a.status}</span>
+            ${a.tahun ? `<span class="year">${a.tahun}</span>` : ''}
+          </div>
+        </div>
+      </a>
+    `;
+  }
+
+  /* ----------------------------------------------------------
+     INIT
+     ---------------------------------------------------------- */
 
   const form = document.getElementById('search-form') as HTMLFormElement;
   const input = document.getElementById('search-input') as HTMLInputElement;
@@ -123,12 +146,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   let allAnime: Anime[] = [];
 
-  // Baca query dari URL
   const params = new URLSearchParams(window.location.search);
   const initialQuery = params.get('q') || '';
   input.value = initialQuery;
 
-  // Fetch data
   async function loadData() {
     if (allAnime.length > 0) return;
     try {
@@ -141,21 +162,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   }
 
   function renderResults(items: Anime[]) {
-    results.innerHTML = items
-      .map(
-        a => `
-      <a href="/anime/${a.id}/" class="anime-card">
-        <div class="cover">
-          <img src="${a.cover}" alt="Cover ${a.title}" width="300" height="450" loading="lazy" decoding="async" />
-        </div>
-        <div class="info">
-          <h3 class="title">${a.title}</h3>
-          <p class="meta">${a.status} · ${a.tahun}</p>
-        </div>
-      </a>
-    `
-      )
-      .join('');
+    results.innerHTML = items.map(renderCard).join('');
   }
 
   async function runSearch(query: string) {
@@ -186,7 +193,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     renderResults(scored.map(r => r.anime));
   }
 
-  // Submit form → update URL
   form.addEventListener('submit', e => {
     e.preventDefault();
     const q = input.value.trim();
@@ -197,7 +203,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     runSearch(q);
   });
 
-  // Support back/forward navigation
   window.addEventListener('popstate', () => {
     const p = new URLSearchParams(window.location.search);
     const q = p.get('q') || '';
@@ -205,7 +210,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     if (q) runSearch(q);
   });
 
-  // Auto-search kalau ada query di URL
   if (initialQuery) {
     runSearch(initialQuery);
   }
@@ -216,14 +220,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     padding-block: var(--s-8) var(--s-12);
   }
 
-  .search-header {
+  .page-header {
     margin-bottom: var(--s-6);
   }
 
-  .search-header h1 {
+  .page-header h1 {
     margin: 0;
   }
 
+  /* ----------------------------------------------------------
+     FORM
+     ---------------------------------------------------------- */
   .search-form {
     display: flex;
     gap: var(--s-2);
@@ -235,7 +242,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     padding: var(--s-3) var(--s-4);
     background: var(--bg-elevated);
     border: 1px solid var(--border);
-    border-radius: var(--r-md);
     color: var(--text-primary);
     font-size: var(--fs-base);
     transition: border-color var(--t-fast);
@@ -251,17 +257,30 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   }
 
   .search-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
     padding: var(--s-3) var(--s-5);
     background: var(--accent);
+    border: 1px solid var(--accent);
     color: var(--accent-text);
-    border-radius: var(--r-md);
     font-size: var(--fs-sm);
-    font-weight: var(--fw-medium);
-    transition: background var(--t-fast);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all var(--t-fast);
+    cursor: pointer;
   }
 
   .search-btn:hover {
     background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  .search-btn :global(svg) {
+    width: 1em;
+    height: 1em;
   }
 
   .search-status {
@@ -270,6 +289,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     margin-bottom: var(--s-4);
   }
 
+  /* ----------------------------------------------------------
+     GRID
+     ---------------------------------------------------------- */
   .anime-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -283,36 +305,97 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     }
   }
 
-  /* Style card — copy dari AnimeCard.astro */
-  .anime-card {
+  /* ----------------------------------------------------------
+     CARD — match AnimeCard.astro
+     ---------------------------------------------------------- */
+  .anime-grid :global(.anime-card) {
     display: block;
-    border-radius: var(--r-md);
-    overflow: hidden;
     background: var(--bg-elevated);
-    transition: transform var(--t-fast);
+    border: 1px solid transparent;
+    overflow: hidden;
+    transition: transform var(--t-fast), background var(--t-fast);
   }
-  .anime-card:hover { transform: translateY(-2px); }
-  .cover {
+
+  .anime-grid :global(.anime-card:hover) {
+    background: var(--bg-surface);
+    transform: translateY(-2px);
+  }
+
+  .anime-grid :global(.cover) {
     aspect-ratio: 2 / 3;
     overflow: hidden;
     background: var(--bg-surface);
   }
-  .cover img { width: 100%; height: 100%; object-fit: cover; }
-  .info { padding: var(--s-2) var(--s-3) var(--s-3); }
-  .title {
+
+  .anime-grid :global(.cover img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--t-base);
+  }
+
+  .anime-grid :global(.anime-card:hover .cover img) {
+    transform: scale(1.03);
+  }
+
+  .anime-grid :global(.info) {
+    padding: var(--s-2) var(--s-3) var(--s-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .anime-grid :global(.title) {
     font-size: var(--fs-sm);
     font-weight: var(--fw-medium);
     color: var(--text-primary);
     line-height: var(--lh-snug);
-    margin: 0 0 var(--s-1);
+    margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  .meta {
+
+  .anime-grid :global(.meta) {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  .anime-grid :global(.year) {
     font-size: var(--fs-xs);
     color: var(--text-muted);
-    margin: 0;
+  }
+
+  /* ----------------------------------------------------------
+     BADGE — match Badge.astro
+     ---------------------------------------------------------- */
+  .anime-grid :global(.badge) {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1875rem var(--s-2);
+    font-size: 0.625rem;
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    line-height: 1;
+  }
+
+  .anime-grid :global(.badge-default) {
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+  }
+
+  .anime-grid :global(.badge-success) {
+    background: var(--success-soft);
+    color: var(--success);
+  }
+
+  .anime-grid :global(.badge-warning) {
+    background: var(--warning-soft);
+    color: var(--warning);
   }
 </style>

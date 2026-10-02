@@ -1,11 +1,11 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import LinkCard from '../../user-components/LinkCard.astro';
 import { GENRES, URLS } from '../../constants';
 
 const allAnime = await getCollection('anime');
 
-// Hitung anime per genre
 const genreCounts: Record<string, number> = {};
 allAnime.forEach(a => {
   a.data.genre.forEach(g => {
@@ -13,25 +13,34 @@ allAnime.forEach(a => {
   });
 });
 
-// Urut: genre dengan anime terbanyak dulu
 const genres = GENRES
   .map(name => ({ name, count: genreCounts[name] || 0 }))
+  .filter(g => g.count > 0)
   .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 ---
 
-<BaseLayout title="Semua Genre" description="Jelajahi anime berdasarkan genre.">
+<BaseLayout
+  title="Semua Genre"
+  description="Jelajahi anime berdasarkan genre."
+>
   <div class="wrapper">
     <header class="page-header">
-      <h1>🏷️ Semua Genre</h1>
+      <h1>Semua Genre</h1>
       <p class="subtitle">{genres.length} genre · {allAnime.length} anime</p>
     </header>
 
     <div class="genre-grid">
       {genres.map(g => (
-        <a href={URLS.genre(g.name)} class="genre-card">
-          <span class="genre-name">{g.name}</span>
-          <span class="genre-count">{g.count} anime</span>
-        </a>
+        <LinkCard
+          href={URLS.genre(g.name)}
+          variant="outline"
+          padding="md"
+        >
+          <div class="genre-content">
+            <span class="genre-name">{g.name}</span>
+            <span class="genre-count">{g.count}</span>
+          </div>
+        </LinkCard>
       ))}
     </div>
   </div>
@@ -69,21 +78,12 @@ const genres = GENRES
     }
   }
 
-  .genre-card {
+  /* Space-between: nama kiri, count kanan */
+  .genre-content {
     display: flex;
-    flex-direction: column;
-    gap: var(--s-1);
-    padding: var(--s-4);
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--r-md);
-    transition: all var(--t-fast);
-  }
-
-  .genre-card:hover {
-    border-color: var(--accent);
-    background: var(--bg-surface);
-    transform: translateY(-2px);
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
   }
 
   .genre-name {
@@ -95,5 +95,6 @@ const genres = GENRES
   .genre-count {
     font-size: var(--fs-xs);
     color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
   }
 </style>

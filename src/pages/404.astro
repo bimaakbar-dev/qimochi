@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import LinkButton from '../user-components/LinkButton.astro';
 import { NAV_LINKS } from '../constants';
 ---
 
@@ -20,14 +21,27 @@ import { NAV_LINKS } from '../constants';
       </p>
 
       <div class="error-actions">
-        <a href="/" class="btn-primary">← Kembali ke Home</a>
+        <LinkButton
+          href="/"
+          variant="accent"
+          size="lg"
+          icon="arrow-left"
+        >
+          Kembali ke Home
+        </LinkButton>
       </div>
 
       <nav class="error-nav" aria-label="Navigasi cepat">
         <p class="error-nav-label">Atau jelajahi:</p>
         <div class="error-links">
           {NAV_LINKS.filter(l => l.href !== '/').map(link => (
-            <a href={link.href} class="error-link">{link.label}</a>
+            <LinkButton
+              href={link.href}
+              variant="ghost"
+              size="sm"
+            >
+              {link.label}
+            </LinkButton>
           ))}
         </div>
       </nav>
@@ -55,7 +69,6 @@ import { NAV_LINKS } from '../constants';
     line-height: 1;
     color: var(--accent);
     letter-spacing: -0.04em;
-    opacity: 0.9;
     user-select: none;
   }
 
@@ -75,36 +88,21 @@ import { NAV_LINKS } from '../constants';
     margin-top: var(--s-2);
   }
 
-  .btn-primary {
-    display: inline-block;
-    padding: var(--s-3) var(--s-6);
-    background: var(--accent);
-    color: var(--accent-text);
-    border-radius: var(--r-md);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-medium);
-    transition: background var(--t-fast);
-  }
-
-  .btn-primary:hover {
-    background: var(--accent-hover);
-    color: var(--accent-text);
-  }
-
   .error-nav {
     margin-top: var(--s-6);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--s-2);
+    gap: var(--s-3);
   }
 
   .error-nav-label {
     font-size: var(--fs-xs);
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.08em;
     margin: 0;
+    font-weight: var(--fw-semibold);
   }
 
   .error-links {
@@ -112,20 +110,5 @@ import { NAV_LINKS } from '../constants';
     flex-wrap: wrap;
     justify-content: center;
     gap: var(--s-2);
-  }
-
-  .error-link {
-    padding: var(--s-1) var(--s-3);
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--r-full);
-    font-size: var(--fs-sm);
-    color: var(--text-secondary);
-    transition: all var(--t-fast);
-  }
-
-  .error-link:hover {
-    border-color: var(--accent);
-    color: var(--accent);
   }
 </style>
