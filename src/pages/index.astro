@@ -279,17 +279,13 @@ const genres = GENRES
     margin: 0;
   }
 
-  .hero-dots {
-    display: flex;
-    justify-content: center;
-    gap: var(--s-2);
-    margin-top: var(--s-4);
-  }
-
   .hero-dot {
     width: 8px;
     height: 8px;
+    padding: 0;
+    border: none;
     background: var(--border);
+    cursor: pointer;
     transition: background var(--t-fast), transform var(--t-fast);
   }
 
