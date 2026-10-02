@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import { GENRES, PER_PAGE, URLS } from '~/constants';
+import { SITE, GENRES, PER_PAGE, URLS } from '~/constants';
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
@@ -35,10 +35,9 @@ const genres = GENRES
   .slice(0, 8);
 ---
 
-<BaseLayout title="Qimochi — Nonton & Download Anime Batch">
+<BaseLayout title={SITE.TITLE}>
   <div class="wrapper">
 
-    <!-- 1. HERO CAROUSEL -->
     {latest.length > 0 && (
       <section class="hero-carousel" aria-label="Anime terbaru">
         <div class="hero-track">
@@ -91,20 +90,6 @@ const genres = GENRES
       </section>
     )}
 
-    <!-- 2. SEARCH -->
-    <section class="search-section">
-      <form action="/search/" method="get" class="search-form">
-        <input
-          type="search"
-          name="q"
-          placeholder="Cari anime..."
-          class="search-input"
-          aria-label="Cari anime"
-        />
-      </form>
-    </section>
-
-    <!-- 3. ONGOING -->
     {ongoing.length > 0 && (
       <section class="landing-section">
         <header class="section-header">
@@ -125,7 +110,6 @@ const genres = GENRES
       </section>
     )}
 
-    <!-- 4. COMPLETED -->
     {completed.length > 0 && (
       <section class="landing-section">
         <header class="section-header">
@@ -146,7 +130,6 @@ const genres = GENRES
       </section>
     )}
 
-    <!-- 5. GENRE -->
     {genres.length > 0 && (
       <section class="landing-section">
         <header class="section-header">
@@ -224,11 +207,6 @@ const genres = GENRES
     gap: var(--s-10);
   }
   
-  .hero-carousel {
-    width: 100;
-    align-items: center;
-  }
-
   .hero-track {
     display: flex;
     overflow-x: auto;
@@ -262,6 +240,7 @@ const genres = GENRES
     width: 100%;
     height: auto;
     display: block;
+    object-fit: cover;
   }
 
   .hero-text {
@@ -302,29 +281,6 @@ const genres = GENRES
   .hero-dot.active {
     background: var(--accent);
     transform: scale(1.3);
-  }
-
-  .search-form {
-    width: 100%;
-  }
-
-  .search-input {
-    width: 100%;
-    padding: var(--s-3) var(--s-4);
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    font-size: var(--fs-base);
-    transition: border-color var(--t-fast);
-  }
-
-  .search-input::placeholder {
-    color: var(--text-muted);
-  }
-
-  .search-input:focus {
-    outline: none;
-    border-color: var(--accent);
   }
 
   .landing-section {
