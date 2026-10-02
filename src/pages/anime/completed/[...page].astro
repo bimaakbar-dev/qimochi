@@ -1,0 +1,95 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumb from '~/components/Breadcrumb.astro';
+import AnimeCard from '~/components/AnimeCard.astro';
+import Pagination from '~/components/Pagination.astro';
+import { getStatusData, buildStatusPaths, paginate } from '~/lib/status';
+
+export async function getStaticPaths() {
+  const { anime, totalPages } = await getStatusData('complete');
+  return buildStatusPaths('complete', anime, totalPages);
+}
+
+const { anime, totalPages, pageNumber } = Astro.props;
+const items = paginate(anime, pageNumber);
+const isFirstPage = pageNumber === 1;
+---
+
+<BaseLayout
+  title={isFirstPage ? 'Anime Completed' : `Anime Completed — Halaman ${pageNumber}`}
+  description={`Koleksi ${anime.length} anime yang sudah selesai.`}
+  canonical="/anime/complete/"
+  noindex={!isFirstPage}
+>
+  <div class="wrapper">
+    <header class="page-header">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Completed' },
+      ]} />
+
+      <h1>Anime Completed</h1>
+      <p class="subtitle">
+        {anime.length} anime
+        {!isFirstPage && ` · Halaman ${pageNumber} dari ${totalPages}`}
+      </p>
+    </header>
+
+    {items.length > 0 ? (
+      <div class="anime-grid">
+        {items.map(a => <AnimeCard anime={a} />)}
+      </div>
+    ) : (
+      <p class="empty">Belum ada anime completed.</p>
+    )}
+
+    <Pagination
+      current={pageNumber}
+      total={totalPages}
+      base="/anime/complete"
+    />
+  </div>
+</BaseLayout>
+
+<style>
+  .wrapper {
+    padding-block: var(--s-8) var(--s-12);
+  }
+
+  .page-header {
+    margin-bottom: var(--s-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .page-header h1 {
+    margin: 0;
+    font-size: var(--fs-2xl);
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    margin: 0;
+  }
+
+  .anime-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-3);
+  }
+
+  @media (min-width: 48rem) {
+    .anime-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--s-4);
+    }
+  }
+
+  .empty {
+    color: var(--text-muted);
+    text-align: center;
+    padding: var(--s-12) 0;
+  }
+</style>
