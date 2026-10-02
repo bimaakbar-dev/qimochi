@@ -1,7 +1,6 @@
 ---
 import { render } from 'astro:content';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import Breadcrumb from '~/components/Breadcrumb.astro';
 import PostCard from '~/components/PostCard.astro';
 import Badge from '~/user-components/Badge.astro';
 import Icon from '~/user-components/Icons.astro';
@@ -46,17 +45,7 @@ const related = getRelatedPosts(post, allPosts, 3);
   canonical={`/blog/${post.id}/`}
 >
   <div class="wrapper">
-
-    <div class="breadcrumb-wrap">
-      <Breadcrumb items={[
-        { label: 'Home', href: '/' },
-        { label: 'Blog', href: '/blog/' },
-        { label: data.title },
-      ]} />
-    </div>
-
     <article class="post">
-      <!-- HEADER -->
       <header class="post-header">
         <Badge variant="accent" size="sm">{data.category}</Badge>
 
@@ -76,7 +65,6 @@ const related = getRelatedPosts(post, allPosts, 3);
         </p>
       </header>
 
-      <!-- COVER -->
       {data.cover && (
         <div class="post-cover">
           <img
@@ -91,12 +79,10 @@ const related = getRelatedPosts(post, allPosts, 3);
         </div>
       )}
 
-      <!-- BODY -->
       <div class="markdown markdown--prose post-body">
         <Content />
       </div>
 
-      <!-- TAGS -->
       {data.tags.length > 0 && (
         <footer class="post-footer">
           <div class="post-tags">
@@ -109,10 +95,9 @@ const related = getRelatedPosts(post, allPosts, 3);
       )}
     </article>
 
-    <!-- RELATED POSTS -->
     {related.length > 0 && (
       <section class="related-section">
-        <h2 class="related-title">Artikel Terkait</h2>
+        <h2 class="related-title">Terkait</h2>
         <div class="related-grid">
           {related.map(p => <PostCard post={p} />)}
         </div>
@@ -134,18 +119,13 @@ const related = getRelatedPosts(post, allPosts, 3);
     margin-bottom: var(--s-2);
   }
 
-  /* ----------------------------------------------------------
-     POST
-     ---------------------------------------------------------- */
   .post {
     display: flex;
     flex-direction: column;
     gap: var(--s-6);
+    isolation: isolate;
   }
 
-  /* ----------------------------------------------------------
-     HEADER — centered, stacked
-     ---------------------------------------------------------- */
   .post-header {
     display: flex;
     flex-direction: column;
@@ -164,9 +144,6 @@ const related = getRelatedPosts(post, allPosts, 3);
     max-width: 30ch;
   }
 
-  /* ----------------------------------------------------------
-     DECORATIVE ICON
-     ---------------------------------------------------------- */
   .post-icon {
     display: inline-flex;
     align-items: center;
@@ -176,23 +153,18 @@ const related = getRelatedPosts(post, allPosts, 3);
   }
 
   .post-icon :global(svg) {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.5em;
+    height: 1.5em;
+    flex-shrink: 0;
   }
 
-  /* ----------------------------------------------------------
-     AUTHOR
-     ---------------------------------------------------------- */
   .post-author {
     font-size: var(--fs-sm);
     color: var(--text-secondary);
     font-weight: var(--fw-medium);
     margin: 0;
   }
-
-  /* ----------------------------------------------------------
-     DATE
-     ---------------------------------------------------------- */
+ 
   .post-date {
     font-size: var(--fs-xs);
     color: var(--text-muted);
@@ -207,15 +179,10 @@ const related = getRelatedPosts(post, allPosts, 3);
     color: var(--text-disabled);
   }
 
-  /* ----------------------------------------------------------
-     COVER — full-bleed di mobile, dalam wrapper di desktop
-     ---------------------------------------------------------- */
   .post-cover {
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background: var(--bg-surface);
-
-    /* Full-bleed: keluar dari padding wrapper */
     margin-inline: calc(var(--pad-x) * -1);
   }
 
@@ -232,16 +199,10 @@ const related = getRelatedPosts(post, allPosts, 3);
     display: block;
   }
 
-  /* ----------------------------------------------------------
-     BODY
-     ---------------------------------------------------------- */
   .post-body {
     margin: 0;
   }
 
-  /* ----------------------------------------------------------
-     FOOTER — tags
-     ---------------------------------------------------------- */
   .post-footer {
     padding-top: var(--s-4);
     border-top: 1px solid var(--border);
@@ -272,9 +233,6 @@ const related = getRelatedPosts(post, allPosts, 3);
     color: var(--text-secondary);
   }
 
-  /* ----------------------------------------------------------
-     RELATED
-     ---------------------------------------------------------- */
   .related-section {
     display: flex;
     flex-direction: column;
@@ -296,7 +254,7 @@ const related = getRelatedPosts(post, allPosts, 3);
     gap: var(--s-4);
   }
 
-  @media (min-width: 30rem) {
+  @media (max-width: 50rem) {
     .related-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
