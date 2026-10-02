@@ -1,8 +1,9 @@
 ---
-import BaseLayout from '../../../layouts/BaseLayout.astro';
-import AnimeCard from '../../../components/AnimeCard.astro';
-import Pagination from '../../../components/Pagination.astro';
-import { getStatusData, buildStatusPaths, paginate } from '../../../lib/status';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumb from '~/components/Breadcrumb.astro';
+import AnimeCard from '~/components/AnimeCard.astro';
+import Pagination from '~/components/Pagination.astro';
+import { getStatusData, buildStatusPaths, paginate } from '~/lib/status';
 
 export async function getStaticPaths() {
   const { anime, totalPages } = await getStatusData('complete');
@@ -22,6 +23,11 @@ const isFirstPage = pageNumber === 1;
 >
   <div class="wrapper">
     <header class="page-header">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Completed' },
+      ]} />
+
       <h1>Anime Completed</h1>
       <p class="subtitle">
         {anime.length} anime
@@ -54,7 +60,7 @@ const isFirstPage = pageNumber === 1;
     margin-bottom: var(--s-6);
     display: flex;
     flex-direction: column;
-    gap: var(--s-2);
+    gap: var(--s-3);
   }
 
   .page-header h1 {
@@ -70,13 +76,13 @@ const isFirstPage = pageNumber === 1;
 
   .anime-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-3);
   }
 
   @media (min-width: 48rem) {
     .anime-grid {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: var(--s-4);
     }
   }
