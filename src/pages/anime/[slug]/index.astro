@@ -29,11 +29,13 @@ const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
 
 const statusSlug = data.status.toLowerCase().replace('completed', 'complete');
 const statusUrl = `/anime/${statusSlug}/`;
+
+const year = data.releaseDate.getFullYear();
 ---
 
 <BaseLayout
   title={data.title}
-  description={`Nonton dan download ${data.title} batch. ${data.studio}, ${data.tahun}.`}
+  description={`Nonton dan download ${data.title} batch. ${data.studio}, ${year}.`}
   image={data.cover}
   type="video.other"
 >
@@ -69,7 +71,7 @@ const statusUrl = `/anime/${statusSlug}/`;
         <ul class="hero-meta">
           <li>Rating {data.rating}</li>
           <li>{data.episodes.length} Episode</li>
-          <li>{data.tahun}</li>
+          <li>{year}</li>
           <li>{data.studio}</li>
         </ul>
 
