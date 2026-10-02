@@ -1,8 +1,8 @@
 import { getCollection } from 'astro:content';
-import type { CollectionEntry } from 'astro:content';
 import { GENRES, PER_PAGE } from '../constants';
+import { sortByRecent, type AnimeEntry } from './anime';
 
-export type AnimeEntry = CollectionEntry<'anime'>;
+export type { AnimeEntry };
 
 export function genreToSlug(genre: string): string {
   return genre.toLowerCase().replace(/\s+/g, '-');
@@ -10,7 +10,8 @@ export function genreToSlug(genre: string): string {
 
 export async function getAnimeByGenre(genre: string): Promise<AnimeEntry[]> {
   const allAnime = await getCollection('anime');
-  return allAnime.filter(a => a.data.genre.includes(genre));
+  const filtered = allAnime.filter(a => a.data.genre.includes(genre));
+  return sortByRecent(filtered);
 }
 
 export async function getGenreData(genre: string) {
