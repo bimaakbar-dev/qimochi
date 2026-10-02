@@ -10,7 +10,7 @@ interface Props {
       title: string;
       cover: string;
       status: string;
-      tahun?: number;
+      releaseDate: Date;
       episodes?: { number: number }[];
     };
   };
@@ -53,6 +53,7 @@ const lastEpisode = data.episodes?.length
 
 <style>
   .anime-card {
+    min-width: 0;
     background: var(--bg-elevated);
   }
 
@@ -78,6 +79,7 @@ const lastEpisode = data.episodes?.length
     display: flex;
     flex-direction: column;
     gap: var(--s-2);
+    min-width: 0;
   }
 
   .title {
@@ -86,16 +88,20 @@ const lastEpisode = data.episodes?.length
     color: var(--text-primary);
     line-height: var(--lh-snug);
     margin: 0;
+    min-width: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    overflow-wrap: anywhere;
   }
 
   .meta {
     display: flex;
     align-items: center;
     gap: var(--s-2);
+    min-width: 0;
+    flex-wrap: wrap;
   }
 
   .episodes {
