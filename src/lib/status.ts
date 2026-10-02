@@ -1,8 +1,8 @@
 import { getCollection } from 'astro:content';
-import type { CollectionEntry } from 'astro:content';
 import { PER_PAGE } from '../constants';
+import { sortByRecent, type AnimeEntry } from './anime';
 
-export type AnimeEntry = CollectionEntry<'anime'>;
+export type { AnimeEntry };
 
 // Mapping URL slug → status value di frontmatter
 export const STATUS_MAP = {
@@ -15,7 +15,8 @@ export type StatusSlug = keyof typeof STATUS_MAP;
 
 export async function getAnimeByStatus(status: string): Promise<AnimeEntry[]> {
   const allAnime = await getCollection('anime');
-  return allAnime.filter(a => a.data.status === status);
+  const filtered = allAnime.filter(a => a.data.status === status);
+  return sortByRecent(filtered);
 }
 
 export async function getStatusData(slug: StatusSlug) {
