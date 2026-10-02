@@ -11,6 +11,7 @@ export const NAV_LINKS = [
   { label: 'Home',     href: '/' },
   { label: 'Ongoing',  href: '/anime/ongoing/' },
   { label: 'Complete', href: '/anime/complete/' },
+  { label: 'Archive',  href: '/anime/' },
   { label: 'Genre',    href: '/genre/' },
 ] as const;
 
