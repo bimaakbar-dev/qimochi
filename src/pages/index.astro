@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import { SITE, GENRES, PER_PAGE, URLS } from '~/constants';
+import { sortByRecent } from '~/lib/anime';
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
@@ -10,17 +11,15 @@ import LinkCard from '~/user-components/LinkCard.astro';
 
 const allAnime = await getCollection('anime');
 
-const latest = allAnime
-  .sort((a, b) => b.data.addedAt.getTime() - a.data.addedAt.getTime())
-  .slice(0, 3);
+const latest = sortByRecent(allAnime).slice(0, 3);
 
-const ongoing = allAnime
-  .filter(a => a.data.status === 'Ongoing')
-  .slice(0, PER_PAGE - 1);
+const ongoing = sortByRecent(
+  allAnime.filter(a => a.data.status === 'Ongoing')
+).slice(0, PER_PAGE - 1);
 
-const completed = allAnime
-  .filter(a => a.data.status === 'Completed')
-  .slice(0, PER_PAGE - 1);
+const completed = sortByRecent(
+  allAnime.filter(a => a.data.status === 'Completed')
+).slice(0, PER_PAGE - 1);
 
 const genreCounts: Record<string, number> = {};
 allAnime.forEach(a => {
@@ -49,7 +48,7 @@ const genres = GENRES
                 <h2 class="hero-title">{anime.data.title}</h2>
 
                 <p class="hero-meta">
-                  {anime.data.status} · {anime.data.tahun} · Rating {anime.data.rating}
+                  {anime.data.status} · {anime.data.releaseDate.getFullYear()} · Rating {anime.data.rating}
                 </p>
 
                 <LinkButton
@@ -80,11 +79,11 @@ const genres = GENRES
         <nav class="hero-dots" aria-label="Navigasi slide">
           {latest.map((_, i) => (
             <button
-      		type="button"
-      		class:list={['hero-dot', { active: i === 0 }]}
-      		data-index={i}
-      		aria-label={`Slide ${i + 1}`}
-    		></button>
+              type="button"
+              class:list={['hero-dot', { active: i === 0 }]}
+              data-index={i}
+              aria-label={`Slide ${i + 1}`}
+            ></button>
           ))}
         </nav>
       </section>
@@ -206,7 +205,7 @@ const genres = GENRES
     flex-direction: column;
     gap: var(--s-10);
   }
-  
+
   .hero-track {
     display: flex;
     overflow-x: auto;
@@ -304,26 +303,26 @@ const genres = GENRES
 
   .anime-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-3);
   }
 
   @media (min-width: 50rem) {
     .anime-grid {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: var(--s-4);
     }
   }
 
   .genre-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-3);
   }
 
   @media (min-width: 50rem) {
     .genre-grid {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: var(--s-4);
     }
   }
