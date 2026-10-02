@@ -1,38 +1,230 @@
 ---
-import { SITE } from '../constants';
+import { SITE, NAV_LINKS } from '~/constants';
+
 const year = new Date().getFullYear();
+
+const currentPath = Astro.url.pathname;
 ---
 
 <footer class="site-footer">
   <div class="footer-inner">
-    <p class="copyright">
-      © {year} {SITE.name}. All rights reserved.
-    </p>
+    <!-- Brand + disclaimer -->
+    <div class="footer-brand">
+      <a href="/" class="footer-logo">
+        <span class="logo-mark" aria-hidden="true"></span>
+        <span>{SITE.name}</span>
+      </a>
+      <p class="footer-tagline">{SITE.description}</p>
+    </div>
+
+    <!-- Navigasi -->
+    <nav class="footer-nav" aria-label="Navigasi footer">
+      <h2 class="footer-heading">Jelajahi</h2>
+      <ul>
+        {NAV_LINKS.map(({ label, href }) => (
+          <li><a href={href}>{label}</a></li>
+        ))}
+      </ul>
+    </nav>
+
+    <!-- Legal -->
+    <nav class="footer-nav" aria-label="Legal">
+      <h2 class="footer-heading">Legal</h2>
+      <ul>
+        <li><a href="/dmca/">DMCA</a></li>
+        <li><a href="/disclaimer/">Disclaimer</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="footer-disclaimer">
+    <div class="footer-disclaimer-inner">
+      <h2 class="footer-heading">Disclaimer</h2>
+      <p>
+        {SITE.name} tidak menyimpan file video apapun di server kami.
+        Semua konten video di-embed dari layanan pihak ketiga yang tersedia
+        secara publik di internet. Kami hanya menyediakan tautan untuk
+        keperluan referensi dan tidak bertanggung jawab atas konten
+        yang di-host oleh pihak ketiga.
+      </p>
+      <p>
+        Jika kamu adalah pemilik hak cipta dan menemukan konten yang
+        melanggar, silakan hubungi kami melalui halaman
+        <a href="/dmca/">DMCA</a> untuk permintaan penghapusan.
+      </p>
+    </div>
+  </div>
+
+  <!-- Copyright -->
+  <div class="footer-bottom">
+    <div class="footer-bottom-inner">
+      <p class="copyright">
+        &copy; {year} {SITE.name}. All rights reserved.
+      </p>
+    </div>
   </div>
 </footer>
 
 <style>
   .site-footer {
-    border-top: 1px solid var(--border);
-    margin-top: var(--s-16);
     background: var(--bg-footer);
+    margin-top: var(--s-16);
   }
 
+  /* ----------------------------------------------------------
+     MAIN — grid 3 kolom di desktop
+     ---------------------------------------------------------- */
   .footer-inner {
     max-width: var(--content-max-mobile);
     margin-inline: auto;
+    padding: var(--s-8) var(--pad-x);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-6);
+  }
+
+  @media (min-width: 50rem) {
+    .footer-inner {
+      max-width: var(--content-max-desktop);
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: var(--s-8);
+    }
+  }
+
+  /* ----------------------------------------------------------
+     BRAND
+     ---------------------------------------------------------- */
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .footer-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-inverted);
+    transition: color var(--t-fast);
+  }
+
+  .footer-logo:hover {
+    color: var(--accent);
+  }
+
+  .logo-mark {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    clip-path: polygon(0 0, 100% 0, 100% 60%, 60% 100%, 0 100%);
+  }
+
+  .footer-tagline {
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+    line-height: var(--lh-relaxed);
+    margin: 0;
+    max-width: 40ch;
+  }
+
+  /* ----------------------------------------------------------
+     NAV
+     ---------------------------------------------------------- */
+  .footer-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .footer-nav a {
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+    transition: color var(--t-fast);
+  }
+
+  .footer-nav a:hover {
+    color: var(--accent);
+  }
+
+  .footer-heading {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 var(--s-3);
+  }
+
+  /* ----------------------------------------------------------
+     DISCLAIMER
+     ---------------------------------------------------------- */
+  .footer-disclaimer {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .footer-disclaimer-inner {
+    max-width: var(--content-max-mobile);
+    margin-inline: auto;
     padding: var(--s-6) var(--pad-x);
+  }
+
+  @media (min-width: 50rem) {
+    .footer-disclaimer-inner {
+      max-width: var(--content-max-desktop);
+    }
+  }
+
+  .footer-disclaimer p {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    line-height: var(--lh-relaxed);
+    margin: 0 0 var(--s-3);
+  }
+
+  .footer-disclaimer p:last-child {
+    margin-bottom: 0;
+  }
+
+  .footer-disclaimer a {
+    color: var(--accent);
+    transition: color var(--t-fast);
+  }
+
+  .footer-disclaimer a:hover {
+    color: var(--accent-hover);
+  }
+
+  /* ----------------------------------------------------------
+     BOTTOM — copyright
+     ---------------------------------------------------------- */
+  .footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .footer-bottom-inner {
+    max-width: var(--content-max-mobile);
+    margin-inline: auto;
+    padding: var(--s-4) var(--pad-x);
     text-align: center;
   }
 
-  @media (min-width: 56rem) {
-    .footer-inner {
+  @media (min-width: 50rem) {
+    .footer-bottom-inner {
       max-width: var(--content-max-desktop);
     }
   }
 
   .copyright {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
     color: var(--text-muted);
     margin: 0;
   }
