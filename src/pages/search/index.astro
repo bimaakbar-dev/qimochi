@@ -1,6 +1,6 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Icon from '../../user-components/Icon.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Icon from '~/user-components/Icons.astro';
 ---
 
 <BaseLayout
@@ -75,10 +75,6 @@ import Icon from '../../user-components/Icon.astro';
     episodes: { number: number }[];
   }
 
-  /* ----------------------------------------------------------
-     FUZZY SEARCH
-     ---------------------------------------------------------- */
-
   function normalize(s: string): string {
     return s
       .toLowerCase()
@@ -143,10 +139,6 @@ import Icon from '../../user-components/Icon.astro';
     return best * 0.85;
   }
 
-  /* ----------------------------------------------------------
-     RENDER CARD — pakai <template>
-     ---------------------------------------------------------- */
-
   const template = document.getElementById('card-template') as HTMLTemplateElement;
 
   function renderCard(a: Anime): DocumentFragment {
@@ -181,10 +173,6 @@ import Icon from '../../user-components/Icon.astro';
     return clone;
   }
 
-  /* ----------------------------------------------------------
-     INIT
-     ---------------------------------------------------------- */
-
   const form = document.getElementById('search-form') as HTMLFormElement;
   const input = document.getElementById('search-input') as HTMLInputElement;
   const clearBtn = document.getElementById('search-clear') as HTMLButtonElement;
@@ -196,10 +184,6 @@ import Icon from '../../user-components/Icon.astro';
   const params = new URLSearchParams(window.location.search);
   const initialQuery = params.get('q') || '';
   input.value = initialQuery;
-
-  /* ----------------------------------------------------------
-     CLEAR BUTTON — show/hide berdasarkan isi input
-     ---------------------------------------------------------- */
 
   function updateClearBtn() {
     clearBtn.hidden = input.value.length === 0;
@@ -215,10 +199,6 @@ import Icon from '../../user-components/Icon.astro';
     results.innerHTML = '';
     status.hidden = true;
   });
-
-  /* ----------------------------------------------------------
-     DATA + SEARCH
-     ---------------------------------------------------------- */
 
   async function loadData() {
     if (allAnime.length > 0) return;
@@ -302,9 +282,6 @@ import Icon from '../../user-components/Icon.astro';
     margin: 0;
   }
 
-  /* ----------------------------------------------------------
-     FORM — column di mobile, row di desktop
-     ---------------------------------------------------------- */
   .search-form {
     display: flex;
     flex-direction: column;
@@ -338,16 +315,12 @@ import Icon from '../../user-components/Icon.astro';
     border-color: var(--accent);
   }
 
-  /* Sembunyikan native clear button (WebKit) */
   .search-input::-webkit-search-cancel-button,
   .search-input::-webkit-search-decoration {
     -webkit-appearance: none;
     appearance: none;
   }
 
-  /* ----------------------------------------------------------
-     CLEAR BUTTON
-     ---------------------------------------------------------- */
   .search-clear {
     position: absolute;
     right: var(--s-2);
@@ -379,9 +352,6 @@ import Icon from '../../user-components/Icon.astro';
     height: 1em;
   }
 
-  /* ----------------------------------------------------------
-     SUBMIT BUTTON
-     ---------------------------------------------------------- */
   .search-btn {
     display: inline-flex;
     align-items: center;
@@ -415,25 +385,19 @@ import Icon from '../../user-components/Icon.astro';
     margin-bottom: var(--s-4);
   }
 
-  /* ----------------------------------------------------------
-     GRID
-     ---------------------------------------------------------- */
   .anime-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-3);
   }
 
-  @media (min-width: 48rem) {
+  @media (min-width: 50rem) {
     .anime-grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: var(--s-4);
     }
   }
 
-  /* ----------------------------------------------------------
-     CARD — sama seperti AnimeCard.astro
-     ---------------------------------------------------------- */
   .anime-card {
     display: block;
     min-width: 0;
@@ -502,9 +466,6 @@ import Icon from '../../user-components/Icon.astro';
     font-weight: var(--fw-medium);
   }
 
-  /* ----------------------------------------------------------
-     BADGE — sama seperti Badge.astro
-     ---------------------------------------------------------- */
   .badge {
     display: inline-flex;
     align-items: center;
@@ -533,10 +494,7 @@ import Icon from '../../user-components/Icon.astro';
     color: var(--warning);
   }
 
-  /* ----------------------------------------------------------
-     DESKTOP — form jadi row
-     ---------------------------------------------------------- */
-  @media (min-width: 30rem) {
+  @media (max-width: 50rem) {
     .search-form {
       flex-direction: row;
     }
