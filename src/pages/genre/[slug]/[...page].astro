@@ -2,9 +2,9 @@
 import { getGenreData, paginate, allGenreSlugs } from '~/lib/genre';
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import Hero from '~/components/Hero.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
 import Pagination from '~/components/Pagination.astro';
-import Breadcrumb from '~/components/Breadcrumb.astro';
 
 export async function getStaticPaths() {
   const paths = [];
@@ -34,22 +34,28 @@ const { genre, anime, totalPages, pageNumber } = Astro.props;
 const items = paginate(anime, pageNumber);
 const slug = Astro.params.slug;
 const isFirstPage = pageNumber === 1;
+
+const title = isFirstPage
+  ? `Anime ${genre}`
+  : `Anime ${genre} — Halaman ${pageNumber}`;
+
+const description = isFirstPage
+  ? `Koleksi ${anime.length} anime genre ${genre}.`
+  : `${anime.length} anime · Halaman ${pageNumber} dari ${totalPages}`;
 ---
 
 <BaseLayout
-  title={isFirstPage ? `Anime ${genre}` : `Anime ${genre} — Halaman ${pageNumber}`}
-  description={`Koleksi ${anime.length} anime genre ${genre}.`}
+  title={title}
+  description={description}
   canonical={`/genre/${slug}/`}
   noindex={!isFirstPage}
 >
   <div class="wrapper">
-    <header class="page-header">
-      <h1>{genre}</h1>
-      <p class="subtitle">
-        {anime.length} anime
-        {!isFirstPage && ` · Halaman ${pageNumber} dari ${totalPages}`}
-      </p>
-    </header>
+
+    <Hero
+      title={genre}
+      description={description}
+    />
 
     {items.length > 0 ? (
       <div class="anime-grid">
@@ -68,44 +74,39 @@ const isFirstPage = pageNumber === 1;
 </BaseLayout>
 
 <style>
+  /* ----------------------------------------------------------
+     WRAPPER
+     ---------------------------------------------------------- */
   .wrapper {
-    padding-block: var(--s-8) var(--s-12);
-  }
-
-  .page-header {
-    margin-bottom: var(--s-6);
+    padding-block: var(--s-6) var(--s-12);
     display: flex;
     flex-direction: column;
-    gap: var(--s-3);
+    gap: var(--s-6);
   }
 
-  .page-header h1 {
-    margin: 0;
-    font-size: var(--fs-2xl);
-  }
-
-  .subtitle {
-    color: var(--text-muted);
-    font-size: var(--fs-sm);
-    margin: 0;
-  }
-
+  /* ----------------------------------------------------------
+     GRID
+     ---------------------------------------------------------- */
   .anime-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-3);
   }
 
-  @media (min-width: 48rem) {
+  @media (min-width: 50rem) {
     .anime-grid {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: var(--s-4);
     }
   }
 
+  /* ----------------------------------------------------------
+     EMPTY
+     ---------------------------------------------------------- */
   .empty {
     color: var(--text-muted);
     text-align: center;
     padding: var(--s-12) 0;
+    font-size: var(--fs-sm);
   }
 </style>
