@@ -2,7 +2,8 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Hero from '~/components/Hero.astro';
-import { URLS } from '~/constants';
+import Badge from '~/user-components/Badge.astro';
+import { URLS, STATUS_VARIANT, type Status } from '~/constants';
 
 const allAnime = await getCollection('anime');
 
@@ -35,14 +36,14 @@ const groups = activeLetters.map(letter => ({
 
 <BaseLayout
   title="Archive Anime"
-  description={`Daftar lengkap ${totalAnime} anime di Qimochi, diurutkan alfabetis.`}
+  description={`Daftar anime di Qimochi`}
   canonical="/anime/"
 >
   <div class="wrapper">
 
     <Hero
       title="Archive Anime"
-      description={`Daftar lengkap ${totalAnime} anime di Qimochi, diurutkan alfabetis.`}
+      description={`Daftar lengkap ${totalAnime} anime di Qimochi.`}
     />
 
     {activeLetters.length > 1 && (
@@ -68,12 +69,12 @@ const groups = activeLetters.map(letter => ({
                 <span class="anime-title">{anime.data.title}</span>
 
                 {anime.data.status !== 'Completed' && (
-                  <span class:list={[
-                    'anime-status',
-                    `anime-status-${anime.data.status.toLowerCase()}`
-                  ]}>
+                  <Badge
+                    variant={STATUS_VARIANT[anime.data.status as Status]}
+                    size="sm"
+                  >
                     {anime.data.status}
-                  </span>
+                  </Badge>
                 )}
               </a>
             </li>
@@ -89,19 +90,13 @@ const groups = activeLetters.map(letter => ({
 </BaseLayout>
 
 <style>
-  /* ----------------------------------------------------------
-     WRAPPER
-     ---------------------------------------------------------- */
   .wrapper {
     padding-block: var(--s-6) var(--s-12);
     display: flex;
     flex-direction: column;
     gap: var(--s-6);
   }
-
-  /* ----------------------------------------------------------
-     LETTER NAV — sticky
-     ---------------------------------------------------------- */
+ 
   .letter-nav {
     position: sticky;
     top: var(--header-height);
@@ -130,7 +125,6 @@ const groups = activeLetters.map(letter => ({
     height: 2rem;
     padding: 0 var(--s-2);
     background: var(--bg-surface);
-    border: 1px solid var(--border);
     font-size: var(--fs-xs);
     font-weight: var(--fw-semibold);
     color: var(--text-secondary);
@@ -142,9 +136,6 @@ const groups = activeLetters.map(letter => ({
     color: var(--accent);
   }
 
-  /* ----------------------------------------------------------
-     LETTER GROUP
-     ---------------------------------------------------------- */
   .letter-group {
     display: flex;
     flex-direction: column;
@@ -162,9 +153,6 @@ const groups = activeLetters.map(letter => ({
     letter-spacing: 0.05em;
   }
 
-  /* ----------------------------------------------------------
-     ANIME LIST
-     ---------------------------------------------------------- */
   .anime-list {
     display: flex;
     flex-direction: column;
@@ -177,7 +165,7 @@ const groups = activeLetters.map(letter => ({
   .anime-link {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: var(--s-2) var(--s-4);
     padding: var(--s-3) var(--s-4);
@@ -203,29 +191,6 @@ const groups = activeLetters.map(letter => ({
     color: var(--accent);
   }
 
-  /* ----------------------------------------------------------
-     STATUS — hanya untuk non-complete
-     ---------------------------------------------------------- */
-  .anime-status {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    flex-shrink: 0;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .anime-status-ongoing {
-    color: var(--success);
-  }
-
-  .anime-status-hiatus {
-    color: var(--warning);
-  }
-
-  /* ----------------------------------------------------------
-     EMPTY
-     ---------------------------------------------------------- */
   .empty {
     color: var(--text-muted);
     text-align: center;
