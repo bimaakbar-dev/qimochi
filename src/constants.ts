@@ -1,6 +1,6 @@
 export const SITE = {
   name: 'Qimochi',
-  title: 'Qimochi — Nonton & Download Anime Batch',
+  title: 'Nonton & Download Anime Batch',
   description: 'Koleksi anime untuk streaming dan download batch. Ringan, cepat, tanpa ribet.',
   url: 'https://qimochi-hub.github.io',
   locale: 'id-ID',
@@ -44,6 +44,9 @@ export const STATUS_VARIANT: Record<Status, 'success' | 'default' | 'warning'> =
   'Completed': 'default',
   'Hiatus':    'warning',
 };
+
+export const ANIME_TYPES = ['TV', 'Movie', 'OVA', 'ONA', 'Special'] as const;
+export type AnimeType = typeof ANIME_TYPES[number];
 
 export const PER_PAGE = 9;
 

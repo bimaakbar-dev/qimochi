@@ -23,12 +23,6 @@ const isFirstPage = pageNumber === 1;
 >
   <div class="wrapper">
     <header class="page-header">
-      <Breadcrumb items={[
-        { label: 'Home', href: '/' },
-        { label: 'Anime', href: '/anime/' },
-        { label: 'Ongoing' },
-      ]} />
-
       <h1>Anime Ongoing</h1>
       <p class="subtitle">
         {anime.length} anime
@@ -83,7 +77,7 @@ const isFirstPage = pageNumber === 1;
 
   @media (min-width: 50rem) {
     .anime-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: var(--s-4);
     }
   }

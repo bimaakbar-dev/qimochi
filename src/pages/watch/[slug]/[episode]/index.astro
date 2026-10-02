@@ -9,7 +9,6 @@ import StreamSelector from '~/components/StreamSelector.astro';
 import ActionBar from '~/components/ActionBar.astro';
 import DownloadPanel from '~/components/DownloadPanel.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
-import Breadcrumb from '~/components/Breadcrumb.astro';
 
 export async function getStaticPaths() {
   const allAnime = await getCollection('anime');
@@ -53,14 +52,6 @@ const downloads = episode.downloads ?? data.batch ?? [];
   canonical={`/watch/${anime.id}/${episode.number}/`}
 >
   <div class="wrapper">
-
-    <div class="breadcrumb-wrap">
-      <Breadcrumb items={[
-        { label: 'Home', href: '/' },
-        { label: data.title, href: URLS.anime(anime.id) },
-        { label: `Episode ${episode.number}` },
-      ]} />
-    </div>
 
     <section class="player-section">
       <Player src={playerSrc} title={`${data.title} Episode ${episode.number}`} />

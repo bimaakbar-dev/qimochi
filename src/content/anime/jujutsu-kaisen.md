@@ -4,6 +4,7 @@ cover: https://cdn.myanimelist.net/images/anime/1171/109222.jpg
 status: Completed
 genre: [Action, Supernatural, Shounen]
 studio: MAPPA
+type: TV
 releaseDate: 2020-10-03
 addedAt: 2026-02-15
 rating: 8.7

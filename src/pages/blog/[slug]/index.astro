@@ -45,28 +45,22 @@ const related = getRelatedPosts(post, allPosts, 3);
   canonical={`/blog/${post.id}/`}
 >
   <div class="wrapper">
-    <article class="post">
-      <header class="post-header">
+    <article>
+      <header>
         <Badge variant="accent" size="sm">{data.category}</Badge>
-
-        <h1 class="post-title">{data.title}</h1>
-
-        <span class="post-icon" aria-hidden="true">
-          <Icon name="book" size={24} />
-        </span>
-
-        <p class="post-author">Oleh {data.author}</p>
-
-        <p class="post-date">
-          <time datetime={data.date.toISOString()}>{dateText}</time>
-          {updatedText && (
-            <span class="updated"> · Diperbarui {updatedText}</span>
-          )}
-        </p>
+        <h1 set:html={data.title} />
+        <div class="post-meta">
+          <span class="post-icon" aria-hidden="true">
+            <Icon name="book" size={24} />
+          </span>
+          <p class="post-author">Oleh {data.author}</p>
+          <p class="post-date">
+            <time datetime={data.date.toISOString()}>{dateText}</time>
+          </p>
+        </div>
       </header>
-
       {data.cover && (
-        <div class="post-cover">
+        <div class="cover">
           <img
             src={data.cover}
             alt={`Cover ${data.title}`}
@@ -85,6 +79,11 @@ const related = getRelatedPosts(post, allPosts, 3);
 
       {data.tags.length > 0 && (
         <footer class="post-footer">
+          <p class="update">
+            {updatedText && (
+              <time datetime={data.date.toISOString()}> Diperbarui {updatedText}</time>
+            )}
+          </p>
           <div class="post-tags">
             <span class="tags-label">Tags:</span>
             {data.tags.map(tag => (
@@ -94,7 +93,6 @@ const related = getRelatedPosts(post, allPosts, 3);
         </footer>
       )}
     </article>
-
     {related.length > 0 && (
       <section class="related-section">
         <h2 class="related-title">Terkait</h2>
@@ -103,7 +101,6 @@ const related = getRelatedPosts(post, allPosts, 3);
         </div>
       </section>
     )}
-
   </div>
 </BaseLayout>
 
@@ -113,108 +110,98 @@ const related = getRelatedPosts(post, allPosts, 3);
     display: flex;
     flex-direction: column;
     gap: var(--s-8);
+    max-width: 48rem;
   }
 
-  .breadcrumb-wrap {
-    margin-bottom: var(--s-2);
-  }
-
-  .post {
+  article {
     display: flex;
     flex-direction: column;
     gap: var(--s-6);
     isolation: isolate;
-  }
-
-  .post-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: var(--s-2);
-    padding-block: var(--s-4);
-  }
-
-  .post-title {
-    font-size: var(--fs-3xl);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-tight);
-    margin: 0;
-    color: var(--text-primary);
-    max-width: 30ch;
-  }
-
-  .post-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent);
-    margin-block: var(--s-1);
-  }
-
-  .post-icon :global(svg) {
-    width: 1.5em;
-    height: 1.5em;
-    flex-shrink: 0;
-  }
-
-  .post-author {
-    font-size: var(--fs-sm);
-    color: var(--text-secondary);
-    font-weight: var(--fw-medium);
-    margin: 0;
-  }
- 
-  .post-date {
-    font-size: var(--fs-xs);
-    color: var(--text-muted);
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: var(--fw-medium);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .post-date .updated {
-    color: var(--text-disabled);
-  }
-
-  .post-cover {
-    aspect-ratio: 16 / 9;
-    overflow: hidden;
-    background: var(--bg-surface);
-    margin-inline: calc(var(--pad-x) * -1);
-  }
-
-  @media (min-width: 40rem) {
-    .post-cover {
-      margin-inline: 0;
+    & header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: var(--s-2);
+      padding-block: var(--s-4);
+      & span {
+        text-transform: uppercase;
+        font-weight: 500;
+      }
+      & h1 {
+        font-size: var(--fs-4xl);
+        font-weight: var(--fw-bold);
+        line-height: var(--lh-tight);
+        margin: 0;
+        color: var(--text-primary);
+        max-width: 30ch;
+      }
+      & .post-meta {
+        display: flex;
+        align-items: center;
+        gap: var(--s-2);
+        & .post-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--accent);
+          margin-block: var(--s-1);
+          & :global(svg) {
+            width: 1.5em;
+            height: 1.5em;
+            flex-shrink: 0;
+          }
+        }
+        & .post-author {
+          font-size: var(--fs-sm);
+          color: var(--text-secondary);
+          font-weight: var(--fw-medium);
+          margin: 0;
+        }
+        & .post-date {
+          font-size: var(--fs-sm);
+          color: var(--text-secondary);
+          margin: 0;
+          letter-spacing: 0.05em;
+          font-weight: var(--fw-medium);
+          font-variant-numeric: tabular-nums;
+        }
+      }
+    }
+    & .cover {
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      margin-inline: calc(var(--pad-x) * -1);
+      margin-block: 0;
+      & img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+    }
+    & .post-body {
+      margin: 0;
+    }
+    & .post-footer {
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--s-4);
+      border-top: 1px solid var(--border);
+      gap: 0.5rem;
+      & .update {
+        color: var(--text-muted);
+        font-size: var(--fs-sm);
+      }
+      & .post-tags {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--s-2);
+      }
     }
   }
-
-  .post-cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .post-body {
-    margin: 0;
-  }
-
-  .post-footer {
-    padding-top: var(--s-4);
-    border-top: 1px solid var(--border);
-  }
-
-  .post-tags {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--s-2);
-  }
-
   .tags-label {
     font-size: var(--fs-xs);
     color: var(--text-muted);
@@ -255,11 +242,16 @@ const related = getRelatedPosts(post, allPosts, 3);
   }
 
   @media (max-width: 50rem) {
+    .post-meta {
+      flex-direction: column;
+    }
+    .cover {
+      margin-inline: 0;
+    }
     .related-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
-
   @media (min-width: 50rem) {
     .related-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
