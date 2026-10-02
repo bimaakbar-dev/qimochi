@@ -4,6 +4,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import Breadcrumb from '~/components/Breadcrumb.astro';
 import PostCard from '~/components/PostCard.astro';
 import Badge from '~/user-components/Badge.astro';
+import Icon from '~/user-components/Icons.astro';
 import {
   getPublishedPostBySlug,
   getAllPostSlugs,
@@ -55,18 +56,18 @@ const related = getRelatedPosts(post, allPosts, 3);
     </div>
 
     <article class="post">
-      <!-- HEADER — centered -->
+      <!-- HEADER -->
       <header class="post-header">
         <Badge variant="accent" size="sm">{data.category}</Badge>
 
         <h1 class="post-title">{data.title}</h1>
 
-        {data.author && (
-          <p class="post-author">{data.author}</p>
-        )}
+        <span class="post-icon" aria-hidden="true">
+          <Icon name="book" size={24} />
+        </span>
 
-        <p class="post-date">
-          <time datetime={data.date.toISOString()}>{dateText}</time>
+        <p class="post-meta">
+          Oleh {data.author} · {dateText}
           {updatedText && (
             <span class="updated"> · Diperbarui {updatedText}</span>
           )}
@@ -161,14 +162,30 @@ const related = getRelatedPosts(post, allPosts, 3);
     max-width: 30ch;
   }
 
-  .post-author {
-    font-size: var(--fs-sm);
-    color: var(--text-secondary);
-    font-weight: var(--fw-medium);
-    margin: 0;
+  /* ----------------------------------------------------------
+     DECORATIVE ICON — cuma 1
+     ---------------------------------------------------------- */
+  .post-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    margin-block: var(--s-1);
   }
 
-  .post-date {
+  .post-icon :global(svg) {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  /* ----------------------------------------------------------
+     META — author + date inline
+     ---------------------------------------------------------- */
+  .post-meta {
     font-size: var(--fs-xs);
     color: var(--text-muted);
     margin: 0;
@@ -178,7 +195,7 @@ const related = getRelatedPosts(post, allPosts, 3);
     font-variant-numeric: tabular-nums;
   }
 
-  .post-date .updated {
+  .post-meta .updated {
     color: var(--text-disabled);
   }
 
