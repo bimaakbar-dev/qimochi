@@ -1,4 +1,5 @@
 import { defineConfig, fontProviders, svgoOptimizer } from 'astro/config';
+import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://qimochi-hub.github.io',
@@ -46,6 +47,22 @@ export default defineConfig({
         ],
       },
     },
+  ],
+  integrations: [
+    sitemap({
+      filter: (page) => {
+        if (page.includes('/search/')) return false;
+        if (page.includes('/404/')) return false;
+        if (page.includes('/dmca/')) return false;
+        if (page.includes('/disclaimer/')) return false;
+        if (/\/\d+\/$/.test(page)) return false;
+
+        return true;
+      },
+      changefreq: 'daily',
+      priority: 0.7,
+      lastmod: new Date(),
+    }),
   ],
   experimental: {
     incrementalBuild: true,
