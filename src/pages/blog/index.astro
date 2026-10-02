@@ -14,33 +14,28 @@ const posts = await getPublishedPosts();
 >
   <div class="wrapper">
 
-    <!-- HERO -->
-    <header class="blog-hero">
+    <!-- COMPACT HEADER -->
+    <header class="blog-header">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: 'Blog' },
       ]} />
-
-      <div class="hero-content">
-        <h1 class="hero-title">Blog</h1>
-        <p class="hero-desc">
-          Berita, review, dan update seputar anime — ditulis untuk kamu
-          yang ingin tahu lebih dalam.
-        </p>
-      </div>
+      <h1 class="blog-title">Blog</h1>
     </header>
 
     <!-- 2 KOLOM -->
     <div class="content-grid">
-      <main class="content-main">
+      <section class="content-main">
         {posts.length > 0 ? (
-          <div class="post-list">
-            {posts.map(post => <PostCard post={post} />)}
+          <div class="post-grid">
+            {posts.map((post, i) => (
+              <PostCard post={post} featured={i === 0} />
+            ))}
           </div>
         ) : (
           <p class="empty">Belum ada artikel.</p>
         )}
-      </main>
+      </section>
 
       <aside class="content-aside">
         <section class="aside-section">
@@ -71,56 +66,24 @@ const posts = await getPublishedPosts();
   }
 
   /* ----------------------------------------------------------
-     HERO — semua centered
+     COMPACT HEADER
      ---------------------------------------------------------- */
-  .blog-hero {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    padding: var(--s-5);
+  .blog-header {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: var(--s-4);
-  }
-
-  /* Breadcrumb centered */
-  .blog-hero :global(.breadcrumb ol) {
-    justify-content: center;
-  }
-
-  .hero-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     gap: var(--s-2);
-    padding-block: var(--s-2);
   }
 
-  .hero-title {
-    font-size: var(--fs-3xl);
+  .blog-title {
+    font-size: var(--fs-2xl);
     font-weight: var(--fw-bold);
     line-height: var(--lh-tight);
     margin: 0;
     color: var(--text-primary);
   }
 
-  .hero-desc {
-    font-size: var(--fs-base);
-    color: var(--text-secondary);
-    line-height: var(--lh-relaxed);
-    margin: 0;
-    max-width: 55ch;
-  }
-
-  @media (min-width: 50rem) {
-    .blog-hero {
-      padding: var(--s-6) var(--s-8);
-    }
-  }
-
   /* ----------------------------------------------------------
-     GRID
+     GRID — main + aside
      ---------------------------------------------------------- */
   .content-grid {
     display: grid;
@@ -132,7 +95,6 @@ const posts = await getPublishedPosts();
   @media (min-width: 56rem) {
     .content-grid {
       grid-template-columns: 1fr var(--aside-width);
-      gap: var(--s-6);
     }
 
     .content-aside {
@@ -150,12 +112,29 @@ const posts = await getPublishedPosts();
     min-width: 0;
   }
 
-  .post-list {
-    display: flex;
-    flex-direction: column;
+  /* ----------------------------------------------------------
+     BENTO GRID — featured span 2, sisanya 2 kolom
+     ---------------------------------------------------------- */
+  .post-grid {
+    display: grid;
+    grid-template-columns: 1fr;
     gap: var(--s-4);
   }
 
+  @media (min-width: 40rem) {
+    .post-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Item pertama span 2 kolom — featured */
+    .post-grid > :first-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* ----------------------------------------------------------
+     EMPTY
+     ---------------------------------------------------------- */
   .empty {
     color: var(--text-muted);
     text-align: center;
