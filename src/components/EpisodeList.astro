@@ -52,7 +52,6 @@ const { slug, episodes, currentEpisode = null } = Astro.props;
     font-weight: var(--fw-medium);
     font-size: var(--fs-sm);
     list-style: none;
-    margin-bottom: var(--s-3);
   }
 
   .episode-list summary::-webkit-details-marker { display: none; }
@@ -74,13 +73,18 @@ const { slug, episodes, currentEpisode = null } = Astro.props;
     transform: rotate(180deg);
   }
 
+  /* Default: NO display set — biarkan browser hide saat closed */
   .episode-items {
+    padding: 0;
+    margin: var(--s-3) 0 0;
+    list-style: none;
+  }
+
+  /* Hanya apply grid saat open */
+  .episode-list[open] .episode-items {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
     gap: var(--s-2);
-    padding: 0;
-    margin: 0;
-    list-style: none;
   }
 
   .episode-item {
