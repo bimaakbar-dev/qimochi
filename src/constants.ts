@@ -13,6 +13,7 @@ export const NAV_LINKS = [
   { label: 'Completed', href: '/anime/completed/' },
   { label: 'Archive',  href: '/anime/' },
   { label: 'Genre',    href: '/genre/' },
+  { label: 'Blog', href: '/blog/' },
 ] as const;
 
 export const GENRES = [
