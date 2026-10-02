@@ -1,6 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
-import { URLS, STATUS_VARIANT, type Status } from '~/constants';
+import { SITE, URLS, STATUS_VARIANT, type Status } from '~/constants';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Breadcrumb from '~/components/Breadcrumb.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
@@ -30,8 +30,7 @@ const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
 const statusSlug = data.status.toLowerCase().replace('completed', 'complete');
 const statusUrl = `/anime/${statusSlug}/`;
 
-// Format tanggal Indonesia
-const releaseDate = new Intl.DateTimeFormat('id-ID', {
+const releaseDate = new Intl.DateTimeFormat({SITE.locale}, {
   day: 'numeric',
   month: 'long',
   year: 'numeric',
@@ -71,8 +70,8 @@ const year = data.releaseDate.getFullYear();
 
       <div class="hero-info">
         <div class="hero-head">
-          <h1 class="hero-title">{data.title}</h1>
           <Badge variant={statusVariant} size="sm">{data.status}</Badge>
+          <h1 class="hero-title">{data.title}</h1>
         </div>
 
         <dl class="hero-meta">
@@ -153,9 +152,6 @@ const year = data.releaseDate.getFullYear();
     margin-bottom: var(--s-5);
   }
 
-  /* ----------------------------------------------------------
-     HERO
-     ---------------------------------------------------------- */
   .hero {
     display: grid;
     grid-template-columns: 1fr;
@@ -203,9 +199,6 @@ const year = data.releaseDate.getFullYear();
     line-height: var(--lh-snug);
   }
 
-  /* ----------------------------------------------------------
-     META — dl grid
-     ---------------------------------------------------------- */
   .hero-meta {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -213,6 +206,7 @@ const year = data.releaseDate.getFullYear();
     width: 100%;
     margin: 0;
     text-align: left;
+    align-items: center;
   }
 
   .meta-item {
@@ -236,9 +230,6 @@ const year = data.releaseDate.getFullYear();
     line-height: var(--lh-snug);
   }
 
-  /* ----------------------------------------------------------
-     GENRES
-     ---------------------------------------------------------- */
   .hero-genres {
     display: flex;
     flex-wrap: wrap;
@@ -249,9 +240,6 @@ const year = data.releaseDate.getFullYear();
     margin: 0;
   }
 
-  /* ----------------------------------------------------------
-     2 KOLOM
-     ---------------------------------------------------------- */
   .content-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -268,9 +256,6 @@ const year = data.releaseDate.getFullYear();
     margin: 0 0 var(--s-3);
   }
 
-  /* ----------------------------------------------------------
-     DESKTOP
-     ---------------------------------------------------------- */
   @media (min-width: 50rem) {
     .hero {
       grid-template-columns: 200px 1fr;
