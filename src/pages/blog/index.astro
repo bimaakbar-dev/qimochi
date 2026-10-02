@@ -14,7 +14,6 @@ const posts = await getPublishedPosts();
 >
   <div class="wrapper">
 
-    <!-- COMPACT HEADER -->
     <header class="blog-header">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
@@ -23,7 +22,6 @@ const posts = await getPublishedPosts();
       <h1 class="blog-title">Blog</h1>
     </header>
 
-    <!-- 2 KOLOM -->
     <div class="content-grid">
       <section class="content-main">
         {posts.length > 0 ? (
@@ -105,29 +103,35 @@ const posts = await getPublishedPosts();
     }
   }
 
-  /* ----------------------------------------------------------
-     MAIN
-     ---------------------------------------------------------- */
   .content-main {
     min-width: 0;
   }
 
   /* ----------------------------------------------------------
-     BENTO GRID — featured span 2, sisanya 2 kolom
+     BENTO GRID
+     - Mobile: 1 kolom, full-bleed (edge to edge)
+     - Desktop: 2 kolom
+     - Item pertama: span full width (di semua ukuran)
      ---------------------------------------------------------- */
   .post-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--s-4);
+
+    /* Full-bleed di mobile */
+    margin-inline: calc(var(--pad-x) * -1);
   }
 
   @media (min-width: 40rem) {
     .post-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+
+      /* Kembalikan margin di desktop */
+      margin-inline: 0;
     }
 
-    /* Item pertama span 2 kolom — featured */
-    .post-grid > :first-child {
+    /* Featured span 2 kolom — pakai :global untuk tembus ke PostCard */
+    .post-grid > :global(:first-child) {
       grid-column: 1 / -1;
     }
   }
