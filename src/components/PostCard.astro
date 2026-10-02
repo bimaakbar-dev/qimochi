@@ -1,5 +1,4 @@
 ---
-import LinkCard from '~/user-components/LinkCard.astro';
 import Badge from '~/user-components/Badge.astro';
 import { postUrl, formatDateShort } from '~/lib/blog';
 
@@ -15,57 +14,79 @@ interface Props {
       tags: string[];
     };
   };
+  featured?: boolean;
 }
 
-const { post } = Astro.props;
+const { post, featured = false } = Astro.props;
 const { id, data } = post;
 
 const dateText = formatDateShort(data.date);
 ---
 
-<LinkCard href={postUrl(id)} class="post-card">
-  <div class="cover">
-    {data.cover ? (
-      <img
-        src={data.cover}
-        alt={`Cover ${data.title}`}
-        width="400"
-        height="225"
-        loading="lazy"
-        decoding="async"
-      />
-    ) : (
-      <div class="cover-fallback" aria-hidden="true">
-        <span>{data.category}</span>
-      </div>
-    )}
-  </div>
-
-  <div class="body">
-    <time class="date" datetime={data.date.toISOString()}>
-      {dateText}
-    </time>
-
-    <div class="content">
-      <Badge variant="accent" size="sm">{data.category}</Badge>
-      <h3 class="title">{data.title}</h3>
+<article class:list={['post-card', { 'post-card-featured': featured }]}>
+  <a href={postUrl(id)} class="post-card-link">
+    <div class="cover">
+      {data.cover ? (
+        <img
+          src={data.cover}
+          alt={`Cover ${data.title}`}
+          width="800"
+          height={featured ? 533 : 450}
+          loading="lazy"
+          decoding="async"
+        />
+      ) : (
+        <div class="cover-fallback" aria-hidden="true">
+          <span>{data.category}</span>
+        </div>
+      )}
     </div>
-  </div>
-</LinkCard>
+
+    <div class="body">
+      <time class="date" datetime={data.date.toISOString()}>
+        {dateText}
+      </time>
+
+      <div class="content">
+        <Badge variant="accent" size="sm">{data.category}</Badge>
+        <h3 class="title">{data.title}</h3>
+      </div>
+    </div>
+  </a>
+</article>
 
 <style>
   .post-card {
+    display: block;
     min-width: 0;
+  }
+
+  .post-card-link {
+    display: block;
+    min-width: 0;
+    height: 100%;
     background: var(--bg-elevated);
+    border: 1px solid transparent;
+    overflow: hidden;
+    transition: transform var(--t-fast), background var(--t-fast);
+  }
+
+  .post-card-link:hover {
+    background: var(--bg-surface);
+    transform: translateY(-2px);
   }
 
   /* ----------------------------------------------------------
-     COVER
+     COVER — default 16:9, featured 3:2
      ---------------------------------------------------------- */
   .cover {
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background: var(--bg-surface);
+  }
+
+  .post-card-featured .cover {
+    aspect-ratio: 3 / 2;
   }
 
   .cover img {
@@ -76,7 +97,7 @@ const dateText = formatDateShort(data.date);
     transition: transform var(--t-base);
   }
 
-  .post-card:hover .cover img {
+  .post-card-link:hover .cover img {
     transform: scale(1.03);
   }
 
@@ -106,8 +127,14 @@ const dateText = formatDateShort(data.date);
     min-width: 0;
   }
 
+  /* Featured: padding lebih besar */
+  .post-card-featured .body {
+    padding: var(--s-4);
+    gap: var(--s-4);
+  }
+
   /* ----------------------------------------------------------
-     DATE — vertical, minimal
+     DATE
      ---------------------------------------------------------- */
   .date {
     writing-mode: vertical-rl;
@@ -117,7 +144,6 @@ const dateText = formatDateShort(data.date);
     align-items: center;
     justify-content: center;
 
-    /* Hapus bg, border, padding */
     background: none;
     border: none;
     padding: 0;
@@ -132,18 +158,19 @@ const dateText = formatDateShort(data.date);
   }
 
   /* ----------------------------------------------------------
-     CONTENT — badge + title
+     CONTENT
      ---------------------------------------------------------- */
   .content {
     display: flex;
     flex-direction: column;
     gap: var(--s-2);
     min-width: 0;
-    align-items: flex-start;   /* ← badge tidak full width */
+    align-items: flex-start;
+    justify-content: center;
   }
 
   .title {
-    font-size: var(--fs-base);   /* ← naik dari fs-sm */
+    font-size: var(--fs-base);
     font-weight: var(--fw-medium);
     color: var(--text-primary);
     line-height: var(--lh-snug);
@@ -157,7 +184,15 @@ const dateText = formatDateShort(data.date);
     overflow-wrap: anywhere;
   }
 
-  .post-card:hover .title {
+  /* Featured: title lebih besar, bisa 4 baris */
+  .post-card-featured .title {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-semibold);
+    line-height: var(--lh-tight);
+    -webkit-line-clamp: 4;
+  }
+
+  .post-card-link:hover .title {
     color: var(--accent);
   }
 </style>
