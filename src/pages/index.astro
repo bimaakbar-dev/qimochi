@@ -1,30 +1,27 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseLayout from '../layouts/BaseLayout.astro';
-import AnimeCard from '../components/AnimeCard.astro';
-import Badge from '../user-components/Badge.astro';
-import LinkButton from '../user-components/LinkButton.astro';
-import LinkCard from '../user-components/LinkCard.astro';
-import { GENRES, PER_PAGE, URLS } from '../constants';
+import { GENRES, PER_PAGE, URLS } from '~/constants';
+
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import AnimeCard from '~/components/AnimeCard.astro';
+import Badge from '~/user-components/Badge.astro';
+import LinkButton from '~/user-components/LinkButton.astro';
+import LinkCard from '~/user-components/LinkCard.astro';
 
 const allAnime = await getCollection('anime');
 
-// Hero — 3 terbaru
 const latest = allAnime
   .sort((a, b) => b.data.addedAt.getTime() - a.data.addedAt.getTime())
   .slice(0, 3);
 
-// Ongoing — 8
 const ongoing = allAnime
   .filter(a => a.data.status === 'Ongoing')
   .slice(0, PER_PAGE - 1);
 
-// Completed — 8
 const completed = allAnime
   .filter(a => a.data.status === 'Completed')
   .slice(0, PER_PAGE - 1);
 
-// Genre — ambil 8 teratas berdasarkan jumlah anime
 const genreCounts: Record<string, number> = {};
 allAnime.forEach(a => {
   a.data.genre.forEach(g => {
@@ -83,11 +80,12 @@ const genres = GENRES
 
         <nav class="hero-dots" aria-label="Navigasi slide">
           {latest.map((_, i) => (
-            <a
-              href={`#slide-${i + 1}`}
-              class:list={['hero-dot', { active: i === 0 }]}
-              aria-label={`Slide ${i + 1}`}
-            ></a>
+            <button
+      		type="button"
+      		class:list={['hero-dot', { active: i === 0 }]}
+      		data-index={i}
+      		aria-label={`Slide ${i + 1}`}
+    		></button>
           ))}
         </nav>
       </section>
@@ -182,7 +180,7 @@ const genres = GENRES
 
 <script>
   const track = document.querySelector<HTMLElement>('.hero-track');
-  const dots = document.querySelectorAll<HTMLElement>('.hero-dot');
+  const dots = document.querySelectorAll<HTMLButtonElement>('.hero-dot');
 
   if (track && dots.length > 0) {
     const slides = track.querySelectorAll<HTMLElement>('.hero-slide');
@@ -202,6 +200,19 @@ const genres = GENRES
     );
 
     slides.forEach((slide) => observer.observe(slide));
+
+    dots.forEach((dot) => {
+      dot.addEventListener('click', () => {
+        const index = Number(dot.dataset.index);
+        const target = slides[index];
+        if (!target) return;
+
+        track.scrollTo({
+          left: target.offsetLeft,
+          behavior: 'smooth',
+        });
+      });
+    });
   }
 </script>
 
@@ -213,9 +224,6 @@ const genres = GENRES
     gap: var(--s-10);
   }
 
-  /* ----------------------------------------------------------
-     HERO
-     ---------------------------------------------------------- */
   .hero-track {
     display: flex;
     overflow-x: auto;
@@ -294,9 +302,6 @@ const genres = GENRES
     transform: scale(1.3);
   }
 
-  /* ----------------------------------------------------------
-     SEARCH
-     ---------------------------------------------------------- */
   .search-form {
     width: 100%;
   }
@@ -320,9 +325,6 @@ const genres = GENRES
     border-color: var(--accent);
   }
 
-  /* ----------------------------------------------------------
-     SECTION
-     ---------------------------------------------------------- */
   .landing-section {
     display: flex;
     flex-direction: column;
@@ -342,32 +344,26 @@ const genres = GENRES
     color: var(--text-primary);
   }
 
-  /* ----------------------------------------------------------
-     ANIME GRID
-     ---------------------------------------------------------- */
   .anime-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--s-3);
   }
 
-  @media (min-width: 48rem) {
+  @media (min-width: 50rem) {
     .anime-grid {
       grid-template-columns: repeat(4, 1fr);
       gap: var(--s-4);
     }
   }
 
-  /* ----------------------------------------------------------
-     GENRE GRID
-     ---------------------------------------------------------- */
   .genre-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--s-3);
   }
 
-  @media (min-width: 48rem) {
+  @media (min-width: 50rem) {
     .genre-grid {
       grid-template-columns: repeat(4, 1fr);
       gap: var(--s-4);
@@ -379,10 +375,7 @@ const genres = GENRES
     color: var(--text-primary);
   }
 
-  /* ----------------------------------------------------------
-     DESKTOP — HERO SIDE-BY-SIDE
-     ---------------------------------------------------------- */
-  @media (min-width: 48rem) {
+  @media (min-width: 50rem) {
     .hero-slide {
       grid-template-columns: 1.2fr 1fr;
       gap: var(--s-8);
