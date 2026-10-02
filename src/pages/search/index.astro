@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import Hero from '~/components/Hero.astro';
 import Icon from '~/user-components/Icons.astro';
 ---
 
@@ -9,9 +10,11 @@ import Icon from '~/user-components/Icons.astro';
   noindex={true}
 >
   <div class="wrapper">
-    <header class="page-header">
-      <h1>Cari Anime</h1>
-    </header>
+
+    <Hero
+      title="Cari Anime"
+      description="Cari judul anime dengan cepat. Typo tetap ketemu."
+    />
 
     <form class="search-form" id="search-form">
       <div class="search-input-wrap">
@@ -268,16 +271,14 @@ import Icon from '~/user-components/Icons.astro';
 </script>
 
 <style>
+  /* ----------------------------------------------------------
+     WRAPPER
+     ---------------------------------------------------------- */
   .wrapper {
-    padding-block: var(--s-8) var(--s-12);
-  }
-
-  .page-header {
-    margin-bottom: var(--s-6);
-  }
-
-  .page-header h1 {
-    margin: 0;
+    padding-block: var(--s-6) var(--s-12);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-6);
   }
 
   /* ----------------------------------------------------------
@@ -287,7 +288,6 @@ import Icon from '~/user-components/Icons.astro';
     display: flex;
     flex-direction: column;
     gap: var(--s-2);
-    margin-bottom: var(--s-4);
   }
 
   .search-input-wrap {
@@ -380,12 +380,17 @@ import Icon from '~/user-components/Icons.astro';
     height: 1em;
   }
 
+  /* ----------------------------------------------------------
+     STATUS
+     ---------------------------------------------------------- */
   .search-status {
     color: var(--text-muted);
     font-size: var(--fs-sm);
-    margin-bottom: var(--s-4);
   }
 
+  /* ----------------------------------------------------------
+     GRID
+     ---------------------------------------------------------- */
   .anime-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -394,11 +399,14 @@ import Icon from '~/user-components/Icons.astro';
 
   @media (min-width: 50rem) {
     .anime-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: var(--s-4);
     }
   }
 
+  /* ----------------------------------------------------------
+     CARD — match AnimeCard
+     ---------------------------------------------------------- */
   .anime-card {
     display: block;
     min-width: 0;
@@ -498,6 +506,9 @@ import Icon from '~/user-components/Icons.astro';
     color: var(--warning);
   }
 
+  /* ----------------------------------------------------------
+     DESKTOP — form jadi row
+     ---------------------------------------------------------- */
   @media (min-width: 50rem) {
     .search-form {
       flex-direction: row;
