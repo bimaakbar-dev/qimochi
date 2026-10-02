@@ -1,5 +1,6 @@
 ---
 import { SITE, NAV_LINKS } from '../constants';
+import Icon from '../user-components/Icons.astro';
 
 const currentPath = Astro.url.pathname;
 
@@ -16,35 +17,41 @@ function isActive(href: string): boolean {
       <span class="logo-text">{SITE.name}</span>
     </a>
 
-    <details class="menu" open>
-      <summary class="menu-btn" aria-label="Menu navigasi">
-        <svg class="icon icon-menu" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-          <path d="M3 6h16M3 11h16M3 16h16" />
-        </svg>
-        <svg class="icon icon-close" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-          <path d="M5 5l12 12M17 5L5 17" />
-        </svg>
-      </summary>
+    <div class="header-actions">
+      <a href="/search/" class="icon-btn" aria-label="Cari anime">
+        <Icon name="search" size={20} />
+      </a>
 
-      <nav class="nav" aria-label="Navigasi utama">
-        {NAV_LINKS.map(({ label, href }) => (
-          <a
-            href={href}
-            class:list={['nav-link', { active: isActive(href) }]}
-            aria-current={isActive(href) ? 'page' : undefined}
-          >
-            {label}
-          </a>
-        ))}
-      </nav>
-    </details>
+      <details class="menu" open>
+        <summary class="menu-btn" aria-label="Menu navigasi">
+          <span class="icon-menu">
+            <Icon name="menu" size={22} />
+          </span>
+          <span class="icon-close">
+            <Icon name="close" size={22} />
+          </span>
+        </summary>
+
+        <nav class="nav" aria-label="Navigasi utama">
+          {NAV_LINKS.map(({ label, href }) => (
+            <a
+              href={href}
+              class:list={['nav-link', { active: isActive(href) }]}
+              aria-current={isActive(href) ? 'page' : undefined}
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+      </details>
+    </div>
   </div>
 </header>
 
 <script>
   const menu = document.querySelector<HTMLDetailsElement>('.menu');
   if (menu) {
-    const mobile = window.matchMedia('(max-width: 55.99rem)');
+    const mobile = window.matchMedia('(max-width: 50rem)');
 
     if (mobile.matches) menu.removeAttribute('open');
 
@@ -98,7 +105,7 @@ function isActive(href: string): boolean {
     padding-inline: var(--pad-x);
   }
 
-  @media (min-width: 56rem) {
+  @media (min-width: 50rem) {
     .header-inner {
       max-width: var(--content-max-desktop);
     }
@@ -129,6 +136,27 @@ function isActive(href: string): boolean {
     clip-path: polygon(0 0, 100% 0, 100% 60%, 60% 100%, 0 100%);
   }
 
+  /* ---------- HEADER ACTIONS ---------- */
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+  }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--text-inverted);
+    transition: color var(--t-fast);
+  }
+
+  .icon-btn:hover {
+    color: var(--accent);
+  }
+
   /* ---------- MENU ---------- */
   .menu {
     display: flex;
@@ -155,23 +183,19 @@ function isActive(href: string): boolean {
     color: var(--accent);
   }
 
-  .menu-btn .icon {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.75;
-    stroke-linecap: square;
-    stroke-linejoin: miter;
+  .icon-menu {
+    display: inline-flex;
   }
 
-  .menu-btn .icon-close {
+  .icon-close {
     display: none;
   }
 
-  .menu[open] .menu-btn .icon-menu {
+  .menu[open] .icon-menu {
     display: none;
   }
-  .menu[open] .menu-btn .icon-close {
-    display: block;
+  .menu[open] .icon-close {
+    display: inline-flex;
   }
 
   /* ---------- NAV ---------- */
@@ -193,16 +217,12 @@ function isActive(href: string): boolean {
     transition: color var(--t-fast);
   }
 
-  .nav-link:hover {
-    color: var(--text-primary);
-  }
-
   .nav-link.active {
     color: var(--accent);
   }
 
   /* ---------- MOBILE ---------- */
-  @media (max-width: 55.999rem) {
+  @media (max-width: 50rem) {
     .menu {
       display: block;
     }
@@ -249,7 +269,7 @@ function isActive(href: string): boolean {
   }
 
   /* ---------- DESKTOP ---------- */
-  @media (min-width: 56rem) {
+  @media (min-width: 50rem) {
     .menu-btn {
       display: none;
     }

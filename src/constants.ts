@@ -1,12 +1,3 @@
-/* ==========================================================
-   CONSTANTS
-   Nilai yang dipakai di banyak tempat.
-   Single source of truth — ubah di sini, semua ikut.
-   ========================================================== */
-
-/* ----------------------------------------------------------
-   SITE
-   ---------------------------------------------------------- */
 export const SITE = {
   name: 'Qimochi',
   title: 'Qimochi — Nonton & Download Anime Batch',
@@ -16,21 +7,13 @@ export const SITE = {
   lang: 'id',
 } as const;
 
-/* ----------------------------------------------------------
-   NAVIGASI
-   ---------------------------------------------------------- */
 export const NAV_LINKS = [
   { label: 'Home',     href: '/' },
-  { label: 'Ongoing',  href: '/anime/ongoing' },
-  { label: 'Complete', href: '/anime/complete' },
-  { label: 'Genre',    href: '/genre' },
+  { label: 'Ongoing',  href: '/anime/ongoing/' },
+  { label: 'Complete', href: '/anime/complete/' },
+  { label: 'Genre',    href: '/genre/' },
 ] as const;
 
-/* ----------------------------------------------------------
-   GENRE
-   Daftar genre yang didukung. Dipakai untuk validasi &
-   halaman /genre.
-   ---------------------------------------------------------- */
 export const GENRES = [
   'Action',
   'Adventure',
@@ -51,43 +34,30 @@ export const GENRES = [
 
 export type Genre = typeof GENRES[number];
 
-/* ----------------------------------------------------------
-   STATUS
-   ---------------------------------------------------------- */
 export const STATUSES = ['Ongoing', 'Completed', 'Hiatus'] as const;
 export type Status = typeof STATUSES[number];
 
-/* ----------------------------------------------------------
-   PAGINATION
-   ---------------------------------------------------------- */
+export const STATUS_VARIANT: Record<Status, 'success' | 'default' | 'warning'> = {
+  'Ongoing':   'success',
+  'Completed': 'default',
+  'Hiatus':    'warning',
+};
+
 export const PER_PAGE = 9;
 
-/* ----------------------------------------------------------
-   BREAKPOINTS
-   Sinkron dengan global.css. Tidak bisa dipakai di @media,
-   tapi berguna untuk JS logic kalau perlu.
-   ---------------------------------------------------------- */
 export const BREAKPOINTS = {
-  tablet:  '48rem',   // 768px
-  desktop: '56rem',   // 896px
+  tablet:  '48rem',
+  desktop: '56rem',
 } as const;
 
-/* ----------------------------------------------------------
-   STORAGE KEYS
-   Biar tidak typo saat akses localStorage
-   ---------------------------------------------------------- */
 export const STORAGE_KEYS = {
   preferredQuality: 'qimochi:preferred-quality',
   preferredServer:  'qimochi:preferred-server',
 } as const;
 
-/* ----------------------------------------------------------
-   URL BUILDER
-   Helper untuk generate URL, biar konsisten
-   ---------------------------------------------------------- */
 export const URLS = {
-  anime:    (slug: string) => `/anime/${slug}`,
-  watch:    (slug: string, episode: number) => `/watch/${slug}/${episode}`,
-  genre:    (slug: string) => `/genre/${slug.toLowerCase().replace(/\s+/g, '-')}`,
-  status:   (status: string) => `/anime/${status.toLowerCase()}`,
+  anime:  (slug: string) => `/anime/${slug}/`,
+  watch:  (slug: string, episode: number) => `/watch/${slug}/${episode}/`,
+  genre:  (slug: string) => `/genre/${slug.toLowerCase().replace(/\s+/g, '-')}/`,
+  status: (status: string) => `/anime/${status.toLowerCase()}/`,
 } as const;

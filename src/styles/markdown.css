@@ -171,7 +171,6 @@
    ---------------------------------------------------------- */
 .markdown img {
   margin: var(--s-4) 0;
-  border-radius: var(--r-md);
   max-width: 100%;
   height: auto;
 }

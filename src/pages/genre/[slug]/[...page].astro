@@ -2,6 +2,7 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import AnimeCard from '../../../components/AnimeCard.astro';
 import Pagination from '../../../components/Pagination.astro';
+import LinkButton from '../../../user-components/LinkButton.astro';
 import { getGenreData, paginate, allGenreSlugs } from '../../../lib/genre';
 
 export async function getStaticPaths() {
@@ -9,6 +10,9 @@ export async function getStaticPaths() {
 
   for (const { genre, slug } of allGenreSlugs()) {
     const { anime, totalPages } = await getGenreData(genre);
+
+    // Skip kalau tidak ada anime
+    if (anime.length === 0) continue;
 
     // Halaman 1: page = undefined
     paths.push({
@@ -42,9 +46,15 @@ const isFirstPage = pageNumber === 1;
 >
   <div class="wrapper">
     <header class="page-header">
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/genre/">← Semua Genre</a>
-      </nav>
+      <LinkButton
+        href="/genre/"
+        variant="ghost"
+        size="md"
+        icon="arrow-left"
+      >
+        Semua Genre
+      </LinkButton>
+
       <h1>{genre}</h1>
       <p class="subtitle">
         {anime.length} anime
@@ -52,9 +62,13 @@ const isFirstPage = pageNumber === 1;
       </p>
     </header>
 
-    <div class="anime-grid">
-      {items.map(a => <AnimeCard anime={a} />)}
-    </div>
+    {items.length > 0 ? (
+      <div class="anime-grid">
+        {items.map(a => <AnimeCard anime={a} />)}
+      </div>
+    ) : (
+      <p class="empty">Belum ada anime untuk genre ini.</p>
+    )}
 
     <Pagination
       current={pageNumber}
@@ -71,23 +85,14 @@ const isFirstPage = pageNumber === 1;
 
   .page-header {
     margin-bottom: var(--s-6);
-  }
-
-  .breadcrumb {
-    margin-bottom: var(--s-3);
-    font-size: var(--fs-sm);
-  }
-
-  .breadcrumb a {
-    color: var(--text-muted);
-  }
-
-  .breadcrumb a:hover {
-    color: var(--accent);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
   }
 
   .page-header h1 {
-    margin: 0 0 var(--s-1);
+    margin: 0;
+    font-size: var(--fs-2xl);
   }
 
   .subtitle {
@@ -107,5 +112,11 @@ const isFirstPage = pageNumber === 1;
       grid-template-columns: repeat(3, 1fr);
       gap: var(--s-4);
     }
+  }
+
+  .empty {
+    color: var(--text-muted);
+    text-align: center;
+    padding: var(--s-12) 0;
   }
 </style>

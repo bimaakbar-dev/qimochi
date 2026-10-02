@@ -1,4 +1,6 @@
 ---
+import Icon from '../user-components/Icons.astro';
+
 interface Server {
   name: string;
   url: string;
@@ -19,7 +21,7 @@ if (!downloads || downloads.length === 0) return null;
 ---
 
 <section class="download-panel">
-  <h3 class="panel-title">📥 Download Batch</h3>
+  <h3 class="panel-title">Download Batch</h3>
 
   {downloads.map((d, i) => (
     <details class="quality-item" open={i === 0}>
@@ -35,6 +37,7 @@ if (!downloads || downloads.length === 0) return null;
             rel="nofollow noopener"
             class="dl-link"
           >
+            <Icon name="download" />
             {srv.name}
           </a>
         ))}
@@ -46,7 +49,7 @@ if (!downloads || downloads.length === 0) return null;
 <style>
   .download-panel {
     background: var(--bg-elevated);
-    border-radius: var(--r-lg);
+    border: 1px solid var(--border);
     padding: var(--s-4);
   }
 
@@ -54,6 +57,7 @@ if (!downloads || downloads.length === 0) return null;
     font-size: var(--fs-base);
     font-weight: var(--fw-semibold);
     margin: 0 0 var(--s-3);
+    color: var(--text-primary);
   }
 
   .quality-item {
@@ -79,7 +83,7 @@ if (!downloads || downloads.length === 0) return null;
 
   .quality-item summary::before {
     content: '▶';
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     color: var(--text-muted);
     transition: transform var(--t-fast);
     display: inline-block;
@@ -106,10 +110,12 @@ if (!downloads || downloads.length === 0) return null;
   }
 
   .dl-link {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
     padding: var(--s-1) var(--s-3);
     background: var(--bg-surface);
-    border-radius: var(--r-sm);
+    border: 1px solid var(--border);
     font-size: var(--fs-xs);
     font-weight: var(--fw-medium);
     color: var(--text-secondary);
@@ -117,7 +123,12 @@ if (!downloads || downloads.length === 0) return null;
   }
 
   .dl-link:hover {
-    background: var(--accent);
-    color: var(--accent-text);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .dl-link :global(svg) {
+    width: 0.9em;
+    height: 0.9em;
   }
 </style>

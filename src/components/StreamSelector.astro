@@ -1,4 +1,6 @@
 ---
+import Icon from '../user-components/Icons.astro';
+
 interface Server {
   name: string;
   url: string;
@@ -13,60 +15,45 @@ interface Props {
 }
 
 const { streams } = Astro.props;
-const defaultQuality = streams[0]?.quality ?? '';
-const defaultServer = streams[0]?.servers[0];
+const defaultStream = streams[0];
+const defaultServer = defaultStream?.servers[0];
 ---
 
 <details class="stream-picker" open>
   <summary>
-    <span class="icon" aria-hidden="true">⚙️</span>
     <span class="label">Server & Kualitas</span>
     <span class="current" id="stream-current">
-      {defaultQuality} · {defaultServer?.name ?? '—'}
+      {defaultStream?.quality} · {defaultServer?.name ?? '—'}
+    </span>
+    <span class="chevron" aria-hidden="true">
+      <Icon name="chevron-down" size={16} />
     </span>
   </summary>
 
   <div class="stream-body">
-    <!-- Kualitas -->
-    <div class="row">
-      <span class="row-label">Kualitas</span>
-      <div class="chips">
-        {streams.map((s, i) => (
-          <>
-            <input
-              type="radio"
-              name="quality"
-              id={`q-${s.quality}`}
-              value={s.quality}
-              checked={i === 0}
-              hidden
-            />
-            <label for={`q-${s.quality}`} class="chip">{s.quality}</label>
-          </>
-        ))}
-      </div>
-    </div>
-
-    <!-- Server per kualitas -->
     {streams.map((s, i) => (
-      <div class="row server-row" data-quality={s.quality} hidden={i !== 0}>
-        <span class="row-label">Server</span>
+      <div class="quality-group">
+        <span class="quality-label">{s.quality}</span>
         <div class="chips">
-          {s.servers.map((srv, j) => (
-            <>
-              <input
-                type="radio"
-                name={`server-${s.quality}`}
-                id={`s-${s.quality}-${j}`}
-                value={srv.url}
-                data-server-name={srv.name}
-                data-quality={s.quality}
-                checked={j === 0}
-                hidden
-              />
-              <label for={`s-${s.quality}-${j}`} class="chip">{srv.name}</label>
-            </>
-          ))}
+          {s.servers.map((srv, j) => {
+            const id = `s-${i}-${j}`;
+            const isDefault = i === 0 && j === 0;
+            return (
+              <>
+                <input
+                  type="radio"
+                  name="stream"
+                  id={id}
+                  value={srv.url}
+                  data-quality={s.quality}
+                  data-server={srv.name}
+                  checked={isDefault}
+                  hidden
+                />
+                <label for={id} class="chip">{srv.name}</label>
+              </>
+            );
+          })}
         </div>
       </div>
     ))}
@@ -76,50 +63,32 @@ const defaultServer = streams[0]?.servers[0];
 <script>
   const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
   const currentLabel = document.getElementById('stream-current');
+  const radios = document.querySelectorAll<HTMLInputElement>('input[name="stream"]');
 
-  function updatePlayer() {
-    const qualityInput = document.querySelector<HTMLInputElement>('input[name="quality"]:checked');
-    if (!qualityInput || !iframe) return;
+  function selectStream(radio: HTMLInputElement) {
+    if (!iframe || !radio) return;
 
-    const quality = qualityInput.value;
-    const serverInput = document.querySelector<HTMLInputElement>(
-      `input[name="server-${quality}"]:checked`
-    );
-    if (!serverInput) return;
-
-    iframe.classList.add('loading');
-    iframe.src = serverInput.value;
-    iframe.onload = () => iframe.classList.remove('loading');
+    iframe.src = radio.value;
 
     if (currentLabel) {
-      currentLabel.textContent = `${quality} · ${serverInput.dataset.serverName}`;
+      currentLabel.textContent = `${radio.dataset.quality} · ${radio.dataset.server}`;
     }
 
-    // Show/hide server rows
-    document.querySelectorAll<HTMLElement>('.server-row').forEach(row => {
-      row.hidden = row.dataset.quality !== quality;
-    });
-
-    localStorage.setItem('qimochi:quality', quality);
-    localStorage.setItem('qimochi:server', serverInput.id);
+    localStorage.setItem('qimochi:stream', radio.id);
   }
 
-  document.querySelectorAll<HTMLInputElement>('.stream-picker input[type="radio"]').forEach(el => {
-    el.addEventListener('change', updatePlayer);
+  radios.forEach((radio) => {
+    radio.addEventListener('change', () => {
+      if (radio.checked) selectStream(radio);
+    });
   });
 
-  // Restore from localStorage
-  const savedQ = localStorage.getItem('qimochi:quality');
-  const savedS = localStorage.getItem('qimochi:server');
-  if (savedQ) {
-    const qEl = document.getElementById(`q-${savedQ}`) as HTMLInputElement | null;
-    if (qEl) {
-      qEl.checked = true;
-      if (savedS) {
-        const sEl = document.getElementById(savedS) as HTMLInputElement | null;
-        if (sEl) sEl.checked = true;
-      }
-      updatePlayer();
+  const saved = localStorage.getItem('qimochi:stream');
+  if (saved) {
+    const savedRadio = document.getElementById(saved) as HTMLInputElement | null;
+    if (savedRadio) {
+      savedRadio.checked = true;
+      selectStream(savedRadio);
     }
   }
 </script>
@@ -127,8 +96,7 @@ const defaultServer = streams[0]?.servers[0];
 <style>
   .stream-picker {
     background: var(--bg-elevated);
-    border-radius: var(--r-lg);
-    overflow: hidden;
+    border: 1px solid var(--border);
   }
 
   .stream-picker summary {
@@ -149,10 +117,22 @@ const defaultServer = streams[0]?.servers[0];
     margin-left: auto;
     padding: var(--s-1) var(--s-3);
     background: var(--bg-surface);
-    border-radius: var(--r-sm);
     color: var(--accent);
     font-size: var(--fs-xs);
-    font-weight: var(--fw-medium);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .stream-picker summary .chevron {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-muted);
+    transition: transform var(--t-base);
+  }
+
+  .stream-picker[open] summary .chevron {
+    transform: rotate(180deg);
   }
 
   .stream-body {
@@ -162,18 +142,18 @@ const defaultServer = streams[0]?.servers[0];
     gap: var(--s-3);
   }
 
-  .row {
+  .quality-group {
     display: flex;
-    align-items: center;
-    gap: var(--s-3);
+    flex-direction: column;
+    gap: var(--s-2);
   }
 
-  .row-label {
+  .quality-label {
     font-size: var(--fs-xs);
     color: var(--text-muted);
-    min-width: 4rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.08em;
+    font-weight: var(--fw-semibold);
   }
 
   .chips {
@@ -187,7 +167,6 @@ const defaultServer = streams[0]?.servers[0];
     padding: var(--s-1) var(--s-3);
     background: var(--bg-surface);
     border: 1px solid var(--border);
-    border-radius: var(--r-sm);
     font-size: var(--fs-xs);
     font-weight: var(--fw-medium);
     color: var(--text-secondary);
@@ -204,13 +183,5 @@ const defaultServer = streams[0]?.servers[0];
     background: var(--accent);
     border-color: var(--accent);
     color: var(--accent-text);
-  }
-
-  @media (max-width: 30rem) {
-    .row {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: var(--s-2);
-    }
   }
 </style>

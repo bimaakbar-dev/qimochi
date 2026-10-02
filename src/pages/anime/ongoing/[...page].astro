@@ -16,13 +16,13 @@ const isFirstPage = pageNumber === 1;
 
 <BaseLayout
   title={isFirstPage ? 'Anime Ongoing' : `Anime Ongoing — Halaman ${pageNumber}`}
-  description={`Koleksi ${anime.length} anime ongoing.`}
+  description={`Koleksi ${anime.length} anime yang sedang tayang.`}
   canonical="/anime/ongoing/"
   noindex={!isFirstPage}
 >
   <div class="wrapper">
     <header class="page-header">
-      <h1>📺 Anime Ongoing</h1>
+      <h1>Anime Ongoing</h1>
       <p class="subtitle">
         {anime.length} anime
         {!isFirstPage && ` · Halaman ${pageNumber} dari ${totalPages}`}
@@ -37,7 +37,11 @@ const isFirstPage = pageNumber === 1;
       <p class="empty">Belum ada anime ongoing.</p>
     )}
 
-    <Pagination current={pageNumber} total={totalPages} base="/anime/ongoing" />
+    <Pagination
+      current={pageNumber}
+      total={totalPages}
+      base="/anime/ongoing"
+    />
   </div>
 </BaseLayout>
 
@@ -48,10 +52,14 @@ const isFirstPage = pageNumber === 1;
 
   .page-header {
     margin-bottom: var(--s-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
   }
 
   .page-header h1 {
-    margin: 0 0 var(--s-1);
+    margin: 0;
+    font-size: var(--fs-2xl);
   }
 
   .subtitle {

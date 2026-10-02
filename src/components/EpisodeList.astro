@@ -10,7 +10,6 @@ const { slug, episodes, currentEpisode = null } = Astro.props;
 
 <details class="episode-list" id="episode-list" open>
   <summary>
-    <span class="icon" aria-hidden="true">📺</span>
     <span class="label">Daftar Episode</span>
     <span class="count">({episodes.length})</span>
   </summary>
@@ -36,7 +35,7 @@ const { slug, episodes, currentEpisode = null } = Astro.props;
 <style>
   .episode-list {
     background: var(--bg-elevated);
-    border-radius: var(--r-lg);
+    border: 1px solid var(--border);
     padding: var(--s-4);
     scroll-margin-top: calc(var(--header-height) + var(--s-4));
   }
@@ -76,7 +75,7 @@ const { slug, episodes, currentEpisode = null } = Astro.props;
     justify-content: center;
     height: 2.5rem;
     background: var(--bg-surface);
-    border-radius: var(--r-sm);
+    border: 1px solid var(--border);
     color: var(--text-secondary);
     font-size: var(--fs-sm);
     font-weight: var(--fw-medium);
@@ -85,12 +84,13 @@ const { slug, episodes, currentEpisode = null } = Astro.props;
   }
 
   .episode-item:hover {
-    background: var(--bg-hover);
+    border-color: var(--border-hover);
     color: var(--text-primary);
   }
 
   .episode-item.active {
     background: var(--accent);
+    border-color: var(--accent);
     color: var(--accent-text);
     pointer-events: none;
   }

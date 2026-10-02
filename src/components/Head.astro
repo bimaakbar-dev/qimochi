@@ -1,5 +1,6 @@
 ---
 import { SITE } from '../constants';
+import { Font } from "astro:assets";
 
 interface Props {
   title: string;
@@ -81,3 +82,7 @@ const twitterCard = image ? 'summary_large_image' : 'summary';
 
 <!-- Sitemap — auto-generated oleh @astrojs/sitemap (nanti) -->
 <link rel="sitemap" href="/sitemap-index.xml" />
+
+<Font cssVariable="--font-montserrat" preload />
+<Font cssVariable="--font-inter" preload />
+<Font cssVariable="--font-firaCode" preload />
