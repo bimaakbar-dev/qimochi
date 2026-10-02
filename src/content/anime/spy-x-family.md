@@ -4,9 +4,9 @@ cover: https://cdn.myanimelist.net/images/anime/1441/122795.jpg
 status: Ongoing
 genre: [Action, Comedy, Slice of Life]
 studio: Wit Studio
-tahun: 2022
+releaseDate: 2022-04-09
+addedAt: 2026-02-20
 rating: 8.5
-addedAt: 2026-01-20
 
 episodes:
   - number: 1
