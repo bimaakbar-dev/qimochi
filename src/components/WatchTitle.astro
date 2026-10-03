@@ -59,4 +59,9 @@ const { slug , title, episodeNumber } = Astro.props;
   a:hover::after {
     opacity:  1;
   }
+  @media (min-width: 50rem) {
+    .watch-title h1 {
+      font-size: var(--fs-4xl);
+    }
+  }
 </style>
