@@ -1,6 +1,7 @@
 ---
 import { SITE, NAV_LINKS } from '~/constants';
 import { Image } from 'astro:assets';
+import SectionLabel from '~/components/SectionLabel.astro';
 import logoImg from '../assets/images/logo/logo.png';
 
 const year = new Date().getFullYear();
@@ -25,7 +26,7 @@ const year = new Date().getFullYear();
 
     <div class="footer-nav-group">
       <nav class="footer-nav" aria-label="Navigasi footer">
-        <h2 class="footer-heading">Jelajahi</h2>
+        <SectionLabel as="h4" size="sm">Jelajahi</SectionLabel>
         <ul>
           {NAV_LINKS.map(({ label, href }) => (
             <li><a href={href}>{label}</a></li>
@@ -34,7 +35,7 @@ const year = new Date().getFullYear();
       </nav>
 
       <nav class="footer-nav" aria-label="Legal">
-        <h2 class="footer-heading">Legal</h2>
+        <SectionLabel as="h4" size="sm">Legal</SectionLabel>
         <ul>
           <li><a href="/dmca/">DMCA</a></li>
           <li><a href="/disclaimer/">Disclaimer</a></li>
@@ -45,7 +46,7 @@ const year = new Date().getFullYear();
 
   <div class="footer-disclaimer">
     <div class="footer-disclaimer-inner">
-      <h2 class="footer-heading">Disclaimer</h2>
+      <SectionLabel as="h4" size="sm" underlined={false}>Disclaimer</SectionLabel>
       <p>
         {SITE.name} tidak menyimpan file video apapun di server kami.
         Semua konten video di-embed dari layanan pihak ketiga yang tersedia
@@ -119,8 +120,21 @@ const year = new Date().getFullYear();
 
   @media (min-width: 50rem) {
     .footer-nav-group {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--s-8);
+      grid-template-columns: repeat(2, max-content);
+      gap: var(--s-12);
+      justify-content: start;
+    }
+  }
+
+  .footer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    align-items: start;
+    & :is(h2, h3, h4) {
+      color: var(--text-secondary);
+      font-size: var(--fs-sm);
+      
     }
   }
 
@@ -167,15 +181,6 @@ const year = new Date().getFullYear();
     }
   }
 
-  .footer-heading {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin: 0 0 var(--s-3);
-  }
-
   .footer-disclaimer {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
@@ -184,6 +189,13 @@ const year = new Date().getFullYear();
     max-width: var(--content-max-mobile);
     margin-inline: auto;
     padding: var(--s-6) var(--pad-x);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    & h4 {
+      color: var(--text-secondary);
+      font-size: var(--fs-xs);
+    }
   }
 
   @media (min-width: 50rem) {
@@ -196,11 +208,7 @@ const year = new Date().getFullYear();
     font-size: var(--fs-xs);
     color: var(--text-muted);
     line-height: var(--lh-relaxed);
-    margin: 0 0 var(--s-3);
-  }
-
-  .footer-disclaimer p:last-child {
-    margin-bottom: 0;
+    margin: 0;
   }
 
   .footer-disclaimer a {
