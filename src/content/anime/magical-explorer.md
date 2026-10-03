@@ -23,8 +23,6 @@ episodes:
             url: "https://player.abyssplayer.com/6A6GSvKaW"
           - name: "mixdrop"
             url: "https://miiiixdrop.net/e/k0nowj4es3djldd"
-          - name: "buzzheavier"
-            url: "https://buzzheavier.com/xmbpoist8ws0/preview"
           - name: "mp4upload"
             url: "https://mp4upload.com/embed-gxs0lpzmwjkm.html"
       - quality: "480p"
@@ -37,8 +35,6 @@ episodes:
             url: "https://vikingfile.com/f/wsOmliXEL9"
           - name: "mixdrop"
             url: "https://miiiixdrop.net/e/vknj7wxluzw8l9"
-          - name: "buzzheavier"
-            url: "https://buzzheavier.com/qdxjf799fws6/preview"
           - name: "mp4upload"
             url: "https://mp4upload.com/embed-gf7o1thq6phj.html"
       - quality: "360p"
@@ -53,11 +49,9 @@ episodes:
             url: "https://miiiixdrop.net/e/9wng19mobrk0kq"
           - name: "abyss"
             url: "https://player.abyssplayer.com/URQa-QrKi"
-          - name: "buzzheavier"
-            url: "https://buzzheavier.com/s5q224eufsdd/preview"
           - name: "mp4upload"
             url: "https://mp4upload.com/embed-nxko06rhu4f2.html"
-    - number: 2
+  - number: 2
     streams:
       - quality: "720p"
         servers:
