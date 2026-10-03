@@ -5,18 +5,30 @@
 body {
   font-family: var(--font-sans);
   font-size: var(--fs-base);
-  line-height: var(--lh-normal);
+  line-height: var(--lh-relaxed);
   color: var(--text-primary);
   background-color: var(--bg-base);
 }
 
-h1 { font-size: var(--fs-2xl); font-weight: var(--fw-semibold); line-height: var(--lh-tight); }
-h2 { font-size: var(--fs-xl);  font-weight: var(--fw-semibold); line-height: var(--lh-tight); }
-h3 { font-size: var(--fs-lg);  font-weight: var(--fw-semibold); line-height: var(--lh-snug); }
-h4, h5, h6 { font-size: var(--fs-base); font-weight: var(--fw-semibold); line-height: var(--lh-snug); }
+:is(h1, h2, h3, h4, h5, h6) {
+  line-height: var(--lh-tight); 
+  font-weight: var(--fw-semibold);
+}
 
-a { transition: color var(--t-fast); }
+h1 { 
+  font-size: var(--fs-4xl); 
+}
+h2 { 
+  font-size: var(--fs-2xl);   
+}
+h3 { 
+  font-size: var(--fs-xl);  
+}
+h4, h5, h6 { 
+  font-size: var(--fs-base); 
+}
 p { line-height: var(--lh-relaxed); }
+a { transition: color var(--t-fast); }
 
 :focus-visible {
   outline: 2px solid var(--accent);

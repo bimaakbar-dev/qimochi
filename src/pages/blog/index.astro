@@ -2,6 +2,7 @@
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Hero from '~/components/Hero.astro';
 import PostCard from '~/components/PostCard.astro';
+import RssFeed from '~/components/RssFeed.astro';
 import { getPublishedPosts } from '~/lib/blog';
 
 const posts = await getPublishedPosts();
@@ -33,19 +34,7 @@ const posts = await getPublishedPosts();
       </section>
 
       <aside class="content-aside">
-        <section class="aside-section">
-          <h2 class="aside-title">RSS Feed</h2>
-          <p class="aside-desc">
-            Dapatkan notifikasi saat ada artikel baru tanpa harus buka situs.
-          </p>
-          <a href="/rss.xml" class="aside-btn">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-              <circle cx="3" cy="13" r="2"/>
-              <path d="M1 6v3a6 6 0 0 1 6 6h3a9 9 0 0 0-9-9zM1 1v3a11 11 0 0 1 11 11h3A14 14 0 0 0 1 1z"/>
-            </svg>
-            <span>Subscribe</span>
-          </a>
-        </section>
+        <RssFeed />
       </aside>
     </div>
 
@@ -63,13 +52,14 @@ const posts = await getPublishedPosts();
   .content-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--s-6);
+    gap: var(--s-16);
     align-items: start;
   }
 
   .content-main {
     min-width: 0;
   }
+
   .post-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -79,6 +69,7 @@ const posts = await getPublishedPosts();
 
   @media (min-width: 50rem) {
     .content-grid {
+      gap: var(--s-8);
       grid-template-columns: 1fr var(--aside-width);
     }
 
@@ -110,57 +101,5 @@ const posts = await getPublishedPosts();
     display: flex;
     flex-direction: column;
     gap: var(--s-4);
-  }
-
-  .aside-section {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    padding: var(--s-4);
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-3);
-  }
-
-  .aside-title {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin: 0;
-  }
-
-  .aside-desc {
-    font-size: var(--fs-sm);
-    color: var(--text-secondary);
-    line-height: var(--lh-relaxed);
-    margin: 0;
-  }
-
-  .aside-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--s-2);
-    padding: var(--s-2) var(--s-4);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    transition: background var(--t-fast);
-    align-self: flex-start;
-  }
-
-  .aside-btn:hover {
-    background: var(--accent-hover);
-    color: var(--accent-text);
-  }
-
-  .aside-btn svg {
-    width: 0.9em;
-    height: 0.9em;
-    flex-shrink: 0;
   }
 </style>

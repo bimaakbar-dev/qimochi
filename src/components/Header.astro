@@ -1,24 +1,21 @@
 ---
-import { SITE, NAV_LINKS } from '../constants';
+import { SITE, NAV_LINKS } from '~/constants';
 import { Image } from 'astro:assets';
-import logoImg from '../assets/images/logo/logo.png';
-import Icon from '../user-components/Icons.astro';
+import logoImg from '~/assets/images/logo/logo.png';
+import Icon from '~/user-components/Icons.astro';
 
 const currentPath = Astro.url.pathname;
 
 function isActive(href: string): boolean {
   if (href === '/') return currentPath === '/';
-
   const matches = currentPath === href || currentPath.startsWith(href);
   if (!matches) return false;
-
   const hasMoreSpecific = NAV_LINKS.some(({ href: otherHref }) => {
     if (otherHref === href) return false;
     if (otherHref === '/') return false;
     if (otherHref.length <= href.length) return false;
     return currentPath === otherHref || currentPath.startsWith(otherHref);
   });
-
   return !hasMoreSpecific;
 }
 ---
@@ -37,26 +34,19 @@ function isActive(href: string): boolean {
         class="logo-img"
       />
     </a>
-    
-    <div class="header-actions">
-      <a href="/search/" class="icon-btn" aria-label="Cari anime">
-        <Icon name="search" size={20} />
-      </a>
+
+    <div class="header-right">
       <details class="menu" open>
         <summary class="menu-btn" aria-label="Menu navigasi">
-          <span class="icon-menu">
-            <Icon name="menu" size={22} />
-          </span>
-          <span class="icon-close">
-            <Icon name="close" size={22} />
-          </span>
+          <span class="icon-menu"><Icon name="menu" size={22} /></span>
+          <span class="icon-close"><Icon name="close" size={22} /></span>
         </summary>
 
         <nav class="nav" aria-label="Navigasi utama">
           {NAV_LINKS.map(({ label, href }) => (
             <a
               href={href}
-              class:list={['nav-link', { active: isActive(href) }]}
+              class:list={[{ active: isActive(href) }]}
               aria-current={isActive(href) ? 'page' : undefined}
             >
               {label}
@@ -64,6 +54,10 @@ function isActive(href: string): boolean {
           ))}
         </nav>
       </details>
+
+      <a href="/search/" class="icon-btn" aria-label="Cari anime">
+        <Icon name="search" size={20} />
+      </a>
     </div>
   </div>
 </header>
@@ -76,22 +70,17 @@ function isActive(href: string): boolean {
     if (mobile.matches) menu.removeAttribute('open');
 
     mobile.addEventListener('change', (e) => {
-      if (e.matches) {
-        menu.removeAttribute('open');
-      } else {
-        menu.setAttribute('open', '');
-      }
+      if (e.matches) menu.removeAttribute('open');
+      else menu.setAttribute('open', '');
     });
 
     document.addEventListener('click', (e) => {
       if (!mobile.matches) return;
       if (!menu.hasAttribute('open')) return;
-      if (!menu.contains(e.target as Node)) {
-        menu.removeAttribute('open');
-      }
+      if (!menu.contains(e.target as Node)) menu.removeAttribute('open');
     });
 
-    menu.querySelectorAll('.nav-link').forEach((a) => {
+    menu.querySelectorAll('.nav a').forEach((a) => {
       a.addEventListener('click', () => {
         if (mobile.matches) menu.removeAttribute('open');
       });
@@ -148,10 +137,31 @@ function isActive(href: string): boolean {
     object-fit: contain;
   }
 
-  .header-actions {
+  .header-right {
     display: flex;
     align-items: center;
     gap: var(--s-1);
+  }
+
+  .header-right .icon-btn {
+    order: 1;
+  }
+
+  .header-right .menu {
+    order: 2;
+  }
+
+  @media (min-width: 50rem) {
+    .header-right {
+      gap: var(--s-4);
+    }
+    .header-right .menu {
+      order: 1;
+    }
+
+    .header-right .icon-btn {
+      order: 2;
+    }
   }
 
   .icon-btn {
@@ -204,6 +214,7 @@ function isActive(href: string): boolean {
   .menu[open] .icon-menu {
     display: none;
   }
+
   .menu[open] .icon-close {
     display: inline-flex;
   }
@@ -212,22 +223,52 @@ function isActive(href: string): boolean {
     display: flex;
     align-items: center;
     gap: var(--s-1);
-  }
 
-  .nav-link {
-    position: relative;
-    padding: var(--s-2) var(--s-3);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-medium);
-    color: var(--text-inverted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    transition: color var(--t-fast);
-  }
+    & a {
+      padding: var(--s-2) var(--s-3);
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-medium);
+      color: var(--text-inverted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      position: relative;
+      text-decoration: none;
+      transition: color var(--t-fast);
+      font-family: var(--font-montserrat);
 
-  .nav-link.active {
-    color: var(--accent);
+      &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -0.01em;
+        height: 0.5em;
+        background-color: var(--accent);
+        -webkit-mask-image: var(--underline);
+        mask-image: var(--underline);
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity var(--t-fast);
+      }
+
+      &:hover {
+        color: var(--accent-hover);
+      }
+
+      &.active {
+        color: var(--accent);
+      }
+
+      &:hover::after,
+      &.active::after {
+        opacity: 1;
+      }
+    }
   }
 
   @media (max-width: 50rem) {
@@ -246,58 +287,10 @@ function isActive(href: string): boolean {
       padding: var(--s-3) var(--pad-x) var(--s-4);
       background: var(--bg-nav);
     }
-
-    .nav-link {
-      position: relative;
-      padding: var(--s-3) var(--s-4);
-      font-size: var(--fs-base);
-      text-transform: none;
-      letter-spacing: normal;
-      border-radius: var(--r-sm);
-      font-family: var(--font-montserrat);
-    }
-
-    .nav-link:hover {
-      background: var(--bg-footer);
-    }
-
-    .nav-link.active {
-      background: var(--accent-soft);
-    }
-
-    .nav-link.active::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      width: 3px;
-      height: 55%;
-      transform: translateY(-50%);
-      background: var(--accent);
-    }
   }
-
   @media (min-width: 50rem) {
     .menu-btn {
       display: none;
-    }
-
-    .nav-link::after {
-      content: '';
-      position: absolute;
-      left: var(--s-3);
-      right: var(--s-3);
-      bottom: 2px;
-      height: 2px;
-      background: var(--accent);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform var(--t-base);
-    }
-
-    .nav-link:hover::after,
-    .nav-link.active::after {
-      transform: scaleX(1);
     }
   }
 </style>

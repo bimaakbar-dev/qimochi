@@ -174,15 +174,37 @@ const groups = activeLetters.map(letter => ({
   }
 
   .anime-title {
+    position: relative;
     font-size: var(--fs-sm);
     color: var(--text-primary);
     font-weight: var(--fw-medium);
     min-width: 0;
     overflow-wrap: anywhere;
+    &::after {
+      content: '';
+      position: absolute;
+      left: -3%;
+      right: -3%;
+      bottom: -0.2em;
+      height: 0.45em;
+      background-color: var(--accent);
+      -webkit-mask-image: var(--underline);
+      mask-image: var(--underline);
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity var(--t-fast);
+    }
   }
 
   .anime-link:hover .anime-title {
     color: var(--accent);
+  }
+  .anime-link:hover .anime-title::after {
+    opacity: 1;
   }
 
   .empty {

@@ -13,8 +13,8 @@ const year = new Date().getFullYear();
         <Image
           src={logoImg}
           alt={SITE.name}
-          width={64}
-          height={64}
+          width={96}
+          height={96}
           loading="lazy"
           fetchpriority="low"
           decoding="async"
@@ -22,22 +22,25 @@ const year = new Date().getFullYear();
         />
       </a>
     </div>
-    <nav class="footer-nav" aria-label="Navigasi footer">
-      <h2 class="footer-heading">Jelajahi</h2>
-      <ul>
-        {NAV_LINKS.map(({ label, href }) => (
-          <li><a href={href}>{label}</a></li>
-        ))}
-      </ul>
-    </nav>
 
-    <nav class="footer-nav" aria-label="Legal">
-      <h2 class="footer-heading">Legal</h2>
-      <ul>
-        <li><a href="/dmca/">DMCA</a></li>
-        <li><a href="/disclaimer/">Disclaimer</a></li>
-      </ul>
-    </nav>
+    <div class="footer-nav-group">
+      <nav class="footer-nav" aria-label="Navigasi footer">
+        <h2 class="footer-heading">Jelajahi</h2>
+        <ul>
+          {NAV_LINKS.map(({ label, href }) => (
+            <li><a href={href}>{label}</a></li>
+          ))}
+        </ul>
+      </nav>
+
+      <nav class="footer-nav" aria-label="Legal">
+        <h2 class="footer-heading">Legal</h2>
+        <ul>
+          <li><a href="/dmca/">DMCA</a></li>
+          <li><a href="/disclaimer/">Disclaimer</a></li>
+        </ul>
+      </nav>
+    </div>
   </div>
 
   <div class="footer-disclaimer">
@@ -74,20 +77,51 @@ const year = new Date().getFullYear();
     padding: var(--s-8) var(--pad-x);
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--s-6);
+    gap: var(--s-8);
   }
 
   @media (min-width: 50rem) {
     .footer-inner {
       max-width: var(--content-max-desktop);
-      grid-template-columns: 2fr 1fr 1fr;
-      gap: var(--s-8);
+      grid-template-columns: auto 1fr;
+      gap: var(--s-16);
     }
   }
 
   .footer-brand {
     display: flex;
-    align-items: start;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    transition: opacity var(--t-fast);
+  }
+
+  .logo:hover {
+    opacity: 0.85;
+  }
+
+  .logo-img {
+    display: block;
+    width: 4rem;
+    height: 4rem;
+    object-fit: contain;
+  }
+
+  .footer-nav-group {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-6);
+  }
+
+  @media (min-width: 50rem) {
+    .footer-nav-group {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--s-8);
+    }
   }
 
   .footer-nav ul {
@@ -100,13 +134,37 @@ const year = new Date().getFullYear();
   }
 
   .footer-nav a {
+    position: relative;
     font-size: var(--fs-sm);
     color: var(--text-inverted);
     transition: color var(--t-fast);
-  }
 
-  .footer-nav a:hover {
-    color: var(--accent);
+    &::after {
+      content: '';
+      position: absolute;
+      left: -3%;
+      right: -3%;
+      bottom: -0.2em;
+      height: 0.45em;
+      background-color: var(--accent);
+      -webkit-mask-image: var(--underline);
+      mask-image: var(--underline);
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity var(--t-fast);
+    }
+
+    &:hover {
+      color: var(--accent);
+
+      &::after {
+        opacity: 1;
+      }
+    }
   }
 
   .footer-heading {

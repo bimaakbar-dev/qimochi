@@ -59,7 +59,7 @@ const downloads = episode.downloads ?? data.batch ?? [];
 
     <div class="content-grid">
       <div class="content-main">
-        <WatchTitle title={data.title} episodeNumber={episode.number} />
+        <WatchTitle title={data.title} episodeNumber={episode.number} slug={anime.id} />
 
         <StreamSelector streams={episode.streams} />
 

@@ -116,7 +116,6 @@ const url = postUrl(id);
   .date {
     writing-mode: vertical-rl;
     transform: rotate(180deg);
-
     font-size: var(--fs-xs);
     font-weight: var(--fw-medium);
     color: var(--text-muted);
@@ -155,26 +154,24 @@ const url = postUrl(id);
     color: var(--text-primary);
     transition: color var(--t-fast);
   }
-
   .title-text::after {
     content: '';
     position: absolute;
-    left: -2px;
-    right: -2px;
-    bottom: -3px;
-    height: 6px;
+    left: -3%;
+    right: -3%;
+    bottom: -0.1em;
+    height: 0.45em;
     background-color: var(--text-primary);
-    -webkit-mask-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M2 7.5 C 20 6.5, 40 7, 60 6.5 C 100 6, 150 6, 198 5.5 L 198 7 C 150 8, 100 8.5, 60 8.5 C 40 8, 20 8, 2 7.8 Z' fill='black'/%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M2 7.5 C 20 6.5, 40 7, 60 6.5 C 100 6, 150 6, 198 5.5 L 198 7 C 150 8, 100 8.5, 60 8.5 C 40 8, 20 8, 2 7.8 Z' fill='black'/%3E%3C/svg%3E");
+    -webkit-mask-image: var(--underline);
+    mask-image: var(--underline);
+    -webkit-mask-size: 100% 100%;
     mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
-
     pointer-events: none;
     opacity: 0;
     transition: opacity var(--t-fast);
   }
-
-
   .post-card:hover .title-text::after {
     opacity: 1;
   }

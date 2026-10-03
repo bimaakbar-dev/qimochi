@@ -28,6 +28,7 @@ const lastEpisode = data.episodes?.length
 ---
 
 <a
+  data-anime-title={data.title}
   href={URLS.anime(id)}
   class:list={['anime-card', { 'anime-card-featured': featured }]}
 >
@@ -68,11 +69,6 @@ const lastEpisode = data.episodes?.length
     transition: transform var(--t-fast);
   }
 
-  .anime-card:hover {
-    background: var(--bg-surface);
-    transform: translateY(-2px);
-  }
-
   .cover {
     position: relative;
     aspect-ratio: 2 / 3;
@@ -90,6 +86,9 @@ const lastEpisode = data.episodes?.length
 
   .anime-card:hover .cover img {
     transform: scale(1.03);
+  }
+  .anime-card:hover h3::after {
+    opacity: 1;
   }
 
   .cover::after {
@@ -142,10 +141,11 @@ const lastEpisode = data.episodes?.length
   }
 
   .info h3 {
+    position: relative;
     font-size: var(--fs-sm);
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
-    line-height: var(--lh-snug);
+    line-height: var(--lh-tight);
     margin: 0;
     min-width: 0;
 
@@ -154,6 +154,24 @@ const lastEpisode = data.episodes?.length
     -webkit-box-orient: vertical;
     overflow: hidden;
     overflow-wrap: anywhere;
+    &::after {
+      content: '';
+      position: absolute;
+      left: -3%;
+      right: -3%;
+      bottom: -0.1em;
+      height: 0.45em;
+      background-color: var(--text-primary);
+      -webkit-mask-image: var(--underline);
+      mask-image: var(--underline);
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity var(--t-fast);
+    }
   }
 
   .episodes {

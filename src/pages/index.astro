@@ -8,6 +8,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
 import Badge from '~/user-components/Badge.astro';
 import LinkButton from '~/user-components/LinkButton.astro';
 import LinkCard from '~/user-components/LinkCard.astro';
+import SectionLabel from '~/components/SectionLabel.astro';
 
 const allAnime = await getCollection('anime');
 
@@ -89,7 +90,7 @@ const genres = GENRES
     {ongoing.length > 0 && (
       <section class="landing-section">
         <header class="section-header">
-          <h2 class="section-title">Ongoing</h2>
+          <SectionLabel>Ongoing</SectionLabel>
           <LinkButton
             href={URLS.status('Ongoing')}
             variant="ghost"
@@ -109,7 +110,7 @@ const genres = GENRES
     {completed.length > 0 && (
       <section class="landing-section">
         <header class="section-header">
-          <h2 class="section-title">Completed</h2>
+          <SectionLabel>Completed</SectionLabel>
           <LinkButton
             href={URLS.status('Completed')}
             variant="ghost"
@@ -129,7 +130,7 @@ const genres = GENRES
     {genres.length > 0 && (
       <section class="landing-section">
         <header class="section-header">
-          <h2 class="section-title">Genre</h2>
+          <SectionLabel>Genre</SectionLabel>
           <LinkButton
             href="/genre/"
             variant="ghost"
@@ -265,12 +266,15 @@ const genres = GENRES
     font-size: var(--fs-4xl);
     margin: 0;
     color: var(--text-inverted);
+    line-height: var(--lh-tight);
     font-weight: 600;
   }
 
   .hero-meta {
-    color: var(--text-secondary);
+    color: var(--text-inverted);
+    opacity: 0.75;
     font-size: var(--fs-base);
+    line-height: var(--lh-relaxed);
     margin: 0;
   }
 
@@ -313,11 +317,7 @@ const genres = GENRES
     gap: var(--s-4);
   }
 
-  .section-title {
-    font-size: var(--fs-3xl);
-    margin: 0;
-    color: var(--text-primary);
-  }
+  /* .section-title DIHAPUS — sudah pakai SectionLabel component */
 
   .anime-grid {
     display: grid;
@@ -330,7 +330,6 @@ const genres = GENRES
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-3);
   }
-
 
   .genre-name {
     font-weight: var(--fw-semibold);
@@ -358,17 +357,21 @@ const genres = GENRES
       max-height: 280px;
       width: auto;
     }
+
     .genre-grid {
       grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: var(--s-4);
     }
+
     .hero-text {
       text-align: left;
       align-items: flex-start;
     }
+
     .hero-title {
       font-size: var(--fs-6xl);
     }
+
     .anime-grid {
       grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: var(--s-4);

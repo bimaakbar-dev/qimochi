@@ -1,0 +1,46 @@
+---
+interface Props {
+  as?: 'h1' | 'h2' | 'h3' | 'h4';
+  underlined?: boolean;
+}
+
+const {
+  as: Tag = 'h2',
+  underlined = true,
+} = Astro.props;
+---
+
+<Tag class:list={['section-label', { 'section-label-underlined': underlined }]}>
+  <slot />
+</Tag>
+
+<style>
+  .section-label {
+    position: relative;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0;
+  }
+
+  .section-label-underlined::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.2em;
+    height: 0.45em;
+    background-color: var(--accent);
+
+    -webkit-mask-image: var(--underline);
+    mask-image: var(--underline);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+
+    pointer-events: none;
+  }
+</style>

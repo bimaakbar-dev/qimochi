@@ -168,7 +168,7 @@ const year = data.releaseDate.getFullYear();
 
     & h1 {
       font-size: var(--fs-3xl);
-      line-height: var(--lh-snug);
+      line-height: var(--lh-tight);
       font-weight: var(--fw-bold);
       margin: 0;
       color: var(--text-primary);
@@ -204,7 +204,7 @@ const year = data.releaseDate.getFullYear();
         font-size: var(--fs-sm);
         color: var(--text-primary);
         margin: 0;
-        line-height: var(--lh-snug);
+        line-height: var(--lh-relaxed);
         min-width: 0;
         overflow-wrap: anywhere;
       }
@@ -212,11 +212,32 @@ const year = data.releaseDate.getFullYear();
   }
   .genre-list {
     & a {
+      position: relative;
       color: var(--accent);
       transition: color var(--t-fast);
-
+      &::after {
+        content: '';
+        position: absolute;
+        left: -3%;
+        right: -3%;
+        bottom: -0.1em;
+        height: 0.45em;
+        background-color: var(--accent);
+        -webkit-mask-image: var(--underline);
+        mask-image: var(--underline);
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity var(--t-fast);
+      }
       &:hover {
         color: var(--accent-hover);
+        &::after {
+          opacity: 1;
+        }
       }
     }
   }
