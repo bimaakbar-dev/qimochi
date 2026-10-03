@@ -25,7 +25,7 @@ const { slug, episodes, currentEpisode = null } = Astro.props;
       return (
         <li>
           <a
-            href={`/watch/${slug}/${num}/`}
+            href={`/anime/watch/${slug}/${num}/`}
             class:list={['episode-item', { active: isActive }]}
             aria-current={isActive ? 'page' : undefined}
           >
