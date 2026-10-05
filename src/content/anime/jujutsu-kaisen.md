@@ -11,226 +11,77 @@ rating: 8.7
 
 episodes:
   - number: 1
-    title: Ryomen Sukuna
     streams:
-      - quality: 1080p
+      - quality: "720p"
         servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-          - { name: Mega, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-          - { name: Pixeldrain, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-      - quality: 720p
+          - name: "mixdrop"
+            url: "https://miiiixdrop.net/e/67wwdrezip9kqv"
+          - name: "mp4upload"
+            url: "https://mp4upload.com/embed-lafyac2h6ux8.html"
+      - quality: "480p"
         servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-          - { name: Mega, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-      - quality: 480p
+          - name: "mixdrop"
+            url: "https://miiiixdrop.net/e/nl88mnwgt1g997"
+          - name: "mp4upload"
+            url: "https://mp4upload.com/embed-ab5dfwa9ej38.html"
+      - quality: "360p"
         servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-    downloads:
-      - quality: 1080p
-        size: 350 MB
-        servers:
-          - { name: GDrive, url: 'https://example.com/dl/1080' }
-          - { name: Mega, url: 'https://example.com/dl/1080-mega' }
-      - quality: 720p
-        size: 180 MB
-        servers:
-          - { name: GDrive, url: 'https://example.com/dl/720' }
-          - { name: Mega, url: 'https://example.com/dl/720-mega' }
-      - quality: 480p
-        size: 90 MB
-        servers:
-          - { name: GDrive, url: 'https://example.com/dl/480' }
+          - name: "mixdrop"
+            url: "https://miiiixdrop.net/e/jdvv3k0vsve7l3"
+          - name: "mp4upload"
+            url: "https://mp4upload.com/embed-9j4sm39ytsco.html"
   - number: 2
-    title: For Myself
     streams:
-      - quality: 1080p
+      - quality: "720p"
         servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-          - { name: Mega, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-      - quality: 720p
+          - name: "mixdrop"
+            url: "https://miiiixdrop.net/e/elrrez3xs4drl7"
+          - name: "mp4upload"
+            url: "https://mp4upload.com/embed-2togstb72vmy.html"
+      - quality: "480p"
         servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-    downloads:
-      - quality: 1080p
-        size: 340 MB
+          - name: "mixdrop"
+            url: "https://miiiixdrop.net/e/0344rznofj8ppm"
+          - name: "mp4upload"
+            url: "https://mp4upload.com/embed-qd9vlyz8uoc1.html"
+          - name: "poi"
+            url: "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e02.480p.sub.indo.mp4?embed=true&autoplay=true"
+      - quality: "360p"
         servers:
-          - { name: GDrive, url: 'https://example.com/dl/2-1080' }
-      - quality: 720p
-        size: 175 MB
+          - name: "mixdrop"
+            url: "https://miiiixdrop.net/e/r6vvd0zvimkk8x"
+          - name: "mp4upload"
+            url: "https://mp4upload.com/embed-glmvwn92aczf.html"
+      - quality: "240p"
         servers:
-          - { name: GDrive, url: 'https://example.com/dl/2-720' }
+          - name: "mp4upload"
+            url: "https://mp4upload.com/embed-bwq1fq9puvdx.html"
   - number: 3
-    title: Girl of Steel
     streams:
-      - quality: 1080p
+      - quality: "720p"
         servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-          - { name: Mega, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-      - quality: 720p
+          - name: "mixdrop"
+            url: "https://miiiixdrop.net/e/q1776dk8ixw9e1"
+          - name: "mp4upload"
+            url: "https://mp4upload.com/embed-lcf8fpnsf622.html"
+      - quality: "480p"
         servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-    downloads:
-      - quality: 1080p
-        size: 355 MB
+          - name: "mixdrop"
+            url: "https://miiiixdrop.net/e/67wwdrk3s7810r"
+          - name: "mp4upload"
+            url: "https://mp4upload.com/embed-vqd35d7hm68u.html"
+          - name: "poi"
+            url: "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e03.480p.sub.indo.mp4?embed=true&autoplay=true"
+      - quality: "360p"
         servers:
-          - { name: GDrive, url: 'https://example.com/dl/3-1080' }
-  - number: 4
-    title: Curse Womb Must Die
-    streams:
-      - quality: 1080p
+          - name: "mixdrop"
+            url: "https://miiiixdrop.net/e/36oo0qdoi8zwwk"
+          - name: "mp4upload"
+            url: "https://mp4upload.com/embed-5kd6nhn9l8ib.html"
+      - quality: "240p"
         servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-          - { name: Mega, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-      - quality: 720p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-    downloads:
-      - quality: 1080p
-        size: 360 MB
-        servers:
-          - { name: GDrive, url: 'https://example.com/dl/4-1080' }
-  - number: 5
-    title: Fearsome Womb
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-      - quality: 720p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-    downloads:
-      - quality: 1080p
-        size: 345 MB
-        servers:
-          - { name: GDrive, url: 'https://example.com/dl/5-1080' }
-  - number: 6
-    title: After Rain
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-      - quality: 720p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-    downloads:
-      - quality: 1080p
-        size: 350 MB
-        servers:
-          - { name: GDrive, url: 'https://example.com/dl/6-1080' }
-  - number: 7
-    title: Assault
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-      - quality: 720p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 8
-    title: Boredom
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-      - quality: 720p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 9
-    title: Small Fry and Reverse Retribution
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 10
-    title: Idle Transfiguration
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 11
-    title: Narrow-minded
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 12
-    title: To You, Someday
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 13
-    title: Tomorrow
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 14
-    title: Kyoto Sister School Exchange Event
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 15
-    title: Kyoto Sister School Exchange Event - Team Battle
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 16
-    title: Kyoto Sister School Exchange Event - Group Battle
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 17
-    title: Kyoto Sister School Exchange Event - Group Battle 2
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 18
-    title: Sage
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 19
-    title: Black Flash
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 20
-    title: Nonstandard
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 21
-    title: Jujutsu Koshien
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 22
-    title: The Origin of Obedience
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 23
-    title: The Origin of Obedience 2
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 24
-    title: Accomplices
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+          - name: "mp4upload"
+            url: "https://mp4upload.com/embed-2gmxr2781dbd.html"
 
 batch:
   - quality: 1080p
