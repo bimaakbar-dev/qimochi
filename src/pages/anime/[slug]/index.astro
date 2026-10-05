@@ -1,5 +1,7 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
+import { getAllAnime } from '~/lib/anime';
+
 import { SITE, URLS, STATUS_VARIANT, type Status } from '~/constants';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
@@ -7,7 +9,7 @@ import Badge from '~/user-components/Badge.astro';
 import LinkButton from '~/user-components/LinkButton.astro';
 
 export async function getStaticPaths() {
-  const allAnime = await getCollection('anime');
+  const allAnime = await getAllAnime();
   return allAnime.map(anime => ({
     params: { slug: anime.id },
     props: { anime },

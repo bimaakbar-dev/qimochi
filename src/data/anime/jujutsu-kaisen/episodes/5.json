@@ -1,0 +1,61 @@
+{
+  "number": 5,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/dkooergluq4e79"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-j2w3nnoinfjt.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e05.720p.sub.indo.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/xw11j9nrsmwj0d"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-w8dlvoc9gc47.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e05.480p.sub.indo.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/xw11j9netzree8"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-y4dv4nr09jsm.html"
+        }
+      ]
+    },
+    {
+      "quality": "240p",
+      "servers": [
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-24zg727zuche.html"
+        }
+      ]
+    }
+  ]
+}

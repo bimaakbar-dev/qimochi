@@ -1,10 +1,11 @@
+// src/pages/anime.json.ts
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
+import { getAllAnime } from '~/lib/anime';
 
 export const GET: APIRoute = async () => {
-  const allAnime = await getCollection('anime');
+  const allAnime = await getAllAnime();
 
-  const data = allAnime.map(a => ({
+  const data = allAnime.map((a) => ({
     id: a.id,
     title: a.data.title,
     cover: a.data.cover,
@@ -14,7 +15,7 @@ export const GET: APIRoute = async () => {
     rating: a.data.rating,
     genre: a.data.genre,
     studio: a.data.studio,
-    episodes: a.data.episodes.map(e => ({ number: e.number })),
+    episodes: a.data.episodes.map((e) => ({ number: e.number })),
   }));
 
   return new Response(JSON.stringify(data), {

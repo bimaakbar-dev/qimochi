@@ -1,11 +1,11 @@
 ---
-import { getCollection } from 'astro:content';
+import { getAllAnime } from '~/lib/anime';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Hero from '~/components/Hero.astro';
 import Badge from '~/user-components/Badge.astro';
 import { URLS, STATUS_VARIANT, type Status } from '~/constants';
 
-const allAnime = await getCollection('anime');
+const allAnime = await getAllAnime();
 
 const sorted = [...allAnime].sort((a, b) =>
   a.data.title.localeCompare(b.data.title, 'id-ID')

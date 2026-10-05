@@ -1,8 +1,10 @@
-import { getCollection } from 'astro:content';
+// src/lib/status.ts
 import { PER_PAGE } from '../constants';
-import { sortByRecent, type AnimeEntry } from './anime';
-
-export type { AnimeEntry };
+import {
+  getAllAnime,
+  sortByRecent,
+  type HydratedAnime,
+} from './anime';
 
 export const STATUS_MAP = {
   ongoing: 'Ongoing',
@@ -12,9 +14,11 @@ export const STATUS_MAP = {
 
 export type StatusSlug = keyof typeof STATUS_MAP;
 
-export async function getAnimeByStatus(status: string): Promise<AnimeEntry[]> {
-  const allAnime = await getCollection('anime');
-  const filtered = allAnime.filter(a => a.data.status === status);
+export async function getAnimeByStatus(
+  status: string
+): Promise<HydratedAnime[]> {
+  const allAnime = await getAllAnime();
+  const filtered = allAnime.filter((a) => a.data.status === status);
   return sortByRecent(filtered);
 }
 
@@ -27,7 +31,7 @@ export async function getStatusData(slug: StatusSlug) {
 
 export function buildStatusPaths(
   slug: StatusSlug,
-  anime: AnimeEntry[],
+  anime: HydratedAnime[],
   totalPages: number
 ) {
   const paths = [

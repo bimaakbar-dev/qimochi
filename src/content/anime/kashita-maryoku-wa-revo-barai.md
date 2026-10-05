@@ -8,21 +8,6 @@ studio: SynergYSP
 releaseDate: 2026-10-04
 addedAt: 2026-10-03
 rating: 0.0
-episodes:
-  - number: 1
-    streams:
-      - quality: "720p"
-        servers:
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/d/HVfqbvxL"
-      - quality: "480p"
-        servers:
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/d/JA3mGx3J"
-      - quality: "360p"
-        servers:
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/d/N6JKUAdv"
 ---
 
 If there's one thing you can never have enough of in a world of RPG-style swords and sorcery, it's magic points! Whether you're fueling spells, techniques, or showing off an incredible ability, you've gotta spend those points to do real damage. But what if you run out?

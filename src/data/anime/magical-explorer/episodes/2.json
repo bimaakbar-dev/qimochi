@@ -1,0 +1,32 @@
+{
+  "number": 2,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/d/vUUNYU7u"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/d/PnkSN5Yd"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/d/es81Yr9s"
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,5 @@
 ---
-import { getCollection } from 'astro:content';
-import { URLS } from '~/constants';
+import { getAllAnime } from '~/lib/anime';
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Player from '~/components/Player.astro';
@@ -11,7 +10,7 @@ import DownloadPanel from '~/components/DownloadPanel.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
 
 export async function getStaticPaths() {
-  const allAnime = await getCollection('anime');
+  const allAnime = await getAllAnime();
   const paths = [];
 
   for (const anime of allAnime) {
@@ -25,7 +24,6 @@ export async function getStaticPaths() {
       });
     }
   }
-
   return paths;
 }
 

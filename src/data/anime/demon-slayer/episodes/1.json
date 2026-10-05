@@ -1,0 +1,50 @@
+{
+  "number": 1,
+  "title": "Cruelty",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+          "name": "Mega",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    },
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ],
+  "downloads": [
+    {
+      "quality": "1080p",
+      "size": "420 MB",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://example.com/dl/ds-1-1080"
+        }
+      ]
+    },
+    {
+      "quality": "720p",
+      "size": "210 MB",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://example.com/dl/ds-1-720"
+        }
+      ]
+    }
+  ]
+}

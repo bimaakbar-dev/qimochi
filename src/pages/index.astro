@@ -1,7 +1,6 @@
 ---
-import { getCollection } from 'astro:content';
 import { SITE, GENRES, PER_PAGE, URLS } from '~/constants';
-import { sortByRecent } from '~/lib/anime';
+import { getAllAnime, sortByRecent } from '~/lib/anime';
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
@@ -10,7 +9,7 @@ import LinkButton from '~/user-components/LinkButton.astro';
 import LinkCard from '~/user-components/LinkCard.astro';
 import SectionLabel from '~/components/SectionLabel.astro';
 
-const allAnime = await getCollection('anime');
+const allAnime = await getAllAnime();
 
 const latest = sortByRecent(allAnime).slice(0, 3);
 
@@ -132,7 +131,7 @@ const genres = GENRES
         <header class="section-header">
           <SectionLabel>Genre</SectionLabel>
           <LinkButton
-            href="/genre/"
+            href="/anime/genre/"
             variant="ghost"
             size="md"
             icon="arrow-right"

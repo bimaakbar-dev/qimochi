@@ -2,7 +2,7 @@ export const SITE = {
   name: 'Qimochi',
   title: 'Nonton & Download Anime Batch',
   description: 'Koleksi anime untuk streaming dan download batch. Ringan, cepat, tanpa ribet.',
-  url: 'https://qimochi-hub.github.io',
+  url: 'https://qimochi.web.id',
   locale: 'id-ID',
   lang: 'id',
 } as const;
@@ -12,7 +12,7 @@ export const NAV_LINKS = [
   { label: 'Ongoing',  href: '/anime/ongoing/' },
   { label: 'Completed', href: '/anime/completed/' },
   { label: 'Archive',  href: '/anime/' },
-  { label: 'Genre',    href: '/genre/' },
+  { label: 'Genre',    href: '/anime/genre/' },
   { label: 'Blog', href: '/blog/' },
 ] as const;
 
@@ -63,6 +63,6 @@ export const STORAGE_KEYS = {
 export const URLS = {
   anime:  (slug: string) => `/anime/${slug}/`,
   watch:  (slug: string, episode: number) => `/anime/watch/${slug}/${episode}/`,
-  genre:  (slug: string) => `/genre/${slug.toLowerCase().replace(/\s+/g, '-')}/`,
+  genre:  (slug: string) => `/anime/genre/${slug.toLowerCase().replace(/\s+/g, '-')}/`,
   status: (status: string) => `/anime/${status.toLowerCase()}/`,
 } as const;

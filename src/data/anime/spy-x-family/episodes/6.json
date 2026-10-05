@@ -1,0 +1,15 @@
+{
+  "number": 6,
+  "title": "The Friendship Scheme",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}

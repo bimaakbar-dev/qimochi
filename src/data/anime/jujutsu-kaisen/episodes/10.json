@@ -1,0 +1,57 @@
+{
+  "number": 10,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/dkooerm0bgpjdw"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-avx6g9vpqc6w.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/z199dj66u1ngl0"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-c0zzwhrn94ua.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.jjk.10.480p.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/0344rznphkoz91v"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-4ey59hyp2cfn.html"
+        }
+      ]
+    },
+    {
+      "quality": "240p",
+      "servers": [
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-cgq5wnl8z4w4.html"
+        }
+      ]
+    }
+  ]
+}
