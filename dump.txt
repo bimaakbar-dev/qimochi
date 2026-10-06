@@ -1,6 +1,6 @@
 === REPO DUMP ===
-Generated: Mon Oct  5 08:28:52 UTC 2026
-Commit: 901fc35
+Generated: Tue Oct  6 14:01:30 UTC 2026
+Commit: efd314f
 
 === STRUCTURE ===
 .
@@ -17,12 +17,30 @@ Commit: 901fc35
 ./src/content
 ./src/content/anime
 ./src/content/blog
+./src/data
+./src/data/anime
+./src/data/anime/demon-slayer
+./src/data/anime/demon-slayer/episodes
+./src/data/anime/jujutsu-kaisen
+./src/data/anime/jujutsu-kaisen/episodes
+./src/data/anime/kashita-maryoku-wa-revo-barai
+./src/data/anime/kashita-maryoku-wa-revo-barai/episodes
+./src/data/anime/magical-explorer
+./src/data/anime/magical-explorer/episodes
+./src/data/anime/spy-x-family
+./src/data/anime/spy-x-family/episodes
+./src/data/anime/tokyo-revangers-s4
+./src/data/anime/tokyo-revangers-s4/episodes
+./src/data/anime/tougen-anki-nikko-kegon-no-taki-hen
+./src/data/anime/tougen-anki-nikko-kegon-no-taki-hen/episodes
 ./src/layouts
 ./src/lib
 ./src/pages
 ./src/pages/anime
 ./src/pages/anime/[slug]
 ./src/pages/anime/completed
+./src/pages/anime/genre
+./src/pages/anime/genre/[slug]
 ./src/pages/anime/ongoing
 ./src/pages/anime/watch
 ./src/pages/anime/watch/[slug]
@@ -38,6 +56,7 @@ Commit: 901fc35
 === FILES ===
 ./.github/workflows/deploy.yml
 ./.github/workflows/dumpl.yml
+./.nojekyll
 ./README.md
 ./astro.config.mjs
 ./package.json
@@ -69,6 +88,41 @@ Commit: 901fc35
 ./src/content/anime/tokyo-revangers-s4.md
 ./src/content/anime/tougen-anki-nikko-kegon-no-taki-hen.md
 ./src/content/blog/selamat-datang-di-qimochi.md
+./src/data/anime/demon-slayer/episodes/1.json
+./src/data/anime/demon-slayer/episodes/2.json
+./src/data/anime/demon-slayer/episodes/3.json
+./src/data/anime/demon-slayer/episodes/4.json
+./src/data/anime/demon-slayer/episodes/5.json
+./src/data/anime/jujutsu-kaisen/episodes/1.json
+./src/data/anime/jujutsu-kaisen/episodes/10.json
+./src/data/anime/jujutsu-kaisen/episodes/11.json
+./src/data/anime/jujutsu-kaisen/episodes/12.json
+./src/data/anime/jujutsu-kaisen/episodes/13.json
+./src/data/anime/jujutsu-kaisen/episodes/2.json
+./src/data/anime/jujutsu-kaisen/episodes/3.json
+./src/data/anime/jujutsu-kaisen/episodes/4.json
+./src/data/anime/jujutsu-kaisen/episodes/5.json
+./src/data/anime/jujutsu-kaisen/episodes/6.json
+./src/data/anime/jujutsu-kaisen/episodes/7.json
+./src/data/anime/jujutsu-kaisen/episodes/8.json
+./src/data/anime/jujutsu-kaisen/episodes/9.json
+./src/data/anime/kashita-maryoku-wa-revo-barai/episodes/1.json
+./src/data/anime/magical-explorer/episodes/1.json
+./src/data/anime/magical-explorer/episodes/2.json
+./src/data/anime/spy-x-family/episodes/1.json
+./src/data/anime/spy-x-family/episodes/10.json
+./src/data/anime/spy-x-family/episodes/11.json
+./src/data/anime/spy-x-family/episodes/12.json
+./src/data/anime/spy-x-family/episodes/2.json
+./src/data/anime/spy-x-family/episodes/3.json
+./src/data/anime/spy-x-family/episodes/4.json
+./src/data/anime/spy-x-family/episodes/5.json
+./src/data/anime/spy-x-family/episodes/6.json
+./src/data/anime/spy-x-family/episodes/7.json
+./src/data/anime/spy-x-family/episodes/8.json
+./src/data/anime/spy-x-family/episodes/9.json
+./src/data/anime/tokyo-revangers-s4/episodes/1.json
+./src/data/anime/tougen-anki-nikko-kegon-no-taki-hen/episodes/1.json
 ./src/layouts/BaseLayout.astro
 ./src/lib/anime.ts
 ./src/lib/blog.ts
@@ -78,6 +132,8 @@ Commit: 901fc35
 ./src/pages/anime.json.ts
 ./src/pages/anime/[slug]/index.astro
 ./src/pages/anime/completed/[...page].astro
+./src/pages/anime/genre/[slug]/[...page].astro
+./src/pages/anime/genre/index.astro
 ./src/pages/anime/index.astro
 ./src/pages/anime/ongoing/[...page].astro
 ./src/pages/anime/watch/[slug]/[episode]/index.astro
@@ -106,25 +162,35 @@ Commit: 901fc35
 
 === DUMP COMPLETE ===
 workflows/deploy.yml =====
+# Sample workflow for building and deploying an Astro site to GitHub Pages
+#
+# To get started with Astro see: https://docs.astro.build/en/getting-started/
+#
 name: Deploy Astro site to Pages
 
 on:
+  # Runs on pushes targeting the default branch
   push:
-    branches: [main]
-  
+    branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 env:
-  BUILD_PATH: "."
+  BUILD_PATH: "." # default value when not using subfolders
+  # BUILD_PATH: subfolder
 
 jobs:
   build:
@@ -133,7 +199,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
       - name: Detect package manager
         id: detect-package-manager
         run: |
@@ -153,40 +218,28 @@ jobs:
             echo "Unable to determine package manager"
             exit 1
           fi
-
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
           node-version: "24"
           cache: ${{ steps.detect-package-manager.outputs.manager }}
           cache-dependency-path: ${{ env.BUILD_PATH }}/${{ steps.detect-package-manager.outputs.lockfile }}
-
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v6
-
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
         working-directory: ${{ env.BUILD_PATH }}
-
       - name: Build with Astro
         run: |
           ${{ steps.detect-package-manager.outputs.runner }} astro build \
             --site "${{ steps.pages.outputs.origin }}" \
             --base "${{ steps.pages.outputs.base_path }}"
         working-directory: ${{ env.BUILD_PATH }}
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
           path: ${{ env.BUILD_PATH }}/dist
-
-      - name: Deploy to gh-pages branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ${{ env.BUILD_PATH }}/dist
-          publish_branch: gh-pages
 
   deploy:
     environment:
@@ -199,6 +252,7 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
 ===== END FILE =====
 
 ===== FILE: ./.github/workflows/dumpl.yml =====
@@ -340,6 +394,11 @@ jobs:
             git commit -m "chore: dump repo [skip ci]"
             git push
           fi
+===== END FILE =====
+
+===== FILE: ./.nojekyll =====
+
+
 ===== END FILE =====
 
 ===== FILE: ./README.md =====
@@ -2596,7 +2655,7 @@ export const SITE = {
   name: 'Qimochi',
   title: 'Nonton & Download Anime Batch',
   description: 'Koleksi anime untuk streaming dan download batch. Ringan, cepat, tanpa ribet.',
-  url: 'https://qimochi-hub.github.io',
+  url: 'https://qimochi.web.id',
   locale: 'id-ID',
   lang: 'id',
 } as const;
@@ -2606,7 +2665,7 @@ export const NAV_LINKS = [
   { label: 'Ongoing',  href: '/anime/ongoing/' },
   { label: 'Completed', href: '/anime/completed/' },
   { label: 'Archive',  href: '/anime/' },
-  { label: 'Genre',    href: '/genre/' },
+  { label: 'Genre',    href: '/anime/genre/' },
   { label: 'Blog', href: '/blog/' },
 ] as const;
 
@@ -2657,13 +2716,14 @@ export const STORAGE_KEYS = {
 export const URLS = {
   anime:  (slug: string) => `/anime/${slug}/`,
   watch:  (slug: string, episode: number) => `/anime/watch/${slug}/${episode}/`,
-  genre:  (slug: string) => `/genre/${slug.toLowerCase().replace(/\s+/g, '-')}/`,
+  genre:  (slug: string) => `/anime/genre/${slug.toLowerCase().replace(/\s+/g, '-')}/`,
   status: (status: string) => `/anime/${status.toLowerCase()}/`,
 } as const;
 
 ===== END FILE =====
 
 ===== FILE: ./src/content.config.ts =====
+// src/content.config.ts
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
@@ -2680,52 +2740,6 @@ const anime = defineCollection({
     releaseDate: z.coerce.date(),
     addedAt: z.coerce.date(),
     rating: z.number().min(0).max(10),
-    episodes: z.array(
-      z.object({
-        number: z.number().int().positive(),
-        title: z.string().optional(),
-        streams: z.array(
-          z.object({
-            quality: z.string(),
-            servers: z.array(
-              z.object({
-                name: z.string(),
-                url: z.url(),
-              })
-            ),
-          })
-        ),
-        downloads: z
-          .array(
-            z.object({
-              quality: z.string(),
-              size: z.string(),
-              servers: z.array(
-                z.object({
-                  name: z.string(),
-                  url: z.url(),
-                })
-              ),
-            })
-          )
-          .optional(),
-      })
-    ),
-
-    batch: z
-      .array(
-        z.object({
-          quality: z.string(),
-          size: z.string(),
-          servers: z.array(
-            z.object({
-              name: z.string(),
-              url: z.url(),
-            })
-          ),
-        })
-      )
-      .optional(),
   }),
 });
 
@@ -2758,57 +2772,6 @@ studio: ufotable
 releaseDate: 2019-04-06
 addedAt: 2026-02-25
 rating: 8.7
-
-episodes:
-  - number: 1
-    title: Cruelty
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-          - { name: Mega, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-      - quality: 720p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-    downloads:
-      - quality: 1080p
-        size: 420 MB
-        servers:
-          - { name: GDrive, url: 'https://example.com/dl/ds-1-1080' }
-      - quality: 720p
-        size: 210 MB
-        servers:
-          - { name: GDrive, url: 'https://example.com/dl/ds-1-720' }
-  - number: 2
-    title: Trainer Sakonji Urokodaki
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 3
-    title: Sabito and Makomo
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 4
-    title: Final Selection
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 5
-    title: My Own Steel
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-
-batch:
-  - quality: 1080p
-    size: 1.8 GB
-    servers:
-      - { name: GDrive, url: 'https://example.com/batch/ds-1080' }
 ---
 
 Tanjiro Kamado adalah anak baik hati yang hidup bahagia bersama keluarganya
@@ -2818,6 +2781,7 @@ berubah menjadi iblis.
 
 Tanjiro bersumpah untuk menjadi pemburu iblis dan menemukan cara
 mengembalikan adiknya menjadi manusia.
+
 ===== END FILE =====
 
 ===== FILE: ./src/content/anime/jujutsu-kaisen.md =====
@@ -2831,96 +2795,6 @@ type: TV
 releaseDate: 2020-10-03
 addedAt: 2026-02-15
 rating: 8.7
-
-episodes:
-  - number: 1
-    streams:
-      - quality: "720p"
-        servers:
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/67wwdrezip9kqv"
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-lafyac2h6ux8.html"
-      - quality: "480p"
-        servers:
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/nl88mnwgt1g997"
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-ab5dfwa9ej38.html"
-      - quality: "360p"
-        servers:
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/jdvv3k0vsve7l3"
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-9j4sm39ytsco.html"
-  - number: 2
-    streams:
-      - quality: "720p"
-        servers:
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/elrrez3xs4drl7"
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-2togstb72vmy.html"
-      - quality: "480p"
-        servers:
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/0344rznofj8ppm"
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-qd9vlyz8uoc1.html"
-          - name: "poi"
-            url: "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e02.480p.sub.indo.mp4?embed=true&autoplay=true"
-      - quality: "360p"
-        servers:
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/r6vvd0zvimkk8x"
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-glmvwn92aczf.html"
-      - quality: "240p"
-        servers:
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-bwq1fq9puvdx.html"
-  - number: 3
-    streams:
-      - quality: "720p"
-        servers:
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/q1776dk8ixw9e1"
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-lcf8fpnsf622.html"
-      - quality: "480p"
-        servers:
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/67wwdrk3s7810r"
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-vqd35d7hm68u.html"
-          - name: "poi"
-            url: "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e03.480p.sub.indo.mp4?embed=true&autoplay=true"
-      - quality: "360p"
-        servers:
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/36oo0qdoi8zwwk"
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-5kd6nhn9l8ib.html"
-      - quality: "240p"
-        servers:
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-2gmxr2781dbd.html"
-
-batch:
-  - quality: 1080p
-    size: 8.2 GB
-    servers:
-      - { name: GDrive, url: 'https://example.com/batch/jjk-1080' }
-      - { name: Mega, url: 'https://example.com/batch/jjk-1080-mega' }
-  - quality: 720p
-    size: 4.5 GB
-    servers:
-      - { name: GDrive, url: 'https://example.com/batch/jjk-720' }
-      - { name: Mega, url: 'https://example.com/batch/jjk-720-mega' }
-  - quality: 480p
-    size: 2.1 GB
-    servers:
-      - { name: GDrive, url: 'https://example.com/batch/jjk-480' }
 ---
 
 Yuji Itadori adalah siswa SMA dengan kekuatan fisik luar biasa yang tidak
@@ -2933,6 +2807,7 @@ sekolah sihir Tokyo untuk memburu seluruh 20 jari Sukuna yang tersebar di Jepang
 
 Setiap jari yang ditelan Yuji memperkuat Sukuna dalam dirinya — dan mengancam
 kendali atas tubuhnya sendiri.
+
 ===== END FILE =====
 
 ===== FILE: ./src/content/anime/kashita-maryoku-wa-revo-barai.md =====
@@ -2946,21 +2821,6 @@ studio: SynergYSP
 releaseDate: 2026-10-04
 addedAt: 2026-10-03
 rating: 0.0
-episodes:
-  - number: 1
-    streams:
-      - quality: "720p"
-        servers:
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/d/HVfqbvxL"
-      - quality: "480p"
-        servers:
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/d/JA3mGx3J"
-      - quality: "360p"
-        servers:
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/d/N6JKUAdv"
 ---
 
 If there's one thing you can never have enough of in a world of RPG-style swords and sorcery, it's magic points! Whether you're fueling spells, techniques, or showing off an incredible ability, you've gotta spend those points to do real damage. But what if you run out?
@@ -2968,6 +2828,7 @@ If there's one thing you can never have enough of in a world of RPG-style swords
 Lent is part of the up-and-coming party known as the “Skypiercers,” and thanks to his unique Gift, he can loan massive amounts of magic to others. No MP? No problem with Lent around! Except, now that his companions have become formidable heroes (thanks to his skill), his usefulness is questioned. Kicked out of the group, Lent is furious…until he discovers a hidden power to his Gift. Now, with his adorably devious fairy partner, he's going to claw back every last scrap of magic from his former party—with interest!
 
 (Source: Seven Seas Entertainment)
+
 ===== END FILE =====
 
 ===== FILE: ./src/content/anime/magical-explorer.md =====
@@ -2981,68 +2842,12 @@ studio: White Fox
 releaseDate: 2026-10-03
 addedAt: 2026-10-04
 rating: 0.0
-episodes:
-  - number: 1
-    streams:
-      - quality: "720p"
-        servers:
-          - name: "doply"
-            url: "https://doply.net/e/48fjnuo6e9k7"
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/u/W6LnaYdC"
-          - name: "vikingfile"
-            url: "https://vikingfile.com/f/65yQriRoWA"
-          - name: "abyss"
-            url: "https://player.abyssplayer.com/6A6GSvKaW"
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/k0nowj4es3djldd"
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-gxs0lpzmwjkm.html"
-      - quality: "480p"
-        servers:
-          - name: "doply"
-            url: "https://doply.net/e/e69lb307pmtf"
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/u/ViuAPL7i"
-          - name: "vikingfile"
-            url: "https://vikingfile.com/f/wsOmliXEL9"
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/vknj7wxluzw8l9"
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-gf7o1thq6phj.html"
-      - quality: "360p"
-        servers:
-          - name: "doply"
-            url: "https://doply.net/e/24pnm88dbq71"
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/u/GPzETLR8"
-          - name: "vikingfile"
-            url: "https://vikingfile.com/f/0CqhRN8cWr"
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/9wng19mobrk0kq"
-          - name: "abyss"
-            url: "https://player.abyssplayer.com/URQa-QrKi"
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-nxko06rhu4f2.html"
-  - number: 2
-    streams:
-      - quality: "720p"
-        servers:
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/d/vUUNYU7u"
-      - quality: "480p"
-        servers:
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/d/PnkSN5Yd"
-      - quality: "360p"
-        servers:
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/d/es81Yr9s"
 ---
 
 Few titles are more revered among horndogs-(ahem) connoisseurs of Japanese erotic video games-than Magical Explorer. One day, our smut-loving hero wakes up to find he has been reincarnated into the body of the game’s dreamboat protagonist! Or rather, his hapless comic-relief best friend, Kousuke Takioto. But with his unparalleled knowledge of Magical Explorer and Kousuke’s unorthodox abilities (a scarf that doubles as a fist?), our hero vows to turn the game’s unluckiest loser into its mightiest heartthrob. In this world, nothing is out of reach when you’ve got the know-how!
 
 (Source: Yen Press)
+
 ===== END FILE =====
 
 ===== FILE: ./src/content/anime/spy-x-family.md =====
@@ -3056,106 +2861,6 @@ type: TV
 releaseDate: 2022-04-09
 addedAt: 2026-02-20
 rating: 8.5
-
-episodes:
-  - number: 1
-    title: Operation Strix
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-          - { name: Mega, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-      - quality: 720p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-    downloads:
-      - quality: 1080p
-        size: 380 MB
-        servers:
-          - { name: GDrive, url: 'https://example.com/dl/spy-1-1080' }
-      - quality: 720p
-        size: 190 MB
-        servers:
-          - { name: GDrive, url: 'https://example.com/dl/spy-1-720' }
-  - number: 2
-    title: Secure a Wife
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-      - quality: 720p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 3
-    title: Prepare for the Interview
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 4
-    title: The Prestigious School
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 5
-    title: Will They Pass or Fail
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 6
-    title: The Friendship Scheme
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 7
-    title: The Target's Second Son
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 8
-    title: The Counter-Secret Police Cover Operation
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 9
-    title: Show Off How in Love You Are
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 10
-    title: The Great Dodgeball Plan
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 11
-    title: Stella
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-  - number: 12
-    title: Penguin Park
-    streams:
-      - quality: 1080p
-        servers:
-          - { name: GDrive, url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
-
-batch:
-  - quality: 1080p
-    size: 4.6 GB
-    servers:
-      - { name: GDrive, url: 'https://example.com/batch/spy-1080' }
-  - quality: 720p
-    size: 2.3 GB
-    servers:
-      - { name: GDrive, url: 'https://example.com/batch/spy-720' }
 ---
 
 Seorang mata-mata terbaik dengan nama kode Twilight ditugaskan untuk
@@ -3165,6 +2870,7 @@ membangun keluarga palsu dalam waktu seminggu.
 Tanpa disadari, ia mengadopsi seorang anak yang bisa membaca pikiran dan
 menikahi seorang wanita yang ternyata adalah pembunuh bayaran. Kini, ketiganya
 menjalani hidup keluarga palsu — masing-masing menyembunyikan identitas asli.
+
 ===== END FILE =====
 
 ===== FILE: ./src/content/anime/tokyo-revangers-s4.md =====
@@ -3178,39 +2884,6 @@ studio: LINDENFILMS
 releaseDate: 2026-10-03
 addedAt: 2026-10-03
 rating: 0.0
-episodes:
-    - number: 1
-      streams:
-      - quality: 360p
-        servers:
-        - { name: MG, url: 'https://mega.nz/embed/CzRWwRaY#MjofiaKntz6HmlaQkp6VBqHspBXPVze3g3z4qB-TH-M' }
-      - quality: 480p
-        servers: 
-        - { name: MG, url: 'https://mega.nz/embed/auQkSQJI#PhPb-v8trGHyiHfmeYzewLILprWZUzkRlIsN0q8hGaM' }
-      - quality: 720p
-        servers: 
-        - { name: MG, url: 'https://mega.nz/embed/auQkSQJI#PhPb-v8trGHyiHfmeYzewLILprWZUzkRlIsN0q8hGaM' }
-      downloads:
-      - quality: 1080p
-        size: 272MB
-        servers:
-          - { name: PXD, url: 'https://pixeldrain.com/u/pPzGTnBv' }
-          - { name: MG, url: 'https://mega.nz/file/66gmRAQb#6RtpM5CJq6mqVdPrlxa0CwG8_5WL8xDsD-qazm6pUdY'}
-      - quality: 720p
-        size: 155MB
-        servers:
-          - { name: PXD, url: 'https://pixeldrain.com/u/fSme1yEd' }
-          - { name: MG, url: 'https://mega.nz/file/WnxHSCzC#ayaG6G7sERvwSIge70ea4P880d-GqtU1dnzguVv5o_U'}
-      - quality: 480p
-        size: 97MB
-        servers:
-          - { name: PXD, url: 'https://pixeldrain.com/u/o4GNkXu3' }
-          - { name: MG, url: 'https://mega.nz/file/auQkSQJI#PhPb-v8trGHyiHfmeYzewLILprWZUzkRlIsN0q8hGaM'}
-      - quality: 360p
-        size: 49MB
-        servers:
-          - { name: PXD, url: 'https://pixeldrain.com/u/3YK8Z9mN' }
-          - { name: MG, url: 'https://mega.nz/file/CzRWwRaY#MjofiaKntz6HmlaQkp6VBqHspBXPVze3g3z4qB-TH-M'}
 ---
 
 Sekuel Tokyo Revengers: Tenjiku-hen.
@@ -3227,69 +2900,8 @@ studio: Studio Hibari
 releaseDate: 2026-10-02
 addedAt: 2026-10-03
 rating: 7.1
-episodes:
-  - number: 1
-    streams:
-      - quality: "1080p"
-        servers:
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/u/LvuXE3nT"
-      - quality: "720p"
-        servers:
-          - name: "doply"
-            url: "https://doply.net/e/3k9fwg064vjf"
-
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/d/eKQnAzMY"
-
-          - name: "vikingfile"
-            url: "https://vikingfile.com/f/Nm8ELJODNb"
-
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/jd9rp33ka03zel"
-
-          - name: "abyss"
-            url: "https://player.abyssplayer.com/Y2lxWkeWb"
-
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-88ri68jrlagf.html"
-      - quality: "480p"
-        servers:
-          - name: "doply"
-            url: "https://doply.net/e/nok02vide8sc"
-
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/d/hzpHs1Jk"
-
-          - name: "vikingfile"
-            url: "https://vikingfile.com/f/qz9w1c8HfX"
-
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/8l4m3773i049n"
-
-
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-chn0tz4fwt7q.html"
-      - quality: "360p"
-        servers:
-          - name: "doply"
-            url: "https://doply.net/e/lmlq0u40emac"
-
-          - name: "pixeldrain"
-            url: "https://pixeldrain.com/d/DaVWohzT"
-
-          - name: "vikingfile"
-            url: "https://vikingfile.com/f/U9GwFLjQkq"
-
-          - name: "mixdrop"
-            url: "https://miiiixdrop.net/e/03v7prrpi13nmm"
-
-          - name: "abyss"
-            url: "https://player.abyssplayer.com/Gs7g4tZEh"
-
-          - name: "mp4upload"
-            url: "https://mp4upload.com/embed-ke00ux0hxpbt.html"
 ---
+
 Di balik keindahan air terjun Kegon, Nikko menyimpan medan perang yang tidak pernah masuk buku sejarah. Ketika konflik antara keturunan Oni dan Momotarō kembali memanas, sekelompok siswa dari Akademi Rasetsu dikirim ke sana—bukan untuk menyelamatkan dunia, melainkan untuk menjalankan misi yang seharusnya sederhana.
 
 Namun, sesuatu di Nikko membuat pertarungan itu berubah arah.
@@ -3297,6 +2909,7 @@ Namun, sesuatu di Nikko membuat pertarungan itu berubah arah.
 Musuh yang mereka hadapi bukan sekadar petarung dari kubu Momotarō. Ada kekuatan yang memaksa para Oni berhadapan dengan sisi diri mereka sendiri: amarah, ketakutan, dan naluri membunuh yang selama ini mereka coba kendalikan. Di tengah pertempuran yang semakin brutal, mereka harus mencari tahu siapa sebenarnya yang sedang memburu mereka—dan mengapa Air Terjun Kegon menjadi bagian penting dari rencana tersebut.
 
 Di tempat di mana darah Oni dan Momotarō kembali mengalir, satu kesalahan kecil bisa mengubah seorang murid menjadi mangsa.
+
 
 ===== END FILE =====
 
@@ -3402,6 +3015,1532 @@ perencanaan:
 Pantau terus blog ini untuk update terbaru. Selamat menjelajah! 🎉
 ===== END FILE =====
 
+===== FILE: ./src/data/anime/demon-slayer/episodes/1.json =====
+{
+  "number": 1,
+  "title": "Cruelty",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+          "name": "Mega",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    },
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ],
+  "downloads": [
+    {
+      "quality": "1080p",
+      "size": "420 MB",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://example.com/dl/ds-1-1080"
+        }
+      ]
+    },
+    {
+      "quality": "720p",
+      "size": "210 MB",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://example.com/dl/ds-1-720"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/demon-slayer/episodes/2.json =====
+{
+  "number": 2,
+  "title": "Trainer Sakonji Urokodaki",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/demon-slayer/episodes/3.json =====
+{
+  "number": 3,
+  "title": "Sabito and Makomo",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/demon-slayer/episodes/4.json =====
+{
+  "number": 4,
+  "title": "Final Selection",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/demon-slayer/episodes/5.json =====
+{
+  "number": 5,
+  "title": "My Own Steel",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/1.json =====
+{
+  "number": 1,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/67wwdrezip9kqv"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-lafyac2h6ux8.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/nl88mnwgt1g997"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-ab5dfwa9ej38.html"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/jdvv3k0vsve7l3"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-9j4sm39ytsco.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/10.json =====
+{
+  "number": 10,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/dkooerm0bgpjdw"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-avx6g9vpqc6w.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/z199dj66u1ngl0"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-c0zzwhrn94ua.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.jjk.10.480p.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/0344rznphkoz91v"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-4ey59hyp2cfn.html"
+        }
+      ]
+    },
+    {
+      "quality": "240p",
+      "servers": [
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-cgq5wnl8z4w4.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/11.json =====
+{
+  "number": 11,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/elrrezgqs3dqzn"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-nnice0ddvilm.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/7k440jlesdpj174"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-b809clx0a67e.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.jjk.11.480p.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/wl99xwvdu4kqwr"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-w0n6xqma1fqp.html"
+        }
+      ]
+    },
+    {
+      "quality": "240p",
+      "servers": [
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-tbpsp2a8q9cj.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/12.json =====
+{
+  "number": 12,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/gjmmod8lfwm7wgg"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-yu0wm4v1fj2r.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/4doo79qlu0pqdp"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-qdt4pphho3w5.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e12.480p.sub.indo.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/owddnzjpu8e3o4"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-rxxidlq9ufb7.html"
+        }
+      ]
+    },
+    {
+      "quality": "240p",
+      "servers": [
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-r1sh2x8t361e.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/13.json =====
+{
+  "number": 13,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/8l997jmguzpxgk"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-7tu13r0fkbrq.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e13.720p.sub.indo.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/r6vvd0r9ugrng0"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-re8xah08piwj.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e13.480p.sub.indo.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/36oo0qd0f980vl"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-z0ylmt985fxj.html"
+        }
+      ]
+    },
+    {
+      "quality": "240p",
+      "servers": [
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-jj9jctcp7mtu.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/2.json =====
+{
+  "number": 2,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/elrrez3xs4drl7"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-2togstb72vmy.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/0344rznofj8ppm"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-qd9vlyz8uoc1.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e02.480p.sub.indo.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/r6vvd0zvimkk8x"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-glmvwn92aczf.html"
+        }
+      ]
+    },
+    {
+      "quality": "240p",
+      "servers": [
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-bwq1fq9puvdx.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/3.json =====
+{
+  "number": 3,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/q1776dk8ixw9e1"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-lcf8fpnsf622.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/67wwdrk3s7810r"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-vqd35d7hm68u.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e03.480p.sub.indo.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/36oo0qdoi8zwwk"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-5kd6nhn9l8ib.html"
+        }
+      ]
+    },
+    {
+      "quality": "240p",
+      "servers": [
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-2gmxr2781dbd.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/4.json =====
+{
+  "number": 4,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/4doo79e0fkk3xd"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-lj1w5p5vua5r.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/r6vvd0zqsv9dx09"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-fsclj6jdb5o5.html"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/0344rzn4u88o61"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-tdgbchb2e9f5.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/5.json =====
+{
+  "number": 5,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/dkooergluq4e79"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-j2w3nnoinfjt.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e05.720p.sub.indo.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/xw11j9nrsmwj0d"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-w8dlvoc9gc47.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e05.480p.sub.indo.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/xw11j9netzree8"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-y4dv4nr09jsm.html"
+        }
+      ]
+    },
+    {
+      "quality": "240p",
+      "servers": [
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-24zg727zuche.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/6.json =====
+{
+  "number": 6,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/jdvv3komf7o041d"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-zqu0mfe9xnun.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/nl88mnwohlg0r8"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-f2tip4ub5j4s.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e06.480p.sub.indo.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/8l997jwrtp7ozv"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-5msvhrjm5tvw.html"
+        }
+      ]
+    },
+    {
+      "quality": "240p",
+      "servers": [
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-9ey4yu1a9xj0.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/7.json =====
+{
+  "number": 7,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/jdvv3koxs9331z"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-n8erdphv0gtc.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/k0vv1e7dsgg0nd"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-ct0sure9yvy2.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.jjk.07.480p.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/owddnzjxswlgrx"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-4nf5c0rg7pg5.html"
+        }
+      ]
+    },
+    {
+      "quality": "240p",
+      "servers": [
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-8cf9tl47tguk.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/8.json =====
+{
+  "number": 8,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/k0vv1eo1f4mweg"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-yynyx2n778fs.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/4doo790wfqk60oj"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-ihw61lyj7i2e.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.jjk.08.480p.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/elrrezpxswv8g7"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-5dv6uf2ix75i.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/jujutsu-kaisen/episodes/9.json =====
+{
+  "number": 9,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/0344rz0wf8706q"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-qni2b8k376ho.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/4doo79qoakgd3x"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-qof8zzbrnex1.html"
+        },
+        {
+          "name": "poi",
+          "url": "https://new.uservideo.xyz/file/nanime.in.jujutsu.kaisen.tv.e09.480p.sub.indo.mp4?embed=true&autoplay=true"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/pj00m61zhw1w3k"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-3dimbzfirdi6.html"
+        }
+      ]
+    },
+    {
+      "quality": "240p",
+      "servers": [
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-439kqavimv1g.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/kashita-maryoku-wa-revo-barai/episodes/1.json =====
+{
+  "number": 1,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/d/HVfqbvxL"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/d/JA3mGx3J"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/d/N6JKUAdv"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/magical-explorer/episodes/1.json =====
+{
+  "number": 1,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "doply",
+          "url": "https://doply.net/e/48fjnuo6e9k7"
+        },
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/u/W6LnaYdC"
+        },
+        {
+          "name": "vikingfile",
+          "url": "https://vikingfile.com/f/65yQriRoWA"
+        },
+        {
+          "name": "abyss",
+          "url": "https://player.abyssplayer.com/6A6GSvKaW"
+        },
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/k0nowj4es3djldd"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-gxs0lpzmwjkm.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "doply",
+          "url": "https://doply.net/e/e69lb307pmtf"
+        },
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/u/ViuAPL7i"
+        },
+        {
+          "name": "vikingfile",
+          "url": "https://vikingfile.com/f/wsOmliXEL9"
+        },
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/vknj7wxluzw8l9"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-gf7o1thq6phj.html"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "doply",
+          "url": "https://doply.net/e/24pnm88dbq71"
+        },
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/u/GPzETLR8"
+        },
+        {
+          "name": "vikingfile",
+          "url": "https://vikingfile.com/f/0CqhRN8cWr"
+        },
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/9wng19mobrk0kq"
+        },
+        {
+          "name": "abyss",
+          "url": "https://player.abyssplayer.com/URQa-QrKi"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-nxko06rhu4f2.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/magical-explorer/episodes/2.json =====
+{
+  "number": 2,
+  "streams": [
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/d/vUUNYU7u"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/d/PnkSN5Yd"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/d/es81Yr9s"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/spy-x-family/episodes/1.json =====
+{
+  "number": 1,
+  "title": "Operation Strix",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+          "name": "Mega",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    },
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ],
+  "downloads": [
+    {
+      "quality": "1080p",
+      "size": "380 MB",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://example.com/dl/spy-1-1080"
+        }
+      ]
+    },
+    {
+      "quality": "720p",
+      "size": "190 MB",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://example.com/dl/spy-1-720"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/spy-x-family/episodes/10.json =====
+{
+  "number": 10,
+  "title": "The Great Dodgeball Plan",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/spy-x-family/episodes/11.json =====
+{
+  "number": 11,
+  "title": "Stella",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/spy-x-family/episodes/12.json =====
+{
+  "number": 12,
+  "title": "Penguin Park",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/spy-x-family/episodes/2.json =====
+{
+  "number": 2,
+  "title": "Secure a Wife",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    },
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/spy-x-family/episodes/3.json =====
+{
+  "number": 3,
+  "title": "Prepare for the Interview",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/spy-x-family/episodes/4.json =====
+{
+  "number": 4,
+  "title": "The Prestigious School",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/spy-x-family/episodes/5.json =====
+{
+  "number": 5,
+  "title": "Will They Pass or Fail",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/spy-x-family/episodes/6.json =====
+{
+  "number": 6,
+  "title": "The Friendship Scheme",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/spy-x-family/episodes/7.json =====
+{
+  "number": 7,
+  "title": "The Target's Second Son",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/spy-x-family/episodes/8.json =====
+{
+  "number": 8,
+  "title": "The Counter-Secret Police Cover Operation",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/spy-x-family/episodes/9.json =====
+{
+  "number": 9,
+  "title": "Show Off How in Love You Are",
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "GDrive",
+          "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
+===== FILE: ./src/data/anime/tokyo-revangers-s4/episodes/1.json =====
+{
+  "number": 1,
+  "streams": [
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "MG",
+          "url": "https://mega.nz/embed/CzRWwRaY#MjofiaKntz6HmlaQkp6VBqHspBXPVze3g3z4qB-TH-M"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "MG",
+          "url": "https://mega.nz/embed/auQkSQJI#PhPb-v8trGHyiHfmeYzewLILprWZUzkRlIsN0q8hGaM"
+        }
+      ]
+    },
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "MG",
+          "url": "https://mega.nz/embed/auQkSQJI#PhPb-v8trGHyiHfmeYzewLILprWZUzkRlIsN0q8hGaM"
+        }
+      ]
+    }
+  ],
+  "downloads": [
+    {
+      "quality": "1080p",
+      "size": "272MB",
+      "servers": [
+        {
+          "name": "PXD",
+          "url": "https://pixeldrain.com/u/pPzGTnBv"
+        },
+        {
+          "name": "MG",
+          "url": "https://mega.nz/file/66gmRAQb#6RtpM5CJq6mqVdPrlxa0CwG8_5WL8xDsD-qazm6pUdY"
+        }
+      ]
+    },
+    {
+      "quality": "720p",
+      "size": "155MB",
+      "servers": [
+        {
+          "name": "PXD",
+          "url": "https://pixeldrain.com/u/fSme1yEd"
+        },
+        {
+          "name": "MG",
+          "url": "https://mega.nz/file/WnxHSCzC#ayaG6G7sERvwSIge70ea4P880d-GqtU1dnzguVv5o_U"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "size": "97MB",
+      "servers": [
+        {
+          "name": "PXD",
+          "url": "https://pixeldrain.com/u/o4GNkXu3"
+        },
+        {
+          "name": "MG",
+          "url": "https://mega.nz/file/auQkSQJI#PhPb-v8trGHyiHfmeYzewLILprWZUzkRlIsN0q8hGaM"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "size": "49MB",
+      "servers": [
+        {
+          "name": "PXD",
+          "url": "https://pixeldrain.com/u/3YK8Z9mN"
+        },
+        {
+          "name": "MG",
+          "url": "https://mega.nz/file/CzRWwRaY#MjofiaKntz6HmlaQkp6VBqHspBXPVze3g3z4qB-TH-M"
+        }
+      ]
+    }
+  ]
+}
+===== END FILE =====
+
+===== FILE: ./src/data/anime/tougen-anki-nikko-kegon-no-taki-hen/episodes/1.json =====
+{
+  "number": 1,
+  "streams": [
+    {
+      "quality": "1080p",
+      "servers": [
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/u/LvuXE3nT"
+        }
+      ]
+    },
+    {
+      "quality": "720p",
+      "servers": [
+        {
+          "name": "doply",
+          "url": "https://doply.net/e/3k9fwg064vjf"
+        },
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/d/eKQnAzMY"
+        },
+        {
+          "name": "vikingfile",
+          "url": "https://vikingfile.com/f/Nm8ELJODNb"
+        },
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/jd9rp33ka03zel"
+        },
+        {
+          "name": "abyss",
+          "url": "https://player.abyssplayer.com/Y2lxWkeWb"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-88ri68jrlagf.html"
+        }
+      ]
+    },
+    {
+      "quality": "480p",
+      "servers": [
+        {
+          "name": "doply",
+          "url": "https://doply.net/e/nok02vide8sc"
+        },
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/d/hzpHs1Jk"
+        },
+        {
+          "name": "vikingfile",
+          "url": "https://vikingfile.com/f/qz9w1c8HfX"
+        },
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/8l4m3773i049n"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-chn0tz4fwt7q.html"
+        }
+      ]
+    },
+    {
+      "quality": "360p",
+      "servers": [
+        {
+          "name": "doply",
+          "url": "https://doply.net/e/lmlq0u40emac"
+        },
+        {
+          "name": "pixeldrain",
+          "url": "https://pixeldrain.com/d/DaVWohzT"
+        },
+        {
+          "name": "vikingfile",
+          "url": "https://vikingfile.com/f/U9GwFLjQkq"
+        },
+        {
+          "name": "mixdrop",
+          "url": "https://miiiixdrop.net/e/03v7prrpi13nmm"
+        },
+        {
+          "name": "abyss",
+          "url": "https://player.abyssplayer.com/Gs7g4tZEh"
+        },
+        {
+          "name": "mp4upload",
+          "url": "https://mp4upload.com/embed-ke00ux0hxpbt.html"
+        }
+      ]
+    }
+  ]
+}
+
+===== END FILE =====
+
 ===== FILE: ./src/layouts/BaseLayout.astro =====
 ---
 import '../styles/global.css';
@@ -3457,26 +4596,103 @@ const {
 ===== END FILE =====
 
 ===== FILE: ./src/lib/anime.ts =====
-import type { CollectionEntry } from 'astro:content';
+// src/lib/anime.ts
+import { getCollection, getEntry, type CollectionEntry } from 'astro:content';
+
+export interface EpisodeServer {
+  name: string;
+  url: string;
+}
+
+export interface EpisodeStream {
+  quality: string;
+  servers: EpisodeServer[];
+}
+
+export interface EpisodeDownload {
+  quality: string;
+  size: string;
+  servers: EpisodeServer[];
+}
+
+export interface EpisodeData {
+  number: number;
+  title?: string;
+  streams: EpisodeStream[];
+  downloads?: EpisodeDownload[];
+}
 
 export type AnimeEntry = CollectionEntry<'anime'>;
 
-/**
- * Sort anime berdasarkan addedAt descending (terbaru dulu).
- * addedAt diupdate manual tiap kali tambah episode / update konten.
- *
- * Return array baru — tidak mutasi input.
- */
-export function sortByRecent(items: AnimeEntry[]): AnimeEntry[] {
+export type HydratedAnime = Omit<AnimeEntry, 'data'> & {
+  data: AnimeEntry['data'] & {
+    episodes: EpisodeData[];
+  };
+};
+
+const episodeModules = import.meta.glob<{ default: EpisodeData }>(
+  '../data/anime/*/episodes/*.json',
+  { eager: true }
+);
+
+const episodesBySlug: Record<string, EpisodeData[]> = {};
+
+for (const [path, mod] of Object.entries(episodeModules)) {
+  const match = path.match(/\/data\/anime\/([^/]+)\/episodes\/(\d+)\.json$/);
+  if (!match) {
+    console.warn(`[Anime] Unexpected episode path: ${path}`);
+    continue;
+  }
+
+  const slug = match[1];
+  if (!slug) continue;
+
+  const data = mod.default;
+  if (!data || typeof data !== 'object' || typeof data.number !== 'number') {
+    console.warn(`[Anime] Invalid episode data: ${path}`);
+    continue;
+  }
+
+  if (!episodesBySlug[slug]) episodesBySlug[slug] = [];
+  episodesBySlug[slug].push(data);
+}
+
+for (const slug of Object.keys(episodesBySlug)) {
+  episodesBySlug[slug]!.sort((a, b) => a.number - b.number);
+}
+
+async function hydrateOne(anime: AnimeEntry): Promise<HydratedAnime> {
+  const episodes = episodesBySlug[anime.id] ?? [];
+
+  return {
+    ...anime,
+    data: {
+      ...anime.data,
+      episodes,
+    },
+  };
+}
+
+export async function getAllAnime(): Promise<HydratedAnime[]> {
+  const all = await getCollection('anime');
+  return Promise.all(all.map(hydrateOne));
+}
+
+export async function getAnimeById(
+  id: string
+): Promise<HydratedAnime | null> {
+  const anime = await getEntry('anime', id);
+  if (!anime) return null;
+  return hydrateOne(anime);
+}
+
+export function sortByRecent(items: HydratedAnime[]): HydratedAnime[] {
   return [...items].sort(
     (a, b) => b.data.addedAt.getTime() - a.data.addedAt.getTime()
   );
 }
 
-/**
- * Extract tahun rilis dari releaseDate.
- */
-export function getYear(anime: AnimeEntry): number {
+export function getYear(anime: HydratedAnime | AnimeEntry): number {
   return anime.data.releaseDate.getFullYear();
 }
 ===== END FILE =====
@@ -3613,19 +4829,25 @@ export function postUrl(slug: string): string {
 ===== END FILE =====
 
 ===== FILE: ./src/lib/genre.ts =====
-import { getCollection } from 'astro:content';
+// src/lib/genre.ts
 import { GENRES, PER_PAGE } from '../constants';
-import { sortByRecent, type AnimeEntry } from './anime';
+import {
+  getAllAnime,
+  sortByRecent,
+  type HydratedAnime,
+} from './anime';
 
-export type { AnimeEntry };
+export type { HydratedAnime };
 
 export function genreToSlug(genre: string): string {
   return genre.toLowerCase().replace(/\s+/g, '-');
 }
 
-export async function getAnimeByGenre(genre: string): Promise<AnimeEntry[]> {
-  const allAnime = await getCollection('anime');
-  const filtered = allAnime.filter(a => a.data.genre.includes(genre));
+export async function getAnimeByGenre(
+  genre: string
+): Promise<HydratedAnime[]> {
+  const allAnime = await getAllAnime();
+  const filtered = allAnime.filter((a) => a.data.genre.includes(genre));
   return sortByRecent(filtered);
 }
 
@@ -3641,7 +4863,7 @@ export function paginate<T>(items: T[], page: number): T[] {
 }
 
 export function allGenreSlugs() {
-  return GENRES.map(g => ({
+  return GENRES.map((g) => ({
     genre: g,
     slug: genreToSlug(g),
   }));
@@ -3649,11 +4871,13 @@ export function allGenreSlugs() {
 ===== END FILE =====
 
 ===== FILE: ./src/lib/status.ts =====
-import { getCollection } from 'astro:content';
+// src/lib/status.ts
 import { PER_PAGE } from '../constants';
-import { sortByRecent, type AnimeEntry } from './anime';
-
-export type { AnimeEntry };
+import {
+  getAllAnime,
+  sortByRecent,
+  type HydratedAnime,
+} from './anime';
 
 export const STATUS_MAP = {
   ongoing: 'Ongoing',
@@ -3663,9 +4887,11 @@ export const STATUS_MAP = {
 
 export type StatusSlug = keyof typeof STATUS_MAP;
 
-export async function getAnimeByStatus(status: string): Promise<AnimeEntry[]> {
-  const allAnime = await getCollection('anime');
-  const filtered = allAnime.filter(a => a.data.status === status);
+export async function getAnimeByStatus(
+  status: string
+): Promise<HydratedAnime[]> {
+  const allAnime = await getAllAnime();
+  const filtered = allAnime.filter((a) => a.data.status === status);
   return sortByRecent(filtered);
 }
 
@@ -3678,7 +4904,7 @@ export async function getStatusData(slug: StatusSlug) {
 
 export function buildStatusPaths(
   slug: StatusSlug,
-  anime: AnimeEntry[],
+  anime: HydratedAnime[],
   totalPages: number
 ) {
   const paths = [
@@ -3822,13 +5048,14 @@ import { NAV_LINKS } from '../constants';
 ===== END FILE =====
 
 ===== FILE: ./src/pages/anime.json.ts =====
+// src/pages/anime.json.ts
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
+import { getAllAnime } from '~/lib/anime';
 
 export const GET: APIRoute = async () => {
-  const allAnime = await getCollection('anime');
+  const allAnime = await getAllAnime();
 
-  const data = allAnime.map(a => ({
+  const data = allAnime.map((a) => ({
     id: a.id,
     title: a.data.title,
     cover: a.data.cover,
@@ -3838,7 +5065,7 @@ export const GET: APIRoute = async () => {
     rating: a.data.rating,
     genre: a.data.genre,
     studio: a.data.studio,
-    episodes: a.data.episodes.map(e => ({ number: e.number })),
+    episodes: a.data.episodes.map((e) => ({ number: e.number })),
   }));
 
   return new Response(JSON.stringify(data), {
@@ -3849,7 +5076,9 @@ export const GET: APIRoute = async () => {
 
 ===== FILE: ./src/pages/anime/[slug]/index.astro =====
 ---
-import { getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
+import { getAllAnime } from '~/lib/anime';
+
 import { SITE, URLS, STATUS_VARIANT, type Status } from '~/constants';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
@@ -3857,7 +5086,7 @@ import Badge from '~/user-components/Badge.astro';
 import LinkButton from '~/user-components/LinkButton.astro';
 
 export async function getStaticPaths() {
-  const allAnime = await getCollection('anime');
+  const allAnime = await getAllAnime();
   return allAnime.map(anime => ({
     params: { slug: anime.id },
     props: { anime },
@@ -4242,15 +5471,238 @@ const description = isFirstPage
 </style>
 ===== END FILE =====
 
+===== FILE: ./src/pages/anime/genre/[slug]/[...page].astro =====
+---
+import { getGenreData, paginate, allGenreSlugs } from '~/lib/genre';
+
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Hero from '~/components/Hero.astro';
+import AnimeCard from '~/components/AnimeCard.astro';
+import Pagination from '~/components/Pagination.astro';
+
+export async function getStaticPaths() {
+  const paths = [];
+
+  for (const { genre, slug } of allGenreSlugs()) {
+    const { anime, totalPages } = await getGenreData(genre);
+
+    if (anime.length === 0) continue;
+
+    paths.push({
+      params: { slug, page: undefined },
+      props: { genre, anime, totalPages, pageNumber: 1 },
+    });
+
+    for (let page = 2; page <= totalPages; page++) {
+      paths.push({
+        params: { slug, page: String(page) },
+        props: { genre, anime, totalPages, pageNumber: page },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { genre, anime, totalPages, pageNumber } = Astro.props;
+const items = paginate(anime, pageNumber);
+const slug = Astro.params.slug;
+const isFirstPage = pageNumber === 1;
+
+const title = isFirstPage
+  ? `Anime ${genre}`
+  : `Anime ${genre} — Halaman ${pageNumber}`;
+
+const description = isFirstPage
+  ? `Koleksi ${anime.length} anime genre ${genre}.`
+  : `${anime.length} anime · Halaman ${pageNumber} dari ${totalPages}`;
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  canonical={`/genre/${slug}/`}
+  noindex={!isFirstPage}
+>
+  <div class="wrapper">
+
+    <Hero
+      title={genre}
+      description={description}
+    />
+
+    {items.length > 0 ? (
+      <div class="anime-grid">
+        {items.map(a => <AnimeCard anime={a} />)}
+      </div>
+    ) : (
+      <p class="empty">Belum ada anime untuk genre ini.</p>
+    )}
+
+    <Pagination
+      current={pageNumber}
+      total={totalPages}
+      base={`/genre/${slug}`}
+    />
+  </div>
+</BaseLayout>
+
+<style>
+  /* ----------------------------------------------------------
+     WRAPPER
+     ---------------------------------------------------------- */
+  .wrapper {
+    padding-block: var(--s-6) var(--s-12);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-6);
+  }
+
+  /* ----------------------------------------------------------
+     GRID
+     ---------------------------------------------------------- */
+  .anime-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-3);
+  }
+
+  @media (min-width: 50rem) {
+    .anime-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--s-4);
+    }
+  }
+
+  /* ----------------------------------------------------------
+     EMPTY
+     ---------------------------------------------------------- */
+  .empty {
+    color: var(--text-muted);
+    text-align: center;
+    padding: var(--s-12) 0;
+    font-size: var(--fs-sm);
+  }
+</style>
+===== END FILE =====
+
+===== FILE: ./src/pages/anime/genre/index.astro =====
+---
+import { getAllAnime } from '~/lib/anime';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Hero from '~/components/Hero.astro';
+import LinkCard from '~/user-components/LinkCard.astro';
+import { GENRES, URLS } from '~/constants';
+
+const allAnime = await getAllAnime();
+
+const genreCounts: Record<string, number> = {};
+allAnime.forEach(a => {
+  a.data.genre.forEach(g => {
+    genreCounts[g] = (genreCounts[g] || 0) + 1;
+  });
+});
+
+const genres = GENRES
+  .map(name => ({ name, count: genreCounts[name] || 0 }))
+  .filter(g => g.count > 0)
+  .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+---
+
+<BaseLayout
+  title="Semua Genre"
+  description="Jelajahi anime berdasarkan genre."
+  canonical="/genre/"
+>
+  <div class="wrapper">
+
+    <Hero
+      title="Semua Genre"
+      description={`${genres.length} genre · ${allAnime.length} anime`}
+    />
+
+    <div class="genre-grid">
+      {genres.map(g => (
+        <LinkCard
+          href={URLS.genre(g.name)}
+          variant="outline"
+          padding="md"
+        >
+          <div class="genre-content">
+            <span class="genre-name">{g.name}</span>
+            <span class="genre-count">{g.count}</span>
+          </div>
+        </LinkCard>
+      ))}
+    </div>
+
+  </div>
+</BaseLayout>
+
+<style>
+  /* ----------------------------------------------------------
+     WRAPPER
+     ---------------------------------------------------------- */
+  .wrapper {
+    padding-block: var(--s-6) var(--s-12);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-6);
+  }
+
+  /* ----------------------------------------------------------
+     GRID
+     ---------------------------------------------------------- */
+  .genre-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-3);
+  }
+
+  @media (min-width: 48rem) {
+    .genre-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--s-4);
+    }
+  }
+
+  /* ----------------------------------------------------------
+     CONTENT — space-between: nama kiri, count kanan
+     ---------------------------------------------------------- */
+  .genre-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    min-width: 0;
+  }
+
+  .genre-name {
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    font-size: var(--fs-base);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .genre-count {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+</style>
+===== END FILE =====
+
 ===== FILE: ./src/pages/anime/index.astro =====
 ---
-import { getCollection } from 'astro:content';
+import { getAllAnime } from '~/lib/anime';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Hero from '~/components/Hero.astro';
 import Badge from '~/user-components/Badge.astro';
 import { URLS, STATUS_VARIANT, type Status } from '~/constants';
 
-const allAnime = await getCollection('anime');
+const allAnime = await getAllAnime();
 
 const sorted = [...allAnime].sort((a, b) =>
   a.data.title.localeCompare(b.data.title, 'id-ID')
@@ -4557,8 +6009,7 @@ const description = isFirstPage
 
 ===== FILE: ./src/pages/anime/watch/[slug]/[episode]/index.astro =====
 ---
-import { getCollection } from 'astro:content';
-import { URLS } from '~/constants';
+import { getAllAnime } from '~/lib/anime';
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Player from '~/components/Player.astro';
@@ -4569,7 +6020,7 @@ import DownloadPanel from '~/components/DownloadPanel.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
 
 export async function getStaticPaths() {
-  const allAnime = await getCollection('anime');
+  const allAnime = await getAllAnime();
   const paths = [];
 
   for (const anime of allAnime) {
@@ -4583,7 +6034,6 @@ export async function getStaticPaths() {
       });
     }
   }
-
   return paths;
 }
 
@@ -5470,9 +6920,8 @@ const genres = GENRES
 
 ===== FILE: ./src/pages/index.astro =====
 ---
-import { getCollection } from 'astro:content';
 import { SITE, GENRES, PER_PAGE, URLS } from '~/constants';
-import { sortByRecent } from '~/lib/anime';
+import { getAllAnime, sortByRecent } from '~/lib/anime';
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
@@ -5481,7 +6930,7 @@ import LinkButton from '~/user-components/LinkButton.astro';
 import LinkCard from '~/user-components/LinkCard.astro';
 import SectionLabel from '~/components/SectionLabel.astro';
 
-const allAnime = await getCollection('anime');
+const allAnime = await getAllAnime();
 
 const latest = sortByRecent(allAnime).slice(0, 3);
 
@@ -5603,7 +7052,7 @@ const genres = GENRES
         <header class="section-header">
           <SectionLabel>Genre</SectionLabel>
           <LinkButton
-            href="/genre/"
+            href="/anime/genre/"
             variant="ghost"
             size="md"
             icon="arrow-right"
@@ -5879,14 +7328,15 @@ export async function GET(context: APIContext) {
 
 ===== FILE: ./src/pages/search/index.astro =====
 ---
-import { getCollection } from 'astro:content';
+import { getAllAnime } from '~/lib/anime';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Hero from '~/components/Hero.astro';
 import Icon from '~/user-components/Icons.astro';
 import Button from '~/user-components/Button.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
 
-const allAnime = await getCollection('anime');
+const allAnime = await getAllAnime();
+
 const sorted = [...allAnime].sort((a, b) =>
   a.data.title.localeCompare(b.data.title, 'id-ID')
 );
