@@ -1,0 +1,419 @@
+---
+import { getAllAnime } from '~/lib/anime';
+
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Player from '~/components/Player.astro';
+import WatchTitle from '~/components/WatchTitle.astro';
+import StreamSelector from '~/components/StreamSelector.astro';
+import ActionBar from '~/components/ActionBar.astro';
+import DownloadPanel from '~/components/DownloadPanel.astro';
+import EpisodeList from '~/components/EpisodeList.astro';
+
+export async function getStaticPaths() {
+  const allAnime = await getAllAnime();
+  return allAnime.map((anime) => ({
+    params: { slug: anime.id },
+    props: { anime },
+  }));
+}
+
+const { anime } = Astro.props;
+const { data } = anime;
+---
+
+<BaseLayout
+  title={`Nonton ${data.title}`}
+  description={`Nonton ${data.title} subtitle Indonesia.`}
+  image={data.cover}
+  type="video.other"
+  canonical={`/anime/watch/${anime.id}/`}
+  noindex={true}
+>
+  <div class="wrapper" data-watch-page>
+    <div class="watch-state" data-loading>Memuat...</div>
+
+    <div class="watch-state watch-state--error" data-error hidden>
+      <p data-error-message>Anime tidak ditemukan.</p>
+      <a href="/" class="watch-state__link">Kembali ke Home</a>
+    </div>
+
+    <div class="watch-content" data-content hidden>
+      <section class="player-section">
+        <Player />
+      </section>
+
+      <div class="content-grid">
+        <div class="content-main">
+          <WatchTitle title={data.title} slug={anime.id} />
+          <StreamSelector />
+          <ActionBar slug={anime.id} />
+          <DownloadPanel />
+        </div>
+
+        <aside class="content-aside">
+          <EpisodeList />
+        </aside>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script define:vars={{ slug: anime.id }}>
+  // @ts-nocheck
+  const SLUG = slug;
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  const page = $('[data-watch-page]');
+  const loadingEl = $('[data-loading]', page);
+  const errorEl = $('[data-error]', page);
+  const contentEl = $('[data-content]', page);
+
+  function readEpFromUrl() {
+    const params = new URLSearchParams(location.search);
+    const n = parseInt(params.get('ep') || '1', 10);
+    return Number.isNaN(n) || n < 1 ? 1 : n;
+  }
+
+  function buildUrl(ep) {
+    return `/anime/watch/${SLUG}/?ep=${ep}`;
+  }
+
+  function renderPlayer(episode) {
+    const iframe = $('#player-iframe');
+    if (!iframe) return;
+    const defaultStream = episode.streams?.[0];
+    const defaultServer = defaultStream?.servers?.[0];
+    iframe.src = defaultServer?.url ?? '';
+  }
+
+  function renderWatchTitle(episode) {
+    const epEl = $('[data-watch-ep]');
+    if (epEl) epEl.textContent = String(episode.number);
+  }
+
+  function renderStreamSelector(episode) {
+    const body = $('[data-stream-body]');
+    const currentLabel = $('[data-stream-current]');
+    const groupTpl = $('[data-stream-group-template]');
+    const chipTpl = $('[data-stream-chip-template]');
+    if (!body || !groupTpl || !chipTpl) return;
+
+    body.innerHTML = '';
+
+    const savedId = localStorage.getItem('qimochi:stream');
+    let defaultLabel = '—';
+
+    episode.streams.forEach((s, i) => {
+      const group = groupTpl.content.cloneNode(true);
+      $('[data-quality-label]', group).textContent = s.quality;
+
+      const chips = $('[data-quality-chips]', group);
+
+      s.servers.forEach((srv, j) => {
+        const frag = chipTpl.content.cloneNode(true);
+        const chipId = `s-${i}-${j}`;
+
+        const input = frag.querySelector('[data-stream-input]');
+        const label = frag.querySelector('[data-stream-label]');
+
+        input.id = chipId;
+        input.value = srv.url;
+        input.dataset.quality = s.quality;
+        input.dataset.server = srv.name;
+
+        label.htmlFor = chipId;
+        label.textContent = srv.name;
+
+        if (i === 0 && j === 0) {
+          input.checked = true;
+          defaultLabel = `${s.quality} · ${srv.name}`;
+        }
+
+        if (savedId === chipId) {
+          input.checked = true;
+          defaultLabel = `${s.quality} · ${srv.name}`;
+        }
+
+        chips.appendChild(frag);
+      });
+
+      body.appendChild(group);
+    });
+
+    if (currentLabel) currentLabel.textContent = defaultLabel;
+
+    const selected = $('input[name="stream"]:checked', body);
+    if (selected) {
+      const iframe = $('#player-iframe');
+      if (iframe) iframe.src = selected.value;
+    }
+  }
+
+  function setupStreamEvents() {
+    const body = $('[data-stream-body]');
+    if (!body) return;
+
+    body.addEventListener('change', (e) => {
+      const radio = e.target;
+      if (!radio.matches('input[name="stream"]')) return;
+      if (!radio.checked) return;
+
+      const iframe = $('#player-iframe');
+      if (iframe) iframe.src = radio.value;
+
+      const currentLabel = $('[data-stream-current]');
+      if (currentLabel) {
+        currentLabel.textContent = `${radio.dataset.quality} · ${radio.dataset.server}`;
+      }
+
+      localStorage.setItem('qimochi:stream', radio.id);
+    });
+  }
+
+  function renderActionBar(episode, totalEpisodes) {
+    const hasPrev = episode.number > 1;
+    const hasNext = episode.number < totalEpisodes;
+    const prevNum = hasPrev ? episode.number - 1 : null;
+    const nextNum = hasNext ? episode.number + 1 : null;
+
+    const prevLink = $('[data-prev-link]');
+    const prevDisabled = $('[data-prev-disabled]');
+    const nextLink = $('[data-next-link]');
+    const nextDisabled = $('[data-next-disabled]');
+
+    if (prevLink) {
+      prevLink.hidden = !hasPrev;
+      if (hasPrev) {
+        prevLink.href = buildUrl(prevNum);
+        const lbl = $('[data-prev-label]', prevLink);
+        if (lbl) lbl.textContent = `Ep ${prevNum}`;
+      }
+    }
+    if (prevDisabled) prevDisabled.hidden = hasPrev;
+
+    if (nextLink) {
+      nextLink.hidden = !hasNext;
+      if (hasNext) {
+        nextLink.href = buildUrl(nextNum);
+        const lbl = $('[data-next-label]', nextLink);
+        if (lbl) lbl.textContent = `Ep ${nextNum}`;
+      }
+    }
+    if (nextDisabled) nextDisabled.hidden = hasNext;
+  }
+
+  function renderDownloads(episode) {
+    const panel = $('[data-download-panel]');
+    const list = $('[data-download-list]');
+    const itemTpl = $('[data-download-item-template]');
+    const serverTpl = $('[data-download-server-template]');
+    if (!panel || !list || !itemTpl || !serverTpl) return;
+
+    const downloads = episode.downloads ?? [];
+
+    if (downloads.length === 0) {
+      panel.hidden = true;
+      return;
+    }
+
+    panel.hidden = false;
+    list.innerHTML = '';
+
+    downloads.forEach((d) => {
+      const item = itemTpl.content.cloneNode(true);
+      $('[data-download-quality]', item).textContent = d.quality;
+      $('[data-download-size]', item).textContent = d.size;
+
+      const servers = $('[data-download-servers]', item);
+      d.servers.forEach((srv) => {
+        const frag = serverTpl.content.cloneNode(true);
+        const a = frag.querySelector('a');
+        a.href = srv.url;
+        $('[data-download-server-name]', frag).textContent = srv.name;
+        servers.appendChild(frag);
+      });
+
+      list.appendChild(item);
+    });
+  }
+
+  function renderEpisodeList(episodes, currentEp) {
+    const list = $('[data-episode-items]');
+    const count = $('[data-episode-count]');
+    const tpl = $('[data-episode-item-template]');
+    if (!list) return;
+
+    if (count) count.textContent = String(episodes.length);
+    list.innerHTML = '';
+
+    const canClone = Boolean(tpl);
+
+    episodes.forEach((ep) => {
+      let a;
+      if (canClone) {
+        const li = tpl.content.cloneNode(true);
+        a = li.querySelector('a');
+        list.appendChild(li);
+      } else {
+        const li = document.createElement('li');
+        a = document.createElement('a');
+        a.className = 'episode-item';
+        a.innerHTML = '<span class="num"></span>';
+        li.appendChild(a);
+        list.appendChild(li);
+      }
+
+      a.href = buildUrl(ep.number);
+      a.dataset.ep = String(ep.number);
+      const numEl = a.querySelector('.num');
+      if (numEl) numEl.textContent = String(ep.number).padStart(2, '0');
+
+      if (ep.number === currentEp) {
+        a.classList.add('active');
+        a.setAttribute('aria-current', 'page');
+      } else {
+        a.classList.remove('active');
+        a.removeAttribute('aria-current');
+      }
+    });
+
+    list.addEventListener('click', (e) => {
+      const link = e.target.closest('a[data-ep]');
+      if (!link) return;
+      e.preventDefault();
+      const ep = parseInt(link.dataset.ep, 10);
+      if (!Number.isNaN(ep)) goToEpisode(ep);
+    });
+  }
+
+  let cache = null;
+
+  function renderEpisode(anime, epNumber) {
+    const episode = anime.episodes.find((e) => e.number === epNumber);
+    if (!episode) {
+      showError(`Episode ${epNumber} tidak ditemukan.`);
+      return;
+    }
+
+    document.title = `${anime.title} Episode ${episode.number}`;
+
+    renderPlayer(episode);
+    renderWatchTitle(episode);
+    renderStreamSelector(episode);
+    renderActionBar(episode, anime.episodes.length);
+    renderDownloads(episode);
+    renderEpisodeList(anime.episodes, epNumber);
+
+    loadingEl.hidden = true;
+    errorEl.hidden = true;
+    contentEl.hidden = false;
+  }
+
+  function showError(msg) {
+    loadingEl.hidden = true;
+    contentEl.hidden = true;
+    errorEl.hidden = false;
+    const msgEl = $('[data-error-message]', errorEl);
+    if (msgEl) msgEl.textContent = msg;
+  }
+
+  function goToEpisode(epNumber) {
+    if (!cache) return;
+    history.pushState({ ep: epNumber }, '', buildUrl(epNumber));
+    renderEpisode(cache, epNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ------------------------------------------------------------
+  // INIT
+  // ------------------------------------------------------------
+  async function init() {
+    try {
+      const res = await fetch(`/anime/${SLUG}.json`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const anime = await res.json();
+      cache = anime;
+
+      setupStreamEvents();
+
+      const ep = readEpFromUrl();
+      renderEpisode(anime, ep);
+    } catch (err) {
+      showError('Gagal memuat data anime.');
+      console.error('[watch]', err);
+    }
+
+    window.addEventListener('popstate', () => {
+      if (!cache) return;
+      const ep = readEpFromUrl();
+      renderEpisode(cache, ep);
+    });
+  }
+
+  init();
+</script>
+
+<style>
+  .wrapper {
+    padding-block: var(--s-4) var(--s-12);
+  }
+
+  .watch-state {
+    text-align: center;
+    padding: var(--s-12) var(--s-4);
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+  }
+
+  .watch-state--error p {
+    margin: 0 0 var(--s-3);
+  }
+
+  .watch-state__link {
+    color: var(--accent);
+  }
+
+  .watch-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+  }
+
+  .watch-content[hidden] {
+    display: none;
+  }
+
+  .player-section {
+    margin-bottom: var(--s-5);
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-4);
+    align-items: start;
+  }
+
+  .content-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  @media (min-width: 50rem) {
+    .content-grid {
+      grid-template-columns: 1fr var(--aside-width);
+      gap: var(--s-6);
+    }
+
+    .content-aside {
+      position: sticky;
+      top: var(--sticky-top);
+      max-height: calc(100vh - var(--sticky-top) - var(--s-4));
+      overflow-y: auto;
+    }
+  }
+</style>

@@ -1,0 +1,78 @@
+---
+import { URLS } from '~/constants';
+import LinkButton from '~/user-components/LinkButton.astro';
+
+interface Props {
+  slug?: string;
+  episodeNumber?: number;
+  totalEpisodes?: number;
+}
+
+const {
+  slug = '',
+  episodeNumber = 1,
+  totalEpisodes = 0,
+} = Astro.props;
+
+const hasPrev = episodeNumber > 1;
+const hasNext = episodeNumber < totalEpisodes;
+const prevEp = hasPrev ? episodeNumber - 1 : null;
+const nextEp = hasNext ? episodeNumber + 1 : null;
+---
+
+<nav class="action-bar" aria-label="Navigasi episode" data-action-bar>
+  <LinkButton
+    data-prev-link
+    href={prevEp ? URLS.watch(slug, prevEp) : '#'}
+    variant="outline"
+    size="md"
+    icon="arrow-left"
+    hidden={!hasPrev}
+  >
+    <span data-prev-label>Ep {prevEp ?? '—'}</span>
+  </LinkButton>
+
+  <LinkButton
+    data-prev-disabled
+    variant="outline"
+    size="md"
+    icon="arrow-left"
+    disabled
+    hidden={hasPrev}
+  >
+    <span data-prev-disabled-label>Ep —</span>
+  </LinkButton>
+
+  <LinkButton
+    data-next-link
+    href={nextEp ? URLS.watch(slug, nextEp) : '#'}
+    variant="outline"
+    size="md"
+    icon="arrow-right"
+    iconPos="suffix"
+    hidden={!hasNext}
+  >
+    <span data-next-label>Ep {nextEp ?? '—'}</span>
+  </LinkButton>
+
+  <LinkButton
+    data-next-disabled
+    variant="outline"
+    size="md"
+    icon="arrow-right"
+    iconPos="suffix"
+    disabled
+    hidden={hasNext}
+  >
+    <span data-next-disabled-label>Ep —</span>
+  </LinkButton>
+</nav>
+
+<style>
+  .action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-2);
+  }
+</style>
