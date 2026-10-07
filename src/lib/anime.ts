@@ -125,3 +125,40 @@ export function sortByRecent(items: HydratedAnime[]): HydratedAnime[] {
 export function getYear(anime: HydratedAnime | AnimeEntry): number {
   return anime.data.releaseDate.getFullYear();
 }
+
+export interface EpisodePathItem {
+  slug: string;
+  anime: HydratedAnime;
+  episode: EpisodeData;
+  episodeIndex: number;
+  totalEpisodes: number;
+}
+
+export async function getAllEpisodePaths(): Promise<EpisodePathItem[]> {
+  const all = await getAllAnime();
+  const paths: EpisodePathItem[] = [];
+
+  for (const anime of all) {
+    const eps = anime.data.episodes;
+    const total = eps.length;
+
+    eps.forEach((episode, episodeIndex) => {
+      paths.push({
+        slug: anime.id,
+        anime,
+        episode,
+        episodeIndex,
+        totalEpisodes: total,
+      });
+    });
+  }
+
+  return paths;
+}
+
+export function findEpisode(
+  anime: HydratedAnime,
+  episodeNumber: number
+): EpisodeData | null {
+  return anime.data.episodes.find((e) => e.number === episodeNumber) ?? null;
+}
