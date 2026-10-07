@@ -19,28 +19,10 @@ export async function getStaticPaths() {
 
 const { anime } = Astro.props;
 const { data } = anime;
-
-// ===== SSR default episode =====
-const DEFAULT_EP = 1;
-const sortedEps = [...data.episodes].sort((a, b) => a.number - b.number);
-const defaultEpisode =
-  sortedEps.find((e) => e.number === DEFAULT_EP) ?? sortedEps[0];
-
-const episodeNumbers = sortedEps.map((e) => e.number);
-const totalEpisodes = sortedEps.length;
-
-// Default stream/server untuk SSR player
-const defaultStream = defaultEpisode?.streams?.[0];
-const defaultServer = defaultStream?.servers?.[0];
-const defaultSrc = defaultServer?.url ?? '';
-
-const watchTitle = defaultEpisode
-  ? `${data.title} Episode ${defaultEpisode.number}`
-  : `Nonton ${data.title}`;
 ---
 
 <BaseLayout
-  title={watchTitle}
+  title={`Nonton ${data.title}`}
   description={`Nonton ${data.title} subtitle Indonesia.`}
   image={data.cover}
   type="video.other"
@@ -48,77 +30,416 @@ const watchTitle = defaultEpisode
   noindex={true}
 >
   <div class="wrapper" data-watch-page>
-    {/* Error state — hidden by default */}
-    <div class="watch-state watch-state--error" data-error hidden>
-      <p data-error-message>Anime tidak ditemukan.</p>
-      <a href="/" class="watch-state__link">Kembali ke Home</a>
+    <!-- ============================================
+         BLUR LOADER — nutupin halaman sampai data siap
+         ============================================ -->
+    <div class="page-loader" data-loader>
+      <div class="page-loader__spinner" aria-hidden="true"></div>
+      <p class="page-loader__text">Memuat episode...</p>
     </div>
 
-    {/* Content — SSR rendered, always visible */}
+    <!-- ============================================
+         CONTENT — di-render kosong dulu, JS yang isi
+         ============================================ -->
     <div class="watch-content" data-content>
       <section class="player-section">
-        {defaultEpisode ? (
-          <Player
-            src={defaultSrc}
-            title={defaultEpisode.title ?? data.title}
-          />
-        ) : (
-          <Player />
-        )}
+        <Player />
       </section>
 
       <div class="content-grid">
         <div class="content-main">
-          <WatchTitle
-            title={data.title}
-            slug={anime.id}
-            episodeNumber={defaultEpisode?.number ?? 1}
-          />
-          <StreamSelector streams={defaultEpisode?.streams ?? []} />
-          <ActionBar
-            slug={anime.id}
-            episodeNumber={defaultEpisode?.number ?? 1}
-            totalEpisodes={totalEpisodes}
-          />
-          <DownloadPanel downloads={defaultEpisode?.downloads ?? []} />
+          <WatchTitle title={data.title} slug={anime.id} />
+          <StreamSelector />
+          <ActionBar slug={anime.id} />
+          <DownloadPanel />
         </div>
 
         <aside class="content-aside">
-          <EpisodeList
-            slug={anime.id}
-            episodes={episodeNumbers}
-            currentEpisode={defaultEpisode?.number ?? 1}
-          />
+          <EpisodeList />
         </aside>
       </div>
     </div>
+
+    <!-- ============================================
+         ERROR — kalau fetch gagal
+         ============================================ -->
+    <div class="watch-state watch-state--error" data-error hidden>
+      <p data-error-message>Anime tidak ditemukan.</p>
+      <a href="/" class="watch-state__link">Kembali ke Home</a>
+    </div>
   </div>
+
+  <!-- ============================================
+       STYLE INLINE — bypass Astro tree-shaking
+       ============================================ -->
+  <style is:inline>
+    /* ---- Page Loader (blur overlay) ---- */
+    .page-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      background: rgba(20, 18, 15, 0.5);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      opacity: 1;
+      transition: opacity 0.35s ease;
+      pointer-events: all;
+    }
+
+    .page-loader[data-hidden="true"] {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .page-loader__spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: page-loader-spin 0.8s linear infinite;
+    }
+
+    .page-loader__text {
+      margin: 0;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.85);
+      letter-spacing: 0.05em;
+    }
+
+    @keyframes page-loader-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ---- Watch page layout ---- */
+    .wrapper {
+      padding-block: var(--s-4) var(--s-12);
+    }
+
+    .watch-content {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-5);
+    }
+
+    .watch-content[hidden] {
+      display: none;
+    }
+
+    .player-section {
+      margin-bottom: var(--s-5);
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--s-4);
+      align-items: start;
+    }
+
+    .content-main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-4);
+    }
+
+    .watch-state {
+      text-align: center;
+      padding: var(--s-12) var(--s-4);
+      color: var(--text-muted);
+      font-size: var(--fs-sm);
+    }
+
+    .watch-state--error p {
+      margin: 0 0 var(--s-3);
+    }
+
+    .watch-state__link {
+      color: var(--accent);
+    }
+
+    @media (min-width: 50rem) {
+      .content-grid {
+        grid-template-columns: 1fr var(--aside-width);
+        gap: var(--s-6);
+      }
+
+      .content-aside {
+        position: sticky;
+        top: var(--sticky-top);
+        max-height: calc(100vh - var(--sticky-top) - var(--s-4));
+        overflow-y: auto;
+      }
+    }
+
+    /* ==========================================
+       WATCH COMPONENTS — bypass tree-shaking
+       ========================================== */
+
+    /* ---- Stream Selector ---- */
+    .stream-picker {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+    }
+    .stream-picker summary {
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+      padding: var(--s-3) var(--s-4);
+      cursor: pointer;
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-medium);
+      list-style: none;
+      user-select: none;
+    }
+    .stream-picker summary::-webkit-details-marker { display: none; }
+    .stream-picker summary .current {
+      margin-left: auto;
+      padding: var(--s-1) var(--s-3);
+      background: var(--bg-surface);
+      color: var(--accent);
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-semibold);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .stream-picker summary .chevron {
+      display: inline-flex;
+      align-items: center;
+      color: var(--text-muted);
+      transition: transform var(--t-base);
+    }
+    .stream-picker[open] summary .chevron {
+      transform: rotate(180deg);
+    }
+    .stream-body {
+      padding: 0 var(--s-4) var(--s-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-3);
+    }
+    .stream-body .quality-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-2);
+    }
+    .stream-body .quality-label {
+      font-size: var(--fs-xs);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: var(--fw-semibold);
+    }
+    .stream-body .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2);
+    }
+    .stream-body .chip {
+      display: inline-block;
+      padding: var(--s-1) var(--s-3);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-medium);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--t-fast);
+    }
+    .stream-body .chip:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+    .stream-body input[type='radio']:checked + .chip {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+
+    /* ---- Episode List ---- */
+    .episode-list {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: var(--s-4);
+    }
+    .episode-list summary {
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+      cursor: pointer;
+      font-weight: var(--fw-medium);
+      font-size: var(--fs-sm);
+      list-style: none;
+    }
+    .episode-list summary::-webkit-details-marker { display: none; }
+    .episode-list summary .count {
+      color: var(--text-muted);
+      font-weight: var(--fw-normal);
+    }
+    .episode-list summary .chevron {
+      display: inline-flex;
+      align-items: center;
+      margin-left: auto;
+      color: var(--text-muted);
+      transition: transform var(--t-base);
+    }
+    .episode-list[open] summary .chevron {
+      transform: rotate(180deg);
+    }
+    .episode-list .episode-items {
+      padding: 0;
+      margin: var(--s-3) 0 0;
+      list-style: none;
+    }
+    .episode-list[open] .episode-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
+      gap: var(--s-2);
+    }
+    .episode-list .episode-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 2.5rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-medium);
+      font-variant-numeric: tabular-nums;
+      transition: all var(--t-fast);
+    }
+    .episode-list .episode-item:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+    .episode-list .episode-item.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-text);
+      pointer-events: none;
+    }
+
+    /* ---- Download Panel ---- */
+    .download-panel {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: var(--s-4);
+    }
+    .download-panel[hidden] { display: none; }
+    .download-panel .panel-title {
+      font-size: var(--fs-base);
+      font-weight: var(--fw-semibold);
+      margin: 0 0 var(--s-3);
+      color: var(--text-primary);
+    }
+    .download-panel .quality-item {
+      border-top: 1px solid var(--border);
+    }
+    .download-panel .quality-item:first-of-type {
+      border-top: none;
+    }
+    .download-panel .quality-item summary {
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+      padding: var(--s-3) 0;
+      cursor: pointer;
+      list-style: none;
+      font-size: var(--fs-sm);
+      user-select: none;
+    }
+    .download-panel .quality-item summary::-webkit-details-marker { display: none; }
+    .download-panel .quality {
+      font-weight: var(--fw-semibold);
+      color: var(--text-primary);
+    }
+    .download-panel .size { color: var(--text-muted); }
+    .download-panel .chevron {
+      display: inline-flex;
+      align-items: center;
+      margin-left: auto;
+      color: var(--text-muted);
+      transition: transform var(--t-base);
+    }
+    .download-panel .quality-item[open] .chevron {
+      transform: rotate(180deg);
+    }
+    .download-panel .servers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2);
+      padding: 0 0 var(--s-3) 0;
+    }
+    .download-panel .dl-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--s-1);
+      padding: var(--s-1) var(--s-3);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-medium);
+      color: var(--text-secondary);
+      transition: all var(--t-fast);
+    }
+    .download-panel .dl-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .download-panel .dl-link svg {
+      width: 0.9em;
+      height: 0.9em;
+    }
+
+    /* ---- Reveal animation (konten muncul) ---- */
+    .watch-content {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .watch-content[data-ready="true"] {
+      opacity: 1;
+    }
+  </style>
 </BaseLayout>
 
-<script define:vars={{ slug: anime.id, defaultEpisodeNumber: defaultEpisode?.number ?? 1 }}>
+<script define:vars={{ slug: anime.id }}>
   // @ts-nocheck
   const SLUG = slug;
-  const DEFAULT_EP = defaultEpisodeNumber;
 
   const $ = (sel, root = document) => root.querySelector(sel);
 
   const page = $('[data-watch-page]');
+  const loader = $('[data-loader]', page);
   const errorEl = $('[data-error]', page);
   const contentEl = $('[data-content]', page);
 
+  function hideLoader() {
+    if (!loader) return;
+    loader.setAttribute('data-hidden', 'true');
+    // Remove from DOM setelah fade selesai
+    setTimeout(() => {
+      if (loader.parentNode) loader.parentNode.removeChild(loader);
+    }, 400);
+  }
+
   function readEpFromUrl() {
     const params = new URLSearchParams(location.search);
-    const n = parseInt(params.get('ep') || String(DEFAULT_EP), 10);
-    return Number.isNaN(n) || n < 1 ? DEFAULT_EP : n;
+    const n = parseInt(params.get('ep') || '1', 10);
+    return Number.isNaN(n) || n < 1 ? 1 : n;
   }
 
   function buildUrl(ep) {
     return `/anime/watch/${SLUG}/?ep=${ep}`;
   }
 
-  // ============================================================
-  // RENDER — dipakai kalau user deep-link ?ep=N (N != default)
-  // ============================================================
   function renderPlayer(episode) {
     const iframe = $('#player-iframe');
     if (!iframe) return;
@@ -188,6 +509,27 @@ const watchTitle = defaultEpisode
       const iframe = $('#player-iframe');
       if (iframe) iframe.src = selected.value;
     }
+  }
+
+  function setupStreamEvents() {
+    const body = $('[data-stream-body]');
+    if (!body) return;
+
+    body.addEventListener('change', (e) => {
+      const radio = e.target;
+      if (!radio.matches('input[name="stream"]')) return;
+      if (!radio.checked) return;
+
+      const iframe = $('#player-iframe');
+      if (iframe) iframe.src = radio.value;
+
+      const currentLabel = $('[data-stream-current]');
+      if (currentLabel) {
+        currentLabel.textContent = `${radio.dataset.quality} · ${radio.dataset.server}`;
+      }
+
+      localStorage.setItem('qimochi:stream', radio.id);
+    });
   }
 
   function renderActionBar(episode, totalEpisodes) {
@@ -296,6 +638,14 @@ const watchTitle = defaultEpisode
         a.removeAttribute('aria-current');
       }
     });
+
+    list.addEventListener('click', (e) => {
+      const link = e.target.closest('a[data-ep]');
+      if (!link) return;
+      e.preventDefault();
+      const ep = parseInt(link.dataset.ep, 10);
+      if (!Number.isNaN(ep)) goToEpisode(ep);
+    });
   }
 
   let cache = null;
@@ -318,6 +668,7 @@ const watchTitle = defaultEpisode
 
     errorEl.hidden = true;
     contentEl.hidden = false;
+    contentEl.setAttribute('data-ready', 'true');
   }
 
   function showError(msg) {
@@ -325,171 +676,64 @@ const watchTitle = defaultEpisode
     errorEl.hidden = false;
     const msgEl = $('[data-error-message]', errorEl);
     if (msgEl) msgEl.textContent = msg;
+    hideLoader();
   }
 
   function goToEpisode(epNumber) {
     if (!cache) return;
+    // Tampilkan loader sambil transisi
+    showLoader();
     history.pushState({ ep: epNumber }, '', buildUrl(epNumber));
     renderEpisode(cache, epNumber);
+    // Hide loader setelah frame berikutnya
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => hideLoader());
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // ============================================================
-  // EVENT LISTENERS
-  // ============================================================
-  function setupStreamEvents() {
-    const body = $('[data-stream-body]');
-    if (!body) return;
-
-    body.addEventListener('change', (e) => {
-      const radio = e.target;
-      if (!radio.matches('input[name="stream"]')) return;
-      if (!radio.checked) return;
-
-      const iframe = $('#player-iframe');
-      if (iframe) iframe.src = radio.value;
-
-      const currentLabel = $('[data-stream-current]');
-      if (currentLabel) {
-        currentLabel.textContent = `${radio.dataset.quality} · ${radio.dataset.server}`;
-      }
-
-      localStorage.setItem('qimochi:stream', radio.id);
-    });
-  }
-
-  function setupEpisodeNav() {
-    const list = $('[data-episode-items]');
-    if (!list) return;
-
-    list.addEventListener('click', (e) => {
-      const link = e.target.closest('a[data-ep]');
-      if (!link) return;
-      e.preventDefault();
-      const ep = parseInt(link.dataset.ep, 10);
-      if (!Number.isNaN(ep)) goToEpisode(ep);
-    });
-  }
-
-  // ============================================================
-  // INIT
-  // ============================================================
-  async function init() {
-    setupStreamEvents();
-    setupEpisodeNav();
-
-    const ep = readEpFromUrl();
-
-    // SSR sudah render DEFAULT_EP → skip fetch & re-render
-    if (ep === DEFAULT_EP) {
-      // Re-apply saved stream preference (jika ada)
-      const savedId = localStorage.getItem('qimochi:stream');
-      if (savedId) {
-        const savedInput = document.getElementById(savedId);
-        if (savedInput && savedInput.name === 'stream') {
-          savedInput.checked = true;
-          const iframe = $('#player-iframe');
-          if (iframe) iframe.src = savedInput.value;
-          const currentLabel = $('[data-stream-current]');
-          if (currentLabel) {
-            currentLabel.textContent = `${savedInput.dataset.quality} · ${savedInput.dataset.server}`;
-          }
-        }
-      }
+  function showLoader() {
+    let existing = $('[data-loader]');
+    if (existing) {
+      existing.setAttribute('data-hidden', 'false');
       return;
     }
+    const newLoader = document.createElement('div');
+    newLoader.className = 'page-loader';
+    newLoader.setAttribute('data-loader', '');
+    newLoader.innerHTML =
+      '<div class="page-loader__spinner"></div>' +
+      '<p class="page-loader__text">Memuat episode...</p>';
+    document.body.appendChild(newLoader);
+  }
 
-    // User deep-link ?ep=N → fetch & re-render
+  async function init() {
     try {
       const res = await fetch(`/anime/${SLUG}.json`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const anime = await res.json();
       cache = anime;
+
+      setupStreamEvents();
+
+      const ep = readEpFromUrl();
       renderEpisode(anime, ep);
+
+      // Fade out loader setelah konten siap
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => hideLoader());
+      });
     } catch (err) {
       showError('Gagal memuat data anime.');
       console.error('[watch]', err);
     }
-  }
 
-  window.addEventListener('popstate', () => {
-    if (!cache) return;
-    const ep = readEpFromUrl();
-    if (ep === DEFAULT_EP) {
-      // Reload halaman untuk kembali ke SSR state
-      location.reload();
-      return;
-    }
-    renderEpisode(cache, ep);
-  });
+    window.addEventListener('popstate', () => {
+      if (!cache) return;
+      const ep = readEpFromUrl();
+      renderEpisode(cache, ep);
+    });
+  }
 
   init();
 </script>
-
-<style>
-  .wrapper {
-    padding-block: var(--s-4) var(--s-12);
-  }
-
-  .watch-state {
-    text-align: center;
-    padding: var(--s-12) var(--s-4);
-    color: var(--text-muted);
-    font-size: var(--fs-sm);
-  }
-
-  .watch-state--error p {
-    margin: 0 0 var(--s-3);
-  }
-
-  .watch-state__link {
-    color: var(--accent);
-  }
-
-  /* ✅ Reserve height supaya tidak ada CLS saat JS mengganti konten */
-  .watch-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-5);
-    min-height: 60vh;
-  }
-
-  .watch-content[hidden] {
-    display: none;
-  }
-
-  .player-section {
-    margin-bottom: var(--s-5);
-    /* Player sudah punya aspect-ratio 16:9 di Player.astro */
-  }
-
-  .content-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s-4);
-    align-items: start;
-  }
-
-  .content-main {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-4);
-    /* Reserve height biar CLS minimal saat re-render */
-    min-height: 30rem;
-  }
-
-  @media (min-width: 50rem) {
-    .content-grid {
-      grid-template-columns: 1fr var(--aside-width);
-      gap: var(--s-6);
-    }
-
-    .content-aside {
-      position: sticky;
-      top: var(--sticky-top);
-      max-height: calc(100vh - var(--sticky-top) - var(--s-4));
-      overflow-y: auto;
-    }
-  }
-</style>
