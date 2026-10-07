@@ -1,0 +1,155 @@
+---
+import AnimeCard from './AnimeCard.astro';
+import AnimeGrid from './AnimeGrid.astro';
+import { getAllAnime } from '~/lib/anime';
+
+const RELATION_LABEL: Record<string, string> = {
+  sequel: 'Sekuel',
+  prequel: 'Prekuel',
+  side_story: 'Cerita Sampingan',
+  parent_story: 'Cerita Induk',
+  alternative: 'Versi Alternatif',
+  spin_off: 'Spin-off',
+  adaptation: 'Adaptasi',
+  character: 'Karakter',
+  summary: 'Ringkasan',
+  full_story: 'Cerita Lengkap',
+  compilation: 'Kompilasi',
+  contains: 'Berisi',
+  other: 'Terkait',
+};
+
+interface Franchise {
+  relation: string;
+  slug: string;
+  title?: string;
+}
+
+interface Props {
+  title?: string;
+  currentSlug: string;
+  franchises?: Franchise[];
+}
+
+const {
+  title = 'Franchise',
+  currentSlug,
+  franchises = [],
+} = Astro.props;
+
+const filtered = franchises.filter((f) => f.slug !== currentSlug);
+
+if (filtered.length === 0) return null;
+
+const allAnime = await getAllAnime();
+const animeMap = new Map(allAnime.map((a) => [a.id, a]));
+
+function labelFor(relation: string): string {
+  return RELATION_LABEL[relation] ?? relation;
+}
+
+function slugToTitle(slug: string): string {
+  return slug
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+---
+
+<section class="anime-franchise">
+  <h2 class="anime-franchise__title">{title}</h2>
+
+  <AnimeGrid>
+    {filtered.map((f) => {
+      const anime = animeMap.get(f.slug);
+      const label = labelFor(f.relation);
+
+      if (anime) {
+        return (
+          <AnimeCard
+            anime={anime}
+            relationBadge={label}
+          />
+        );
+      }
+
+      const displayTitle = f.title ?? slugToTitle(f.slug);
+
+      return (
+        <div class="anime-franchise__dummy" aria-disabled="true">
+          <div class="anime-franchise__dummy-cover">
+            <span class="anime-franchise__dummy-label">{label}</span>
+          </div>
+          <p class="anime-franchise__dummy-title">{displayTitle}</p>
+          <span class="anime-franchise__dummy-meta">Belum tersedia</span>
+        </div>
+      );
+    })}
+  </AnimeGrid>
+</section>
+
+<style>
+  .anime-franchise {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .anime-franchise__title {
+    margin: 0;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    line-height: var(--lh-tight);
+  }
+
+  .anime-franchise__dummy {
+    display: block;
+    min-width: 0;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .anime-franchise__dummy-cover {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    background: var(--bg-surface);
+    display: grid;
+    place-items: center;
+    padding: var(--s-3);
+  }
+
+  .anime-franchise__dummy-label {
+    display: inline-block;
+    padding: 2px 6px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.625rem;
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .anime-franchise__dummy-title {
+    margin: 0;
+    padding: var(--s-3) var(--s-3) var(--s-1);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    line-height: var(--lh-tight);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .anime-franchise__dummy-meta {
+    display: block;
+    padding: 0 var(--s-3) var(--s-3);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+</style>
