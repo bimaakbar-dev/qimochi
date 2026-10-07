@@ -12,6 +12,7 @@ import StreamSelector from '~/components/StreamSelector.astro';
 import ActionBar from '~/components/ActionBar.astro';
 import DownloadPanel from '~/components/DownloadPanel.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
+import AnimeFranchise from '~/components/AnimeFranchise.astro';
 
 export async function getStaticPaths() {
   const paths = await getAllEpisodePaths();
@@ -38,12 +39,10 @@ interface Props {
 const { anime, episode, totalEpisodes } = Astro.props as Props;
 const { data } = anime;
 
-// Sort episode numbers untuk EpisodeList
 const episodeNumbers = data.episodes
   .map((e) => e.number)
   .sort((a, b) => a - b);
 
-// Default server (yang paling atas = kualitas tertinggi biasanya)
 const defaultStream = episode.streams?.[0];
 const defaultServer = defaultStream?.servers?.[0];
 const playerSrc = defaultServer?.url ?? '';
@@ -86,6 +85,11 @@ const canonical = `/anime/watch/${anime.id}/episodes/${episode.number}/`;
         />
 
         <DownloadPanel downloads={episode.downloads ?? []} />
+
+        <AnimeFranchise
+          currentSlug={anime.id}
+          franchises={data.franchises}
+        />
       </div>
 
       <aside class="content-aside">
@@ -119,7 +123,7 @@ const canonical = `/anime/watch/${anime.id}/episodes/${episode.number}/`;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--s-4);
+    gap: var(--s-5);
   }
 
   @media (min-width: 50rem) {
