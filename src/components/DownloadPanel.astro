@@ -19,75 +19,44 @@ const { downloads = [] } = Astro.props;
 const hasDownloads = downloads.length > 0;
 ---
 
-<section class="download-panel" data-download-panel hidden={!hasDownloads}>
-  <h3 class="panel-title">Download</h3>
+{hasDownloads && (
+  <section class="download-panel">
+    <h3 class="panel-title">Download</h3>
 
-  <div data-download-list>
-    {downloads.map((d) => (
-      <details class="quality-item">
-        <summary>
-          <span class="quality">{d.quality}</span>
-          <span class="size">· {d.size}</span>
-          <span class="chevron" aria-hidden="true">
-            <Icon name="chevron-down" size={14} />
-          </span>
-        </summary>
-        <div class="servers">
-          {d.servers.map(srv => (
-            <a
-              href={srv.url}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              class="dl-link"
-            >
-              <Icon name="download" />
-              <span>{srv.name}</span>
-            </a>
-          ))}
-        </div>
-      </details>
-    ))}
-  </div>
-
-  {!hasDownloads && (
-    <>
-      <template data-download-item-template>
+    <div>
+      {downloads.map((d) => (
         <details class="quality-item">
           <summary>
-            <span class="quality" data-download-quality></span>
-            <span class="size">· <span data-download-size></span></span>
+            <span class="quality">{d.quality}</span>
+            <span class="size">· {d.size}</span>
             <span class="chevron" aria-hidden="true">
               <Icon name="chevron-down" size={14} />
             </span>
           </summary>
-          <div class="servers" data-download-servers></div>
+          <div class="servers">
+            {d.servers.map((srv) => (
+              <a
+                href={srv.url}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                class="dl-link"
+              >
+                <Icon name="download" />
+                <span>{srv.name}</span>
+              </a>
+            ))}
+          </div>
         </details>
-      </template>
-
-      <template data-download-server-template>
-        <a
-          href="#"
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-          class="dl-link"
-        >
-          <Icon name="download" />
-          <span data-download-server-name></span>
-        </a>
-      </template>
-    </>
-  )}
-</section>
+      ))}
+    </div>
+  </section>
+)}
 
 <style>
   .download-panel {
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     padding: var(--s-4);
-  }
-
-  .download-panel[hidden] {
-    display: none;
   }
 
   .panel-title {
@@ -116,7 +85,9 @@ const hasDownloads = downloads.length > 0;
     user-select: none;
   }
 
-  .quality-item summary::-webkit-details-marker { display: none; }
+  .quality-item summary::-webkit-details-marker {
+    display: none;
+  }
 
   .quality {
     font-weight: var(--fw-semibold);
