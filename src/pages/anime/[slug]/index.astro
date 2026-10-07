@@ -5,12 +5,13 @@ import { getAllAnime } from '~/lib/anime';
 import { SITE, URLS, STATUS_VARIANT, type Status } from '~/constants';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
+import AnimeFranchise from '~/components/AnimeFranchise.astro';
 import Badge from '~/user-components/Badge.astro';
 import LinkButton from '~/user-components/LinkButton.astro';
 
 export async function getStaticPaths() {
   const allAnime = await getAllAnime();
-  return allAnime.map(anime => ({
+  return allAnime.map((anime) => ({
     params: { slug: anime.id },
     props: { anime },
   }));
@@ -21,7 +22,7 @@ const { data } = anime;
 const { Content } = await render(anime);
 
 const episodeNumbers = data.episodes
-  .map(e => e.number)
+  .map((e) => e.number)
   .sort((a, b) => a - b);
 
 const firstEpisode = episodeNumbers[0] ?? 1;
@@ -114,6 +115,11 @@ const year = data.releaseDate.getFullYear();
             <Content />
           </div>
         </section>
+
+        <AnimeFranchise
+          currentSlug={anime.id}
+          franchises={data.franchises}
+        />
       </div>
 
       <aside class="content-aside">
@@ -178,7 +184,6 @@ const year = data.releaseDate.getFullYear();
 
     & .hero-meta {
       display: grid;
-      /* Mobile: 2 kolom × 3 baris */
       grid-template-columns: repeat(2, 1fr);
       gap: var(--s-4);
       width: 100%;
@@ -212,6 +217,7 @@ const year = data.releaseDate.getFullYear();
       }
     }
   }
+
   .genre-list {
     & a {
       position: relative;
@@ -243,15 +249,21 @@ const year = data.releaseDate.getFullYear();
       }
     }
   }
+
   .content-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--s-6);
     align-items: start;
   }
+
   .content-main {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-8);
   }
+
   .section-title {
     font-size: var(--fs-lg);
     margin: 0 0 var(--s-3);
