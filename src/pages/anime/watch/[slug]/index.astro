@@ -19,10 +19,28 @@ export async function getStaticPaths() {
 
 const { anime } = Astro.props;
 const { data } = anime;
+
+// ===== SSR default episode =====
+const DEFAULT_EP = 1;
+const sortedEps = [...data.episodes].sort((a, b) => a.number - b.number);
+const defaultEpisode =
+  sortedEps.find((e) => e.number === DEFAULT_EP) ?? sortedEps[0];
+
+const episodeNumbers = sortedEps.map((e) => e.number);
+const totalEpisodes = sortedEps.length;
+
+// Default stream/server untuk SSR player
+const defaultStream = defaultEpisode?.streams?.[0];
+const defaultServer = defaultStream?.servers?.[0];
+const defaultSrc = defaultServer?.url ?? '';
+
+const watchTitle = defaultEpisode
+  ? `${data.title} Episode ${defaultEpisode.number}`
+  : `Nonton ${data.title}`;
 ---
 
 <BaseLayout
-  title={`Nonton ${data.title}`}
+  title={watchTitle}
   description={`Nonton ${data.title} subtitle Indonesia.`}
   image={data.cover}
   type="video.other"
@@ -30,56 +48,77 @@ const { data } = anime;
   noindex={true}
 >
   <div class="wrapper" data-watch-page>
-    <div class="watch-state" data-loading>Memuat...</div>
-
+    {/* Error state — hidden by default */}
     <div class="watch-state watch-state--error" data-error hidden>
       <p data-error-message>Anime tidak ditemukan.</p>
       <a href="/" class="watch-state__link">Kembali ke Home</a>
     </div>
 
-    <div class="watch-content" data-content hidden>
+    {/* Content — SSR rendered, always visible */}
+    <div class="watch-content" data-content>
       <section class="player-section">
-        <Player />
+        {defaultEpisode ? (
+          <Player
+            src={defaultSrc}
+            title={defaultEpisode.title ?? data.title}
+          />
+        ) : (
+          <Player />
+        )}
       </section>
 
       <div class="content-grid">
         <div class="content-main">
-          <WatchTitle title={data.title} slug={anime.id} />
-          <StreamSelector />
-          <ActionBar slug={anime.id} />
-          <DownloadPanel />
+          <WatchTitle
+            title={data.title}
+            slug={anime.id}
+            episodeNumber={defaultEpisode?.number ?? 1}
+          />
+          <StreamSelector streams={defaultEpisode?.streams ?? []} />
+          <ActionBar
+            slug={anime.id}
+            episodeNumber={defaultEpisode?.number ?? 1}
+            totalEpisodes={totalEpisodes}
+          />
+          <DownloadPanel downloads={defaultEpisode?.downloads ?? []} />
         </div>
 
         <aside class="content-aside">
-          <EpisodeList />
+          <EpisodeList
+            slug={anime.id}
+            episodes={episodeNumbers}
+            currentEpisode={defaultEpisode?.number ?? 1}
+          />
         </aside>
       </div>
     </div>
   </div>
 </BaseLayout>
 
-<script define:vars={{ slug: anime.id }}>
+<script define:vars={{ slug: anime.id, defaultEpisodeNumber: defaultEpisode?.number ?? 1 }}>
   // @ts-nocheck
   const SLUG = slug;
+  const DEFAULT_EP = defaultEpisodeNumber;
 
   const $ = (sel, root = document) => root.querySelector(sel);
-  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   const page = $('[data-watch-page]');
-  const loadingEl = $('[data-loading]', page);
   const errorEl = $('[data-error]', page);
   const contentEl = $('[data-content]', page);
 
   function readEpFromUrl() {
     const params = new URLSearchParams(location.search);
-    const n = parseInt(params.get('ep') || '1', 10);
-    return Number.isNaN(n) || n < 1 ? 1 : n;
+    const n = parseInt(params.get('ep') || String(DEFAULT_EP), 10);
+    return Number.isNaN(n) || n < 1 ? DEFAULT_EP : n;
   }
 
   function buildUrl(ep) {
     return `/anime/watch/${SLUG}/?ep=${ep}`;
   }
 
+  // ============================================================
+  // RENDER — dipakai kalau user deep-link ?ep=N (N != default)
+  // ============================================================
   function renderPlayer(episode) {
     const iframe = $('#player-iframe');
     if (!iframe) return;
@@ -149,27 +188,6 @@ const { data } = anime;
       const iframe = $('#player-iframe');
       if (iframe) iframe.src = selected.value;
     }
-  }
-
-  function setupStreamEvents() {
-    const body = $('[data-stream-body]');
-    if (!body) return;
-
-    body.addEventListener('change', (e) => {
-      const radio = e.target;
-      if (!radio.matches('input[name="stream"]')) return;
-      if (!radio.checked) return;
-
-      const iframe = $('#player-iframe');
-      if (iframe) iframe.src = radio.value;
-
-      const currentLabel = $('[data-stream-current]');
-      if (currentLabel) {
-        currentLabel.textContent = `${radio.dataset.quality} · ${radio.dataset.server}`;
-      }
-
-      localStorage.setItem('qimochi:stream', radio.id);
-    });
   }
 
   function renderActionBar(episode, totalEpisodes) {
@@ -278,14 +296,6 @@ const { data } = anime;
         a.removeAttribute('aria-current');
       }
     });
-
-    list.addEventListener('click', (e) => {
-      const link = e.target.closest('a[data-ep]');
-      if (!link) return;
-      e.preventDefault();
-      const ep = parseInt(link.dataset.ep, 10);
-      if (!Number.isNaN(ep)) goToEpisode(ep);
-    });
   }
 
   let cache = null;
@@ -306,13 +316,11 @@ const { data } = anime;
     renderDownloads(episode);
     renderEpisodeList(anime.episodes, epNumber);
 
-    loadingEl.hidden = true;
     errorEl.hidden = true;
     contentEl.hidden = false;
   }
 
   function showError(msg) {
-    loadingEl.hidden = true;
     contentEl.hidden = true;
     errorEl.hidden = false;
     const msgEl = $('[data-error-message]', errorEl);
@@ -326,31 +334,94 @@ const { data } = anime;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
+  // EVENT LISTENERS
+  // ============================================================
+  function setupStreamEvents() {
+    const body = $('[data-stream-body]');
+    if (!body) return;
+
+    body.addEventListener('change', (e) => {
+      const radio = e.target;
+      if (!radio.matches('input[name="stream"]')) return;
+      if (!radio.checked) return;
+
+      const iframe = $('#player-iframe');
+      if (iframe) iframe.src = radio.value;
+
+      const currentLabel = $('[data-stream-current]');
+      if (currentLabel) {
+        currentLabel.textContent = `${radio.dataset.quality} · ${radio.dataset.server}`;
+      }
+
+      localStorage.setItem('qimochi:stream', radio.id);
+    });
+  }
+
+  function setupEpisodeNav() {
+    const list = $('[data-episode-items]');
+    if (!list) return;
+
+    list.addEventListener('click', (e) => {
+      const link = e.target.closest('a[data-ep]');
+      if (!link) return;
+      e.preventDefault();
+      const ep = parseInt(link.dataset.ep, 10);
+      if (!Number.isNaN(ep)) goToEpisode(ep);
+    });
+  }
+
+  // ============================================================
   // INIT
-  // ------------------------------------------------------------
+  // ============================================================
   async function init() {
+    setupStreamEvents();
+    setupEpisodeNav();
+
+    const ep = readEpFromUrl();
+
+    // SSR sudah render DEFAULT_EP → skip fetch & re-render
+    if (ep === DEFAULT_EP) {
+      // Re-apply saved stream preference (jika ada)
+      const savedId = localStorage.getItem('qimochi:stream');
+      if (savedId) {
+        const savedInput = document.getElementById(savedId);
+        if (savedInput && savedInput.name === 'stream') {
+          savedInput.checked = true;
+          const iframe = $('#player-iframe');
+          if (iframe) iframe.src = savedInput.value;
+          const currentLabel = $('[data-stream-current]');
+          if (currentLabel) {
+            currentLabel.textContent = `${savedInput.dataset.quality} · ${savedInput.dataset.server}`;
+          }
+        }
+      }
+      return;
+    }
+
+    // User deep-link ?ep=N → fetch & re-render
     try {
       const res = await fetch(`/anime/${SLUG}.json`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const anime = await res.json();
       cache = anime;
-
-      setupStreamEvents();
-
-      const ep = readEpFromUrl();
       renderEpisode(anime, ep);
     } catch (err) {
       showError('Gagal memuat data anime.');
       console.error('[watch]', err);
     }
-
-    window.addEventListener('popstate', () => {
-      if (!cache) return;
-      const ep = readEpFromUrl();
-      renderEpisode(cache, ep);
-    });
   }
+
+  window.addEventListener('popstate', () => {
+    if (!cache) return;
+    const ep = readEpFromUrl();
+    if (ep === DEFAULT_EP) {
+      // Reload halaman untuk kembali ke SSR state
+      location.reload();
+      return;
+    }
+    renderEpisode(cache, ep);
+  });
 
   init();
 </script>
@@ -375,10 +446,12 @@ const { data } = anime;
     color: var(--accent);
   }
 
+  /* ✅ Reserve height supaya tidak ada CLS saat JS mengganti konten */
   .watch-content {
     display: flex;
     flex-direction: column;
     gap: var(--s-5);
+    min-height: 60vh;
   }
 
   .watch-content[hidden] {
@@ -387,6 +460,7 @@ const { data } = anime;
 
   .player-section {
     margin-bottom: var(--s-5);
+    /* Player sudah punya aspect-ratio 16:9 di Player.astro */
   }
 
   .content-grid {
@@ -401,6 +475,8 @@ const { data } = anime;
     display: flex;
     flex-direction: column;
     gap: var(--s-4);
+    /* Reserve height biar CLS minimal saat re-render */
+    min-height: 30rem;
   }
 
   @media (min-width: 50rem) {
