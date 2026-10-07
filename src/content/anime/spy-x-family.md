@@ -1,7 +1,7 @@
 ---
 title: Spy x Family
 cover: https://cdn.myanimelist.net/images/anime/1441/122795.jpg
-status: Ongoing
+status: Completed
 genre: [Action, Comedy, Slice of Life]
 studio: Wit Studio
 type: TV
