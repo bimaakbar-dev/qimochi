@@ -17,13 +17,12 @@ interface Props {
 const { streams = [] } = Astro.props;
 const defaultStream = streams[0];
 const defaultServer = defaultStream?.servers?.[0];
-const hasStreams = streams.length > 0;
 ---
 
-<details class="stream-picker" open data-stream-picker>
+<details class="stream-picker" open>
   <summary>
     <span class="label">Server &amp; Kualitas</span>
-    <span class="current" id="stream-current" data-stream-current>
+    <span class="current" data-current>
       {defaultStream ? `${defaultStream.quality} · ${defaultServer?.name ?? '—'}` : '—'}
     </span>
     <span class="chevron" aria-hidden="true">
@@ -31,7 +30,7 @@ const hasStreams = streams.length > 0;
     </span>
   </summary>
 
-  <div class="stream-body" data-stream-body>
+  <div class="stream-body">
     {streams.map((s, i) => (
       <div class="quality-group">
         <span class="quality-label">{s.quality}</span>
@@ -59,32 +58,52 @@ const hasStreams = streams.length > 0;
       </div>
     ))}
   </div>
-
-  {!hasStreams && (
-    <>
-      <template data-stream-group-template>
-        <div class="quality-group">
-          <span class="quality-label" data-quality-label></span>
-          <div class="chips" data-quality-chips></div>
-        </div>
-      </template>
-
-      <template data-stream-chip-template>
-        <>
-          <input
-            type="radio"
-            name="stream"
-            data-stream-input
-            hidden
-          />
-          <label class="chip" data-stream-label></label>
-        </>
-      </template>
-    </>
-  )}
 </details>
 
-<style is:global>
+<script>
+  // ------------------------------------------------------------
+  // Ganti server: update iframe src + label + simpan preferensi
+  // ------------------------------------------------------------
+  const picker = document.querySelector<HTMLElement>('.stream-picker');
+  const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
+  const currentLabel = picker?.querySelector<HTMLElement>('[data-current]') ?? null;
+
+  if (picker && iframe) {
+    // Restore saved preference (kalau ada)
+    const savedId = localStorage.getItem('qimochi:stream');
+    if (savedId) {
+      const savedInput = document.getElementById(savedId) as HTMLInputElement | null;
+      if (savedInput && savedInput.name === 'stream') {
+        savedInput.checked = true;
+        iframe.src = savedInput.value;
+        if (currentLabel) {
+          const q = savedInput.dataset.quality ?? '';
+          const s = savedInput.dataset.server ?? '';
+          currentLabel.textContent = `${q} · ${s}`;
+        }
+      }
+    }
+
+    // Listen perubahan radio
+    picker.addEventListener('change', (e) => {
+      const target = e.target as HTMLInputElement;
+      if (!target.matches('input[name="stream"]')) return;
+      if (!target.checked) return;
+
+      iframe.src = target.value;
+
+      if (currentLabel) {
+        const q = target.dataset.quality ?? '';
+        const s = target.dataset.server ?? '';
+        currentLabel.textContent = `${q} · ${s}`;
+      }
+
+      localStorage.setItem('qimochi:stream', target.id);
+    });
+  }
+</script>
+
+<style>
   .stream-picker {
     background: var(--bg-elevated);
     border: 1px solid var(--border);
@@ -102,7 +121,9 @@ const hasStreams = streams.length > 0;
     user-select: none;
   }
 
-  .stream-picker summary::-webkit-details-marker { display: none; }
+  .stream-picker summary::-webkit-details-marker {
+    display: none;
+  }
 
   .stream-picker summary .current {
     margin-left: auto;
