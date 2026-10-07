@@ -15,17 +15,17 @@ const {
 } = Astro.props;
 ---
 
-<details class="episode-list" open data-episode-list>
+<details class="episode-list" open>
   <summary>
     <span class="label">Episode</span>
-    <span class="count">(<span data-episode-count>{episodes.length}</span>)</span>
+    <span class="count">({episodes.length})</span>
     <span class="chevron" aria-hidden="true">
       <Icon name="chevron-down" size={14} />
     </span>
   </summary>
 
-  <ol class="episode-items" data-episode-items>
-    {episodes.map(num => {
+  <ol class="episode-items">
+    {episodes.map((num) => {
       const isActive = num === currentEpisode;
       return (
         <li>
@@ -40,16 +40,6 @@ const {
       );
     })}
   </ol>
-
-  {episodes.length === 0 && (
-    <template data-episode-item-template>
-      <li>
-        <a class="episode-item" href="#">
-          <span class="num"></span>
-        </a>
-      </li>
-    </template>
-  )}
 </details>
 
 <style>
@@ -69,7 +59,9 @@ const {
     list-style: none;
   }
 
-  .episode-list summary::-webkit-details-marker { display: none; }
+  .episode-list summary::-webkit-details-marker {
+    display: none;
+  }
 
   .episode-list summary .count {
     color: var(--text-muted);
