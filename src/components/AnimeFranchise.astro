@@ -1,6 +1,5 @@
 ---
 import AnimeCard from './AnimeCard.astro';
-import AnimeGrid from './AnimeGrid.astro';
 import { getAllAnime } from '~/lib/anime';
 
 const RELATION_LABEL: Record<string, string> = {
@@ -59,7 +58,7 @@ function slugToTitle(slug: string): string {
 <section class="anime-franchise">
   <h2 class="anime-franchise__title">{title}</h2>
 
-  <AnimeGrid>
+  <div class="anime-franchise__grid">
     {filtered.map((f) => {
       const anime = animeMap.get(f.slug);
       const label = labelFor(f.relation);
@@ -85,7 +84,7 @@ function slugToTitle(slug: string): string {
         </div>
       );
     })}
-  </AnimeGrid>
+  </div>
 </section>
 
 <style>
@@ -101,6 +100,19 @@ function slugToTitle(slug: string): string {
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
     line-height: var(--lh-tight);
+  }
+
+  .anime-franchise__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-3);
+  }
+
+  @media (min-width: 50rem) {
+    .anime-franchise__grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--s-4);
+    }
   }
 
   .anime-franchise__dummy {
