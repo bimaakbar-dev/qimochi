@@ -11,7 +11,17 @@ import SectionLabel from '~/components/SectionLabel.astro';
 
 const allAnime = await getAllAnime();
 
-const latest = sortByRecent(allAnime).slice(0, 3);
+const ongoingWithEpisodes = allAnime.filter(
+  a => a.data.status === 'Ongoing' && (a.data.episodes?.length ?? 0) > 0
+);
+
+const latest = [...ongoingWithEpisodes]
+  .sort((a, b) => {
+    const aTime = (a.data.updatedAt ?? a.data.addedAt).getTime();
+    const bTime = (b.data.updatedAt ?? b.data.addedAt).getTime();
+    return bTime - aTime;
+  })
+  .slice(0, 3);
 
 const ongoing = sortByRecent(
   allAnime.filter(a => a.data.status === 'Ongoing')
