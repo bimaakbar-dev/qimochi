@@ -48,7 +48,7 @@ export const STATUS_VARIANT: Record<Status, 'success' | 'default' | 'warning'> =
 export const ANIME_TYPES = ['TV', 'Movie', 'OVA', 'ONA', 'Special'] as const;
 export type AnimeType = typeof ANIME_TYPES[number];
 
-export const PER_PAGE = 9;
+export const PER_PAGE = 12;
 
 export const BREAKPOINTS = {
   tablet:  '48rem',
