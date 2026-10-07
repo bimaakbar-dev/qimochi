@@ -1,6 +1,6 @@
 ---
-import Badge from '../user-components/Badge.astro';
-import { URLS, STATUS_VARIANT, type Status } from '../constants';
+import Badge from '~/user-components/Badge.astro';
+import { URLS, STATUS_VARIANT, type Status } from '~/constants';
 
 interface Props {
   anime: {
@@ -15,9 +15,15 @@ interface Props {
     };
   };
   featured?: boolean;
+  relationBadge?: string;
 }
 
-const { anime, featured = false } = Astro.props;
+const {
+  anime,
+  featured = false,
+  relationBadge,
+} = Astro.props;
+
 const { id, data } = anime;
 
 const variant = STATUS_VARIANT[data.status as Status] ?? 'default';
@@ -51,8 +57,19 @@ const lastEpisode = data.episodes?.length
 
   <div class="info">
     <h3 set:html={data.title} />
-    {lastEpisode > 0 && (
+
+    {relationBadge && (
+      <span class="relation-badge">{relationBadge}</span>
+    )}
+
+    {lastEpisode > 0 && !relationBadge && (
       <span class="episodes">Ep {lastEpisode}</span>
+    )}
+
+    {lastEpisode > 0 && relationBadge && (
+      <span class="episodes">
+        {relationBadge} · Ep {lastEpisode}
+      </span>
     )}
   </div>
 </a>
@@ -87,6 +104,7 @@ const lastEpisode = data.episodes?.length
   .anime-card:hover .cover img {
     transform: scale(1.03);
   }
+
   .anime-card:hover h3::after {
     opacity: 1;
   }
@@ -108,11 +126,9 @@ const lastEpisode = data.episodes?.length
     top: var(--s-2);
     right: var(--s-2);
     z-index: 2;
-
     display: inline-flex;
     align-items: center;
     padding: 2px 6px;
-
     background: rgba(0, 0, 0, 0.7);
     color: var(--text-inverted);
     font-size: 0.625rem;
@@ -172,6 +188,19 @@ const lastEpisode = data.episodes?.length
       opacity: 0;
       transition: opacity var(--t-fast);
     }
+  }
+
+  .relation-badge {
+    display: inline-block;
+    align-self: flex-start;
+    padding: 2px 6px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.625rem;
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
   }
 
   .episodes {
