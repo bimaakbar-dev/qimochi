@@ -24,11 +24,18 @@ export interface EpisodeData {
   downloads?: EpisodeDownload[];
 }
 
+export interface Franchise {
+  relation: string;
+  slug: string;
+  title?: string;
+}
+
 export type AnimeEntry = CollectionEntry<'anime'>;
 
 export type HydratedAnime = Omit<AnimeEntry, 'data'> & {
   data: AnimeEntry['data'] & {
     episodes: EpisodeData[];
+    franchises: Franchise[];
   };
 };
 
@@ -39,8 +46,20 @@ interface ChunkRef {
   path: string;
 }
 
+const HIDDEN_RELATIONS = new Set([
+  'character',
+  'adaptation',
+  'contains',
+  'other',
+]);
+
 const episodeModules = import.meta.glob<{ default: EpisodeData[] }>(
   '../data/anime/*/episodes/*.json',
+  { eager: true }
+);
+
+const franchiseModules = import.meta.glob<{ default: Franchise[] }>(
+  '../data/anime/*/franchises.json',
   { eager: true }
 );
 
@@ -91,14 +110,30 @@ for (const [slug, chunks] of Object.entries(chunksBySlug)) {
   episodesBySlug[slug] = merged;
 }
 
-async function hydrateOne(anime: AnimeEntry): Promise<HydratedAnime> {
-  const episodes = episodesBySlug[anime.id] ?? [];
+const franchisesBySlug: Record<string, Franchise[]> = {};
 
+for (const [path, mod] of Object.entries(franchiseModules)) {
+  const match = path.match(/\/data\/anime\/([^/]+)\/franchises\.json$/);
+  if (!match) continue;
+
+  const slug = match[1];
+  if (!slug) continue;
+
+  const raw = Array.isArray(mod.default) ? mod.default : [];
+  const filtered = raw.filter(
+    (f) => f && typeof f.slug === 'string' && !HIDDEN_RELATIONS.has(f.relation)
+  );
+
+  franchisesBySlug[slug] = filtered;
+}
+
+async function hydrateOne(anime: AnimeEntry): Promise<HydratedAnime> {
   return {
     ...anime,
     data: {
       ...anime.data,
-      episodes,
+      episodes: episodesBySlug[anime.id] ?? [],
+      franchises: franchisesBySlug[anime.id] ?? [],
     },
   };
 }
