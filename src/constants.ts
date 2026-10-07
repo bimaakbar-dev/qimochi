@@ -1,7 +1,7 @@
 export const SITE = {
   name: 'Qimochi',
-  title: 'Nonton & Download Anime Batch',
-  description: 'Koleksi anime untuk streaming dan download batch. Ringan, cepat, tanpa ribet.',
+  title: 'Nonton Anime Subtitle Indonesia',
+  description: 'Koleksi anime untuk streaming subtitel bahasa indonesia. Ringan, cepat, tanpa ribet.',
   url: 'https://qimochi.web.id',
   locale: 'id-ID',
   lang: 'id',
@@ -62,7 +62,7 @@ export const STORAGE_KEYS = {
 
 export const URLS = {
   anime:  (slug: string) => `/anime/${slug}/`,
-  watch: (slug: string, episode: number) => `/anime/watch/${slug}/?ep=${episode}`,
+  watch: (slug, episode) => `/anime/watch/${slug}/episodes/${episode}/`,
   genre:  (slug: string) => `/anime/genre/${slug.toLowerCase().replace(/\s+/g, '-')}/`,
   status: (status: string) => `/anime/${status.toLowerCase()}/`,
 } as const;
