@@ -20,52 +20,48 @@ const prevEp = hasPrev ? episodeNumber - 1 : null;
 const nextEp = hasNext ? episodeNumber + 1 : null;
 ---
 
-<nav class="action-bar" aria-label="Navigasi episode" data-action-bar>
-  <LinkButton
-    data-prev-link
-    href={prevEp ? URLS.watch(slug, prevEp) : '#'}
-    variant="outline"
-    size="md"
-    icon="arrow-left"
-    hidden={!hasPrev}
-  >
-    <span data-prev-label>Ep {prevEp ?? '—'}</span>
-  </LinkButton>
+<nav class="action-bar" aria-label="Navigasi episode">
+  {hasPrev ? (
+    <LinkButton
+      href={URLS.watch(slug, prevEp!)}
+      variant="outline"
+      size="md"
+      icon="arrow-left"
+    >
+      Ep {prevEp}
+    </LinkButton>
+  ) : (
+    <LinkButton
+      variant="outline"
+      size="md"
+      icon="arrow-left"
+      disabled
+    >
+      Ep —
+    </LinkButton>
+  )}
 
-  <LinkButton
-    data-prev-disabled
-    variant="outline"
-    size="md"
-    icon="arrow-left"
-    disabled
-    hidden={hasPrev}
-  >
-    <span data-prev-disabled-label>Ep —</span>
-  </LinkButton>
-
-  <LinkButton
-    data-next-link
-    href={nextEp ? URLS.watch(slug, nextEp) : '#'}
-    variant="outline"
-    size="md"
-    icon="arrow-right"
-    iconPos="suffix"
-    hidden={!hasNext}
-  >
-    <span data-next-label>Ep {nextEp ?? '—'}</span>
-  </LinkButton>
-
-  <LinkButton
-    data-next-disabled
-    variant="outline"
-    size="md"
-    icon="arrow-right"
-    iconPos="suffix"
-    disabled
-    hidden={hasNext}
-  >
-    <span data-next-disabled-label>Ep —</span>
-  </LinkButton>
+  {hasNext ? (
+    <LinkButton
+      href={URLS.watch(slug, nextEp!)}
+      variant="outline"
+      size="md"
+      icon="arrow-right"
+      iconPos="suffix"
+    >
+      Ep {nextEp}
+    </LinkButton>
+  ) : (
+    <LinkButton
+      variant="outline"
+      size="md"
+      icon="arrow-right"
+      iconPos="suffix"
+      disabled
+    >
+      Ep —
+    </LinkButton>
+  )}
 </nav>
 
 <style>
