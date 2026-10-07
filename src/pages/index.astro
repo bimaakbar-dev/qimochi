@@ -25,11 +25,11 @@ const latest = [...ongoingWithEpisodes]
 
 const ongoing = sortByRecent(
   allAnime.filter(a => a.data.status === 'Ongoing')
-).slice(0, PER_PAGE - 1);
+).slice(0, PER_PAGE);
 
 const completed = sortByRecent(
   allAnime.filter(a => a.data.status === 'Completed')
-).slice(0, PER_PAGE - 1);
+).slice(0, PER_PAGE);
 
 const genreCounts: Record<string, number> = {};
 allAnime.forEach(a => {
