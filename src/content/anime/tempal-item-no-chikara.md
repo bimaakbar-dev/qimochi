@@ -1,6 +1,6 @@
 ---
 title: "Tempal: Item no Chikara"
-cover: https://shikimori.one/assets/globals/missing_original.jpg
+cover: https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx212888-NhyvqPt5aIuJ.jpg
 status: Ongoing
 type: TV
 genre: [Action, Adventure, Fantasy, Comedy]
