@@ -14,6 +14,7 @@ const anime = defineCollection({
     studio: z.string(),
     releaseDate: z.coerce.date(),
     addedAt: z.coerce.date(),
+    updatedAt: z.coerce.date().optional(),
     rating: z.number().min(0).max(10),
   }),
 });
