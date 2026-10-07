@@ -1,7 +1,7 @@
 ---
 title: Demon Slayer Kimetsu no Yaiba
 cover: https://cdn.myanimelist.net/images/anime/1286/99889.jpg
-status: Ongoing
+status: Completed
 genre: [Action, Supernatural, Drama]
 type: TV
 studio: ufotable
