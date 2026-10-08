@@ -30,7 +30,7 @@ const year = new Date().getFullYear();
     </div>
     <div class="footer-nav-group">
       <nav class="footer-nav" aria-label="Navigasi footer">
-        <SectionLabel as="h4" size="sm" class="nav-label">Jelajahi</SectionLabel>
+        <SectionLabel as="h4" size="sm" class="footnav-label">Jelajahi</SectionLabel>
         <ul>
           {NAV_LINKS.map(({ label, href }) => (
             <li><a href={href}>{label}</a></li>
@@ -38,7 +38,7 @@ const year = new Date().getFullYear();
         </ul>
       </nav>
       <nav class="footer-nav" aria-label="Legal">
-        <SectionLabel as="h4" size="sm" class="nav-label">Legal</SectionLabel>
+        <SectionLabel as="h4" size="sm" class="footnav-label">Legal</SectionLabel>
         <ul>
           <li><a href="/dmca/">DMCA</a></li>
           <li><a href="/disclaimer/">Disclaimer</a></li>
@@ -48,7 +48,7 @@ const year = new Date().getFullYear();
   </div>
   <div class="footer-disclaimer">
     <div class="footer-disclaimer-inner">
-      <SectionLabel as="h4" size="sm" underlined={false} class="nav-label">Disclaimer</SectionLabel>
+      <SectionLabel as="h4" size="sm" underlined={false} class="footnav-label">Disclaimer</SectionLabel>
       <p>
         {SITE.name} tidak menyimpan file video apapun di server kami.
         Semua konten video di-embed dari layanan pihak ketiga yang tersedia
@@ -105,7 +105,7 @@ const year = new Date().getFullYear();
     object-fit: contain;
   }
   
-  .nav-label {
+  :global(.footnav-label) {
     color: var(--text-inverted) !important;
   }
 
