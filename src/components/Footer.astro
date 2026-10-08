@@ -1,8 +1,13 @@
 ---
-import { SITE, NAV_LINKS } from '~/constants';
 import { Image } from 'astro:assets';
+import logoImg from '~/assets/images/logo/logo.png';
+
+import { 
+	SITE,
+	NAV_LINKS 
+} from '~/constants';
+
 import SectionLabel from '~/components/SectionLabel.astro';
-import logoImg from '../assets/images/logo/logo.png';
 
 const year = new Date().getFullYear();
 ---
@@ -23,19 +28,17 @@ const year = new Date().getFullYear();
         />
       </a>
     </div>
-
     <div class="footer-nav-group">
       <nav class="footer-nav" aria-label="Navigasi footer">
-        <SectionLabel as="h4" size="sm">Jelajahi</SectionLabel>
+        <SectionLabel as="h4" size="sm" class="nav-label">Jelajahi</SectionLabel>
         <ul>
           {NAV_LINKS.map(({ label, href }) => (
             <li><a href={href}>{label}</a></li>
           ))}
         </ul>
       </nav>
-
       <nav class="footer-nav" aria-label="Legal">
-        <SectionLabel as="h4" size="sm">Legal</SectionLabel>
+        <SectionLabel as="h4" size="sm" class="nav-label">Legal</SectionLabel>
         <ul>
           <li><a href="/dmca/">DMCA</a></li>
           <li><a href="/disclaimer/">Disclaimer</a></li>
@@ -43,10 +46,9 @@ const year = new Date().getFullYear();
       </nav>
     </div>
   </div>
-
   <div class="footer-disclaimer">
     <div class="footer-disclaimer-inner">
-      <SectionLabel as="h4" size="sm" underlined={false}>Disclaimer</SectionLabel>
+      <SectionLabel as="h4" size="sm" underlined={false} class="nav-label">Disclaimer</SectionLabel>
       <p>
         {SITE.name} tidak menyimpan file video apapun di server kami.
         Semua konten video di-embed dari layanan pihak ketiga yang tersedia
@@ -56,7 +58,6 @@ const year = new Date().getFullYear();
       </p>
     </div>
   </div>
-
   <div class="footer-bottom">
     <div class="footer-bottom-inner">
       <p class="copyright">
@@ -81,14 +82,6 @@ const year = new Date().getFullYear();
     gap: var(--s-8);
   }
 
-  @media (min-width: 50rem) {
-    .footer-inner {
-      max-width: var(--content-max-desktop);
-      grid-template-columns: auto 1fr;
-      gap: var(--s-16);
-    }
-  }
-
   .footer-brand {
     display: flex;
     align-items: flex-start;
@@ -111,19 +104,15 @@ const year = new Date().getFullYear();
     height: 4rem;
     object-fit: contain;
   }
+  
+  .nav-label {
+    color: var(--text-inverted);
+  }
 
   .footer-nav-group {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--s-6);
-  }
-
-  @media (min-width: 50rem) {
-    .footer-nav-group {
-      grid-template-columns: repeat(2, max-content);
-      gap: var(--s-12);
-      justify-content: start;
-    }
   }
 
   .footer-nav {
@@ -132,7 +121,6 @@ const year = new Date().getFullYear();
     gap: var(--s-3);
     align-items: start;
     & :is(h2, h3, h4) {
-      color: var(--text-inverted);
       font-size: var(--fs-sm);
       
     }
@@ -174,7 +162,6 @@ const year = new Date().getFullYear();
 
     &:hover {
       color: var(--accent);
-
       &::after {
         opacity: 1;
       }
@@ -193,14 +180,7 @@ const year = new Date().getFullYear();
     flex-direction: column;
     gap: var(--s-3);
     & h4 {
-      color: var(--text-inverted);
       font-size: var(--fs-xs);
-    }
-  }
-
-  @media (min-width: 50rem) {
-    .footer-disclaimer-inner {
-      max-width: var(--content-max-desktop);
     }
   }
 
@@ -230,16 +210,27 @@ const year = new Date().getFullYear();
     padding: var(--s-4) var(--pad-x);
     text-align: center;
   }
-
-  @media (min-width: 50rem) {
-    .footer-bottom-inner {
-      max-width: var(--content-max-desktop);
-    }
-  }
-
+  
   .copyright {
     font-size: var(--fs-xs);
     color: var(--text-muted);
     margin: 0;
+  }
+
+  @media (min-width: 50rem) {
+    .footer-inner {
+      max-width: var(--content-max-desktop);
+      grid-template-columns: auto 1fr;
+      gap: var(--s-16);
+    }
+    .footer-nav-group {
+      grid-template-columns: repeat(2, max-content);
+      gap: var(--s-12);
+      justify-content: start;
+    }
+    .footer-bottom-inner,
+	.footer-disclaimer-inner {
+      max-width: var(--content-max-desktop);
+    }
   }
 </style>
