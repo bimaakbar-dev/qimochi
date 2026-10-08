@@ -17,6 +17,14 @@ interface Props {
 const { streams = [] } = Astro.props;
 const defaultStream = streams[0];
 const defaultServer = defaultStream?.servers?.[0];
+
+function encodeUrl(s: string): string {
+  if (!s) return '';
+  const bytes = new TextEncoder().encode(s);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
 ---
 
 <details class="stream-picker" open>
@@ -44,7 +52,7 @@ const defaultServer = defaultStream?.servers?.[0];
                   type="radio"
                   name="stream"
                   id={id}
-                  value={srv.url}
+                  data-enc={encodeUrl(srv.url)}
                   data-quality={s.quality}
                   data-server={srv.name}
                   checked={isDefault}
@@ -61,21 +69,38 @@ const defaultServer = defaultStream?.servers?.[0];
 </details>
 
 <script>
-  // ------------------------------------------------------------
-  // Ganti server: update iframe src + label + simpan preferensi
-  // ------------------------------------------------------------
-  const picker = document.querySelector<HTMLElement>('.stream-picker');
-  const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
-  const currentLabel = picker?.querySelector<HTMLElement>('[data-current]') ?? null;
+  (function () {
+    const picker = document.querySelector<HTMLElement>('.stream-picker');
+    const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
+    const currentLabel = picker?.querySelector<HTMLElement>('[data-current]') ?? null;
 
-  if (picker && iframe) {
-    // Restore saved preference (kalau ada)
+    if (!picker || !iframe) return;
+
+    function decode(b64: string): string {
+      try {
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return new TextDecoder().decode(bytes);
+      } catch {
+        return '';
+      }
+    }
+
+    function applyInput(input: HTMLInputElement): void {
+      const enc = input.dataset.enc;
+      if (!enc) return;
+      const real = decode(enc);
+      if (!real) return;
+      iframe.src = real;
+    }
+
     const savedId = localStorage.getItem('qimochi:stream');
     if (savedId) {
       const savedInput = document.getElementById(savedId) as HTMLInputElement | null;
       if (savedInput && savedInput.name === 'stream') {
         savedInput.checked = true;
-        iframe.src = savedInput.value;
+        applyInput(savedInput);
         if (currentLabel) {
           const q = savedInput.dataset.quality ?? '';
           const s = savedInput.dataset.server ?? '';
@@ -84,13 +109,12 @@ const defaultServer = defaultStream?.servers?.[0];
       }
     }
 
-    // Listen perubahan radio
     picker.addEventListener('change', (e) => {
       const target = e.target as HTMLInputElement;
       if (!target.matches('input[name="stream"]')) return;
       if (!target.checked) return;
 
-      iframe.src = target.value;
+      applyInput(target);
 
       if (currentLabel) {
         const q = target.dataset.quality ?? '';
@@ -100,7 +124,7 @@ const defaultServer = defaultStream?.servers?.[0];
 
       localStorage.setItem('qimochi:stream', target.id);
     });
-  }
+  })();
 </script>
 
 <style>
