@@ -4,25 +4,56 @@ interface Props {
   title?: string;
 }
 
-const {
-  src = '',
-  title = '',
-} = Astro.props;
+const { src = '', title = '' } = Astro.props;
 
-const hasSrc = Boolean(src);
+function encodeSrc(s: string): string {
+  if (!s) return '';
+  const bytes = new TextEncoder().encode(s);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+const encodedSrc = encodeSrc(src);
 ---
 
 <div class="player-wrapper">
   <iframe
     id="player-iframe"
-    src={hasSrc ? src : undefined}
+    data-enc={encodedSrc || undefined}
     title={title}
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
     allowfullscreen
     loading="eager"
     referrerpolicy="no-referrer"
   ></iframe>
+
+  <noscript>
+    <p class="player-noscript">
+      Aktifkan JavaScript untuk memuat player.
+    </p>
+  </noscript>
 </div>
+
+<script>
+  (function () {
+    const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
+    if (!iframe) return;
+
+    const enc = iframe.dataset.enc;
+    if (!enc) return;
+
+    try {
+      const bin = atob(enc);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const real = new TextDecoder().decode(bytes);
+      iframe.src = real;
+    } catch (err) {
+      console.error('[Player] decode failed:', err);
+    }
+  })();
+</script>
 
 <style>
   .player-wrapper {
@@ -39,5 +70,17 @@ const hasSrc = Boolean(src);
     height: 100%;
     border: none;
     display: block;
+  }
+
+  .player-noscript {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #ccc;
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.875rem;
+    margin: 0;
   }
 </style>
