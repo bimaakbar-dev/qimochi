@@ -1,14 +1,15 @@
 ---
-import { SITE, GENRES, PER_PAGE, URLS } from '~/constants';
+import { SITE, GENRES, PER_PAGE, URLS, ADS } from '~/constants';
 import { getAllAnime, sortByRecent } from '~/lib/anime';
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
+import AdSlot from '~/components/AdSlot.astro';
+import HistoryCard from '~/components/HistoryCard.astro';
 import Badge from '~/user-components/Badge.astro';
 import LinkButton from '~/user-components/LinkButton.astro';
 import LinkCard from '~/user-components/LinkCard.astro';
 import SectionLabel from '~/components/SectionLabel.astro';
-import HistoryCard from '~/components/HistoryCard.astro';
 
 const allAnime = await getAllAnime();
 
@@ -117,6 +118,12 @@ const genres = GENRES
       </section>
     )}
 
+    <AdSlot
+      format="leaderboard"
+      id="ad-home-inline"
+      code={ADS.slots.homeInline}
+    />
+
     {completed.length > 0 && (
       <section class="landing-section">
         <header class="section-header">
@@ -165,7 +172,7 @@ const genres = GENRES
       </section>
     )}
 
-  <HistoryCard/>
+    <HistoryCard />
 
   </div>
 </BaseLayout>
