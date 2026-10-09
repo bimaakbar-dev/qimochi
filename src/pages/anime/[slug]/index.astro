@@ -4,6 +4,7 @@ import { getAllAnime } from '~/lib/anime';
 
 import { SITE, URLS, STATUS_VARIANT, type Status } from '~/constants';
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumb from '~/components/Breadcrumb.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
 import AnimeFranchise from '~/components/AnimeFranchise.astro';
 import Badge from '~/user-components/Badge.astro';
@@ -35,6 +36,12 @@ const releaseDate = new Intl.DateTimeFormat(SITE.locale, {
 }).format(data.releaseDate);
 
 const year = data.releaseDate.getFullYear();
+
+const breadcrumbItems = [
+  { label: 'Home', href: '/' },
+  { label: 'Archive', href: '/anime/' },
+  { label: data.title },
+];
 ---
 
 <BaseLayout
@@ -44,6 +51,10 @@ const year = data.releaseDate.getFullYear();
   type="video.other"
 >
   <article>
+    <div class="breadcrumb-wrap">
+      <Breadcrumb items={breadcrumbItems} />
+    </div>
+
     <section class="hero">
       <div class="cover">
         <img
@@ -137,9 +148,14 @@ const year = data.releaseDate.getFullYear();
   article {
     max-width: var(--content-max-mobile);
     margin-inline: auto;
-    padding-block: var(--s-6) var(--s-12);
+    padding-block: var(--s-4) var(--s-12);
     padding-inline: var(--pad-x);
     isolation: isolate;
+  }
+
+  .breadcrumb-wrap {
+    padding-block: var(--s-2) var(--s-4);
+    min-width: 0;
   }
 
   .hero {
