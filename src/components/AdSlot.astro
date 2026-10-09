@@ -1,0 +1,116 @@
+---
+import { ADS } from '~/constants';
+
+type Format = 'leaderboard' | 'rectangle' | 'skyscraper' | 'inline';
+
+interface Props {
+  format?: Format;
+  id?: string;
+  code?: string;
+  label?: string;
+}
+
+const {
+  format = 'inline',
+  id,
+  code = '',
+  label = 'Slot Iklan',
+} = Astro.props;
+
+const dims: Record<Format, string> = {
+  leaderboard: '728 × 90',
+  rectangle: '300 × 250',
+  skyscraper: '300 × 600',
+  inline: 'Responsive',
+};
+
+const hasCode = code.trim().length > 0;
+const showPlaceholder = !hasCode && ADS.showPlaceholder;
+---
+
+{hasCode ? (
+  <div
+    class:list={['ad-slot', 'ad-slot-filled', `ad-slot-${format}`]}
+    id={id}
+    data-ad-slot={format}
+    aria-label="Iklan"
+    set:html={code}
+  />
+) : showPlaceholder ? (
+  <div
+    class:list={['ad-slot', 'ad-slot-placeholder', `ad-slot-${format}`]}
+    id={id}
+    data-ad-slot={format}
+    aria-label="Slot iklan"
+  >
+    <span class="ad-slot-label">{label}</span>
+    <span class="ad-slot-dims">{dims[format]}</span>
+  </div>
+) : null}
+
+<style>
+  .ad-slot {
+    display: block;
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .ad-slot-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-1);
+    padding: var(--s-4);
+    background: var(--bg-elevated);
+    border: 1px dashed var(--border);
+    color: var(--text-muted);
+    text-align: center;
+    user-select: none;
+  }
+
+  .ad-slot-label {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .ad-slot-dims {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .ad-slot-leaderboard {
+    min-height: 90px;
+    max-width: 728px;
+  }
+
+  .ad-slot-rectangle {
+    min-height: 250px;
+    max-width: 300px;
+  }
+
+  .ad-slot-skyscraper {
+    min-height: 600px;
+    max-width: 300px;
+  }
+
+  .ad-slot-inline {
+    min-height: 90px;
+  }
+
+  .ad-slot-filled {
+    overflow: hidden;
+  }
+
+  .ad-slot-filled :global(img),
+  .ad-slot-filled :global(iframe) {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+</style>
