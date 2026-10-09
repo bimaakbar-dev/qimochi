@@ -1,0 +1,687 @@
+---
+import SectionLabel from '~/components/SectionLabel.astro';
+import Icon from '~/user-components/Icons.astro';
+
+interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+---
+
+<section
+  class="comments"
+  data-comments
+  data-slug={slug}
+  data-api={apiBase}
+  data-sitekey={siteKey}
+>
+  <header class="comments-header">
+    <SectionLabel>Komentar</SectionLabel>
+    <span class="comments-count" data-count>0</span>
+  </header>
+
+  <div class="login-box" data-login-box>
+    <p class="login-hint">Masuk dengan Google untuk ikut berkomentar.</p>
+    <div class="gsi-slot" data-gsi-slot></div>
+  </div>
+
+  <div class="user-box" data-user-box hidden>
+    <div class="user-info">
+      <img class="user-avatar" data-user-avatar alt="" width="36" height="36" />
+      <div class="user-meta">
+        <span class="user-name" data-user-name></span>
+        <button type="button" class="logout-btn" data-logout>Keluar</button>
+      </div>
+    </div>
+  </div>
+
+  <form class="comment-form" data-form hidden>
+    <textarea
+      class="comment-input"
+      data-input
+      placeholder="Tulis komentar…"
+      maxlength="2000"
+      rows="4"
+    ></textarea>
+    <div class="form-footer">
+      <span class="char-count" data-charcount>0 / 2000</span>
+      <div class="cf-turnstile" data-turnstile data-sitekey={siteKey}></div>
+    </div>
+    <div class="form-actions">
+      <span class="form-status" data-form-status hidden></span>
+      <button type="submit" class="submit-btn" data-submit disabled>
+        Kirim
+      </button>
+    </div>
+  </form>
+
+  <div class="comments-status" data-status>Memuat komentar…</div>
+
+  <ol class="comment-list" data-list hidden></ol>
+
+  <template data-item-tmpl>
+    <li class="comment-item">
+      <div class="comment-head">
+        <img class="comment-avatar" data-avatar alt="" width="32" height="32" loading="lazy" />
+        <div class="comment-meta">
+          <span class="comment-name" data-name></span>
+          <time class="comment-time" data-time></time>
+        </div>
+      </div>
+      <div class="comment-body" data-body></div>
+      <ol class="comment-replies" data-replies hidden></ol>
+    </li>
+  </template>
+</section>
+
+<style>
+  .comments {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    margin-top: var(--s-8);
+    padding-top: var(--s-6);
+    border-top: 1px solid var(--border);
+  }
+
+  .comments-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-3);
+  }
+
+  .comments-count {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .login-box,
+  .user-box,
+  .comment-form {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    padding: var(--s-4);
+  }
+
+  .login-box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    align-items: flex-start;
+  }
+
+  .login-hint {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+  }
+
+  .gsi-slot {
+    min-height: 40px;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--r-full);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .user-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .user-name {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+  }
+
+  .logout-btn {
+    align-self: flex-start;
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .logout-btn:hover { color: var(--accent); }
+
+  .comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .comment-input {
+    width: 100%;
+    padding: var(--s-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-relaxed);
+    resize: vertical;
+    min-height: 5rem;
+  }
+
+  .comment-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .form-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+  }
+
+  .char-count {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--s-3);
+  }
+
+  .form-status {
+    font-size: var(--fs-xs);
+  }
+
+  .form-status.is-error { color: var(--danger); }
+  .form-status.is-success { color: var(--success); }
+
+  .submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
+    padding: var(--s-2) var(--s-5);
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: var(--r-full);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    min-height: 2.25rem;
+    transition: background var(--t-fast);
+  }
+
+  .submit-btn:hover:not(:disabled) { background: var(--accent-hover); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .comments-status {
+    padding: var(--s-4) 0;
+    text-align: center;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .comment-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .comment-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    padding: var(--s-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+  }
+
+  .comment-head {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+  }
+
+  .comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--r-full);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .comment-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .comment-name {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+  }
+
+  .comment-time {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .comment-body {
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+    line-height: var(--lh-relaxed);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .comment-replies {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    list-style: none;
+    padding: 0;
+    margin: var(--s-2) 0 0 var(--s-6);
+    padding-left: var(--s-3);
+    border-left: 2px solid var(--border);
+  }
+</style>
+
+<script>
+  (function () {
+    const root = document.querySelector<HTMLElement>('[data-comments]');
+    if (!root) return;
+
+    const SLUG = root.dataset.slug || '';
+    const API = (root.dataset.api || '').replace(/\/$/, '');
+    const SITE_KEY = root.dataset.sitekey || '';
+
+    const countEl = root.querySelector<HTMLElement>('[data-count]')!;
+    const loginBox = root.querySelector<HTMLElement>('[data-login-box]')!;
+    const gsiSlot = root.querySelector<HTMLElement>('[data-gsi-slot]')!;
+    const userBox = root.querySelector<HTMLElement>('[data-user-box]')!;
+    const userAvatar = root.querySelector<HTMLImageElement>('[data-user-avatar]')!;
+    const userName = root.querySelector<HTMLElement>('[data-user-name]')!;
+    const logoutBtn = root.querySelector<HTMLButtonElement>('[data-logout]')!;
+    const form = root.querySelector<HTMLFormElement>('[data-form]')!;
+    const input = root.querySelector<HTMLTextAreaElement>('[data-input]')!;
+    const charCount = root.querySelector<HTMLElement>('[data-charcount]')!;
+    const submitBtn = root.querySelector<HTMLButtonElement>('[data-submit]')!;
+    const formStatus = root.querySelector<HTMLElement>('[data-form-status]')!;
+    const statusEl = root.querySelector<HTMLElement>('[data-status]')!;
+    const listEl = root.querySelector<HTMLOListElement>('[data-list]')!;
+    const tmpl = root.querySelector<HTMLTemplateElement>('[data-item-tmpl]')!;
+
+    if (!SLUG || !API) {
+      statusEl.textContent = 'Konfigurasi komentar tidak lengkap.';
+      return;
+    }
+
+    let currentUser: { sub: string; name: string; picture: string | null } | null = null;
+    let turnstileWidgetId: string | null = null;
+    let turnstileToken = '';
+    let submitting = false;
+
+    function loadScript(src: string): Promise<void> {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector<HTMLScriptElement>(`script[src="${src}"]`);
+        if (existing) {
+          if (existing.dataset.loaded === '1') return resolve();
+          existing.addEventListener('load', () => resolve(), { once: true });
+          existing.addEventListener('error', () => reject(), { once: true });
+          return;
+        }
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.defer = true;
+        s.addEventListener('load', () => { s.dataset.loaded = '1'; resolve(); }, { once: true });
+        s.addEventListener('error', () => reject(), { once: true });
+        document.head.appendChild(s);
+      });
+    }
+
+    function formatTime(ts: number): string {
+      const d = new Date(ts * 1000);
+      const now = Date.now();
+      const diff = Math.floor((now - d.getTime()) / 1000);
+      if (diff < 60) return 'baru saja';
+      if (diff < 3600) return `${Math.floor(diff / 60)} menit lalu`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)} jam lalu`;
+      if (diff < 604800) return `${Math.floor(diff / 86400)} hari lalu`;
+      return new Intl.DateTimeFormat('id-ID', {
+        day: 'numeric', month: 'short', year: 'numeric',
+      }).format(d);
+    }
+
+    interface CommentItem {
+      id: string;
+      parentId: string | null;
+      body: string;
+      createdAt: number;
+      user: { sub: string; name: string; picture: string | null };
+    }
+
+    function makeItem(item: CommentItem): HTMLLIElement {
+      const node = tmpl.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
+      const avatar = node.querySelector<HTMLImageElement>('[data-avatar]')!;
+      if (item.user.picture) {
+        avatar.src = item.user.picture;
+        avatar.alt = item.user.name;
+      } else {
+        avatar.removeAttribute('src');
+        avatar.style.background = 'var(--bg-surface)';
+      }
+      node.querySelector<HTMLElement>('[data-name]')!.textContent = item.user.name;
+      const timeEl = node.querySelector<HTMLTimeElement>('[data-time]')!;
+      timeEl.dateTime = new Date(item.createdAt * 1000).toISOString();
+      timeEl.textContent = formatTime(item.createdAt);
+      node.querySelector<HTMLElement>('[data-body]')!.textContent = item.body;
+      return node;
+    }
+
+    function renderComments(items: CommentItem[]): void {
+      const roots = items.filter((c) => c.parentId === null);
+      const childrenOf: Record<string, CommentItem[]> = {};
+      for (const c of items) {
+        if (c.parentId) {
+          (childrenOf[c.parentId] ??= []).push(c);
+        }
+      }
+
+      listEl.innerHTML = '';
+      for (const r of roots) {
+        const node = makeItem(r);
+        const replies = childrenOf[r.id] ?? [];
+        if (replies.length > 0) {
+          const repliesEl = node.querySelector<HTMLOListElement>('[data-replies]')!;
+          for (const reply of replies) {
+            repliesEl.appendChild(makeItem(reply));
+          }
+          repliesEl.hidden = false;
+        }
+        listEl.appendChild(node);
+      }
+
+      countEl.textContent = String(items.length);
+    }
+
+    async function fetchComments(): Promise<void> {
+      statusEl.hidden = false;
+      statusEl.textContent = 'Memuat komentar…';
+      listEl.hidden = true;
+      try {
+        const res = await fetch(
+          `${API}/api/v1/comments?slug=${encodeURIComponent(SLUG)}`,
+          { credentials: 'include' }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as { data: CommentItem[] };
+        const items = Array.isArray(json.data) ? json.data : [];
+        if (items.length === 0) {
+          statusEl.textContent = 'Belum ada komentar. Jadilah yang pertama.';
+          listEl.hidden = true;
+          countEl.textContent = '0';
+        } else {
+          renderComments(items);
+          statusEl.hidden = true;
+          listEl.hidden = false;
+        }
+      } catch (err) {
+        console.error('[comments] fetch failed', err);
+        statusEl.textContent = 'Gagal memuat komentar. Coba refresh.';
+      }
+    }
+
+    async function fetchMe(): Promise<void> {
+      try {
+        const res = await fetch(`${API}/api/v1/auth/me`, { credentials: 'include' });
+        if (!res.ok) return;
+        const json = (await res.json()) as {
+          ok: boolean;
+          user: { sub: string; name: string; picture: string | null } | null;
+        };
+        if (json.ok && json.user) {
+          currentUser = json.user;
+          applyUserState();
+        }
+      } catch {
+        // silent
+      }
+    }
+
+    function applyUserState(): void {
+      if (currentUser) {
+        loginBox.hidden = true;
+        userBox.hidden = false;
+        form.hidden = false;
+        userName.textContent = currentUser.name;
+        if (currentUser.picture) {
+          userAvatar.src = currentUser.picture;
+          userAvatar.alt = currentUser.name;
+        } else {
+          userAvatar.removeAttribute('src');
+        }
+        mountTurnstile();
+      } else {
+        loginBox.hidden = false;
+        userBox.hidden = true;
+        form.hidden = true;
+      }
+    }
+
+    function mountTurnstile(): void {
+      if (!SITE_KEY) return;
+      if (turnstileWidgetId) return;
+      const container = root.querySelector<HTMLElement>('[data-turnstile]');
+      if (!container) return;
+      const ts = (window as any).turnstile;
+      if (!ts) return;
+      try {
+        turnstileWidgetId = ts.render(container, {
+          sitekey: SITE_KEY,
+          callback: (token: string) => {
+            turnstileToken = token;
+            updateSubmitState();
+          },
+          'expired-callback': () => {
+            turnstileToken = '';
+            updateSubmitState();
+          },
+          'error-callback': () => {
+            turnstileToken = '';
+            updateSubmitState();
+          },
+        });
+      } catch (err) {
+        console.error('[turnstile] render failed', err);
+      }
+    }
+
+    function updateSubmitState(): void {
+      const text = input.value.trim();
+      const ok = !!currentUser && text.length >= 2 && !!turnstileToken && !submitting;
+      submitBtn.disabled = !ok;
+    }
+
+    function setFormStatus(text: string, kind: 'error' | 'success' | null): void {
+      formStatus.textContent = text;
+      formStatus.classList.remove('is-error', 'is-success');
+      if (kind === 'error') formStatus.classList.add('is-error');
+      if (kind === 'success') formStatus.classList.add('is-success');
+      formStatus.hidden = !text;
+    }
+
+    async function loadGsi(): Promise<void> {
+      if (!window.hasOwnProperty('google')) {
+        await loadScript('https://accounts.google.com/gsi/client');
+      }
+      const g = (window as any).google;
+      if (!g?.accounts?.id) throw new Error('GIS tidak tersedia');
+
+      const clientId = (window as any).__GOOGLE_CLIENT_ID__;
+      if (!clientId) {
+        console.warn('[comments] GOOGLE_CLIENT_ID belum di-set di frontend');
+        gsiSlot.textContent = 'Login belum dikonfigurasi.';
+        return;
+      }
+
+      g.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredential,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+      g.accounts.id.renderButton(gsiSlot, {
+        theme: 'outline',
+        size: 'large',
+        text: 'signin_with',
+        shape: 'pill',
+      });
+    }
+
+    async function handleGoogleCredential(response: { credential: string }): Promise<void> {
+      try {
+        const res = await fetch(`${API}/api/v1/auth/google`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as {
+          ok: boolean;
+          user: { sub: string; name: string; picture: string | null };
+        };
+        if (json.ok && json.user) {
+          currentUser = json.user;
+          applyUserState();
+        }
+      } catch (err) {
+        console.error('[comments] login failed', err);
+        setFormStatus('Login gagal, coba lagi.', 'error');
+      }
+    }
+
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        await fetch(`${API}/api/v1/auth/logout`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+      } catch {}
+      currentUser = null;
+      turnstileToken = '';
+      applyUserState();
+      setFormStatus('', null);
+    });
+
+    input.addEventListener('input', () => {
+      const len = input.value.length;
+      charCount.textContent = `${len} / 2000`;
+      updateSubmitState();
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (submitting) return;
+
+      const text = input.value.trim();
+      if (text.length < 2) {
+        setFormStatus('Komentar minimal 2 karakter.', 'error');
+        return;
+      }
+      if (!turnstileToken) {
+        setFormStatus('Selesaikan captcha dulu.', 'error');
+        return;
+      }
+
+      submitting = true;
+      updateSubmitState();
+      setFormStatus('Mengirim…', null);
+
+      try {
+        const res = await fetch(`${API}/api/v1/comments`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slug: SLUG,
+            body: text,
+            parentId: null,
+            turnstileToken,
+          }),
+        });
+
+        const json = (await res.json()) as {
+          ok?: boolean;
+          status?: string;
+          error?: { code: string; message: string };
+        };
+
+        if (!res.ok) {
+          const msg = json.error?.message ?? `Gagal (HTTP ${res.status})`;
+          setFormStatus(msg, 'error');
+          return;
+        }
+
+        input.value = '';
+        charCount.textContent = '0 / 2000';
+        turnstileToken = '';
+        if (turnstileWidgetId) {
+          try { (window as any).turnstile.reset(turnstileWidgetId); } catch {}
+        }
+        setFormStatus('Komentar terkirim. Menunggu moderasi.', 'success');
+      } catch (err) {
+        console.error('[comments] submit failed', err);
+        setFormStatus('Gagal mengirim. Coba lagi.', 'error');
+      } finally {
+        submitting = false;
+        updateSubmitState();
+      }
+    });
+
+    (async () => {
+      await Promise.allSettled([
+        fetchMe(),
+        fetchComments(),
+        loadScript('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit')
+          .then(() => mountTurnstile())
+          .catch((err) => console.error('[comments] turnstile load failed', err)),
+        loadGsi().catch((err) => console.error('[comments] gsi load failed', err)),
+      ]);
+      updateSubmitState();
+    })();
+  })();
+</script>
