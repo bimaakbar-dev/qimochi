@@ -1,7 +1,7 @@
 export const SITE = {
   name: 'Qimochi',
   title: 'Nonton Anime Subtitle Indonesia',
-  description: 'Koleksi anime untuk streaming subtitel bahasa indonesia. Ringan, cepat, tanpa ribet.',
+  description: 'Koleksi anime subtitle bahasa indonesia. Ringan, cepat, tanpa ribet.',
   url: 'https://qimochi.pages.dev',
   locale: 'id-ID',
   lang: 'id',
@@ -11,7 +11,7 @@ export const NAV_LINKS = [
   { label: 'Home',     href: '/' },
   { label: 'Ongoing',  href: '/anime/ongoing/' },
   { label: 'Completed', href: '/anime/completed/' },
-  { label: 'Archive',  href: '/anime/' },
+  { label: 'Anime',  href: '/anime/' },
   { label: 'Genre',    href: '/anime/genre/' },
   { label: 'Blog', href: '/blog/' },
 ] as const;
@@ -62,7 +62,7 @@ export const STORAGE_KEYS = {
 
 export const URLS = {
   anime:  (slug: string) => `/anime/${slug}/`,
-  watch: (slug, episode) => `/anime/watch/${slug}/episodes/${episode}/`,
+  watch: (slug: string, episode: number) => `/anime/watch/${slug}/episodes/${episode}/`,
   genre:  (slug: string) => `/anime/genre/${slug.toLowerCase().replace(/\s+/g, '-')}/`,
   status: (status: string) => `/anime/${status.toLowerCase()}/`,
 } as const;

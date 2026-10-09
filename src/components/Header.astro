@@ -51,7 +51,6 @@ function isActive(href: string): boolean {
           <span class="icon-menu"><Icon name="menu" size={22} /></span>
           <span class="icon-close"><Icon name="close" size={22} /></span>
         </summary>
-
         <nav class="nav nav--mobile" aria-label="Navigasi utama">
           {NAV_LINKS.map(({ label, href }) => (
             <a
@@ -109,6 +108,8 @@ function isActive(href: string): boolean {
     top: 0;
     z-index: var(--z-header);
     background: var(--bg-nav);
+    width: 100%;
+    box-shadow: var(--shadow-header);
   }
 
   .header-inner {
@@ -122,34 +123,28 @@ function isActive(href: string): boolean {
     margin-inline: auto;
     padding-inline: var(--pad-x);
   }
-
   .logo {
     display: inline-flex;
     align-items: center;
     transition: opacity var(--t-fast);
   }
-
   .logo:hover {
     opacity: 0.85;
   }
-
   .logo-img {
     display: block;
     width: 2rem;
     height: 2rem;
     object-fit: contain;
   }
-
   .header-right {
     display: flex;
     align-items: center;
     gap: var(--s-1);
   }
-
   .header-right .icon-btn {
     order: 1;
   }
-
   .header-right .menu {
     order: 2;
   }
@@ -162,7 +157,6 @@ function isActive(href: string): boolean {
     color: var(--text-inverted);
     transition: color var(--t-fast);
   }
-
   .icon-btn:hover {
     color: var(--accent);
   }
@@ -170,7 +164,6 @@ function isActive(href: string): boolean {
     display: flex;
     align-items: center;
   }
-
   .menu-btn {
     display: inline-flex;
     align-items: center;
@@ -182,27 +175,21 @@ function isActive(href: string): boolean {
     list-style: none;
     transition: color var(--t-fast);
   }
-
   .menu-btn::-webkit-details-marker {
     display: none;
   }
-
   .menu-btn:hover {
     color: var(--accent);
   }
-
   .icon-menu {
     display: inline-flex;
   }
-
   .icon-close {
     display: none;
   }
-
   .menu[open] .icon-menu {
     display: none;
   }
-
   .menu[open] .icon-close {
     display: inline-flex;
   }
@@ -224,7 +211,6 @@ function isActive(href: string): boolean {
     transition: color var(--t-fast);
     font-family: var(--font-montserrat);
   }
-
   .nav a::after {
     content: '';
     position: absolute;
@@ -243,20 +229,16 @@ function isActive(href: string): boolean {
     opacity: 0;
     transition: opacity var(--t-fast);
   }
-
   .nav a:hover {
     color: var(--accent-hover);
   }
-
   .nav a.active {
     color: var(--accent);
   }
-
   .nav a:hover::after,
   .nav a.active::after {
     opacity: 1;
   }
-  
   .nav--desktop {
     display: none;
   }
@@ -284,12 +266,11 @@ function isActive(href: string): boolean {
     .header-right .icon-btn {
       order: 2;
     }
-    .menu {
-      display: none;
-    }
-    
     .nav--desktop {
       display: flex;
+    }
+    .menu {
+      display: none;
     }
   }
 </style>

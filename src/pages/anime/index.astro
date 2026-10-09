@@ -4,6 +4,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import Hero from '~/components/Hero.astro';
 import Badge from '~/user-components/Badge.astro';
 import { URLS, STATUS_VARIANT, type Status } from '~/constants';
+import Page from '~/components/Page.astro';
 
 const allAnime = await getAllAnime();
 
@@ -39,7 +40,7 @@ const groups = activeLetters.map(letter => ({
   description={`Daftar anime di Qimochi`}
   canonical="/anime/"
 >
-  <div class="wrapper">
+  <Page class="wrapper">
 
     <Hero
       title="Archive Anime"
@@ -86,14 +87,11 @@ const groups = activeLetters.map(letter => ({
     {totalAnime === 0 && (
       <p class="empty">Belum ada anime di database.</p>
     )}
-  </div>
+  </Page>
 </BaseLayout>
 
 <style>
   .wrapper {
-    padding-block: var(--s-6) var(--s-12);
-    display: flex;
-    flex-direction: column;
     gap: var(--s-6);
   }
  

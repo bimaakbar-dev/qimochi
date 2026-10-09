@@ -3,6 +3,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import Hero from '~/components/Hero.astro';
 import Icon from '~/user-components/Icons.astro';
 import Button from '~/user-components/Button.astro';
+import Page from '~/components/Page.astro';
 ---
 
 <BaseLayout
@@ -10,7 +11,7 @@ import Button from '~/user-components/Button.astro';
   description="Cari anime di Qimochi."
   noindex={true}
 >
-  <div class="wrapper">
+  <Page class="wrapper">
 
     <Hero
       title="Cari Anime"
@@ -65,7 +66,7 @@ import Button from '~/user-components/Button.astro';
 
     <div id="load-sentinel" aria-hidden="true"></div>
 
-  </div>
+  </Page>
 
   <template id="anime-card-template">
     <a class="anime-card" data-anime-title="">
@@ -128,7 +129,6 @@ import Button from '~/user-components/Button.astro';
     let visibleCount = 0;
     let ready = false;
 
-    /* ---------- FUZZY (fallback only) ---------- */
     function levenshtein(a: string, b: string): number {
       if (a === b) return 0;
       if (a.length === 0) return b.length;
@@ -164,8 +164,6 @@ import Button from '~/user-components/Button.astro';
       }
       return best;
     }
-
-    /* ---------- CARD RENDER ---------- */
     function statusVariant(s: string): string {
       if (s === 'Ongoing') return 'badge-success';
       if (s === 'Hiatus') return 'badge-warning';
@@ -173,7 +171,7 @@ import Button from '~/user-components/Button.astro';
     }
 
     function makeCard(item: IndexItem): HTMLElement {
-      const node = tmpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
+      const node = tmpl!.content.firstElementChild!.cloneNode(true) as HTMLElement;
       node.setAttribute('href', `/anime/${item.i}/`);
       node.dataset.animeTitle = item.t;
 

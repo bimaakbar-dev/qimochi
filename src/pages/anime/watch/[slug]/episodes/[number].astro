@@ -14,6 +14,7 @@ import ActionBar from '~/components/ActionBar.astro';
 import DownloadPanel from '~/components/DownloadPanel.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
 import AnimeFranchise from '~/components/AnimeFranchise.astro';
+import Page from '~/components/Page.astro';
 
 export async function getStaticPaths() {
   const paths = await getAllEpisodePaths();
@@ -54,7 +55,7 @@ const canonical = `/anime/watch/${anime.id}/episodes/${episode.number}/`;
 
 const breadcrumbItems = [
   { label: 'Home', href: '/' },
-  { label: 'Archive', href: '/anime/' },
+  { label: 'Anime', href: '/anime/' },
   { label: data.title, href: `/anime/${anime.id}/` },
   { label: `Episode ${episode.number}` },
 ];
@@ -76,7 +77,7 @@ const progressPayload = {
   canonical={canonical}
   noindex={true}
 >
-  <div class="wrapper">
+  <Page class="wrapper">
     <div class="breadcrumb-wrap">
       <Breadcrumb items={breadcrumbItems} />
     </div>
@@ -120,7 +121,7 @@ const progressPayload = {
         />
       </aside>
     </div>
-  </div>
+  </Page>
 
   <script
     type="application/json"

@@ -4,6 +4,7 @@ import Hero from '~/components/Hero.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
 import Pagination from '~/components/Pagination.astro';
 import { getStatusData, buildStatusPaths, paginate } from '~/lib/status';
+import Page from '~/components/Page.astro';
 
 export async function getStaticPaths() {
   const { anime, totalPages } = await getStatusData('complete');
@@ -29,7 +30,7 @@ const description = isFirstPage
   canonical="/anime/complete/"
   noindex={!isFirstPage}
 >
-  <div class="wrapper">
+  <Page class="wrapper">
 
     <Hero
       title="Anime Completed"
@@ -49,23 +50,16 @@ const description = isFirstPage
       total={totalPages}
       base="/anime/completed"
     />
-  </div>
+  </Page>
 </BaseLayout>
 
 <style>
-  /* ----------------------------------------------------------
-     WRAPPER
-     ---------------------------------------------------------- */
   .wrapper {
     padding-block: var(--s-6) var(--s-12);
     display: flex;
     flex-direction: column;
     gap: var(--s-6);
   }
-
-  /* ----------------------------------------------------------
-     GRID
-     ---------------------------------------------------------- */
   .anime-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -78,10 +72,6 @@ const description = isFirstPage
       gap: var(--s-4);
     }
   }
-
-  /* ----------------------------------------------------------
-     EMPTY
-     ---------------------------------------------------------- */
   .empty {
     color: var(--text-muted);
     text-align: center;

@@ -5,6 +5,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import Hero from '~/components/Hero.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
 import Pagination from '~/components/Pagination.astro';
+import Page from '~/components/Page.astro';
 
 export async function getStaticPaths() {
   const paths = [];
@@ -50,7 +51,7 @@ const description = isFirstPage
   canonical={`/genre/${slug}/`}
   noindex={!isFirstPage}
 >
-  <div class="wrapper">
+  <Page class="wrapper">
 
     <Hero
       title={genre}
@@ -70,23 +71,16 @@ const description = isFirstPage
       total={totalPages}
       base={`/genre/${slug}`}
     />
-  </div>
+    </Page>
 </BaseLayout>
 
 <style>
-  /* ----------------------------------------------------------
-     WRAPPER
-     ---------------------------------------------------------- */
   .wrapper {
     padding-block: var(--s-6) var(--s-12);
     display: flex;
     flex-direction: column;
     gap: var(--s-6);
   }
-
-  /* ----------------------------------------------------------
-     GRID
-     ---------------------------------------------------------- */
   .anime-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -99,10 +93,6 @@ const description = isFirstPage
       gap: var(--s-4);
     }
   }
-
-  /* ----------------------------------------------------------
-     EMPTY
-     ---------------------------------------------------------- */
   .empty {
     color: var(--text-muted);
     text-align: center;
