@@ -10,6 +10,7 @@ import EpisodeList from '~/components/EpisodeList.astro';
 import AnimeFranchise from '~/components/AnimeFranchise.astro';
 import Badge from '~/user-components/Badge.astro';
 import LinkButton from '~/user-components/LinkButton.astro';
+import Comments from '~/components/Comments.astro';
 
 export async function getStaticPaths() {
   const allAnime = await getAllAnime();
@@ -138,6 +139,8 @@ const breadcrumbItems = [
           currentSlug={anime.id}
           franchises={data.franchises}
         />
+
+       <Comments slug={anime.id} />
       </div>
 
       <aside class="content-aside">
