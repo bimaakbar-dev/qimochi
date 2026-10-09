@@ -10,7 +10,3 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
-
-interface Window {
-  __GOOGLE_CLIENT_ID__?: string;
-}
