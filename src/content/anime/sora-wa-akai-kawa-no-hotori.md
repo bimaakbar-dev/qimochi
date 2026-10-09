@@ -7,6 +7,7 @@ genre: [Action, Adventure, Drama, Fantasy, Romance]
 studio: Tatsunoko Production
 releaseDate: 2026-07-08
 addedAt: 2026-10-07
+updatedAt: 2026-10-09
 rating: 6.2
 ---
 
