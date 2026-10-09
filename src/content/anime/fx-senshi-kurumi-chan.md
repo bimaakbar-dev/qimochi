@@ -7,6 +7,7 @@ genre: [Drama, Slice-of-life]
 studio: Passione
 releaseDate: 2026-10-01
 addedAt: 2026-10-07
+updatedAt: 2026-10-09
 rating: 6.9
 ---
 
