@@ -6,6 +6,7 @@ import {
 } from '~/lib/anime';
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import Breadcrumb from '~/components/Breadcrumb.astro';
 import Player from '~/components/Player.astro';
 import WatchTitle from '~/components/WatchTitle.astro';
 import StreamSelector from '~/components/StreamSelector.astro';
@@ -50,6 +51,21 @@ const playerSrc = defaultServer?.url ?? '';
 const pageTitle = `${data.title} Episode ${episode.number}`;
 const pageDesc = `Nonton ${data.title} Episode ${episode.number} subtitle Indonesia.`;
 const canonical = `/anime/watch/${anime.id}/episodes/${episode.number}/`;
+
+const breadcrumbItems = [
+  { label: 'Home', href: '/' },
+  { label: 'Archive', href: '/anime/' },
+  { label: data.title, href: `/anime/${anime.id}/` },
+  { label: `Episode ${episode.number}` },
+];
+
+const progressPayload = {
+  slug: anime.id,
+  title: data.title,
+  cover: data.cover,
+  episode: episode.number,
+  total: totalEpisodes,
+};
 ---
 
 <BaseLayout
@@ -61,6 +77,10 @@ const canonical = `/anime/watch/${anime.id}/episodes/${episode.number}/`;
   noindex={true}
 >
   <div class="wrapper">
+    <div class="breadcrumb-wrap">
+      <Breadcrumb items={breadcrumbItems} />
+    </div>
+
     <section class="player-section">
       <Player
         src={playerSrc}
@@ -101,11 +121,80 @@ const canonical = `/anime/watch/${anime.id}/episodes/${episode.number}/`;
       </aside>
     </div>
   </div>
+
+  <script
+    type="application/json"
+    id="progress-payload"
+    is:inline
+    set:html={JSON.stringify(progressPayload).replace(/</g, '\\u003c')}
+  />
+
+  <script>
+    (function () {
+      const KEY = 'qimochi:continue';
+      const MAX_ITEMS = 20;
+      const el = document.getElementById('progress-payload');
+      if (!el) return;
+
+      type ProgressItem = {
+        slug: string;
+        title: string;
+        cover: string;
+        episode: number;
+        total: number;
+        ts: number;
+      };
+
+      let payload: Omit<ProgressItem, 'ts'>;
+      try {
+        payload = JSON.parse(el.textContent || '{}');
+      } catch {
+        return;
+      }
+
+      if (!payload.slug) return;
+
+      let list: ProgressItem[] = [];
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) list = parsed;
+        }
+      } catch {}
+
+      list = list.filter(x => x && typeof x.slug === 'string');
+      list = list.filter(x => x.slug !== payload.slug);
+
+      list.unshift({
+        ...payload,
+        ts: Date.now(),
+      });
+
+      if (list.length > MAX_ITEMS) list = list.slice(0, MAX_ITEMS);
+
+      try {
+        localStorage.setItem(KEY, JSON.stringify(list));
+      } catch {}
+
+      if (payload.episode < payload.total) {
+        const NEXT_KEY = 'qimochi:auto-next';
+        try {
+          localStorage.setItem(NEXT_KEY, '1');
+        } catch {}
+      }
+    })();
+  </script>
 </BaseLayout>
 
 <style>
   .wrapper {
-    padding-block: var(--s-4) var(--s-12);
+    padding-block: var(--s-2) var(--s-12);
+  }
+
+  .breadcrumb-wrap {
+    padding-block: var(--s-2) var(--s-3);
+    min-width: 0;
   }
 
   .player-section {
