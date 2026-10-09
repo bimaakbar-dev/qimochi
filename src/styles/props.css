@@ -37,7 +37,7 @@
 
   --font-sans: var(--font-inter), system-ui, -apple-system, 'Segoe UI', Roboto,
                'Helvetica Neue', Arial, sans-serif;
-  --font-mono: var(--font-inter), ui-monospace, 'SF Mono', Monaco, 'Cascadia Code',
+  --font-mono: var(--font-firaCode), ui-monospace, 'SF Mono', Monaco, 'Cascadia Code',
                'Roboto Mono', monospace;
 
   --fs-xs:   0.8125rem;
