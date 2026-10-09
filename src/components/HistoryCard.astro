@@ -1,5 +1,6 @@
 ---
 import SectionLabel from '~/components/SectionLabel.astro';
+import Icon from '~/user-components/Icons.astro';
 ---
 
 <section class="history-section" data-history-section hidden>
@@ -22,9 +23,7 @@ import SectionLabel from '~/components/SectionLabel.astro';
         </span>
       </span>
       <span class="history-arrow" aria-hidden="true">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="square">
-          <path d="M3 8h10M9 4l4 4-4 4" />
-        </svg>
+        <Icon name="arrow-right" size={16} />
       </span>
     </a>
   </li>
