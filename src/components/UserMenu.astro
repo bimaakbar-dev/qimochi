@@ -1,0 +1,410 @@
+---
+const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
+const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
+---
+
+<div
+  class="user-menu"
+  data-user-menu
+  data-clientid={clientId}
+  data-api={apiBase}
+>
+  <button
+    type="button"
+    class="user-trigger"
+    data-trigger
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-label="Akun"
+  >
+    <span class="user-trigger-guest" data-guest>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+      </svg>
+    </span>
+    <img class="user-trigger-avatar" data-avatar alt="" width="28" height="28" hidden />
+  </button>
+
+  <div class="user-panel" data-panel hidden>
+    <div class="user-panel-gsi" data-gsi></div>
+
+    <div class="user-panel-profile" data-profile hidden>
+      <div class="user-panel-head">
+        <img data-info-avatar alt="" width="40" height="40" />
+        <div class="user-panel-meta">
+          <strong data-info-name></strong>
+          <span data-info-email></span>
+        </div>
+      </div>
+      <button type="button" class="user-panel-logout" data-logout>Keluar</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .user-menu {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .user-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-inverted);
+    cursor: pointer;
+    transition: color var(--t-fast);
+  }
+
+  .user-trigger:hover {
+    color: var(--accent);
+  }
+
+  .user-trigger-guest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .user-trigger-avatar {
+    display: block;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--r-full);
+    object-fit: cover;
+    border: 1.5px solid var(--border-hover);
+  }
+
+  .user-trigger-avatar[hidden] {
+    display: none;
+  }
+
+  .user-panel {
+    position: absolute;
+    top: calc(100% + var(--s-2));
+    right: 0;
+    z-index: var(--z-overlay);
+    min-width: 16rem;
+    max-width: 20rem;
+    padding: var(--s-3);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .user-panel[hidden] {
+    display: none;
+  }
+
+  .user-panel-gsi {
+    display: flex;
+    justify-content: center;
+    min-height: 40px;
+  }
+
+  .user-panel-gsi:empty {
+    min-height: 0;
+  }
+
+  .user-panel-profile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .user-panel-head {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-width: 0;
+  }
+
+  .user-panel-head img {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--r-full);
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--bg-surface);
+  }
+
+  .user-panel-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .user-panel-meta strong {
+    font-size: var(--fs-sm);
+    color: var(--text-primary);
+    font-weight: var(--fw-semibold);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-panel-meta span {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-panel-logout {
+    align-self: stretch;
+    padding: var(--s-2) var(--s-3);
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .user-panel-logout:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+</style>
+
+<script>
+  interface AuthUser {
+    sub: string;
+    name: string;
+    email: string;
+    picture: string | null;
+  }
+
+  (function () {
+    const root = document.querySelector<HTMLElement>('[data-user-menu]');
+    if (!root) return;
+
+    const CLIENT_ID = root.dataset.clientid || '';
+    const API = (root.dataset.api || '').replace(/\/$/, '');
+
+    const trigger = root.querySelector<HTMLButtonElement>('[data-trigger]')!;
+    const guestIcon = root.querySelector<HTMLElement>('[data-guest]')!;
+    const triggerAvatar = root.querySelector<HTMLImageElement>('[data-avatar]')!;
+    const panel = root.querySelector<HTMLElement>('[data-panel]')!;
+    const gsiSlot = root.querySelector<HTMLElement>('[data-gsi]')!;
+    const profileBox = root.querySelector<HTMLElement>('[data-profile]')!;
+    const infoAvatar = root.querySelector<HTMLImageElement>('[data-info-avatar]')!;
+    const infoName = root.querySelector<HTMLElement>('[data-info-name]')!;
+    const infoEmail = root.querySelector<HTMLElement>('[data-info-email]')!;
+    const logoutBtn = root.querySelector<HTMLButtonElement>('[data-logout]')!;
+
+    let currentUser: AuthUser | null = null;
+    let gsiRendered = false;
+    let panelOpen = false;
+
+    function loadScript(src: string): Promise<void> {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector<HTMLScriptElement>(`script[src="${src}"]`);
+        if (existing) {
+          if (existing.dataset.loaded === '1') return resolve();
+          existing.addEventListener('load', () => resolve(), { once: true });
+          existing.addEventListener('error', () => reject(), { once: true });
+          return;
+        }
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.defer = true;
+        s.addEventListener('load', () => { s.dataset.loaded = '1'; resolve(); }, { once: true });
+        s.addEventListener('error', () => reject(), { once: true });
+        document.head.appendChild(s);
+      });
+    }
+
+    function dispatchAuthChanged(): void {
+      document.dispatchEvent(
+        new CustomEvent('qimochi:auth-changed', { detail: { user: currentUser } })
+      );
+    }
+
+    function applyUser(): void {
+      if (currentUser) {
+        guestIcon.hidden = true;
+        triggerAvatar.hidden = false;
+        if (currentUser.picture) {
+          triggerAvatar.src = currentUser.picture;
+          triggerAvatar.alt = currentUser.name;
+        } else {
+          triggerAvatar.removeAttribute('src');
+        }
+        gsiSlot.innerHTML = '';
+        gsiSlot.hidden = true;
+        profileBox.hidden = false;
+        if (currentUser.picture) {
+          infoAvatar.src = currentUser.picture;
+        } else {
+          infoAvatar.removeAttribute('src');
+        }
+        infoAvatar.alt = currentUser.name;
+        infoName.textContent = currentUser.name;
+        infoEmail.textContent = currentUser.email;
+      } else {
+        guestIcon.hidden = false;
+        triggerAvatar.hidden = true;
+        triggerAvatar.removeAttribute('src');
+        profileBox.hidden = true;
+        gsiSlot.hidden = false;
+        ensureGsi();
+      }
+    }
+
+    function ensureGsi(): void {
+      if (gsiRendered) return;
+      if (!CLIENT_ID) return;
+      const g = (window as any).google;
+      if (!g?.accounts?.id) return;
+      if (!panelOpen) return;
+
+      try {
+        g.accounts.id.renderButton(gsiSlot, {
+          theme: 'outline',
+          size: 'large',
+          text: 'signin_with',
+          shape: 'rect',
+          logo_alignment: 'left',
+          width: 240,
+        });
+        gsiRendered = true;
+      } catch (err) {
+        console.error('[usermenu] render gsi failed', err);
+      }
+    }
+
+    function openPanel(): void {
+      panelOpen = true;
+      panel.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      if (!currentUser) ensureGsi();
+    }
+
+    function closePanel(): void {
+      panelOpen = false;
+      panel.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (panelOpen) closePanel();
+      else openPanel();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!panelOpen) return;
+      if (root.contains(e.target as Node)) return;
+      closePanel();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && panelOpen) closePanel();
+    });
+
+    async function handleCredential(response: { credential: string }): Promise<void> {
+      try {
+        const res = await fetch(`${API}/api/v1/auth/google`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as { ok: boolean; user: AuthUser };
+        if (json.ok && json.user) {
+          currentUser = json.user;
+          applyUser();
+          closePanel();
+          dispatchAuthChanged();
+        }
+      } catch (err) {
+        console.error('[usermenu] login failed', err);
+      }
+    }
+
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        await fetch(`${API}/api/v1/auth/logout`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+      } catch {}
+      currentUser = null;
+      gsiRendered = false;
+      applyUser();
+      closePanel();
+      dispatchAuthChanged();
+    });
+
+    async function fetchMe(): Promise<void> {
+      try {
+        const res = await fetch(`${API}/api/v1/auth/me`, { credentials: 'include' });
+        if (!res.ok) return;
+        const json = (await res.json()) as { ok: boolean; user: AuthUser | null };
+        currentUser = json.ok && json.user ? json.user : null;
+        applyUser();
+        dispatchAuthChanged();
+      } catch {
+        applyUser();
+      }
+    }
+
+    function onExternalChange(e: Event): void {
+      const detail = (e as CustomEvent<{ user: AuthUser | null }>).detail;
+      if (!detail) return;
+      const sameUser =
+        (detail.user?.sub ?? null) === (currentUser?.sub ?? null);
+      if (sameUser) return;
+      currentUser = detail.user;
+      applyUser();
+    }
+
+    document.addEventListener('qimochi:auth-changed', onExternalChange);
+
+    (async () => {
+      if (CLIENT_ID) {
+        try {
+          await loadScript('https://accounts.google.com/gsi/client');
+          const g = (window as any).google;
+          if (g?.accounts?.id) {
+            g.accounts.id.initialize({
+              client_id: CLIENT_ID,
+              callback: handleCredential,
+              auto_select: false,
+              cancel_on_tap_outside: true,
+            });
+            document.dispatchEvent(new CustomEvent('qimochi:gsi-ready'));
+          }
+        } catch (err) {
+          console.error('[usermenu] gsi load failed', err);
+        }
+      }
+
+      await fetchMe();
+    })();
+
+    (window as any).__qimochiUserMenu = {
+      getUser: () => currentUser,
+      open: () => openPanel(),
+      close: () => closePanel(),
+    };
+  })();
+</script>
