@@ -1,6 +1,6 @@
 ---
 import { SITE, GENRES, PER_PAGE, URLS, ADS } from '~/constants';
-import { getAllAnime, sortByRecent } from '~/lib/anime';
+import { getAllAnime, type HydratedAnime } from '~/lib/anime';
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Featured from '~/components/Featured.astro';
@@ -14,32 +14,36 @@ import Page from '~/components/Page.astro';
 
 const allAnime = await getAllAnime();
 
+function latestUpdateTime(a: HydratedAnime): number {
+  return (a.data.updatedAt ?? a.data.addedAt).getTime();
+}
+
 const ongoingWithEpisodes = allAnime.filter(
-  a => a.data.status === 'Ongoing' && (a.data.episodes?.length ?? 0) > 0
+  (a) =>
+    a.data.status === 'Ongoing' && (a.data.episodes?.length ?? 0) > 0
 );
 
 const latest = [...ongoingWithEpisodes]
-  .sort((a, b) => {
-    const aTime = (a.data.updatedAt ?? a.data.addedAt).getTime();
-    const bTime = (b.data.updatedAt ?? b.data.addedAt).getTime();
-    return bTime - aTime;
-  })
+  .sort((a, b) => latestUpdateTime(b) - latestUpdateTime(a))
   .slice(0, 3);
 
-const ongoing = sortByRecent(
-  allAnime.filter(a => a.data.status === 'Ongoing')
-).slice(0, PER_PAGE);
+const ongoing = [...allAnime]
+  .filter((a) => a.data.status === 'Ongoing')
+  .sort((a, b) => latestUpdateTime(b) - latestUpdateTime(a))
+  .slice(0, PER_PAGE);
 
-const completed = sortByRecent(
-  allAnime.filter(a => a.data.status === 'Completed')
-).slice(0, PER_PAGE);
+const completed = [...allAnime]
+  .filter((a) => a.data.status === 'Completed')
+  .sort((a, b) => latestUpdateTime(b) - latestUpdateTime(a))
+  .slice(0, PER_PAGE);
 
 const genreCounts: Record<string, number> = {};
-allAnime.forEach(a => {
-  a.data.genre.forEach(g => {
+allAnime.forEach((a) => {
+  a.data.genre.forEach((g) => {
     genreCounts[g] = (genreCounts[g] || 0) + 1;
   });
 });
+
 const genres = GENRES
   .map(name => ({ name, count: genreCounts[name] || 0 }))
   .filter(g => g.count > 0)
