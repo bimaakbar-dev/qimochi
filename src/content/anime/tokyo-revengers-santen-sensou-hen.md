@@ -7,6 +7,7 @@ genre: [Action, Drama, Romance, Supernatural]
 studio: LIDENFILMS
 releaseDate: 2026-10-03
 addedAt: 2026-10-07
+updatedAt: 2026-10-09
 rating: 7.6
 ---
 
