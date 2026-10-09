@@ -1,26 +1,8 @@
 ---
-import { getAllAnime } from '~/lib/anime';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Hero from '~/components/Hero.astro';
 import Icon from '~/user-components/Icons.astro';
 import Button from '~/user-components/Button.astro';
-
-const allAnime = await getAllAnime();
-
-const index = allAnime
-  .map(a => ({
-    i: a.id,
-    t: a.data.title,
-    c: a.data.cover,
-    s: a.data.status,
-    y: a.data.type,
-    e: a.data.episodes?.length
-      ? Math.max(...a.data.episodes.map(x => x.number))
-      : 0,
-  }))
-  .sort((a, b) => a.t.localeCompare(b.t, 'id-ID'));
-
-const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
 ---
 
 <BaseLayout
@@ -85,13 +67,6 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
 
   </div>
 
-  <script
-    type="application/json"
-    id="anime-index"
-    is:inline
-    set:html={indexJson}
-  />
-
   <template id="anime-card-template">
     <a class="anime-card" data-anime-title="">
       <div class="cover">
@@ -118,88 +93,22 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
 
 <script>
   (function () {
+    const API = '/api/anime.json';
     const BATCH = 24;
     const DEBOUNCE_MS = 120;
     const MIN_QUERY = 2;
-    const SCORE_THRESHOLD = 0.4;
-
-    function normalize(s: string): string {
-      return s
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9\s]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
-
-    function levenshtein(a: string, b: string): number {
-      if (a === b) return 0;
-      if (a.length === 0) return b.length;
-      if (b.length === 0) return a.length;
-
-      const matrix: number[][] = [];
-      for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-      for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-
-      for (let i = 1; i <= b.length; i++) {
-        for (let j = 1; j <= a.length; j++) {
-          const cost = a[j - 1] === b[i - 1] ? 0 : 1;
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j - 1] + cost
-          );
-        }
-      }
-
-      return matrix[b.length][a.length];
-    }
-
-    function scoreTitle(query: string, title: string): number {
-      const q = normalize(query);
-      const t = normalize(title);
-      if (!q || !t) return 0;
-
-      if (t.includes(q)) {
-        const pos = t.indexOf(q);
-        return 1 - (pos / t.length) * 0.3;
-      }
-
-      const words = t.split(' ');
-      let best = 0;
-
-      for (const word of words) {
-        const dist = levenshtein(q, word);
-        const maxLen = Math.max(q.length, word.length);
-        const similarity = 1 - dist / maxLen;
-        if (similarity > best) best = similarity;
-      }
-
-      if (q.length >= 3) {
-        for (const word of words) {
-          if (word.includes(q) || q.includes(word)) {
-            best = Math.max(best, 0.85);
-          }
-        }
-      }
-
-      return best * 0.85;
-    }
-
-    function statusVariant(s: string): string {
-      if (s === 'Ongoing') return 'badge-success';
-      if (s === 'Hiatus') return 'badge-warning';
-      return 'badge-default';
-    }
+    const FUZZY_THRESHOLD = 0.55;
 
     type IndexItem = {
       i: string; t: string; c: string;
       s: string; y: string; e: number;
     };
 
-    const indexEl = document.getElementById('anime-index');
-    const tmplEl = document.getElementById('anime-card-template');
+    type Entry = {
+      item: IndexItem;
+      search: string;
+    };
+
     const form = document.getElementById('search-form') as HTMLFormElement;
     const input = document.getElementById('search-input') as HTMLInputElement;
     const clearBtn = document.getElementById('search-clear') as HTMLButtonElement;
@@ -210,25 +119,58 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
     const loadMoreBtn = document.getElementById('load-more-btn') as HTMLButtonElement;
     const loadMoreText = document.getElementById('load-more-text')!;
     const sentinel = document.getElementById('load-sentinel')!;
+    const tmpl = document.getElementById('anime-card-template') as HTMLTemplateElement | null;
 
-    if (!indexEl || !tmplEl) return;
+    if (!form || !tmpl) return;
 
-    let data: IndexItem[] = [];
-    try {
-      data = JSON.parse(indexEl.textContent || '[]');
-    } catch (err) {
-      console.error('[Search] JSON parse failed:', err);
-      return;
-    }
-
-    if (!Array.isArray(data) || data.length === 0) {
-      console.warn('[Search] Index empty');
-      return;
-    }
-
-    const tmpl = tmplEl as HTMLTemplateElement;
+    let index: Entry[] = [];
     let matched: IndexItem[] = [];
     let visibleCount = 0;
+    let ready = false;
+
+    /* ---------- FUZZY (fallback only) ---------- */
+    function levenshtein(a: string, b: string): number {
+      if (a === b) return 0;
+      if (a.length === 0) return b.length;
+      if (b.length === 0) return a.length;
+
+      const m: number[][] = [];
+      for (let i = 0; i <= b.length; i++) m[i] = [i];
+      for (let j = 0; j <= a.length; j++) m[0][j] = j;
+
+      for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+          const cost = a[j - 1] === b[i - 1] ? 0 : 1;
+          m[i][j] = Math.min(
+            m[i - 1][j] + 1,
+            m[i][j - 1] + 1,
+            m[i - 1][j - 1] + cost
+          );
+        }
+      }
+      return m[b.length][a.length];
+    }
+
+    function fuzzyScore(q: string, t: string): number {
+      if (!q || !t) return 0;
+
+      const words = t.split(' ');
+      let best = 0;
+      for (const w of words) {
+        const dist = levenshtein(q, w);
+        const max = Math.max(q.length, w.length);
+        const sim = 1 - dist / max;
+        if (sim > best) best = sim;
+      }
+      return best;
+    }
+
+    /* ---------- CARD RENDER ---------- */
+    function statusVariant(s: string): string {
+      if (s === 'Ongoing') return 'badge-success';
+      if (s === 'Hiatus') return 'badge-warning';
+      return 'badge-default';
+    }
 
     function makeCard(item: IndexItem): HTMLElement {
       const node = tmpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
@@ -236,9 +178,8 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
       node.dataset.animeTitle = item.t;
 
       const img = node.querySelector('[data-cover-img]') as HTMLImageElement;
-      const coverUrl = (item.c || '').trim();
-      if (coverUrl) {
-        img.src = coverUrl;
+      if (item.c) {
+        img.src = item.c;
         img.alt = `Cover ${item.t}`;
       }
 
@@ -286,8 +227,41 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
       matched = [];
     }
 
+    /* ---------- FILTER ---------- */
+    function runFilter(qRaw: string): IndexItem[] {
+      const q = qRaw.toLowerCase().trim();
+      if (!q) return [];
+
+      const substring: IndexItem[] = [];
+      for (const entry of index) {
+        if (entry.search.includes(q)) substring.push(entry.item);
+      }
+
+      if (substring.length > 0) {
+        substring.sort((a, b) => {
+          const at = a.t.toLowerCase();
+          const bt = b.t.toLowerCase();
+          const ai = at.indexOf(q);
+          const bi = bt.indexOf(q);
+          if (ai !== bi) return ai - bi;
+          return at.length - bt.length;
+        });
+        return substring;
+      }
+
+      const fuzzy = index
+        .map(e => ({ item: e.item, score: fuzzyScore(q, e.search) }))
+        .filter(({ score }) => score >= FUZZY_THRESHOLD)
+        .sort((a, b) => b.score - a.score)
+        .map(s => s.item);
+
+      return fuzzy;
+    }
+
     function applyFilter(query: string): void {
       const q = query.trim();
+
+      if (!ready) return;
 
       if (q.length === 0) {
         resetResults();
@@ -308,13 +282,8 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
         return;
       }
 
-      const scored = data
-        .map(item => ({ item, score: scoreTitle(q, item.t) }))
-        .filter(({ score }) => score > SCORE_THRESHOLD)
-        .sort((a, b) => b.score - a.score);
-
       resetResults();
-      matched = scored.map(s => s.item);
+      matched = runFilter(q);
 
       emptyState.hidden = true;
       results.hidden = false;
@@ -332,6 +301,7 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
       renderNext();
     }
 
+    /* ---------- EVENTS ---------- */
     let debounceId: number | null = null;
     function debouncedFilter(q: string): void {
       if (debounceId !== null) window.clearTimeout(debounceId);
@@ -391,11 +361,41 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
       applyFilter(q);
     });
 
+    /* ---------- INIT (fetch JSON) ---------- */
     const params = new URLSearchParams(window.location.search);
     const initialQuery = params.get('q') || '';
     input.value = initialQuery;
     updateClearBtn();
-    applyFilter(initialQuery);
+
+    fetch(API, { headers: { Accept: 'application/json' } })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json() as Promise<IndexItem[]>;
+      })
+      .then(json => {
+        if (!Array.isArray(json)) {
+          console.error('[Search] Invalid payload');
+          return;
+        }
+
+        index = json.map(item => ({
+          item,
+          search: (item.t || '').toLowerCase(),
+        }));
+
+        ready = true;
+
+        if (initialQuery.trim().length >= MIN_QUERY) {
+          applyFilter(initialQuery);
+        } else {
+          applyFilter('');
+        }
+      })
+      .catch(err => {
+        console.error('[Search] fetch failed:', err);
+        status.textContent = 'Gagal memuat data. Coba refresh halaman.';
+        status.hidden = false;
+      });
   })();
 </script>
 
