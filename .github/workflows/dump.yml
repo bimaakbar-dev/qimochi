@@ -22,7 +22,7 @@ jobs:
         run: |
           OUT=dump.txt
           MAX=$(( ${MAX_KB:-200} * 1024 ))
-          SKIP='(^|/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?)$'
+          SKIP='(^|/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?)$|^src/content/anime/|^data/anime/'
 
           {
             echo "# Repo: $GITHUB_REPOSITORY"
@@ -36,8 +36,6 @@ jobs:
 
           : > skipped.txt
 
-          # git ls-files hanya memuat file yang di-track, jadi .env, node_modules,
-          # dist, dan file di .gitignore otomatis tidak ikut.
           git ls-files -z | while IFS= read -r -d '' f; do
             if echo "$f" | grep -Eq "$SKIP"; then continue; fi
             [ -f "$f" ] || continue
@@ -76,11 +74,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
+
           git checkout --orphan dump
           git rm -rf --quiet .
           git add dump.txt
           git commit -m "Dump repo @ ${GITHUB_SHA::7}"
           git push --force origin dump
 
-          echo "File: https://github.com/$GITHUB_REPOSITORY/blob/repo-dump/repo-dump.txt" >> "$GITHUB_STEP_SUMMARY"
+          echo "File: https://github.com/$GITHUB_REPOSITORY/blob/dump/dump.txt" >> "$GITHUB_STEP_SUMMARY"
