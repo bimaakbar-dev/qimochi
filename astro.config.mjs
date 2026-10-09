@@ -2,7 +2,7 @@ import { defineConfig, fontProviders, svgoOptimizer } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://qimochi.pages.dev',
+  site: 'https://qimochi.web.id',
   trailingSlash: 'always',
   fonts: [
     {
@@ -60,9 +60,8 @@ export default defineConfig({
 
         return true;
       },
-      changefreq: 'daily',
+      changefreq: 'weekly',
       priority: 0.7,
-      lastmod: new Date(),
     }),
   ],
   experimental: {
