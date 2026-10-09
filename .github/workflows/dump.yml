@@ -22,7 +22,7 @@ jobs:
         run: |
           OUT=dump.txt
           MAX=$(( ${MAX_KB:-200} * 1024 ))
-          SKIP='(^|/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?)$|^src/content/anime/|^data/anime/'
+          SKIP='(^|/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?)$|^src/content/anime/|^src/data/anime/'
 
           {
             echo "# Repo: $GITHUB_REPOSITORY"
