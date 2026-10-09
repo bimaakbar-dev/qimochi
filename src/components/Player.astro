@@ -17,7 +17,7 @@ function encodeSrc(s: string): string {
 const encodedSrc = encodeSrc(src);
 ---
 
-<div class="player-wrapper">
+<div class="player-wrapper" data-player>
   <iframe
     id="player-iframe"
     data-enc={encodedSrc || undefined}
@@ -28,6 +28,13 @@ const encodedSrc = encodeSrc(src);
     referrerpolicy="no-referrer"
   ></iframe>
 
+  <div class="player-error" data-player-error hidden>
+    <p class="player-error-msg">Player gagal dimuat.</p>
+    <button type="button" class="player-retry" data-player-retry>
+      Coba Lagi
+    </button>
+  </div>
+
   <noscript>
     <p class="player-noscript">
       Aktifkan JavaScript untuk memuat player.
@@ -37,21 +44,77 @@ const encodedSrc = encodeSrc(src);
 
 <script>
   (function () {
+    const wrapper = document.querySelector<HTMLElement>('[data-player]');
     const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
-    if (!iframe) return;
+    const errorBox = wrapper?.querySelector<HTMLElement>('[data-player-error]') ?? null;
+    const retryBtn = wrapper?.querySelector<HTMLButtonElement>('[data-player-retry]') ?? null;
+
+    if (!iframe || !errorBox || !retryBtn) return;
 
     const enc = iframe.dataset.enc;
     if (!enc) return;
 
+    let realSrc = '';
     try {
       const bin = atob(enc);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      const real = new TextDecoder().decode(bytes);
-      iframe.src = real;
+      realSrc = new TextDecoder().decode(bytes);
     } catch (err) {
       console.error('[Player] decode failed:', err);
+      return;
     }
+
+    if (!realSrc) return;
+
+    const LOAD_TIMEOUT = 12000;
+
+    let timeoutId: number | null = null;
+    let loaded = false;
+
+    function clearTimer() {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    }
+
+    function showError() {
+      clearTimer();
+      errorBox.hidden = false;
+    }
+
+    function hideError() {
+      errorBox.hidden = true;
+    }
+
+    function armTimer() {
+      loaded = false;
+      clearTimer();
+      timeoutId = window.setTimeout(() => {
+        if (!loaded) showError();
+      }, LOAD_TIMEOUT);
+    }
+
+    iframe.addEventListener('load', () => {
+      loaded = true;
+      clearTimer();
+      hideError();
+    });
+
+    iframe.addEventListener('error', showError);
+
+    retryBtn.addEventListener('click', () => {
+      hideError();
+      iframe.src = 'about:blank';
+      window.setTimeout(() => {
+        armTimer();
+        iframe.src = realSrc;
+      }, 100);
+    });
+
+    armTimer();
+    iframe.src = realSrc;
   })();
 </script>
 
@@ -70,6 +133,50 @@ const encodedSrc = encodeSrc(src);
     height: 100%;
     border: none;
     display: block;
+  }
+
+  .player-error {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-3);
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: var(--s-4);
+    text-align: center;
+  }
+
+  .player-error[hidden] {
+    display: none;
+  }
+
+  .player-error-msg {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: #ddd;
+  }
+
+  .player-retry {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--s-2) var(--s-5);
+    background: var(--accent);
+    color: var(--accent-text);
+    border-radius: var(--r-full);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background var(--t-fast);
+  }
+
+  .player-retry:hover {
+    background: var(--accent-hover);
   }
 
   .player-noscript {
