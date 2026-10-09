@@ -8,6 +8,7 @@ import Badge from '~/user-components/Badge.astro';
 import LinkButton from '~/user-components/LinkButton.astro';
 import LinkCard from '~/user-components/LinkCard.astro';
 import SectionLabel from '~/components/SectionLabel.astro';
+import HistoryCard from '~/components/HistoryCard.astro';
 
 const allAnime = await getAllAnime();
 
@@ -95,6 +96,8 @@ const genres = GENRES
         </nav>
       </section>
     )}
+
+<HistoryCard />
 
     {ongoing.length > 0 && (
       <section class="landing-section">
