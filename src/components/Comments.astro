@@ -8,7 +8,6 @@ interface Props {
 const { slug } = Astro.props;
 const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
-const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
 ---
 
 <section
@@ -17,7 +16,6 @@ const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
   data-slug={slug}
   data-api={apiBase}
   data-sitekey={siteKey}
-  data-clientid={clientId}
 >
   <header class="comments-header">
     <SectionLabel>Komentar</SectionLabel>
@@ -320,6 +318,21 @@ const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
 </style>
 
 <script>
+  interface AuthUser {
+    sub: string;
+    name: string;
+    email: string;
+    picture: string | null;
+  }
+
+  interface CommentItem {
+    id: string;
+    parentId: string | null;
+    body: string;
+    createdAt: number;
+    user: { sub: string; name: string; picture: string | null };
+  }
+
   (function () {
     const root = document.querySelector<HTMLElement>('[data-comments]');
     if (!root) return;
@@ -327,7 +340,6 @@ const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
     const SLUG = root.dataset.slug || '';
     const API = (root.dataset.api || '').replace(/\/$/, '');
     const SITE_KEY = root.dataset.sitekey || '';
-    const CLIENT_ID = root.dataset.clientid || '';
 
     const countEl = root.querySelector<HTMLElement>('[data-count]')!;
     const loginBox = root.querySelector<HTMLElement>('[data-login-box]')!;
@@ -350,10 +362,11 @@ const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
       return;
     }
 
-    let currentUser: { sub: string; name: string; picture: string | null } | null = null;
+    let currentUser: AuthUser | null = null;
     let turnstileWidgetId: string | null = null;
     let turnstileToken = '';
     let submitting = false;
+    let gsiRendered = false;
 
     function loadScript(src: string): Promise<void> {
       return new Promise((resolve, reject) => {
@@ -385,14 +398,6 @@ const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
       return new Intl.DateTimeFormat('id-ID', {
         day: 'numeric', month: 'short', year: 'numeric',
       }).format(d);
-    }
-
-    interface CommentItem {
-      id: string;
-      parentId: string | null;
-      body: string;
-      createdAt: number;
-      user: { sub: string; name: string; picture: string | null };
     }
 
     function makeItem(item: CommentItem): HTMLLIElement {
@@ -466,20 +471,21 @@ const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
       }
     }
 
-    async function fetchMe(): Promise<void> {
+    function renderGsiButton(): void {
+      if (gsiRendered) return;
+      if (currentUser) return;
+      const g = (window as any).google;
+      if (!g?.accounts?.id) return;
       try {
-        const res = await fetch(`${API}/api/v1/auth/me`, { credentials: 'include' });
-        if (!res.ok) return;
-        const json = (await res.json()) as {
-          ok: boolean;
-          user: { sub: string; name: string; picture: string | null } | null;
-        };
-        if (json.ok && json.user) {
-          currentUser = json.user;
-          applyUserState();
-        }
-      } catch {
-        // silent
+        g.accounts.id.renderButton(gsiSlot, {
+          theme: 'outline',
+          size: 'large',
+          text: 'signin_with',
+          shape: 'pill',
+        });
+        gsiRendered = true;
+      } catch (err) {
+        console.error('[comments] render gsi failed', err);
       }
     }
 
@@ -500,6 +506,9 @@ const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
         loginBox.hidden = false;
         userBox.hidden = true;
         form.hidden = true;
+        gsiRendered = false;
+        gsiSlot.innerHTML = '';
+        renderGsiButton();
       }
     }
 
@@ -545,65 +554,44 @@ const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
       formStatus.hidden = !text;
     }
 
-    async function loadGsi(): Promise<void> {
-      if (!CLIENT_ID) {
-        gsiSlot.textContent = 'Login Google belum dikonfigurasi.';
-        return;
-      }
-
-      await loadScript('https://accounts.google.com/gsi/client');
-
-      const g = (window as any).google;
-      if (!g?.accounts?.id) throw new Error('GIS tidak tersedia');
-
-      g.accounts.id.initialize({
-        client_id: CLIENT_ID,
-        callback: handleGoogleCredential,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      });
-      g.accounts.id.renderButton(gsiSlot, {
-        theme: 'outline',
-        size: 'large',
-        text: 'signin_with',
-        shape: 'pill',
-      });
+    function setCurrentUser(user: AuthUser | null): void {
+      const sameUser = (user?.sub ?? null) === (currentUser?.sub ?? null);
+      if (sameUser) return;
+      currentUser = user;
+      applyUserState();
+      updateSubmitState();
     }
 
-    async function handleGoogleCredential(response: { credential: string }): Promise<void> {
-      try {
-        const res = await fetch(`${API}/api/v1/auth/google`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ credential: response.credential }),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = (await res.json()) as {
-          ok: boolean;
-          user: { sub: string; name: string; picture: string | null };
-        };
-        if (json.ok && json.user) {
-          currentUser = json.user;
-          applyUserState();
-        }
-      } catch (err) {
-        console.error('[comments] login failed', err);
-        setFormStatus('Login gagal, coba lagi.', 'error');
-      }
+    function onAuthChanged(e: Event): void {
+      const detail = (e as CustomEvent<{ user: AuthUser | null }>).detail;
+      if (!detail) return;
+      setCurrentUser(detail.user);
+    }
+
+    document.addEventListener('qimochi:auth-changed', onAuthChanged);
+    document.addEventListener('qimochi:gsi-ready', () => renderGsiButton());
+
+    if ((window as any).google?.accounts?.id) {
+      renderGsiButton();
     }
 
     logoutBtn.addEventListener('click', async () => {
+      const api = (window as any).__qimochiUserMenu;
+      if (api) {
+        api.close();
+      }
       try {
         await fetch(`${API}/api/v1/auth/logout`, {
           method: 'POST',
           credentials: 'include',
         });
       } catch {}
-      currentUser = null;
+      setCurrentUser(null);
       turnstileToken = '';
-      applyUserState();
       setFormStatus('', null);
+      document.dispatchEvent(
+        new CustomEvent('qimochi:auth-changed', { detail: { user: null } })
+      );
     });
 
     input.addEventListener('input', () => {
@@ -673,13 +661,21 @@ const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
 
     (async () => {
       await Promise.allSettled([
-        fetchMe(),
         fetchComments(),
         loadScript('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit')
-          .then(() => mountTurnstile())
+          .then(() => {
+            if (currentUser) mountTurnstile();
+          })
           .catch((err) => console.error('[comments] turnstile load failed', err)),
-        loadGsi().catch((err) => console.error('[comments] gsi load failed', err)),
       ]);
+
+      const menu = (window as any).__qimochiUserMenu;
+      if (menu) {
+        const u = menu.getUser();
+        setCurrentUser(u ?? null);
+      }
+
+      renderGsiButton();
       updateSubmitState();
     })();
   })();
