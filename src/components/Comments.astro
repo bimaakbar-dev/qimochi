@@ -1,6 +1,5 @@
 ---
 import SectionLabel from '~/components/SectionLabel.astro';
-import Icon from '~/user-components/Icons.astro';
 
 interface Props {
   slug: string;
@@ -9,6 +8,7 @@ interface Props {
 const { slug } = Astro.props;
 const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
 ---
 
 <section
@@ -17,6 +17,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
   data-slug={slug}
   data-api={apiBase}
   data-sitekey={siteKey}
+  data-clientid={clientId}
 >
   <header class="comments-header">
     <SectionLabel>Komentar</SectionLabel>
@@ -48,7 +49,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     ></textarea>
     <div class="form-footer">
       <span class="char-count" data-charcount>0 / 2000</span>
-      <div class="cf-turnstile" data-turnstile data-sitekey={siteKey}></div>
+      <div class="cf-turnstile" data-turnstile></div>
     </div>
     <div class="form-actions">
       <span class="form-status" data-form-status hidden></span>
@@ -326,6 +327,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     const SLUG = root.dataset.slug || '';
     const API = (root.dataset.api || '').replace(/\/$/, '');
     const SITE_KEY = root.dataset.sitekey || '';
+    const CLIENT_ID = root.dataset.clientid || '';
 
     const countEl = root.querySelector<HTMLElement>('[data-count]')!;
     const loginBox = root.querySelector<HTMLElement>('[data-login-box]')!;
@@ -544,21 +546,18 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     }
 
     async function loadGsi(): Promise<void> {
-      if (!window.hasOwnProperty('google')) {
-        await loadScript('https://accounts.google.com/gsi/client');
-      }
-      const g = (window as any).google;
-      if (!g?.accounts?.id) throw new Error('GIS tidak tersedia');
-
-      const clientId = (window as any).__GOOGLE_CLIENT_ID__;
-      if (!clientId) {
-        console.warn('[comments] GOOGLE_CLIENT_ID belum di-set di frontend');
-        gsiSlot.textContent = 'Login belum dikonfigurasi.';
+      if (!CLIENT_ID) {
+        gsiSlot.textContent = 'Login Google belum dikonfigurasi.';
         return;
       }
 
+      await loadScript('https://accounts.google.com/gsi/client');
+
+      const g = (window as any).google;
+      if (!g?.accounts?.id) throw new Error('GIS tidak tersedia');
+
       g.accounts.id.initialize({
-        client_id: clientId,
+        client_id: CLIENT_ID,
         callback: handleGoogleCredential,
         auto_select: false,
         cancel_on_tap_outside: true,
