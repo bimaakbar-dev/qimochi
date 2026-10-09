@@ -2,7 +2,7 @@ export const SITE = {
   name: 'Qimochi',
   title: 'Nonton Anime Subtitle Indonesia',
   description: 'Koleksi anime untuk streaming subtitel bahasa indonesia. Ringan, cepat, tanpa ribet.',
-  url: 'https://qimochi.web.id',
+  url: 'https://qimochi.pages.dev',
   locale: 'id-ID',
   lang: 'id',
 } as const;
@@ -65,4 +65,14 @@ export const URLS = {
   watch: (slug, episode) => `/anime/watch/${slug}/episodes/${episode}/`,
   genre:  (slug: string) => `/anime/genre/${slug.toLowerCase().replace(/\s+/g, '-')}/`,
   status: (status: string) => `/anime/${status.toLowerCase()}/`,
+} as const;
+
+export const ADS = {
+  showPlaceholder: import.meta.env.DEV,
+  slots: {
+    homeInline: '',
+    animeDetailInline: '',
+    animeDetailSidebar: '',
+    watchBelowPlayer: '',
+  },
 } as const;
