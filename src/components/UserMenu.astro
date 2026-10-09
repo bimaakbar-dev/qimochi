@@ -42,7 +42,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
   </div>
 </div>
 
-<style is:global>
+<style>
   .user-menu {
     position: relative;
     display: inline-flex;
@@ -71,6 +71,10 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     display: inline-flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .user-trigger-guest[hidden] {
+    display: none;
   }
 
   .user-trigger-avatar {
@@ -112,6 +116,10 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     min-height: 40px;
   }
 
+  .user-panel-gsi[hidden] {
+    display: none;
+  }
+
   .user-panel-gsi:empty {
     min-height: 0;
   }
@@ -120,6 +128,10 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     display: flex;
     flex-direction: column;
     gap: var(--s-3);
+  }
+
+  .user-panel-profile[hidden] {
+    display: none;
   }
 
   .user-panel-head {
