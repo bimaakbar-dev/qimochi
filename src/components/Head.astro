@@ -33,6 +33,8 @@ const ogImage = image
   : new URL('/images/og-default.png', Astro.site);
 
 const twitterCard = image ? 'summary_large_image' : 'summary';
+const GA_ID = import.meta.env.PUBLIC_GA_ID;
+if (!GA_ID) return;
 ---
 
 <meta charset="UTF-8" />
@@ -88,3 +90,17 @@ const twitterCard = image ? 'summary_large_image' : 'summary';
 <meta name="google-site-verification" content="nxQ9quVY9tB3HvbGSMBWZOWmJlgslMqvqmDbbqNhFCQ" />
 <meta name="yandex-verification" content="df80961e7a05c91f" />
 <meta name="msvalidate.01" content="7CFD9CF1E14CB523FAC8FA8F0E5D2939" />
+
+<script
+  is:inline
+  async
+  src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+></script>
+
+<script is:inline define:vars={{ GA_ID }}>
+  // @ts-nocheck
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', GA_ID);
+</script>
