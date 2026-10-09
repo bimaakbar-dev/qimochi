@@ -3,6 +3,7 @@ import { SITE, NAV_LINKS } from '~/constants';
 import { Image } from 'astro:assets';
 import logoImg from '~/assets/images/logo/logo.png';
 import Icon from '~/user-components/Icons.astro';
+import UserMenu from '~/components/UserMenu.astro';
 
 const currentPath = Astro.url.pathname;
 
@@ -46,6 +47,7 @@ function isActive(href: string): boolean {
       ))}
     </nav>
     <div class="header-right">
+      <UserMenu />
       <details class="menu">
         <summary class="menu-btn" aria-label="Menu navigasi">
           <span class="icon-menu"><Icon name="menu" size={22} /></span>
@@ -143,11 +145,14 @@ function isActive(href: string): boolean {
     gap: var(--s-1);
   }
   .header-right .icon-btn {
-    order: 1;
-  }
-  .header-right .menu {
-    order: 2;
-  }
+  order: 2;
+}
+.header-right .menu {
+  order: 3;
+}
+.header-right .user-menu {
+  order: 1;
+}
   .icon-btn {
     display: inline-flex;
     align-items: center;
@@ -261,11 +266,14 @@ function isActive(href: string): boolean {
       gap: var(--s-4);
     }
     .header-right .menu {
-      order: 1;
-    }
-    .header-right .icon-btn {
-      order: 2;
-    }
+  order: 2;
+}
+.header-right .icon-btn {
+  order: 3;
+}
+.header-right .user-menu {
+  order: 1;
+}
     .nav--desktop {
       display: flex;
     }
