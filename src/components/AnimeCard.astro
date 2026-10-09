@@ -39,6 +39,8 @@ const lastEpisode = data.episodes?.length
   class:list={['anime-card', { 'anime-card-featured': featured }]}
 >
   <div class="cover">
+    <div class="cover-placeholder is-loading" aria-hidden="true"></div>
+
     <img
       src={data.cover}
       alt={`Cover ${data.title}`}
@@ -48,7 +50,6 @@ const lastEpisode = data.episodes?.length
       decoding="async"
       data-cover-img
     />
-    <div class="cover-placeholder" hidden aria-hidden="true"></div>
 
     <span class="type-badge">{data.type}</span>
 
@@ -77,26 +78,51 @@ const lastEpisode = data.episodes?.length
 </a>
 
 <script>
-  function setupCoverFallback(img: HTMLImageElement): void {
-    if (img.dataset.fallbackReady) return;
-    img.dataset.fallbackReady = '1';
+  (function () {
+    function setupCoverImage(img: HTMLImageElement): void {
+      if (img.dataset.ready) return;
+      img.dataset.ready = '1';
 
-    const showPlaceholder = () => {
-      img.hidden = true;
       const wrap = img.parentElement;
-      const ph = wrap?.querySelector('.cover-placeholder');
-      if (ph instanceof HTMLElement) ph.hidden = false;
-    };
+      const placeholder = wrap?.querySelector<HTMLElement>('.cover-placeholder') ?? null;
 
-    if (img.complete && img.naturalWidth === 0) {
-      showPlaceholder();
-      return;
+      const stopShimmer = () => {
+        placeholder?.classList.remove('is-loading');
+      };
+
+      const done = () => {
+        img.classList.add('is-loaded');
+        stopShimmer();
+      };
+
+      const fail = () => {
+        img.hidden = true;
+        stopShimmer();
+      };
+
+      if (img.complete) {
+        if (img.naturalWidth > 0) done();
+        else fail();
+        return;
+      }
+
+      img.addEventListener('load', done, { once: true });
+      img.addEventListener('error', fail, { once: true });
     }
 
-    img.addEventListener('error', showPlaceholder, { once: true });
-  }
+    function init(scope: ParentNode = document): void {
+      scope
+        .querySelectorAll<HTMLImageElement>('[data-cover-img]')
+        .forEach(setupCoverImage);
+    }
 
-  document.querySelectorAll<HTMLImageElement>('[data-cover-img]').forEach(setupCoverFallback);
+    init();
+
+    window.addEventListener('qimochi:covers', (e) => {
+      const detail = (e as CustomEvent<ParentNode>).detail;
+      if (detail) init(detail);
+    });
+  })();
 </script>
 
 <style>
@@ -118,33 +144,61 @@ const lastEpisode = data.episodes?.length
     background: var(--bg-surface);
   }
 
+  .cover-placeholder {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: var(--bg-surface);
+    pointer-events: none;
+  }
+
+  .cover-placeholder.is-loading::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      var(--bg-hover) 50%,
+      transparent 80%
+    );
+    transform: translateX(-100%);
+    animation: cover-shimmer 1.6s infinite;
+  }
+
+  @keyframes cover-shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cover-placeholder.is-loading::before {
+      animation: none;
+      opacity: 0;
+    }
+  }
+
   .cover img {
+    position: relative;
+    z-index: 1;
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform var(--t-base);
+    opacity: 0;
+    transition: opacity var(--t-base), transform var(--t-base);
+  }
+
+  .cover img.is-loaded {
+    opacity: 1;
   }
 
   .cover img[hidden] {
     display: none;
   }
 
-  .cover-placeholder {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      135deg,
-      var(--bg-surface) 0%,
-      var(--bg-hover) 100%
-    );
-  }
-
-  .cover-placeholder[hidden] {
-    display: none;
-  }
-
-  .anime-card:hover .cover img {
+  .anime-card:hover .cover img.is-loaded {
     transform: scale(1.03);
   }
 
@@ -156,6 +210,7 @@ const lastEpisode = data.episodes?.length
     content: '';
     position: absolute;
     inset: 0;
+    z-index: 2;
     background: linear-gradient(
       to bottom,
       transparent 50%,
@@ -168,7 +223,7 @@ const lastEpisode = data.episodes?.length
     position: absolute;
     top: var(--s-2);
     right: var(--s-2);
-    z-index: 2;
+    z-index: 3;
     display: inline-flex;
     align-items: center;
     padding: 2px 6px;
@@ -185,7 +240,7 @@ const lastEpisode = data.episodes?.length
     position: absolute;
     bottom: var(--s-2);
     left: var(--s-2);
-    z-index: 2;
+    z-index: 3;
     & span {
       text-transform: uppercase;
     }
