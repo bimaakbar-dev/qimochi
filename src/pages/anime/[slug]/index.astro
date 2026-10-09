@@ -2,9 +2,10 @@
 import { render } from 'astro:content';
 import { getAllAnime } from '~/lib/anime';
 
-import { SITE, URLS, STATUS_VARIANT, type Status } from '~/constants';
+import { SITE, URLS, ADS, STATUS_VARIANT, type Status } from '~/constants';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Breadcrumb from '~/components/Breadcrumb.astro';
+import AdSlot from '~/components/AdSlot.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
 import AnimeFranchise from '~/components/AnimeFranchise.astro';
 import Badge from '~/user-components/Badge.astro';
@@ -127,6 +128,12 @@ const breadcrumbItems = [
           </div>
         </section>
 
+        <AdSlot
+          format="leaderboard"
+          id="ad-anime-inline"
+          code={ADS.slots.animeDetailInline}
+        />
+
         <AnimeFranchise
           currentSlug={anime.id}
           franchises={data.franchises}
@@ -138,6 +145,12 @@ const breadcrumbItems = [
           slug={anime.id}
           episodes={episodeNumbers}
           currentEpisode={null}
+        />
+
+        <AdSlot
+          format="rectangle"
+          id="ad-anime-sidebar"
+          code={ADS.slots.animeDetailSidebar}
         />
       </aside>
     </div>
@@ -284,6 +297,12 @@ const breadcrumbItems = [
     font-size: var(--fs-lg);
     margin: 0 0 var(--s-3);
     color: var(--text-primary);
+  }
+
+  .content-aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
   }
 
   @media (min-width: 50rem) {
