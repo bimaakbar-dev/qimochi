@@ -7,6 +7,7 @@ genre: [Comedy, Drama, Romance, Slice of Life]
 studio: Studio KAI
 releaseDate: 2026-10-01
 addedAt: 2026-10-07
+updatedAt: 2026-10-09
 rating: 8.2
 ---
 
