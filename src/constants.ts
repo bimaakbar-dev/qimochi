@@ -2,7 +2,7 @@ export const SITE = {
   name: 'Qimochi',
   title: 'Nonton Anime Subtitle Indonesia',
   description: 'Koleksi anime subtitle bahasa indonesia. Ringan, cepat, tanpa ribet.',
-  url: 'https://qimochi.web.id',
+  url: 'https://qimochi.pages.dev',
   locale: 'id-ID',
   lang: 'id',
 } as const;
@@ -36,13 +36,14 @@ export const GENRES = [
 
 export type Genre = typeof GENRES[number];
 
-export const STATUSES = ['Ongoing', 'Completed', 'Hiatus'] as const;
+export const STATUSES = ['Ongoing', 'Completed', 'Hiatus', 'Upcoming'] as const;
 export type Status = typeof STATUSES[number];
 
-export const STATUS_VARIANT: Record<Status, 'success' | 'default' | 'warning'> = {
+export const STATUS_VARIANT: Record<Status, 'success' | 'default' | 'warning' | 'accent'> = {
   'Ongoing':   'success',
-  'Completed': 'default',
+  'Completed': 'accent',
   'Hiatus':    'warning',
+  'Upcoming':   'default',
 };
 
 export const ANIME_TYPES = ['TV', 'Movie', 'OVA', 'ONA', 'Special'] as const;
