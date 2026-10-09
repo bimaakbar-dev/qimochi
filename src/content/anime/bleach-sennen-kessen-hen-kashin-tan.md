@@ -7,6 +7,7 @@ genre: [Action, Adventure, Supernatural]
 studio: PIERROT FILMS
 releaseDate: 2026-07-25
 addedAt: 2026-10-07
+updatedAt: 2026-10-09
 rating: 8.9
 ---
 
