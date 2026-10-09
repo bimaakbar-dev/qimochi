@@ -54,5 +54,19 @@
         ]
       }
     ]
+  },
+  {
+    "number": 6,
+    "streams": [
+      {
+        "quality": "360p",
+        "servers": [
+          {
+            "name": "lexanime",
+            "url": "https://desustream.net/dstream/ondesu/new/hd/index.php?id=MytBZkZheUt1RHZYbGFacVRjcU1tUmlSTGNCNDB5VTgwSkQrNW9EYUx6ND0="
+          }
+        ]
+      }
+    ]
   }
 ]
