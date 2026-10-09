@@ -46,7 +46,9 @@ const lastEpisode = data.episodes?.length
       height="450"
       loading="lazy"
       decoding="async"
+      data-cover-img
     />
+    <div class="cover-placeholder" hidden aria-hidden="true"></div>
 
     <span class="type-badge">{data.type}</span>
 
@@ -74,6 +76,29 @@ const lastEpisode = data.episodes?.length
   </div>
 </a>
 
+<script>
+  function setupCoverFallback(img: HTMLImageElement): void {
+    if (img.dataset.fallbackReady) return;
+    img.dataset.fallbackReady = '1';
+
+    const showPlaceholder = () => {
+      img.hidden = true;
+      const wrap = img.parentElement;
+      const ph = wrap?.querySelector('.cover-placeholder');
+      if (ph instanceof HTMLElement) ph.hidden = false;
+    };
+
+    if (img.complete && img.naturalWidth === 0) {
+      showPlaceholder();
+      return;
+    }
+
+    img.addEventListener('error', showPlaceholder, { once: true });
+  }
+
+  document.querySelectorAll<HTMLImageElement>('[data-cover-img]').forEach(setupCoverFallback);
+</script>
+
 <style>
   .anime-card {
     display: block;
@@ -99,6 +124,24 @@ const lastEpisode = data.episodes?.length
     object-fit: cover;
     display: block;
     transition: transform var(--t-base);
+  }
+
+  .cover img[hidden] {
+    display: none;
+  }
+
+  .cover-placeholder {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      var(--bg-surface) 0%,
+      var(--bg-hover) 100%
+    );
+  }
+
+  .cover-placeholder[hidden] {
+    display: none;
   }
 
   .anime-card:hover .cover img {
