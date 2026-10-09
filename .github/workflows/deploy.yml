@@ -26,7 +26,10 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+		run: npm run build
+		env:
+			PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
+			PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
