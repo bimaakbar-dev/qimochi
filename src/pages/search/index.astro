@@ -103,7 +103,6 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
           loading="lazy"
           decoding="async"
         />
-        <div class="cover-placeholder" hidden aria-hidden="true"></div>
         <span class="type-badge"></span>
         <div class="status-overlay">
           <span class="badge badge-sm" data-badge></span>
@@ -124,7 +123,6 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
     const MIN_QUERY = 2;
     const SCORE_THRESHOLD = 0.4;
 
-    /* ---------- SEARCH UTILS ---------- */
     function normalize(s: string): string {
       return s
         .toLowerCase()
@@ -189,25 +187,10 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
       return best * 0.85;
     }
 
-    /* ---------- CARD RENDER ---------- */
     function statusVariant(s: string): string {
       if (s === 'Ongoing') return 'badge-success';
       if (s === 'Hiatus') return 'badge-warning';
       return 'badge-default';
-    }
-
-    function setupCoverFallback(img: HTMLImageElement): void {
-      if (img.dataset.fallbackReady) return;
-      img.dataset.fallbackReady = '1';
-
-      const show = () => {
-        img.hidden = true;
-        const ph = img.parentElement?.querySelector('.cover-placeholder');
-        if (ph instanceof HTMLElement) ph.hidden = false;
-      };
-
-      if (img.complete && img.naturalWidth === 0) { show(); return; }
-      img.addEventListener('error', show, { once: true });
     }
 
     type IndexItem = {
@@ -230,12 +213,22 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
 
     if (!indexEl || !tmplEl) return;
 
-    const data: IndexItem[] = JSON.parse(indexEl.textContent || '[]');
-    const tmpl = tmplEl as HTMLTemplateElement;
+    let data: IndexItem[] = [];
+    try {
+      data = JSON.parse(indexEl.textContent || '[]');
+    } catch (err) {
+      console.error('[Search] JSON parse failed:', err);
+      return;
+    }
 
+    if (!Array.isArray(data) || data.length === 0) {
+      console.warn('[Search] Index empty');
+      return;
+    }
+
+    const tmpl = tmplEl as HTMLTemplateElement;
     let matched: IndexItem[] = [];
     let visibleCount = 0;
-    let currentQuery = '';
 
     function makeCard(item: IndexItem): HTMLElement {
       const node = tmpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
@@ -243,8 +236,11 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
       node.dataset.animeTitle = item.t;
 
       const img = node.querySelector('[data-cover-img]') as HTMLImageElement;
-      img.src = item.c;
-      img.alt = `Cover ${item.t}`;
+      const coverUrl = (item.c || '').trim();
+      if (coverUrl) {
+        img.src = coverUrl;
+        img.alt = `Cover ${item.t}`;
+      }
 
       (node.querySelector('.type-badge') as HTMLElement).textContent = item.y;
 
@@ -260,7 +256,6 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
         eps.hidden = false;
       }
 
-      setupCoverFallback(img);
       return node;
     }
 
@@ -291,12 +286,10 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
       matched = [];
     }
 
-    /* ---------- FILTER ---------- */
     function applyFilter(query: string): void {
       const q = query.trim();
 
       if (q.length === 0) {
-        currentQuery = '';
         resetResults();
         emptyState.hidden = false;
         status.hidden = true;
@@ -306,7 +299,6 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
       }
 
       if (q.length < MIN_QUERY) {
-        currentQuery = q;
         resetResults();
         emptyState.hidden = true;
         status.textContent = `Ketik minimal ${MIN_QUERY} karakter.`;
@@ -315,8 +307,6 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
         loadMoreWrap.hidden = true;
         return;
       }
-
-      currentQuery = q;
 
       const scored = data
         .map(item => ({ item, score: scoreTitle(q, item.t) }))
@@ -342,7 +332,6 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
       renderNext();
     }
 
-    /* ---------- EVENTS ---------- */
     let debounceId: number | null = null;
     function debouncedFilter(q: string): void {
       if (debounceId !== null) window.clearTimeout(debounceId);
@@ -402,7 +391,6 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
       applyFilter(q);
     });
 
-    /* ---------- INIT ---------- */
     const params = new URLSearchParams(window.location.search);
     const initialQuery = params.get('q') || '';
     input.value = initialQuery;
@@ -592,21 +580,13 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
     transition: transform var(--t-base);
   }
 
-  .anime-card .cover img[hidden] { display: none; }
-
-  .anime-card .cover-placeholder {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      135deg,
-      var(--bg-surface) 0%,
-      var(--bg-hover) 100%
-    );
+  .anime-card:hover .cover img {
+    transform: scale(1.03);
   }
-  .anime-card .cover-placeholder[hidden] { display: none; }
 
-  .anime-card:hover .cover img { transform: scale(1.03); }
-  .anime-card:hover h3::after { opacity: 1; }
+  .anime-card:hover h3::after {
+    opacity: 1;
+  }
 
   .anime-card .cover::after {
     content: '';
@@ -643,7 +623,10 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
     left: var(--s-2);
     z-index: 2;
   }
-  .anime-card .status-overlay span { text-transform: uppercase; }
+
+  .anime-card .status-overlay span {
+    text-transform: uppercase;
+  }
 
   .anime-card .info {
     padding: var(--s-3);
@@ -693,9 +676,11 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
     font-variant-numeric: tabular-nums;
     font-weight: var(--fw-medium);
   }
-  .anime-card .episodes[hidden] { display: none; }
 
-  /* badge (dipakai di template, dynamic) */
+  .anime-card .episodes[hidden] {
+    display: none;
+  }
+
   .badge {
     display: inline-flex;
     align-items: center;
@@ -706,8 +691,24 @@ const indexJson = JSON.stringify(index).replace(/</g, '\\u003c');
     border: 1px solid transparent;
     line-height: 1;
   }
-  .badge-sm { padding: 0.1875rem var(--s-2); font-size: 0.625rem; }
-  .badge-default { background: var(--bg-surface); color: var(--text-secondary); }
-  .badge-success { background: var(--success-soft); color: var(--success); }
-  .badge-warning { background: var(--warning-soft); color: var(--warning); }
+
+  .badge-sm {
+    padding: 0.1875rem var(--s-2);
+    font-size: 0.625rem;
+  }
+
+  .badge-default {
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+  }
+
+  .badge-success {
+    background: var(--success-soft);
+    color: var(--success);
+  }
+
+  .badge-warning {
+    background: var(--warning-soft);
+    color: var(--warning);
+  }
 </style>
