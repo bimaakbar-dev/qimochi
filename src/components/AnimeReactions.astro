@@ -12,69 +12,79 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
   data-reaction-bar
   data-anime={animeId}
   data-api={apiBase}
->
-  <span class="reaction-hint" data-hint>Reaksi:</span>
-</div>
+  role="group"
+  aria-label="Reaksi anime"
+></div>
 
 <style>
   .reaction-bar {
     display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--s-2);
-  }
-
-  .reaction-hint {
-    font-size: var(--fs-xs);
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: var(--fw-semibold);
-  }
-
-  .reaction-hint[hidden] {
-    display: none;
+    gap: 0.375rem;
   }
 
   .reaction-btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: var(--s-1);
-    padding: var(--s-1) var(--s-3);
+    justify-content: center;
+    gap: 0.3125rem;
+    padding: 0.3125rem 0.625rem;
+    min-height: 1.875rem;
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--r-full);
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
     line-height: 1;
+    color: var(--text-muted);
     cursor: pointer;
-    transition: all var(--t-fast);
-    color: var(--text-secondary);
+    transition:
+      background var(--t-fast),
+      border-color var(--t-fast),
+      color var(--t-fast),
+      transform var(--t-fast),
+      box-shadow var(--t-fast);
     font-variant-numeric: tabular-nums;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .reaction-btn:hover {
-    border-color: var(--accent);
+  .reaction-btn:not(:disabled):hover {
+    border-color: var(--border-hover);
+    color: var(--text-secondary);
     transform: translateY(-1px);
+  }
+
+  .reaction-btn:not(:disabled):active {
+    transform: translateY(0) scale(0.96);
   }
 
   .reaction-btn:disabled {
     cursor: not-allowed;
-    opacity: 0.6;
-    transform: none;
+    opacity: 0.55;
   }
 
   .reaction-emoji {
-    font-size: 1rem;
+    font-size: 0.9375rem;
     line-height: 1;
     display: inline-block;
+    transition: transform var(--t-base);
+  }
+
+  .reaction-btn:not(:disabled):hover .reaction-emoji {
+    transform: scale(1.1);
   }
 
   .reaction-count {
-    font-size: var(--fs-xs);
+    font-size: 0.6875rem;
     font-weight: var(--fw-semibold);
+    letter-spacing: 0.02em;
     color: var(--text-muted);
     min-width: 0.75rem;
     text-align: center;
+    transition: color var(--t-fast);
   }
 
   .reaction-count[data-empty='true'] {
@@ -82,13 +92,49 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
   }
 
   .reaction-btn.is-active {
-    background: var(--accent-soft);
+    background: var(--accent);
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-text);
+    box-shadow: 0 2px 8px var(--accent-soft);
   }
 
   .reaction-btn.is-active .reaction-count {
-    color: var(--accent);
+    color: var(--accent-text);
+  }
+
+  .reaction-btn.is-active .reaction-emoji {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+  }
+
+  .reaction-btn.is-active:not(:disabled):hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  .reaction-btn.pop {
+    animation: reaction-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes reaction-pop {
+    0% {
+      transform: scale(1);
+    }
+    40% {
+      transform: scale(1.18);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reaction-btn.pop {
+      animation: none;
+    }
+    .reaction-btn,
+    .reaction-emoji {
+      transition: none;
+    }
   }
 </style>
 
@@ -108,8 +154,6 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     const API = (root.dataset.api || '').replace(/\/$/, '');
     if (!ANIME_ID || !API) return;
 
-    const hint = root.querySelector<HTMLElement>('[data-hint]')!;
-
     let currentUser: AuthUser | null = null;
     let allowed: string[] = ['👍', '❤️', '🔥', '😂', '😮'];
     let counts: Record<string, number> = {};
@@ -121,6 +165,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     function buildButtons(): void {
       for (const btn of Object.values(buttons)) btn.remove();
       buttons = {};
+      root.innerHTML = '';
 
       for (const emoji of allowed) {
         const btn = document.createElement('button');
@@ -142,19 +187,32 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
       for (const emoji of allowed) {
         const btn = buttons[emoji];
         if (!btn) continue;
+
         const countEl = btn.querySelector<HTMLElement>('[data-count]')!;
         const count = counts[emoji] ?? 0;
-        countEl.textContent = String(count);
-        countEl.dataset.empty = count === 0 ? 'true' : 'false';
-
         const active = userReactions.has(emoji);
+
+        countEl.textContent = String(count);
+        countEl.dataset.empty = count === 0 && !active ? 'true' : 'false';
+
         btn.classList.toggle('is-active', active);
 
         const disabled = !canReact || submitting;
         btn.disabled = disabled;
-      }
 
-      hint.hidden = allowed.length === 0;
+        const label = `${emoji} ${count}`;
+        btn.setAttribute('aria-label', `Reaksi ${emoji}, ${count} orang`);
+        btn.setAttribute('aria-pressed', String(active));
+      }
+    }
+
+    function popButton(emoji: string): void {
+      const btn = buttons[emoji];
+      if (!btn) return;
+      btn.classList.remove('pop');
+      void btn.offsetWidth;
+      btn.classList.add('pop');
+      window.setTimeout(() => btn.classList.remove('pop'), 400);
     }
 
     async function fetchReactions(): Promise<void> {
@@ -185,14 +243,23 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
         applyState();
       } catch (err) {
         console.error('[reaction] fetch failed', err);
-        hint.textContent = 'Gagal memuat reaksi.';
       }
     }
 
     async function toggle(emoji: string): Promise<void> {
       if (!canReact || submitting) return;
+
+      const wasActive = userReactions.has(emoji);
+      userReactions = new Set(userReactions);
+      if (wasActive) userReactions.delete(emoji);
+      else userReactions.add(emoji);
+
+      counts = { ...counts };
+      counts[emoji] = Math.max(0, (counts[emoji] ?? 0) + (wasActive ? -1 : 1));
+
       submitting = true;
       applyState();
+      popButton(emoji);
 
       try {
         const res = await fetch(
@@ -207,8 +274,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 
         if (res.status === 401) {
           canReact = false;
-          submitting = false;
-          applyState();
+          await fetchReactions();
           return;
         }
 
@@ -223,6 +289,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
         userReactions = new Set(json.data.userReactions || []);
       } catch (err) {
         console.error('[reaction] toggle failed', err);
+        await fetchReactions();
       } finally {
         submitting = false;
         applyState();
