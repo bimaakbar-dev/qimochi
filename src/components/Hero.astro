@@ -27,6 +27,12 @@ const {
     margin-block-start: calc(var(--s-6) * -1);
     margin-block-end: var(--s-6);
   }
+  
+  @supports (width: 100dvw) {
+    .hero {
+      margin-inline: calc(50% - 50dvw);
+    }
+  }
 
   .hero-inner {
     max-width: var(--content-max-mobile);
