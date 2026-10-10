@@ -203,6 +203,8 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
   }
 
   (function () {
+    const CACHE_KEY = 'qimochi:user-cache';
+
     const root = document.querySelector<HTMLElement>('[data-user-menu]');
     if (!root) return;
 
@@ -223,6 +225,30 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     let currentUser: AuthUser | null = null;
     let gsiRendered = false;
     let panelOpen = false;
+
+    function readCache(): AuthUser | null {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as Partial<AuthUser> | null;
+        if (parsed && typeof parsed.sub === 'string' && typeof parsed.name === 'string') {
+          return {
+            sub: parsed.sub,
+            name: parsed.name,
+            email: typeof parsed.email === 'string' ? parsed.email : '',
+            picture: typeof parsed.picture === 'string' ? parsed.picture : null,
+          };
+        }
+      } catch {}
+      return null;
+    }
+
+    function writeCache(user: AuthUser | null): void {
+      try {
+        if (user) localStorage.setItem(CACHE_KEY, JSON.stringify(user));
+        else localStorage.removeItem(CACHE_KEY);
+      } catch {}
+    }
 
     function loadScript(src: string): Promise<void> {
       return new Promise((resolve, reject) => {
@@ -343,6 +369,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
         const json = (await res.json()) as { ok: boolean; user: AuthUser };
         if (json.ok && json.user) {
           currentUser = json.user;
+          writeCache(json.user);
           applyUser();
           closePanel();
           dispatchAuthChanged();
@@ -361,6 +388,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
       } catch {}
       currentUser = null;
       gsiRendered = false;
+      writeCache(null);
       applyUser();
       closePanel();
       dispatchAuthChanged();
@@ -371,25 +399,38 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
         const res = await fetch(`${API}/api/v1/auth/me`, { credentials: 'include' });
         if (!res.ok) return;
         const json = (await res.json()) as { ok: boolean; user: AuthUser | null };
-        currentUser = json.ok && json.user ? json.user : null;
+        const user = json.ok && json.user ? json.user : null;
+        const same = (user?.sub ?? null) === (currentUser?.sub ?? null);
+        if (same) return;
+        currentUser = user;
+        writeCache(user);
         applyUser();
         dispatchAuthChanged();
       } catch {
-        applyUser();
+        // biarkan state dari cache
       }
     }
 
     function onExternalChange(e: Event): void {
       const detail = (e as CustomEvent<{ user: AuthUser | null }>).detail;
       if (!detail) return;
-      const sameUser =
-        (detail.user?.sub ?? null) === (currentUser?.sub ?? null);
+      const sameUser = (detail.user?.sub ?? null) === (currentUser?.sub ?? null);
       if (sameUser) return;
       currentUser = detail.user;
+      writeCache(detail.user);
       applyUser();
     }
 
     document.addEventListener('qimochi:auth-changed', onExternalChange);
+
+    (function bootstrap(): void {
+      const cached = readCache();
+      if (cached) {
+        currentUser = cached;
+        applyUser();
+        dispatchAuthChanged();
+      }
+    })();
 
     (async () => {
       if (CLIENT_ID) {
