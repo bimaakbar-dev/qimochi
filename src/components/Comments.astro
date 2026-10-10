@@ -1522,7 +1522,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
           );
           if (!res.ok) {
             const json = (await res.json()) as {
-              error?: { message: string };
+              error?: { code?: string; message: string };
             };
             editStatus.textContent =
               json.error?.message ?? `Gagal (HTTP ${res.status})`;
@@ -1635,11 +1635,25 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         const json = (await res.json()) as {
           ok?: boolean;
           status?: string;
+          reason?: string;
           data?: { id: string };
-          error?: { code: string; message: string };
+          error?: { code?: string; message: string };
         };
 
         if (!res.ok) {
+          if (json.error?.code === 'COMMENT_REJECTED') {
+            turnstileToken = '';
+            if (turnstileWidgetId) {
+              try {
+                (window as any).turnstile.reset(turnstileWidgetId);
+              } catch {}
+            }
+            setFormStatus(json.error.message, 'error');
+            input.focus();
+            updateSubmitState();
+            return;
+          }
+
           const msg = json.error?.message ?? `Gagal (HTTP ${res.status})`;
           setFormStatus(msg, 'error');
           return;
@@ -1655,15 +1669,11 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
           } catch {}
         }
         setReplyTarget(null);
+
         const newStatus = json.status ?? 'pending';
 
         if (newStatus === 'approved') {
           setFormStatus('Komentar kamu langsung tampil.', 'success');
-        } else if (newStatus === 'rejected') {
-          const reason =
-            (json as { reason?: string }).reason ||
-            'Melanggar aturan komunitas.';
-          setFormStatus(`Komentar ditolak: ${reason}`, 'error');
         } else {
           setFormStatus('Komentar terkirim. Menunggu moderasi.', 'success');
         }
