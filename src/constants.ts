@@ -21,6 +21,7 @@ export const GENRES = [
   'Adventure',
   'Comedy',
   'Drama',
+  'Ecchi',
   'Fantasy',
   'Horror',
   'Isekai',
