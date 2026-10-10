@@ -1,0 +1,466 @@
+---
+interface Props {
+  animeId: string;
+}
+
+const { animeId } = Astro.props;
+const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
+---
+
+<div
+  class="rating-widget"
+  data-rating-widget
+  data-anime={animeId}
+  data-api={apiBase}
+>
+  <div class="rating-top">
+    <div class="rating-stars" data-stars role="radiogroup" aria-label="Rating">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          type="button"
+          class="rating-star"
+          data-star={n}
+          role="radio"
+          aria-checked="false"
+          aria-label={`${n} bintang`}
+          disabled
+        >★</button>
+      ))}
+    </div>
+    <div class="rating-score">
+      <span class="rating-average" data-average>—</span>
+      <span class="rating-scale">/ 10</span>
+    </div>
+  </div>
+
+  <div class="rating-meta">
+    <span class="rating-votes" data-votes>Belum ada rating</span>
+    <span class="rating-user" data-user hidden></span>
+  </div>
+
+  <button
+    type="button"
+    class="rating-clear"
+    data-clear
+    hidden
+  >Hapus rating saya</button>
+
+  <p class="rating-hint" data-hint hidden>
+    <a href="#" data-login-link>Login</a> untuk memberi rating.
+  </p>
+</div>
+
+<style>
+  .rating-widget {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    padding: var(--s-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 22rem;
+  }
+
+  .rating-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    flex-wrap: wrap;
+  }
+
+  .rating-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .rating-star {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    background: transparent;
+    border: none;
+    color: var(--border-hover);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color var(--t-fast), transform var(--t-fast);
+  }
+
+  .rating-star:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .rating-star:not(:disabled):hover {
+    transform: scale(1.1);
+  }
+
+  .rating-star.is-active {
+    color: var(--gold);
+  }
+
+  .rating-star.is-preview {
+    color: var(--gold-hover);
+  }
+
+  .rating-score {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rating-average {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .rating-scale {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-weight: var(--fw-medium);
+  }
+
+  .rating-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-2);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  .rating-user {
+    color: var(--accent);
+    font-weight: var(--fw-semibold);
+  }
+
+  .rating-user[hidden] {
+    display: none;
+  }
+
+  .rating-clear {
+    align-self: flex-start;
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color var(--t-fast);
+  }
+
+  .rating-clear:hover {
+    color: var(--danger);
+  }
+
+  .rating-clear[hidden] {
+    display: none;
+  }
+
+  .rating-hint {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    line-height: var(--lh-relaxed);
+  }
+
+  .rating-hint[hidden] {
+    display: none;
+  }
+
+  .rating-hint a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+
+  .rating-hint a:hover {
+    color: var(--accent-hover);
+  }
+</style>
+
+<script>
+  interface AuthUser {
+    sub: string;
+    name: string;
+    email: string;
+    picture: string | null;
+  }
+
+  (function () {
+    const root = document.querySelector<HTMLElement>('[data-rating-widget]');
+    if (!root) return;
+
+    const ANIME_ID = root.dataset.anime || '';
+    const API = (root.dataset.api || '').replace(/\/$/, '');
+    if (!ANIME_ID || !API) return;
+
+    const stars = Array.from(
+      root.querySelectorAll<HTMLButtonElement>('[data-star]')
+    );
+    const averageEl = root.querySelector<HTMLElement>('[data-average]')!;
+    const votesEl = root.querySelector<HTMLElement>('[data-votes]')!;
+    const userEl = root.querySelector<HTMLElement>('[data-user]')!;
+    const clearBtn = root.querySelector<HTMLButtonElement>('[data-clear]')!;
+    const hint = root.querySelector<HTMLElement>('[data-hint]')!;
+
+    let userScore: number | null = null;
+    let currentUser: AuthUser | null = null;
+    let submitting = false;
+
+    function formatAverage(avg: number): string {
+      if (!avg) return '—';
+      return avg.toFixed(1);
+    }
+
+    function paintStars(active: number | null, preview = false): void {
+      for (const s of stars) {
+        const n = Number(s.dataset.star);
+        s.classList.remove('is-active', 'is-preview');
+        if (active !== null && n <= active) {
+          s.classList.add(preview ? 'is-preview' : 'is-active');
+        }
+      }
+    }
+
+    function updateAria(): void {
+      for (const s of stars) {
+        const n = Number(s.dataset.star);
+        s.setAttribute('aria-checked', String(n === userScore));
+      }
+    }
+
+    function setInteractive(): void {
+      const canRate = !!currentUser;
+      for (const s of stars) {
+        s.disabled = !canRate || submitting;
+      }
+      hint.hidden = canRate;
+      clearBtn.hidden = !(currentUser && userScore !== null);
+    }
+
+    function renderUserScore(): void {
+      if (userScore !== null) {
+        paintStars(userScore);
+        userEl.textContent = `Rating kamu: ${userScore}`;
+        userEl.hidden = false;
+      } else {
+        paintStars(null);
+        userEl.hidden = true;
+      }
+      updateAria();
+    }
+
+    async function fetchRating(): Promise<void> {
+      try {
+        const res = await fetch(
+          `${API}/api/v1/ratings/${encodeURIComponent(ANIME_ID)}`,
+          { credentials: 'include' }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as {
+          data: {
+            average: number;
+            votes: number;
+            userScore: number | null;
+            canRate: boolean;
+          };
+        };
+        const d = json.data;
+        averageEl.textContent = formatAverage(d.average);
+        votesEl.textContent = d.votes
+          ? `${d.votes} suara`
+          : 'Belum ada rating';
+        userScore = d.userScore;
+        renderUserScore();
+        setInteractive();
+      } catch (err) {
+        console.error('[rating] fetch failed', err);
+        averageEl.textContent = '—';
+        votesEl.textContent = 'Gagal memuat';
+        setInteractive();
+      }
+    }
+
+    async function submitRating(score: number): Promise<void> {
+      if (!currentUser || submitting) return;
+      submitting = true;
+      setInteractive();
+
+      try {
+        const res = await fetch(
+          `${API}/api/v1/ratings/${encodeURIComponent(ANIME_ID)}`,
+          {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ score }),
+          }
+        );
+
+        if (res.status === 401) {
+          currentUser = null;
+          setInteractive();
+          return;
+        }
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as {
+          data: {
+            average: number;
+            votes: number;
+            userScore: number | null;
+          };
+        };
+        const d = json.data;
+        averageEl.textContent = formatAverage(d.average);
+        votesEl.textContent = d.votes ? `${d.votes} suara` : 'Belum ada rating';
+        userScore = d.userScore;
+        renderUserScore();
+      } catch (err) {
+        console.error('[rating] submit failed', err);
+      } finally {
+        submitting = false;
+        setInteractive();
+      }
+    }
+
+    async function clearRating(): Promise<void> {
+      if (!currentUser || submitting) return;
+      submitting = true;
+      setInteractive();
+
+      try {
+        const res = await fetch(
+          `${API}/api/v1/ratings/${encodeURIComponent(ANIME_ID)}`,
+          { method: 'DELETE', credentials: 'include' }
+        );
+
+        if (res.status === 401) {
+          currentUser = null;
+          setInteractive();
+          return;
+        }
+
+        if (!res.ok && res.status !== 404) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const json = (await res.json()) as {
+          data: {
+            average: number;
+            votes: number;
+            userScore: number | null;
+          };
+        };
+        const d = json.data;
+        averageEl.textContent = formatAverage(d.average);
+        votesEl.textContent = d.votes ? `${d.votes} suara` : 'Belum ada rating';
+        userScore = null;
+        renderUserScore();
+      } catch (err) {
+        console.error('[rating] clear failed', err);
+      } finally {
+        submitting = false;
+        setInteractive();
+      }
+    }
+
+    for (const s of stars) {
+      const n = Number(s.dataset.star);
+      s.addEventListener('mouseenter', () => {
+        if (!currentUser || submitting) return;
+        paintStars(n, true);
+      });
+      s.addEventListener('mouseleave', () => {
+        if (!currentUser || submitting) return;
+        paintStars(userScore);
+      });
+      s.addEventListener('click', () => {
+        if (!currentUser || submitting) return;
+        submitRating(n);
+      });
+    }
+
+    clearBtn.addEventListener('click', () => clearRating());
+
+    const loginLink = root.querySelector<HTMLAnchorElement>('[data-login-link]');
+    loginLink?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const api = (window as any).__qimochiUserMenu;
+      if (api) api.open();
+    });
+
+    function readCache(): AuthUser | null {
+      try {
+        const raw = localStorage.getItem('qimochi:user-cache');
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as Partial<AuthUser> | null;
+        if (
+          parsed &&
+          typeof parsed.sub === 'string' &&
+          typeof parsed.name === 'string'
+        ) {
+          return {
+            sub: parsed.sub,
+            name: parsed.name,
+            email: typeof parsed.email === 'string' ? parsed.email : '',
+            picture:
+              typeof parsed.picture === 'string' ? parsed.picture : null,
+          };
+        }
+      } catch {}
+      return null;
+    }
+
+    function onAuthChanged(e: Event): void {
+      const detail = (e as CustomEvent<{ user: AuthUser | null }>).detail;
+      if (!detail) return;
+      const same =
+        (detail.user?.sub ?? null) === (currentUser?.sub ?? null);
+      if (same) return;
+      currentUser = detail.user;
+      if (!currentUser) {
+        userScore = null;
+        renderUserScore();
+      }
+      setInteractive();
+      fetchRating();
+    }
+
+    document.addEventListener('qimochi:auth-changed', onAuthChanged);
+
+    (function bootstrap(): void {
+      currentUser = readCache();
+      setInteractive();
+      renderUserScore();
+    })();
+
+    fetchRating();
+
+    (async () => {
+      const menu = (window as any).__qimochiUserMenu;
+      if (menu) {
+        const u = menu.getUser();
+        if ((u?.sub ?? null) !== (currentUser?.sub ?? null)) {
+          currentUser = u ?? null;
+          setInteractive();
+          fetchRating();
+        }
+      }
+    })();
+  })();
+</script>
