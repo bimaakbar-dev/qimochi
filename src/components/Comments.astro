@@ -23,8 +23,6 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     <span class="comments-count" data-count>0</span>
   </header>
 
-  <AnimeReactions animeId={slug} />
-
   <div class="auth-skeleton" data-auth-skeleton></div>
 
   <div class="login-box" data-login-box hidden>
@@ -53,16 +51,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       >×</button>
     </div>
 
-    <div class="emoji-row" data-emoji-row>
-      {['👍', '❤️', '🔥', '😂', '😮', '😢', '🎉'].map((e) => (
-        <button
-          type="button"
-          class="emoji-btn"
-          data-emoji={e}
-          aria-label={`Sisipkan ${e}`}
-        >{e}</button>
-      ))}
-    </div>
+    <AnimeReactions animeId={slug} />
 
     <textarea
       class="comment-input"
@@ -297,33 +286,6 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
   .reply-context-cancel:hover {
     color: var(--accent-hover);
-  }
-
-  .emoji-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-1);
-  }
-
-  .emoji-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
-    background: var(--bg-surface);
-    border: 1px solid transparent;
-    border-radius: var(--r-sm);
-    font-size: 1.125rem;
-    line-height: 1;
-    cursor: pointer;
-    transition: all var(--t-fast);
-  }
-
-  .emoji-btn:hover {
-    border-color: var(--border);
-    transform: scale(1.05);
   }
 
   .comment-input {
@@ -1441,24 +1403,6 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       const len = input.value.length;
       charCount.textContent = `${len} / 2000`;
       updateSubmitState();
-    });
-
-    root.querySelectorAll<HTMLButtonElement>('[data-emoji]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const emoji = btn.dataset.emoji || '';
-        if (!emoji) return;
-        const start = input.selectionStart ?? input.value.length;
-        const end = input.selectionEnd ?? start;
-        const before = input.value.slice(0, start);
-        const after = input.value.slice(end);
-        input.value = before + emoji + after;
-        const pos = start + emoji.length;
-        input.setSelectionRange(pos, pos);
-        input.focus();
-        const len = input.value.length;
-        charCount.textContent = `${len} / 2000`;
-        updateSubmitState();
-      });
     });
 
     listEl.addEventListener('click', async (e) => {
