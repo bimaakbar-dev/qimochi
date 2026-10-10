@@ -22,25 +22,15 @@ const {
 
 <style>
   .hero {
-    background: var(--bg-footer);
-    width: 100%;
-    margin-inline: 0;
     position: relative;
     isolation: isolate;
-  
+    width: 100%;
+
+    box-shadow: 0 0 0 100vmax var(--bg-footer);
+    clip-path: inset(0 -100vmax);
+
     margin-block-start: calc(var(--s-6) * -1);
     margin-block-end: var(--s-6);
-  }
-  
-  .hero::before {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    inset-block: 0;
-    inset-inline-start: 50%;
-    width: 100vw;
-    transform: translateX(-50%);
-    background: var(--bg-footer);
   }
 
   .hero-inner {
