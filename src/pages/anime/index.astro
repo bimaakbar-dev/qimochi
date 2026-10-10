@@ -102,4 +102,392 @@ const groups = activeLetters.map(letter => ({
       ))}
 
       {totalAnime === 0 && (
-        <
+        <p class="empty">Belum ada anime di database.</p>
+      )}
+    </div>
+
+    <div class="archive-panel" data-panel="top" hidden>
+      <p class="top-status" data-top-status>Memuat rating tertinggi…</p>
+      <ol class="top-list" data-top-list hidden></ol>
+    </div>
+
+  </Page>
+</BaseLayout>
+
+<style>
+  .wrapper {
+    gap: var(--s-6);
+  }
+
+  .archive-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+    padding: 3px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    align-self: flex-start;
+  }
+
+  .archive-tab {
+    padding: var(--s-2) var(--s-4);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .archive-tab:hover {
+    color: var(--text-primary);
+  }
+
+  .archive-tab.is-active {
+    background: var(--accent);
+    color: var(--accent-text);
+  }
+
+  .archive-panel[hidden] {
+    display: none;
+  }
+
+  .letter-nav {
+    position: sticky;
+    top: var(--header-height);
+    z-index: 50;
+    background: var(--bg-base);
+
+    margin-inline: calc(var(--pad-x) * -1);
+    padding-block: var(--s-3);
+    padding-inline: var(--pad-x);
+  }
+
+  .letter-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .letter-list a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 var(--s-2);
+    background: var(--bg-surface);
+    border: 1px solid transparent;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    color: var(--text-secondary);
+    transition: all var(--t-fast);
+  }
+
+  .letter-list a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .letter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    scroll-margin-top: calc(var(--header-height) + 4rem);
+    margin-bottom: var(--s-4);
+  }
+
+  .letter-heading {
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-bold);
+    color: var(--accent);
+    margin: 0;
+    padding-bottom: var(--s-2);
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.05em;
+  }
+
+  .anime-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .anime-link {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-2) var(--s-4);
+    padding-block: var(--s-3);
+    transition: all var(--t-fast);
+  }
+
+  .anime-title {
+    position: relative;
+    font-size: var(--fs-sm);
+    color: var(--text-primary);
+    font-weight: var(--fw-medium);
+    min-width: 0;
+    overflow-wrap: anywhere;
+    &::after {
+      content: '';
+      position: absolute;
+      left: -3%;
+      right: -3%;
+      bottom: -0.2em;
+      height: 0.45em;
+      background-color: var(--accent);
+      -webkit-mask-image: var(--underline);
+      mask-image: var(--underline);
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity var(--t-fast);
+    }
+  }
+
+  .anime-link:hover .anime-title {
+    color: var(--accent);
+  }
+  .anime-link:hover .anime-title::after {
+    opacity: 1;
+  }
+
+  .empty {
+    color: var(--text-muted);
+    text-align: center;
+    padding: var(--s-12) 0;
+    font-size: var(--fs-sm);
+  }
+
+  .top-status {
+    color: var(--text-muted);
+    text-align: center;
+    padding: var(--s-8) 0;
+    font-size: var(--fs-sm);
+    margin: 0;
+  }
+
+  .top-status[hidden] {
+    display: none;
+  }
+
+  .top-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: rank;
+  }
+
+  .top-list[hidden] {
+    display: none;
+  }
+
+  .top-item {
+    display: grid;
+    grid-template-columns: 2rem 1fr auto;
+    align-items: center;
+    gap: var(--s-3);
+    padding-block: var(--s-3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .top-item::before {
+    counter-increment: rank;
+    content: counter(rank);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .top-item:first-child::before {
+    background: var(--gold);
+    color: #1a1a1a;
+  }
+  .top-item:nth-child(2)::before {
+    background: var(--accent);
+    color: var(--accent-text);
+  }
+  .top-item:nth-child(3)::before {
+    background: var(--warning);
+    color: #1a1a1a;
+  }
+
+  .top-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-width: 0;
+    transition: color var(--t-fast);
+  }
+
+  .top-cover {
+    width: 36px;
+    height: 54px;
+    object-fit: cover;
+    background: var(--bg-surface);
+    flex-shrink: 0;
+  }
+
+  .top-title {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--text-primary);
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: var(--lh-tight);
+  }
+
+  .top-link:hover .top-title {
+    color: var(--accent);
+  }
+
+  .top-score {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 3px;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
+  .top-score-value {
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
+    color: var(--gold);
+  }
+
+  .top-score-votes {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+</style>
+
+<script define:vars={{ apiBase }}>
+  (function () {
+    const wrap = document.querySelector('[data-archive]');
+    if (!wrap) return;
+    const tabs = wrap.querySelectorAll('[data-tab]');
+    const panels = document.querySelectorAll('[data-panel]');
+    const topStatus = document.querySelector('[data-top-status]');
+    const topList = document.querySelector('[data-top-list]');
+    if (!tabs.length || !panels.length || !topStatus || !topList) return;
+
+    let loadedTop = false;
+    let loadPromise = null;
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    async function loadTop() {
+      if (loadedTop) return;
+      if (loadPromise) return loadPromise;
+
+      loadPromise = (async () => {
+        topStatus.hidden = false;
+        topStatus.textContent = 'Memuat rating tertinggi…';
+        topList.hidden = true;
+
+        try {
+          const [animeRes, ratingsRes] = await Promise.all([
+            fetch('/api/anime.json').then((r) => r.json()),
+            fetch(`${apiBase}/api/v1/ratings`).then((r) => r.json()),
+          ]);
+
+          const animeList = Array.isArray(animeRes) ? animeRes : [];
+          const ratingMap = ratingsRes?.data ?? {};
+
+          const scored = animeList
+            .map((a) => ({
+              slug: a.i,
+              title: a.t,
+              cover: a.c,
+              rating: ratingMap[a.i]?.average ?? 0,
+              votes: ratingMap[a.i]?.votes ?? 0,
+            }))
+            .filter((a) => a.votes > 0)
+            .sort((a, b) => {
+              if (b.rating !== a.rating) return b.rating - a.rating;
+              return b.votes - a.votes;
+            })
+            .slice(0, 100);
+
+          if (scored.length === 0) {
+            topStatus.textContent = 'Belum ada rating.';
+            topList.hidden = true;
+            loadedTop = true;
+            return;
+          }
+
+          topList.innerHTML = '';
+          for (const it of scored) {
+            const li = document.createElement('li');
+            li.className = 'top-item';
+            li.innerHTML = `
+              <a class="top-link" href="/anime/${escapeHtml(it.slug)}/">
+                ${it.cover ? `<img class="top-cover" src="${escapeHtml(it.cover)}" alt="" width="36" height="54" loading="lazy" decoding="async" />` : ''}
+                <span class="top-title">${escapeHtml(it.title)}</span>
+              </a>
+              <span class="top-score">
+                <span class="top-score-value">${it.rating.toFixed(1)}</span>
+                <span class="top-score-votes">(${it.votes})</span>
+              </span>
+            `;
+            topList.appendChild(li);
+          }
+
+          topStatus.hidden = true;
+          topList.hidden = false;
+          loadedTop = true;
+        } catch (err) {
+          console.error('[archive] top load failed', err);
+          topStatus.textContent = 'Gagal memuat. Coba refresh.';
+        }
+      })();
+
+      return loadPromise;
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        tabs.forEach((t) => {
+          const isActive = t === tab;
+          t.classList.toggle('is-active', isActive);
+          t.setAttribute('aria-selected', String(isActive));
+        });
+        panels.forEach((p) => {
+          p.hidden = p.dataset.panel !== target;
+        });
+        if (target === 'top') loadTop();
+      });
+    });
+  })();
+</script>
