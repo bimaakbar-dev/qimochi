@@ -18,7 +18,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     aria-label="Akun"
   >
     <span class="user-trigger-guest" data-guest>
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="12" cy="8" r="4" />
         <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
       </svg>
@@ -67,25 +67,27 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     color: var(--accent);
   }
 
-  .user-trigger-guest {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .user-trigger-guest[hidden] {
-    display: none;
-  }
-
+  .user-trigger-guest,
   .user-trigger-avatar {
     display: block;
     width: 28px;
     height: 28px;
     border-radius: var(--r-full);
-    object-fit: cover;
     border: 1.5px solid var(--border-hover);
+    object-fit: cover;
+    flex-shrink: 0;
+    box-sizing: border-box;
   }
 
+  .user-trigger-guest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-nav);
+    color: var(--text-inverted);
+  }
+
+  .user-trigger-guest[hidden],
   .user-trigger-avatar[hidden] {
     display: none;
   }
@@ -424,12 +426,9 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     document.addEventListener('qimochi:auth-changed', onExternalChange);
 
     (function bootstrap(): void {
-      const cached = readCache();
-      if (cached) {
-        currentUser = cached;
-        applyUser();
-        dispatchAuthChanged();
-      }
+      currentUser = readCache();
+      applyUser();
+      if (currentUser) dispatchAuthChanged();
     })();
 
     (async () => {
