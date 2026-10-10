@@ -107,8 +107,21 @@ const groups = activeLetters.map(letter => ({
     </div>
 
     <div class="archive-panel" data-panel="top" hidden>
+      <div class="top-filters" data-top-filters hidden>
+        <button type="button" class="top-filter is-active" data-min="0">Semua</button>
+        <button type="button" class="top-filter" data-min="9">9.0+</button>
+        <button type="button" class="top-filter" data-min="8">8.0+</button>
+        <button type="button" class="top-filter" data-min="7">7.0+</button>
+        <button type="button" class="top-filter" data-min="6">6.0+</button>
+      </div>
+
       <p class="top-status" data-top-status>Memuat rating tertinggi…</p>
-      <ol class="top-list" data-top-list hidden></ol>
+
+      <div class="top-grid" data-top-grid hidden></div>
+
+      <p class="top-empty" data-top-empty hidden>
+        Tidak ada anime dengan rating di rentang ini.
+      </p>
     </div>
 
   </Page>
@@ -273,6 +286,44 @@ const groups = activeLetters.map(letter => ({
     font-size: var(--fs-sm);
   }
 
+  /* ---------- TOP RATED ---------- */
+
+  .top-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-1);
+    margin-bottom: var(--s-4);
+  }
+
+  .top-filters[hidden] {
+    display: none;
+  }
+
+  .top-filter {
+    padding: var(--s-1) var(--s-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-full);
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .top-filter:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .top-filter.is-active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+
   .top-status {
     color: var(--text-muted);
     text-align: center;
@@ -285,103 +336,170 @@ const groups = activeLetters.map(letter => ({
     display: none;
   }
 
-  .top-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    list-style: none;
-    padding: 0;
+  .top-empty {
+    color: var(--text-muted);
+    text-align: center;
+    padding: var(--s-8) 0;
+    font-size: var(--fs-sm);
     margin: 0;
-    counter-reset: rank;
   }
 
-  .top-list[hidden] {
+  .top-empty[hidden] {
     display: none;
   }
 
-  .top-item {
+  .top-grid {
     display: grid;
-    grid-template-columns: 2rem 1fr auto;
-    align-items: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-3);
-    padding-block: var(--s-3);
-    border-bottom: 1px solid var(--border);
   }
 
-  .top-item::before {
-    counter-increment: rank;
-    content: counter(rank);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 2rem;
-    height: 2rem;
+  .top-grid[hidden] {
+    display: none;
+  }
+
+  @media (min-width: 50rem) {
+    .top-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--s-4);
+    }
+  }
+
+  .top-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-elevated);
+    border: 1px solid transparent;
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+    transition: transform var(--t-fast), border-color var(--t-fast);
+  }
+
+  .top-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+  }
+
+  .top-cover-wrap {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
     background: var(--bg-surface);
-    color: var(--text-muted);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .top-item:first-child::before {
-    background: var(--gold);
-    color: #1a1a1a;
-  }
-  .top-item:nth-child(2)::before {
-    background: var(--accent);
-    color: var(--accent-text);
-  }
-  .top-item:nth-child(3)::before {
-    background: var(--warning);
-    color: #1a1a1a;
-  }
-
-  .top-link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-3);
-    min-width: 0;
-    transition: color var(--t-fast);
   }
 
   .top-cover {
-    width: 36px;
-    height: 54px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    background: var(--bg-surface);
-    flex-shrink: 0;
+    display: block;
+    transition: transform var(--t-base);
   }
 
-  .top-title {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-medium);
-    color: var(--text-primary);
-    min-width: 0;
-    overflow-wrap: anywhere;
-    line-height: var(--lh-tight);
+  .top-card:hover .top-cover {
+    transform: scale(1.04);
   }
 
-  .top-link:hover .top-title {
-    color: var(--accent);
+  .top-cover-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 55%,
+      rgba(0, 0, 0, 0.7) 100%
+    );
+    pointer-events: none;
   }
 
-  .top-score {
+  .top-rank {
+    position: absolute;
+    top: var(--s-2);
+    left: var(--s-2);
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.75rem;
+    height: 1.75rem;
+    padding: 0 var(--s-1);
+    background: rgba(0, 0, 0, 0.75);
+    color: #ffffff;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    font-variant-numeric: tabular-nums;
+    border-radius: var(--r-sm);
+    backdrop-filter: blur(6px);
+    line-height: 1;
+  }
+
+  .top-rank.rank-1 {
+    background: var(--gold);
+    color: #1a1a1a;
+  }
+  .top-rank.rank-2 {
+    background: #c0c0c0;
+    color: #1a1a1a;
+  }
+  .top-rank.rank-3 {
+    background: #cd7f32;
+    color: #ffffff;
+  }
+
+  .top-score-badge {
+    position: absolute;
+    bottom: var(--s-2);
+    right: var(--s-2);
+    z-index: 2;
     display: inline-flex;
     align-items: baseline;
     gap: 3px;
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
-  }
-
-  .top-score-value {
-    font-size: var(--fs-base);
-    font-weight: var(--fw-bold);
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.75);
     color: var(--gold);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    border-radius: var(--r-sm);
+    backdrop-filter: blur(6px);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
   }
 
-  .top-score-votes {
+  .top-score-badge .votes {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.625rem;
+    font-weight: var(--fw-medium);
+  }
+
+  .top-info {
+    padding: var(--s-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    min-width: 0;
+  }
+
+  .top-info h3 {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    margin: 0;
+    line-height: var(--lh-tight);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+
+  .top-card:hover .top-info h3 {
+    color: var(--accent);
+  }
+
+  .top-info .top-meta {
     font-size: var(--fs-xs);
     color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
   }
 </style>
 
@@ -391,29 +509,92 @@ const groups = activeLetters.map(letter => ({
     if (!wrap) return;
     const tabs = wrap.querySelectorAll('[data-tab]');
     const panels = document.querySelectorAll('[data-panel]');
+    const filtersEl = document.querySelector('[data-top-filters]');
     const topStatus = document.querySelector('[data-top-status]');
-    const topList = document.querySelector('[data-top-list]');
-    if (!tabs.length || !panels.length || !topStatus || !topList) return;
+    const topGrid = document.querySelector('[data-top-grid]');
+    const topEmpty = document.querySelector('[data-top-empty]');
+    const filterBtns = filtersEl
+      ? filtersEl.querySelectorAll('[data-min]')
+      : [];
+    if (!tabs.length || !panels.length || !topStatus || !topGrid || !topEmpty)
+      return;
 
-    let loadedTop = false;
+    let loaded = false;
     let loadPromise = null;
+    let allScored = [];
+    let minRating = 0;
 
     function escapeHtml(s) {
       return String(s)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderGrid() {
+      const filtered = allScored.filter((a) => a.rating >= minRating);
+      topGrid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        topGrid.hidden = true;
+        topEmpty.hidden = false;
+        return;
+      }
+
+      topEmpty.hidden = true;
+      topGrid.hidden = false;
+
+      const frag = document.createDocumentFragment();
+      filtered.forEach((it, i) => {
+        const rank = i + 1;
+        const rankClass =
+          rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+        const a = document.createElement('a');
+        a.className = 'top-card';
+        a.href = `/anime/${encodeURIComponent(it.slug)}/`;
+        a.innerHTML = `
+          <div class="top-cover-wrap">
+            ${it.cover ? `<img class="top-cover" src="${escapeHtml(it.cover)}" alt="" width="300" height="450" loading="lazy" decoding="async" />` : ''}
+            <span class="top-rank ${rankClass}">#${rank}</span>
+            <span class="top-score-badge">
+              ${it.rating.toFixed(1)}
+              <span class="votes">(${it.votes})</span>
+            </span>
+          </div>
+          <div class="top-info">
+            <h3>${escapeHtml(it.title)}</h3>
+            ${it.type ? `<span class="top-meta">${escapeHtml(it.type)}</span>` : ''}
+          </div>
+        `;
+        frag.appendChild(a);
+      });
+
+      topGrid.appendChild(frag);
+    }
+
+    function applyFilter(value) {
+      minRating = value;
+      filterBtns.forEach((b) => {
+        b.classList.toggle(
+          'is-active',
+          Number(b.dataset.min) === minRating
+        );
+      });
+      renderGrid();
     }
 
     async function loadTop() {
-      if (loadedTop) return;
+      if (loaded) return;
       if (loadPromise) return loadPromise;
 
       loadPromise = (async () => {
         topStatus.hidden = false;
         topStatus.textContent = 'Memuat rating tertinggi…';
-        topList.hidden = true;
+        topGrid.hidden = true;
+        topEmpty.hidden = true;
+        if (filtersEl) filtersEl.hidden = true;
 
         try {
           const [animeRes, ratingsRes] = await Promise.all([
@@ -424,11 +605,12 @@ const groups = activeLetters.map(letter => ({
           const animeList = Array.isArray(animeRes) ? animeRes : [];
           const ratingMap = ratingsRes?.data ?? {};
 
-          const scored = animeList
+          allScored = animeList
             .map((a) => ({
               slug: a.i,
               title: a.t,
               cover: a.c,
+              type: a.y,
               rating: ratingMap[a.i]?.average ?? 0,
               votes: ratingMap[a.i]?.votes ?? 0,
             }))
@@ -439,33 +621,19 @@ const groups = activeLetters.map(letter => ({
             })
             .slice(0, 100);
 
-          if (scored.length === 0) {
+          if (allScored.length === 0) {
             topStatus.textContent = 'Belum ada rating.';
-            topList.hidden = true;
-            loadedTop = true;
+            topStatus.hidden = false;
+            topGrid.hidden = true;
+            topEmpty.hidden = true;
+            loaded = true;
             return;
           }
 
-          topList.innerHTML = '';
-          for (const it of scored) {
-            const li = document.createElement('li');
-            li.className = 'top-item';
-            li.innerHTML = `
-              <a class="top-link" href="/anime/${escapeHtml(it.slug)}/">
-                ${it.cover ? `<img class="top-cover" src="${escapeHtml(it.cover)}" alt="" width="36" height="54" loading="lazy" decoding="async" />` : ''}
-                <span class="top-title">${escapeHtml(it.title)}</span>
-              </a>
-              <span class="top-score">
-                <span class="top-score-value">${it.rating.toFixed(1)}</span>
-                <span class="top-score-votes">(${it.votes})</span>
-              </span>
-            `;
-            topList.appendChild(li);
-          }
-
           topStatus.hidden = true;
-          topList.hidden = false;
-          loadedTop = true;
+          if (filtersEl) filtersEl.hidden = false;
+          applyFilter(minRating);
+          loaded = true;
         } catch (err) {
           console.error('[archive] top load failed', err);
           topStatus.textContent = 'Gagal memuat. Coba refresh.';
@@ -474,6 +642,13 @@ const groups = activeLetters.map(letter => ({
 
       return loadPromise;
     }
+
+    filterBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const v = Number(btn.dataset.min || '0');
+        applyFilter(v);
+      });
+    });
 
     tabs.forEach((tab) => {
       tab.addEventListener('click', () => {
