@@ -11,6 +11,7 @@ import AnimeFranchise from '~/components/AnimeFranchise.astro';
 import Badge from '~/user-components/Badge.astro';
 import LinkButton from '~/user-components/LinkButton.astro';
 import Comments from '~/components/Comments.astro';
+import AnimeRatings from '~/components/AnimeRatings.astro';
 
 export async function getStaticPaths() {
   const allAnime = await getAllAnime();
@@ -108,6 +109,8 @@ const breadcrumbItems = [
             </dd>
           </div>
         </dl>
+
+        <AnimeRatings animeId={anime.id} />
 
         <LinkButton
           href={URLS.watch(anime.id, firstEpisode)}
