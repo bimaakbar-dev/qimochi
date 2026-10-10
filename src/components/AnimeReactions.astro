@@ -16,7 +16,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
   aria-label="Reaksi anime"
 ></div>
 
-<style>
+<style is:global>
   .reaction-bar {
     display: inline-flex;
     flex-wrap: wrap;
@@ -24,7 +24,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     gap: var(--s-1);
   }
 
-  .reaction-btn {
+  .reaction-bar .reaction-btn {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -45,36 +45,36 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     -webkit-tap-highlight-color: transparent;
   }
 
-  .reaction-btn:not(:disabled):hover {
+  .reaction-bar .reaction-btn:not(:disabled):hover {
     border-color: var(--border);
     transform: scale(1.05);
   }
 
-  .reaction-btn:not(:disabled):active {
+  .reaction-bar .reaction-btn:not(:disabled):active {
     transform: scale(0.94);
   }
 
-  .reaction-btn:disabled {
+  .reaction-bar .reaction-btn:disabled {
     cursor: not-allowed;
     opacity: 0.55;
   }
 
-  .reaction-btn.is-active {
+  .reaction-bar .reaction-btn.is-active {
     background: var(--accent-soft);
     border-color: var(--accent);
   }
 
-  .reaction-emoji {
+  .reaction-bar .reaction-emoji {
     display: inline-block;
     line-height: 1;
     transition: transform var(--t-base);
   }
 
-  .reaction-btn:not(:disabled):hover .reaction-emoji {
+  .reaction-bar .reaction-btn:not(:disabled):hover .reaction-emoji {
     transform: scale(1.1);
   }
 
-  .reaction-count {
+  .reaction-bar .reaction-count {
     position: absolute;
     top: -0.25rem;
     right: -0.25rem;
@@ -95,16 +95,16 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     transition: transform var(--t-fast);
   }
 
-  .reaction-count[data-empty='true'] {
+  .reaction-bar .reaction-count[data-empty='true'] {
     display: none;
   }
 
-  .reaction-btn.is-active .reaction-count {
+  .reaction-bar .reaction-btn.is-active .reaction-count {
     background: var(--accent);
     color: var(--accent-text);
   }
 
-  .reaction-btn.pop .reaction-emoji {
+  .reaction-bar .reaction-btn.pop .reaction-emoji {
     animation: reaction-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
@@ -121,12 +121,12 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .reaction-btn,
-    .reaction-emoji,
-    .reaction-count {
+    .reaction-bar .reaction-btn,
+    .reaction-bar .reaction-emoji,
+    .reaction-bar .reaction-count {
       transition: none;
     }
-    .reaction-btn.pop .reaction-emoji {
+    .reaction-bar .reaction-btn.pop .reaction-emoji {
       animation: none;
     }
   }
