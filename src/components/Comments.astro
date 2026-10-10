@@ -1,5 +1,6 @@
 ---
 import SectionLabel from '~/components/SectionLabel.astro';
+import AnimeReactions from '~/components/AnimeReactions.astro';
 
 interface Props {
   slug: string;
@@ -21,6 +22,8 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     <SectionLabel>Komentar</SectionLabel>
     <span class="comments-count" data-count>0</span>
   </header>
+
+  <AnimeReactions animeId={slug} />
 
   <div class="auth-skeleton" data-auth-skeleton></div>
 
