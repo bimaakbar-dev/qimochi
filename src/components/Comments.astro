@@ -52,7 +52,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     <textarea
       class="comment-input"
       data-input
-      placeholder="Tulis komentar…"
+      placeholder="Tulis komentar… (mendukung **bold**, *italic*, `code`, > quote, ||spoiler||)"
       maxlength="2000"
       rows="4"
     ></textarea>
@@ -68,9 +68,26 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     </div>
   </form>
 
+  <div class="toolbar" data-toolbar hidden>
+    <label class="toolbar-sort">
+      <span class="toolbar-label">Urutkan</span>
+      <select class="toolbar-select" data-sort>
+        <option value="oldest">Terlama</option>
+        <option value="newest">Terbaru</option>
+        <option value="popular">Populer</option>
+      </select>
+    </label>
+  </div>
+
   <div class="comments-status" data-status>Memuat komentar…</div>
 
   <ol class="comment-list" data-list hidden></ol>
+
+  <div class="load-more-wrap" data-load-more-wrap hidden>
+    <button type="button" class="load-more-btn" data-load-more>
+      Muat lebih banyak
+    </button>
+  </div>
 
   <template data-item-tmpl>
     <li class="comment-item" data-comment-item>
@@ -78,23 +95,31 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         <img class="comment-avatar" data-avatar alt="" width="32" height="32" loading="lazy" />
         <div class="comment-meta">
           <span class="comment-name" data-name></span>
-          <time class="comment-time" data-time></time>
+          <span class="comment-submeta">
+            <time class="comment-time" data-time></time>
+            <span class="comment-edited" data-edited hidden>· diedit</span>
+          </span>
         </div>
         <span class="comment-badge" data-badge hidden></span>
       </div>
       <div class="comment-body" data-body></div>
+      <div class="comment-edit" data-edit-box hidden>
+        <textarea class="comment-edit-input" data-edit-input maxlength="2000" rows="4"></textarea>
+        <div class="comment-edit-actions">
+          <span class="comment-edit-status" data-edit-status hidden></span>
+          <button type="button" class="btn-mini" data-edit-cancel>Batal</button>
+          <button type="button" class="btn-mini btn-mini-primary" data-edit-save>Simpan</button>
+        </div>
+      </div>
       <div class="comment-actions" data-actions>
-        <button
-          type="button"
-          class="comment-action-btn"
-          data-action="reply"
-        >Balas</button>
-        <button
-          type="button"
-          class="comment-action-btn comment-action-danger"
-          data-action="delete"
-          hidden
-        >Hapus</button>
+        <button type="button" class="comment-action-btn" data-action="like">
+          <span class="like-icon" data-like-icon>♡</span>
+          <span class="like-count" data-like-count hidden>0</span>
+        </button>
+        <button type="button" class="comment-action-btn" data-action="reply">Balas</button>
+        <button type="button" class="comment-action-btn" data-action="edit" hidden>Edit</button>
+        <button type="button" class="comment-action-btn comment-action-danger" data-action="delete" hidden>Hapus</button>
+        <button type="button" class="comment-action-btn comment-action-report" data-action="report" hidden>Laporkan</button>
       </div>
       <ol class="comment-replies" data-replies hidden></ol>
     </li>
@@ -328,6 +353,45 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
   .submit-btn:hover:not(:disabled) { background: var(--accent-hover); }
   .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--s-3);
+  }
+
+  .toolbar[hidden] {
+    display: none;
+  }
+
+  .toolbar-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  .toolbar-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: var(--fw-semibold);
+  }
+
+  .toolbar-select {
+    padding: var(--s-1) var(--s-2);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: var(--fs-xs);
+    cursor: pointer;
+  }
+
+  .toolbar-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
   .comments-status {
     padding: var(--s-4) 0;
     text-align: center;
@@ -388,10 +452,26 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     color: var(--text-primary);
   }
 
+  .comment-submeta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+  }
+
   .comment-time {
     font-size: var(--fs-xs);
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
+  }
+
+  .comment-edited {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .comment-edited[hidden] {
+    display: none;
   }
 
   .comment-badge {
@@ -423,8 +503,134 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     font-size: var(--fs-sm);
     color: var(--text-secondary);
     line-height: var(--lh-relaxed);
-    white-space: pre-wrap;
     overflow-wrap: anywhere;
+  }
+
+  .comment-body :global(strong) {
+    color: var(--text-primary);
+    font-weight: var(--fw-semibold);
+  }
+
+  .comment-body :global(em) {
+    font-style: italic;
+  }
+
+  .comment-body :global(del) {
+    opacity: 0.6;
+  }
+
+  .comment-body :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    padding: 0.1em 0.35em;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    color: var(--text-primary);
+  }
+
+  .comment-body :global(a) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .comment-body :global(a:hover) {
+    color: var(--accent-hover);
+  }
+
+  .comment-body :global(.spoiler) {
+    display: inline;
+    padding: 0 3px;
+    background: var(--text-primary);
+    color: transparent;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 2px;
+    transition: all var(--t-fast);
+  }
+
+  .comment-body :global(.spoiler.revealed) {
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    user-select: auto;
+  }
+
+  .comment-edit {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .comment-edit[hidden] {
+    display: none;
+  }
+
+  .comment-edit-input {
+    width: 100%;
+    padding: var(--s-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--accent);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-relaxed);
+    resize: vertical;
+    min-height: 4rem;
+  }
+
+  .comment-edit-input:focus {
+    outline: none;
+  }
+
+  .comment-edit-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--s-2);
+  }
+
+  .comment-edit-status {
+    margin-right: auto;
+    font-size: var(--fs-xs);
+    color: var(--danger);
+  }
+
+  .comment-edit-status[hidden] {
+    display: none;
+  }
+
+  .btn-mini {
+    padding: var(--s-1) var(--s-3);
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .btn-mini:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-mini:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-mini-primary {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
+  }
+
+  .btn-mini-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--accent-text);
   }
 
   .comment-actions {
@@ -432,9 +638,13 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     align-items: center;
     gap: var(--s-3);
     margin-top: var(--s-1);
+    flex-wrap: wrap;
   }
 
   .comment-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
     padding: 0;
     background: none;
     border: none;
@@ -453,8 +663,35 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     display: none;
   }
 
+  .comment-action-btn.is-liked {
+    color: var(--accent);
+  }
+
+  .comment-action-btn.is-liked .like-icon {
+    transform: scale(1.15);
+  }
+
+  .like-icon {
+    display: inline-block;
+    font-size: 1rem;
+    line-height: 1;
+    transition: transform var(--t-fast);
+  }
+
+  .like-count {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .like-count[hidden] {
+    display: none;
+  }
+
   .comment-action-danger:hover {
     color: var(--danger);
+  }
+
+  .comment-action-report:hover {
+    color: var(--warning);
   }
 
   .comment-replies {
@@ -470,6 +707,34 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
   .comment-replies[hidden] {
     display: none;
+  }
+
+  .load-more-wrap {
+    display: flex;
+    justify-content: center;
+    padding-block: var(--s-2);
+  }
+
+  .load-more-wrap[hidden] {
+    display: none;
+  }
+
+  .load-more-btn {
+    padding: var(--s-2) var(--s-5);
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .load-more-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
   }
 </style>
 
@@ -487,13 +752,21 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     body: string;
     status: string;
     createdAt: number;
+    editedAt: number | null;
+    likes: number;
+    isLiked: boolean;
     isOwn: boolean;
+    canEdit: boolean;
     user: { sub: string; name: string; picture: string | null };
   }
 
+  type SortKey = 'oldest' | 'newest' | 'popular';
+
   (function () {
     const CACHE_KEY = 'qimochi:user-cache';
+    const SORT_KEY = 'qimochi:comment-sort';
     const COOLDOWN_SEC = 15;
+    const PAGE_SIZE = 10;
 
     const root = document.querySelector<HTMLElement>('[data-comments]');
     if (!root) return;
@@ -518,8 +791,12 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     const charCount = root.querySelector<HTMLElement>('[data-charcount]')!;
     const submitBtn = root.querySelector<HTMLButtonElement>('[data-submit]')!;
     const formStatus = root.querySelector<HTMLElement>('[data-form-status]')!;
+    const toolbar = root.querySelector<HTMLElement>('[data-toolbar]')!;
+    const sortSelect = root.querySelector<HTMLSelectElement>('[data-sort]')!;
     const statusEl = root.querySelector<HTMLElement>('[data-status]')!;
     const listEl = root.querySelector<HTMLOListElement>('[data-list]')!;
+    const loadMoreWrap = root.querySelector<HTMLElement>('[data-load-more-wrap]')!;
+    const loadMoreBtn = root.querySelector<HTMLButtonElement>('[data-load-more]')!;
     const tmpl = root.querySelector<HTMLTemplateElement>('[data-item-tmpl]')!;
 
     if (!SLUG || !API) {
@@ -528,6 +805,11 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     }
 
     let currentUser: AuthUser | null = null;
+    let allComments: CommentItem[] = [];
+    let rootComments: CommentItem[] = [];
+    let childrenMap: Record<string, CommentItem[]> = {};
+    let visibleRoots = PAGE_SIZE;
+    let sortKey: SortKey = 'oldest';
     let turnstileWidgetId: string | null = null;
     let turnstileToken = '';
     let submitting = false;
@@ -535,6 +817,15 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     let replyTarget: { id: string; name: string } | null = null;
     let cooldownUntil = 0;
     let cooldownTimer: number | null = null;
+
+    try {
+      const saved = localStorage.getItem(SORT_KEY) as SortKey | null;
+      if (saved === 'oldest' || saved === 'newest' || saved === 'popular') {
+        sortKey = saved;
+      }
+    } catch {}
+
+    sortSelect.value = sortKey;
 
     function readCache(): AuthUser | null {
       try {
@@ -586,6 +877,44 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       });
     }
 
+    function escapeHtml(s: string): string {
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderMarkdown(text: string): string {
+      let s = escapeHtml(text);
+
+      s = s.replace(
+        /\|\|([^|\n]+?)\|\|/g,
+        '<span class="spoiler" data-spoiler>$1</span>'
+      );
+
+      s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+      s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+      s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+      s = s.replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
+
+      s = s.replace(
+        /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+        '<a href="$2" target="_blank" rel="nofollow ugc noopener noreferrer">$1</a>'
+      );
+
+      s = s.replace(
+        /(^|[^"=])(https?:\/\/[^\s<]+)/g,
+        (_, prefix, url) =>
+          `${prefix}<a href="${url}" target="_blank" rel="nofollow ugc noopener noreferrer">${url}</a>`
+      );
+
+      s = s.replace(/\n/g, '<br>');
+
+      return s;
+    }
+
     function formatTime(ts: number): string {
       const d = new Date(ts * 1000);
       const now = Date.now();
@@ -605,6 +934,21 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       if (status === 'pending') return 'Menunggu moderasi';
       if (status === 'rejected') return 'Ditolak';
       return '';
+    }
+
+    function sortRoots(items: CommentItem[]): CommentItem[] {
+      const arr = [...items];
+      if (sortKey === 'newest') {
+        arr.sort((a, b) => b.createdAt - a.createdAt);
+      } else if (sortKey === 'popular') {
+        arr.sort((a, b) => {
+          if (b.likes !== a.likes) return b.likes - a.likes;
+          return b.createdAt - a.createdAt;
+        });
+      } else {
+        arr.sort((a, b) => a.createdAt - b.createdAt);
+      }
+      return arr;
     }
 
     function makeItem(item: CommentItem, isReply: boolean): HTMLLIElement {
@@ -630,7 +974,19 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       timeEl.dateTime = new Date(item.createdAt * 1000).toISOString();
       timeEl.textContent = formatTime(item.createdAt);
 
-      node.querySelector<HTMLElement>('[data-body]')!.textContent = item.body;
+      const editedEl = node.querySelector<HTMLElement>('[data-edited]')!;
+      if (item.editedAt) {
+        editedEl.hidden = false;
+      }
+
+      const bodyEl = node.querySelector<HTMLElement>('[data-body]')!;
+      bodyEl.innerHTML = renderMarkdown(item.body);
+
+      bodyEl.querySelectorAll<HTMLElement>('[data-spoiler]').forEach((el) => {
+        el.addEventListener('click', () => {
+          el.classList.toggle('revealed');
+        });
+      });
 
       const badge = node.querySelector<HTMLElement>('[data-badge]')!;
       if (item.isOwn && item.status !== 'approved') {
@@ -644,11 +1000,41 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         }
       }
 
+      const likeBtn = node.querySelector<HTMLButtonElement>(
+        '[data-action="like"]'
+      )!;
+      likeBtn.dataset.id = item.id;
+
+      const likeIcon = likeBtn.querySelector<HTMLElement>('[data-like-icon]')!;
+      const likeCount = likeBtn.querySelector<HTMLElement>('[data-like-count]')!;
+
+      likeIcon.textContent = item.isLiked ? '♥' : '♡';
+      if (item.likes > 0) {
+        likeCount.textContent = String(item.likes);
+        likeCount.hidden = false;
+      }
+      if (item.isLiked) likeBtn.classList.add('is-liked');
+
+      if (!currentUser) {
+        likeBtn.hidden = true;
+      }
+
       const replyBtn = node.querySelector<HTMLButtonElement>(
         '[data-action="reply"]'
       )!;
       if (isReply || !currentUser) {
         replyBtn.hidden = true;
+      } else {
+        replyBtn.dataset.id = item.id;
+        replyBtn.dataset.name = item.user.name;
+      }
+
+      const editBtn = node.querySelector<HTMLButtonElement>(
+        '[data-action="edit"]'
+      )!;
+      if (item.canEdit) {
+        editBtn.hidden = false;
+        editBtn.dataset.id = item.id;
       }
 
       const deleteBtn = node.querySelector<HTMLButtonElement>(
@@ -660,35 +1046,33 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         if (item.parentId === null) {
           deleteBtn.dataset.root = '1';
         }
-      } else {
-        deleteBtn.hidden = true;
       }
 
-      if (item.isOwn) {
-        node.classList.add('is-own');
+      const reportBtn = node.querySelector<HTMLButtonElement>(
+        '[data-action="report"]'
+      )!;
+      if (currentUser && !item.isOwn) {
+        reportBtn.hidden = false;
+        reportBtn.dataset.id = item.id;
       }
 
-      if (item.isOwn) {
-        replyBtn.dataset.id = item.id;
-        replyBtn.dataset.name = item.user.name;
-      }
+      const editBox = node.querySelector<HTMLElement>('[data-edit-box]')!;
+      const editInput = node.querySelector<HTMLTextAreaElement>(
+        '[data-edit-input]'
+      )!;
+      editInput.value = item.body;
+      editBox.dataset.id = item.id;
 
       return node;
     }
 
-    function renderComments(items: CommentItem[]): void {
-      const roots = items.filter((c) => c.parentId === null);
-      const childrenOf: Record<string, CommentItem[]> = {};
-      for (const c of items) {
-        if (c.parentId) {
-          (childrenOf[c.parentId] ??= []).push(c);
-        }
-      }
+    function render(): void {
+      const visible = rootComments.slice(0, visibleRoots);
 
       listEl.innerHTML = '';
-      for (const r of roots) {
+      for (const r of visible) {
         const node = makeItem(r, false);
-        const replies = childrenOf[r.id] ?? [];
+        const replies = childrenMap[r.id] ?? [];
         if (replies.length > 0) {
           const repliesEl = node.querySelector<HTMLOListElement>(
             '[data-replies]'
@@ -701,7 +1085,18 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         listEl.appendChild(node);
       }
 
-      countEl.textContent = String(items.length);
+      countEl.textContent = String(allComments.length);
+      listEl.hidden = visible.length === 0;
+
+      const remaining = rootComments.length - visible.length;
+      if (remaining > 0) {
+        loadMoreWrap.hidden = false;
+        loadMoreBtn.textContent = `Muat lebih banyak (${remaining})`;
+      } else {
+        loadMoreWrap.hidden = true;
+      }
+
+      toolbar.hidden = rootComments.length === 0;
     }
 
     async function fetchComments(): Promise<void> {
@@ -715,17 +1110,34 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = (await res.json()) as { data: CommentItem[] };
-        const items = Array.isArray(json.data) ? json.data : [];
-        if (items.length === 0) {
-          statusEl.textContent =
-            'Belum ada komentar. Jadilah yang pertama.';
-          listEl.hidden = true;
-          countEl.textContent = '0';
-        } else {
-          renderComments(items);
-          statusEl.hidden = true;
-          listEl.hidden = false;
+        allComments = Array.isArray(json.data) ? json.data : [];
+
+        rootComments = allComments.filter((c) => c.parentId === null);
+        childrenMap = {};
+        for (const c of allComments) {
+          if (c.parentId) {
+            (childrenMap[c.parentId] ??= []).push(c);
+          }
         }
+
+        for (const key of Object.keys(childrenMap)) {
+          childrenMap[key]!.sort((a, b) => a.createdAt - b.createdAt);
+        }
+
+        rootComments = sortRoots(rootComments);
+        visibleRoots = Math.max(PAGE_SIZE, visibleRoots);
+
+        if (allComments.length === 0) {
+          statusEl.textContent = 'Belum ada komentar. Jadilah yang pertama.';
+          listEl.hidden = true;
+          loadMoreWrap.hidden = true;
+          toolbar.hidden = true;
+          countEl.textContent = '0';
+          return;
+        }
+
+        render();
+        statusEl.hidden = true;
       } catch (err) {
         console.error('[comments] fetch failed', err);
         statusEl.textContent = 'Gagal memuat komentar. Coba refresh.';
@@ -807,17 +1219,13 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       return Date.now() < cooldownUntil;
     }
 
-    function submitLabel(): string {
-      return replyTarget ? 'Balas' : 'Kirim';
-    }
-
     function updateSubmitState(): void {
       if (isCooldown()) return;
       const text = input.value.trim();
       const ok =
         !!currentUser && text.length >= 2 && !!turnstileToken && !submitting;
       submitBtn.disabled = !ok;
-      submitBtn.textContent = submitLabel();
+      submitBtn.textContent = replyTarget ? 'Balas' : 'Kirim';
     }
 
     function tickCooldown(): void {
@@ -891,9 +1299,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
     logoutBtn.addEventListener('click', async () => {
       const api = (window as any).__qimochiUserMenu;
-      if (api) {
-        api.close();
-      }
+      if (api) api.close();
       try {
         await fetch(`${API}/api/v1/auth/logout`, {
           method: 'POST',
@@ -913,6 +1319,23 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       setReplyTarget(null);
     });
 
+    sortSelect.addEventListener('change', () => {
+      const v = sortSelect.value as SortKey;
+      if (v !== 'oldest' && v !== 'newest' && v !== 'popular') return;
+      sortKey = v;
+      try {
+        localStorage.setItem(SORT_KEY, v);
+      } catch {}
+      rootComments = sortRoots(rootComments);
+      visibleRoots = PAGE_SIZE;
+      render();
+    });
+
+    loadMoreBtn.addEventListener('click', () => {
+      visibleRoots += PAGE_SIZE;
+      render();
+    });
+
     input.addEventListener('input', () => {
       const len = input.value.length;
       charCount.textContent = `${len} / 2000`;
@@ -922,6 +1345,49 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     listEl.addEventListener('click', async (e) => {
       const target = e.target as HTMLElement;
 
+      const likeBtn = target.closest<HTMLButtonElement>(
+        '[data-action="like"]'
+      );
+      if (likeBtn) {
+        const id = likeBtn.dataset.id;
+        if (!id) return;
+        if (!currentUser) return;
+        likeBtn.disabled = true;
+        try {
+          const res = await fetch(
+            `${API}/api/v1/comments/${encodeURIComponent(id)}/like`,
+            { method: 'POST', credentials: 'include' }
+          );
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = (await res.json()) as {
+            liked: boolean;
+            likes: number;
+          };
+
+          const item = allComments.find((c) => c.id === id);
+          if (item) {
+            item.isLiked = json.liked;
+            item.likes = json.likes;
+          }
+
+          const icon = likeBtn.querySelector<HTMLElement>('[data-like-icon]')!;
+          const count = likeBtn.querySelector<HTMLElement>('[data-like-count]')!;
+          icon.textContent = json.liked ? '♥' : '♡';
+          if (json.likes > 0) {
+            count.textContent = String(json.likes);
+            count.hidden = false;
+          } else {
+            count.hidden = true;
+          }
+          likeBtn.classList.toggle('is-liked', json.liked);
+        } catch (err) {
+          console.error('[comments] like failed', err);
+        } finally {
+          likeBtn.disabled = false;
+        }
+        return;
+      }
+
       const replyBtn = target.closest<HTMLButtonElement>(
         '[data-action="reply"]'
       );
@@ -930,6 +1396,98 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         const name = replyBtn.dataset.name;
         if (!id || !name) return;
         setReplyTarget({ id, name });
+        return;
+      }
+
+      const editBtn = target.closest<HTMLButtonElement>(
+        '[data-action="edit"]'
+      );
+      if (editBtn) {
+        const id = editBtn.dataset.id;
+        if (!id) return;
+        const itemNode = editBtn.closest<HTMLElement>('[data-comment-item]');
+        if (!itemNode) return;
+        const body = itemNode.querySelector<HTMLElement>('[data-body]')!;
+        const editBox = itemNode.querySelector<HTMLElement>('[data-edit-box]')!;
+        const editInput = itemNode.querySelector<HTMLTextAreaElement>(
+          '[data-edit-input]'
+        )!;
+        const actions = itemNode.querySelector<HTMLElement>('[data-actions]')!;
+        body.hidden = true;
+        actions.hidden = true;
+        editBox.hidden = false;
+        editInput.focus();
+        const len = editInput.value.length;
+        editInput.setSelectionRange(len, len);
+        return;
+      }
+
+      const cancelBtn = target.closest<HTMLButtonElement>(
+        '[data-edit-cancel]'
+      );
+      if (cancelBtn) {
+        const itemNode = cancelBtn.closest<HTMLElement>('[data-comment-item]');
+        if (!itemNode) return;
+        const body = itemNode.querySelector<HTMLElement>('[data-body]')!;
+        const editBox = itemNode.querySelector<HTMLElement>('[data-edit-box]')!;
+        const actions = itemNode.querySelector<HTMLElement>('[data-actions]')!;
+        const editStatus = itemNode.querySelector<HTMLElement>(
+          '[data-edit-status]'
+        )!;
+        body.hidden = false;
+        actions.hidden = false;
+        editBox.hidden = true;
+        editStatus.hidden = true;
+        return;
+      }
+
+      const saveBtn = target.closest<HTMLButtonElement>('[data-edit-save]');
+      if (saveBtn) {
+        const itemNode = saveBtn.closest<HTMLElement>('[data-comment-item]');
+        if (!itemNode) return;
+        const id = itemNode.dataset.id;
+        if (!id) return;
+        const editInput = itemNode.querySelector<HTMLTextAreaElement>(
+          '[data-edit-input]'
+        )!;
+        const editStatus = itemNode.querySelector<HTMLElement>(
+          '[data-edit-status]'
+        )!;
+        const text = editInput.value.trim();
+        if (text.length < 2) {
+          editStatus.textContent = 'Komentar minimal 2 karakter.';
+          editStatus.hidden = false;
+          return;
+        }
+        saveBtn.disabled = true;
+        editStatus.hidden = true;
+        try {
+          const res = await fetch(
+            `${API}/api/v1/comments/${encodeURIComponent(id)}`,
+            {
+              method: 'PATCH',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ body: text }),
+            }
+          );
+          if (!res.ok) {
+            const json = (await res.json()) as {
+              error?: { message: string };
+            };
+            editStatus.textContent =
+              json.error?.message ?? `Gagal (HTTP ${res.status})`;
+            editStatus.hidden = false;
+            return;
+          }
+          await fetchComments();
+        } catch (err) {
+          console.error('[comments] edit failed', err);
+          editStatus.textContent = 'Gagal menyimpan. Coba lagi.';
+          editStatus.hidden = false;
+        } finally {
+          saveBtn.disabled = false;
+        }
         return;
       }
 
@@ -958,6 +1516,39 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
           window.alert('Gagal menghapus komentar.');
           deleteBtn.disabled = false;
         }
+        return;
+      }
+
+      const reportBtn = target.closest<HTMLButtonElement>(
+        '[data-action="report"]'
+      );
+      if (reportBtn) {
+        const id = reportBtn.dataset.id;
+        if (!id) return;
+        const reason = window.prompt(
+          'Alasan melaporkan komentar ini? (spam, kasar, spoiler, dll)'
+        );
+        if (reason === null) return;
+        reportBtn.disabled = true;
+        try {
+          const res = await fetch(
+            `${API}/api/v1/comments/${encodeURIComponent(id)}/report`,
+            {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ reason: reason.trim() }),
+            }
+          );
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          window.alert('Laporan terkirim. Terima kasih.');
+        } catch (err) {
+          console.error('[comments] report failed', err);
+          window.alert('Gagal mengirim laporan.');
+        } finally {
+          reportBtn.disabled = false;
+        }
+        return;
       }
     });
 
