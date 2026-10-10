@@ -1655,7 +1655,18 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
           } catch {}
         }
         setReplyTarget(null);
-        setFormStatus('Komentar terkirim. Menunggu moderasi.', 'success');
+        const newStatus = json.status ?? 'pending';
+
+        if (newStatus === 'approved') {
+          setFormStatus('Komentar kamu langsung tampil.', 'success');
+        } else if (newStatus === 'rejected') {
+          const reason =
+            (json as { reason?: string }).reason ||
+            'Melanggar aturan komunitas.';
+          setFormStatus(`Komentar ditolak: ${reason}`, 'error');
+        } else {
+          setFormStatus('Komentar terkirim. Menunggu moderasi.', 'success');
+        }
         startCooldown();
         if (newId) highlightId = newId;
         await fetchComments();
