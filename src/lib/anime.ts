@@ -74,7 +74,7 @@ const HIDDEN_RELATIONS = new Set([
 ]);
 
 const episodeModules = import.meta.glob<{ default: EpisodeData[] }>(
-  '../data/anime/*/episodes/*.json',
+  '../data/anime/*/episodes/streams/*.json',
   { eager: true }
 );
 
@@ -87,7 +87,7 @@ const chunksBySlug: Record<string, ChunkRef[]> = {};
 
 for (const [path, mod] of Object.entries(episodeModules)) {
   const match = path.match(
-    /\/data\/anime\/([^/]+)\/episodes\/(\d+)-(\d+)\.json$/
+  /\/data\/anime\/([^/]+)\/episodes\/streams\/(\d+)-(\d+)\.json$/
   );
   if (!match) continue;
 
