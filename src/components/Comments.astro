@@ -114,6 +114,10 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     align-items: flex-start;
   }
 
+  .login-box[hidden] {
+    display: none;
+  }
+
   .login-hint {
     margin: 0;
     font-size: var(--fs-sm);
@@ -122,6 +126,10 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
   .gsi-slot {
     min-height: 40px;
+  }
+
+  .user-box[hidden] {
+    display: none;
   }
 
   .user-info {
@@ -171,6 +179,10 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     gap: var(--s-3);
   }
 
+  .comment-form[hidden] {
+    display: none;
+  }
+
   .comment-input {
     width: 100%;
     padding: var(--s-3);
@@ -214,6 +226,10 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     font-size: var(--fs-xs);
   }
 
+  .form-status[hidden] {
+    display: none;
+  }
+
   .form-status.is-error { color: var(--danger); }
   .form-status.is-success { color: var(--success); }
 
@@ -246,6 +262,10 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     color: var(--text-muted);
   }
 
+  .comments-status[hidden] {
+    display: none;
+  }
+
   .comment-list {
     display: flex;
     flex-direction: column;
@@ -253,6 +273,10 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     list-style: none;
     padding: 0;
     margin: 0;
+  }
+
+  .comment-list[hidden] {
+    display: none;
   }
 
   .comment-item {
@@ -315,6 +339,10 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     padding-left: var(--s-3);
     border-left: 2px solid var(--border);
   }
+
+  .comment-replies[hidden] {
+    display: none;
+  }
 </style>
 
 <script>
@@ -334,6 +362,8 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
   }
 
   (function () {
+    const CACHE_KEY = 'qimochi:user-cache';
+
     const root = document.querySelector<HTMLElement>('[data-comments]');
     if (!root) return;
 
@@ -367,6 +397,23 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     let turnstileToken = '';
     let submitting = false;
     let gsiRendered = false;
+
+    function readCache(): AuthUser | null {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as Partial<AuthUser> | null;
+        if (parsed && typeof parsed.sub === 'string' && typeof parsed.name === 'string') {
+          return {
+            sub: parsed.sub,
+            name: parsed.name,
+            email: typeof parsed.email === 'string' ? parsed.email : '',
+            picture: typeof parsed.picture === 'string' ? parsed.picture : null,
+          };
+        }
+      } catch {}
+      return null;
+    }
 
     function loadScript(src: string): Promise<void> {
       return new Promise((resolve, reject) => {
@@ -658,6 +705,15 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         updateSubmitState();
       }
     });
+
+    (function bootstrap(): void {
+      const cached = readCache();
+      if (cached) {
+        currentUser = cached;
+        applyUserState();
+        updateSubmitState();
+      }
+    })();
 
     (async () => {
       await Promise.allSettled([
