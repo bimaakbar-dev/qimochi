@@ -23,15 +23,24 @@ const {
 <style>
   .hero {
     background: var(--bg-footer);
-    margin-inline: calc(50% - 50vw);
+    width: 100%;
+    margin-inline: 0;
+    position: relative;
+    isolation: isolate;
+  
     margin-block-start: calc(var(--s-6) * -1);
     margin-block-end: var(--s-6);
   }
   
-  @supports (width: 100dvw) {
-    .hero {
-      margin-inline: calc(50% - 50dvw);
-    }
+  .hero::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset-block: 0;
+    inset-inline-start: 50%;
+    width: 100vw;
+    transform: translateX(-50%);
+    background: var(--bg-footer);
   }
 
   .hero-inner {
