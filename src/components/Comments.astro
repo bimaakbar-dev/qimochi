@@ -49,10 +49,22 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         aria-label="Batalkan balasan"
       >×</button>
     </div>
+
+    <div class="emoji-row" data-emoji-row>
+      {['👍', '❤️', '🔥', '😂', '😮', '😢', '🎉'].map((e) => (
+        <button
+          type="button"
+          class="emoji-btn"
+          data-emoji={e}
+          aria-label={`Sisipkan ${e}`}
+        >{e}</button>
+      ))}
+    </div>
+
     <textarea
       class="comment-input"
       data-input
-      placeholder="Tulis komentar… (mendukung **bold**, *italic*, `code`, > quote, ||spoiler||)"
+      placeholder="Tulis komentar… (**bold**, *italic*, `code`, ||spoiler||, @mention)"
       maxlength="2000"
       rows="4"
     ></textarea>
@@ -94,7 +106,10 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       <div class="comment-head">
         <img class="comment-avatar" data-avatar alt="" width="32" height="32" loading="lazy" />
         <div class="comment-meta">
-          <span class="comment-name" data-name></span>
+          <span class="comment-name-row">
+            <span class="comment-name" data-name></span>
+            <span class="comment-role" data-role hidden>Admin</span>
+          </span>
           <span class="comment-submeta">
             <time class="comment-time" data-time></time>
             <span class="comment-edited" data-edited hidden>· diedit</span>
@@ -281,6 +296,33 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     color: var(--accent-hover);
   }
 
+  .emoji-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1);
+  }
+
+  .emoji-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    background: var(--bg-surface);
+    border: 1px solid transparent;
+    border-radius: var(--r-sm);
+    font-size: 1.125rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .emoji-btn:hover {
+    border-color: var(--border);
+    transform: scale(1.05);
+  }
+
   .comment-input {
     width: 100%;
     padding: var(--s-3);
@@ -423,6 +465,12 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     padding: var(--s-4);
     background: var(--bg-elevated);
     border: 1px solid var(--border);
+    transition: box-shadow var(--t-base), border-color var(--t-base);
+  }
+
+  .comment-item.just-posted {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
   }
 
   .comment-head {
@@ -446,10 +494,35 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     min-width: 0;
   }
 
+  .comment-name-row {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-width: 0;
+  }
+
   .comment-name {
     font-size: var(--fs-sm);
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
+  }
+
+  .comment-role {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 5px;
+    background: var(--gold);
+    color: #1a1a1a;
+    font-size: 0.5625rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1;
+    border-radius: var(--r-sm);
+  }
+
+  .comment-role[hidden] {
+    display: none;
   }
 
   .comment-submeta {
@@ -537,6 +610,14 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
   .comment-body :global(a:hover) {
     color: var(--accent-hover);
+  }
+
+  .comment-body :global(.mention) {
+    color: var(--accent);
+    font-weight: var(--fw-semibold);
+    background: var(--accent-soft);
+    padding: 0 4px;
+    border-radius: var(--r-sm);
   }
 
   .comment-body :global(.spoiler) {
@@ -667,15 +748,15 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     color: var(--accent);
   }
 
-  .comment-action-btn.is-liked .like-icon {
-    transform: scale(1.15);
-  }
-
   .like-icon {
     display: inline-block;
     font-size: 1rem;
     line-height: 1;
     transition: transform var(--t-fast);
+  }
+
+  .comment-action-btn.is-liked .like-icon {
+    transform: scale(1.15);
   }
 
   .like-count {
@@ -756,6 +837,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     likes: number;
     isLiked: boolean;
     isOwn: boolean;
+    isAdmin: boolean;
     canEdit: boolean;
     user: { sub: string; name: string; picture: string | null };
   }
@@ -817,6 +899,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     let replyTarget: { id: string; name: string } | null = null;
     let cooldownUntil = 0;
     let cooldownTimer: number | null = null;
+    let highlightId: string | null = null;
 
     try {
       const saved = localStorage.getItem(SORT_KEY) as SortKey | null;
@@ -900,6 +983,11 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       s = s.replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
 
       s = s.replace(
+        /(^|\s)@([A-Za-z0-9_]{2,30})/g,
+        '$1<span class="mention">@$2</span>'
+      );
+
+      s = s.replace(
         /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
         '<a href="$2" target="_blank" rel="nofollow ugc noopener noreferrer">$1</a>'
       );
@@ -970,14 +1058,17 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       node.querySelector<HTMLElement>('[data-name]')!.textContent =
         item.user.name;
 
+      const roleEl = node.querySelector<HTMLElement>('[data-role]')!;
+      if (item.isAdmin) {
+        roleEl.hidden = false;
+      }
+
       const timeEl = node.querySelector<HTMLTimeElement>('[data-time]')!;
       timeEl.dateTime = new Date(item.createdAt * 1000).toISOString();
       timeEl.textContent = formatTime(item.createdAt);
 
       const editedEl = node.querySelector<HTMLElement>('[data-edited]')!;
-      if (item.editedAt) {
-        editedEl.hidden = false;
-      }
+      if (item.editedAt) editedEl.hidden = false;
 
       const bodyEl = node.querySelector<HTMLElement>('[data-body]')!;
       bodyEl.innerHTML = renderMarkdown(item.body);
@@ -1014,10 +1105,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         likeCount.hidden = false;
       }
       if (item.isLiked) likeBtn.classList.add('is-liked');
-
-      if (!currentUser) {
-        likeBtn.hidden = true;
-      }
+      if (!currentUser) likeBtn.hidden = true;
 
       const replyBtn = node.querySelector<HTMLButtonElement>(
         '[data-action="reply"]'
@@ -1043,9 +1131,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       if (item.isOwn) {
         deleteBtn.hidden = false;
         deleteBtn.dataset.id = item.id;
-        if (item.parentId === null) {
-          deleteBtn.dataset.root = '1';
-        }
+        if (item.parentId === null) deleteBtn.dataset.root = '1';
       }
 
       const reportBtn = node.querySelector<HTMLButtonElement>(
@@ -1097,6 +1183,20 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       }
 
       toolbar.hidden = rootComments.length === 0;
+
+      if (highlightId) {
+        const target = listEl.querySelector<HTMLElement>(
+          `[data-id="${highlightId}"]`
+        );
+        if (target) {
+          target.classList.add('just-posted');
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          window.setTimeout(() => {
+            target.classList.remove('just-posted');
+          }, 2500);
+          highlightId = null;
+        }
+      }
     }
 
     async function fetchComments(): Promise<void> {
@@ -1315,9 +1415,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       );
     });
 
-    replyCancel.addEventListener('click', () => {
-      setReplyTarget(null);
-    });
+    replyCancel.addEventListener('click', () => setReplyTarget(null));
 
     sortSelect.addEventListener('change', () => {
       const v = sortSelect.value as SortKey;
@@ -1342,16 +1440,31 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       updateSubmitState();
     });
 
+    root.querySelectorAll<HTMLButtonElement>('[data-emoji]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const emoji = btn.dataset.emoji || '';
+        if (!emoji) return;
+        const start = input.selectionStart ?? input.value.length;
+        const end = input.selectionEnd ?? start;
+        const before = input.value.slice(0, start);
+        const after = input.value.slice(end);
+        input.value = before + emoji + after;
+        const pos = start + emoji.length;
+        input.setSelectionRange(pos, pos);
+        input.focus();
+        const len = input.value.length;
+        charCount.textContent = `${len} / 2000`;
+        updateSubmitState();
+      });
+    });
+
     listEl.addEventListener('click', async (e) => {
       const target = e.target as HTMLElement;
 
-      const likeBtn = target.closest<HTMLButtonElement>(
-        '[data-action="like"]'
-      );
+      const likeBtn = target.closest<HTMLButtonElement>('[data-action="like"]');
       if (likeBtn) {
         const id = likeBtn.dataset.id;
-        if (!id) return;
-        if (!currentUser) return;
+        if (!id || !currentUser) return;
         likeBtn.disabled = true;
         try {
           const res = await fetch(
@@ -1359,10 +1472,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
             { method: 'POST', credentials: 'include' }
           );
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const json = (await res.json()) as {
-            liked: boolean;
-            likes: number;
-          };
+          const json = (await res.json()) as { liked: boolean; likes: number };
 
           const item = allComments.find((c) => c.id === id);
           if (item) {
@@ -1388,9 +1498,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         return;
       }
 
-      const replyBtn = target.closest<HTMLButtonElement>(
-        '[data-action="reply"]'
-      );
+      const replyBtn = target.closest<HTMLButtonElement>('[data-action="reply"]');
       if (replyBtn) {
         const id = replyBtn.dataset.id;
         const name = replyBtn.dataset.name;
@@ -1399,12 +1507,8 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         return;
       }
 
-      const editBtn = target.closest<HTMLButtonElement>(
-        '[data-action="edit"]'
-      );
+      const editBtn = target.closest<HTMLButtonElement>('[data-action="edit"]');
       if (editBtn) {
-        const id = editBtn.dataset.id;
-        if (!id) return;
         const itemNode = editBtn.closest<HTMLElement>('[data-comment-item]');
         if (!itemNode) return;
         const body = itemNode.querySelector<HTMLElement>('[data-body]')!;
@@ -1422,9 +1526,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         return;
       }
 
-      const cancelBtn = target.closest<HTMLButtonElement>(
-        '[data-edit-cancel]'
-      );
+      const cancelBtn = target.closest<HTMLButtonElement>('[data-edit-cancel]');
       if (cancelBtn) {
         const itemNode = cancelBtn.closest<HTMLElement>('[data-comment-item]');
         if (!itemNode) return;
@@ -1586,6 +1688,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         const json = (await res.json()) as {
           ok?: boolean;
           status?: string;
+          data?: { id: string };
           error?: { code: string; message: string };
         };
 
@@ -1595,6 +1698,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
           return;
         }
 
+        const newId = json.data?.id ?? null;
         input.value = '';
         charCount.textContent = '0 / 2000';
         turnstileToken = '';
@@ -1606,6 +1710,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
         setReplyTarget(null);
         setFormStatus('Komentar terkirim. Menunggu moderasi.', 'success');
         startCooldown();
+        if (newId) highlightId = newId;
         await fetchComments();
       } catch (err) {
         console.error('[comments] submit failed', err);
