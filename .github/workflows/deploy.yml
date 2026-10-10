@@ -3,6 +3,8 @@ name: Deploy to Cloudflare Pages
 on:
   push:
     branches: [main]
+  repository_dispatch:
+    types: [data-updated]
   workflow_dispatch:
 
 jobs:
@@ -13,8 +15,35 @@ jobs:
       deployments: write
 
     steps:
-      - name: Checkout
+      - name: Checkout qimochi
         uses: actions/checkout@v7
+
+      - name: Checkout yukio-data
+        uses: actions/checkout@v7
+        with:
+          repository: bimaakbar-dev/yukio-data
+          path: _data
+
+      - name: Inject data
+        run: |
+          rm -rf src/content/anime
+          rm -rf src/data/anime
+          rm -rf src/data/actors
+          mkdir -p src/content/anime
+          mkdir -p src/data
+          if [ -d _data/src/content/anime ]; then
+            cp -r _data/src/content/anime/. src/content/anime/
+          fi
+          if [ -d _data/data/anime ]; then
+            cp -r _data/data/anime src/data/anime
+          fi
+          if [ -d _data/data/actors ]; then
+            cp -r _data/data/actors src/data/actors
+          fi
+          echo "=== src/content/anime ==="
+          ls -1 src/content/anime/ | wc -l
+          echo "=== src/data/anime ==="
+          ls -1 src/data/anime/ 2>/dev/null | wc -l
 
       - name: Setup Node
         uses: actions/setup-node@v7
