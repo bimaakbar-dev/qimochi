@@ -1,5 +1,5 @@
 ---
-import { render } from 'astro:content';
+import { render, getEntry } from 'astro:content';
 import { getAllAnime } from '~/lib/anime';
 
 import { SITE, URLS, ADS, STATUS_VARIANT, type Status } from '~/constants';
@@ -23,7 +23,10 @@ export async function getStaticPaths() {
 
 const { anime } = Astro.props;
 const { data } = anime;
-const { Content } = await render(anime);
+
+const entry = await getEntry('anime', anime.id);
+if (!entry) return Astro.redirect('/404/');
+const { Content } = await render(entry);
 
 const episodeNumbers = data.episodes
   .map((e) => e.number)

@@ -81,11 +81,11 @@ const encodedSrc = encodeSrc(src);
 
     function showError() {
       clearTimer();
-      errorBox.hidden = false;
+      if (errorBox) errorBox.hidden = false;
     }
 
     function hideError() {
-      errorBox.hidden = true;
+      if (errorBox) errorBox.hidden = true;
     }
 
     function armTimer() {

@@ -1255,7 +1255,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     function mountTurnstile(): void {
       if (!SITE_KEY) return;
       if (turnstileWidgetId) return;
-      const container = root.querySelector<HTMLElement>('[data-turnstile]');
+      const container = root!.querySelector<HTMLElement>('[data-turnstile]');
       if (!container) return;
       const ts = (window as any).turnstile;
       if (!ts) return;

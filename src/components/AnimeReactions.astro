@@ -159,7 +159,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     function buildButtons(): void {
       for (const btn of Object.values(buttons)) btn.remove();
       buttons = {};
-      root.innerHTML = '';
+      root!.innerHTML = '';
 
       for (const emoji of allowed) {
         const btn = document.createElement('button');
@@ -172,7 +172,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
           <span class="reaction-count" data-count data-empty="true">0</span>
         `;
         btn.addEventListener('click', () => toggle(emoji));
-        root.appendChild(btn);
+        root!.appendChild(btn);
         buttons[emoji] = btn;
       }
     }

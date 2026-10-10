@@ -92,7 +92,7 @@ function encodeUrl(s: string): string {
       if (!enc) return;
       const real = decode(enc);
       if (!real) return;
-      iframe.src = real;
+      if (iframe) iframe.src = real;
     }
 
     const savedId = localStorage.getItem('qimochi:stream');

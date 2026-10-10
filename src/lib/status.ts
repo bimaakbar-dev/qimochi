@@ -29,12 +29,21 @@ export async function getStatusData(slug: StatusSlug) {
   return { status, anime, totalPages };
 }
 
+interface StatusPath {
+  params: { page: string | undefined };
+  props: {
+    anime: HydratedAnime[];
+    totalPages: number;
+    pageNumber: number;
+  };
+}
+
 export function buildStatusPaths(
-  slug: StatusSlug,
+  _slug: StatusSlug,
   anime: HydratedAnime[],
   totalPages: number
-) {
-  const paths = [
+): StatusPath[] {
+  const paths: StatusPath[] = [
     {
       params: { page: undefined },
       props: { anime, totalPages, pageNumber: 1 },
