@@ -8,46 +8,66 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 ---
 
 <div
-  class="rating"
+  class="rating-wrap"
   data-rating-widget
   data-anime={animeId}
   data-api={apiBase}
 >
-  <span class="rating-stars" data-stars role="radiogroup" aria-label="Rating">
-    {[1, 2, 3, 4, 5].map((n) => (
-      <button
-        type="button"
-        class="rating-star"
-        data-star={n}
-        role="radio"
-        aria-checked="false"
-        aria-label={`${n} bintang`}
-        disabled
-      >★</button>
+  <div class="rating">
+    <span class="rating-stars" data-stars role="radiogroup" aria-label="Rating">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          type="button"
+          class="rating-star"
+          data-star={n}
+          role="radio"
+          aria-checked="false"
+          aria-label={`${n} bintang`}
+          disabled
+        >★</button>
+      ))}
+    </span>
+
+    <span class="rating-divider" aria-hidden="true">·</span>
+
+    <button type="button" class="rating-score" data-score-btn disabled>
+      <span class="rating-average" data-average>—</span>
+      <span class="rating-scale">/10</span>
+    </button>
+
+    <span class="rating-votes" data-votes></span>
+
+    <span class="rating-user" data-user hidden></span>
+
+    <button
+      type="button"
+      class="rating-clear"
+      data-clear
+      hidden
+      aria-label="Hapus rating"
+    >×</button>
+  </div>
+
+  <div class="rating-dist" data-dist hidden>
+    {[5, 4, 3, 2, 1].map((n) => (
+      <div class="rating-dist-row">
+        <span class="rating-dist-label">{n}★</span>
+        <span class="rating-dist-bar">
+          <span class="rating-dist-fill" data-fill={n} style="width: 0%"></span>
+        </span>
+        <span class="rating-dist-count" data-count={n}>0</span>
+      </div>
     ))}
-  </span>
-
-  <span class="rating-divider" aria-hidden="true">·</span>
-
-  <span class="rating-score" data-score>
-    <span class="rating-average" data-average>—</span>
-    <span class="rating-scale">/10</span>
-  </span>
-
-  <span class="rating-votes" data-votes></span>
-
-  <span class="rating-user" data-user hidden></span>
-
-  <button
-    type="button"
-    class="rating-clear"
-    data-clear
-    hidden
-    aria-label="Hapus rating"
-  >×</button>
+  </div>
 </div>
 
 <style>
+  .rating-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
   .rating {
     display: inline-flex;
     flex-wrap: wrap;
@@ -105,9 +125,22 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     display: inline-flex;
     align-items: baseline;
     gap: 1px;
+    padding: 0;
+    background: none;
+    border: none;
     font-variant-numeric: tabular-nums;
     color: var(--text-primary);
     font-weight: var(--fw-semibold);
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .rating-score:disabled {
+    cursor: default;
+  }
+
+  .rating-score:not(:disabled):hover .rating-average {
+    color: var(--accent);
   }
 
   .rating-average {
@@ -164,6 +197,53 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
   .rating-clear[hidden] {
     display: none;
   }
+
+  .rating-dist {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--s-2) 0 0;
+    border-top: 1px dashed var(--border);
+    max-width: 20rem;
+  }
+
+  .rating-dist[hidden] {
+    display: none;
+  }
+
+  .rating-dist-row {
+    display: grid;
+    grid-template-columns: 1.75rem 1fr 2rem;
+    align-items: center;
+    gap: var(--s-2);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  .rating-dist-label {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .rating-dist-bar {
+    display: block;
+    height: 6px;
+    background: var(--bg-surface);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+  }
+
+  .rating-dist-fill {
+    display: block;
+    height: 100%;
+    background: var(--gold);
+    transition: width var(--t-base);
+  }
+
+  .rating-dist-count {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
 </style>
 
 <script>
@@ -185,14 +265,23 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     const stars = Array.from(
       root.querySelectorAll<HTMLButtonElement>('[data-star]')
     );
+    const scoreBtn = root.querySelector<HTMLButtonElement>('[data-score-btn]')!;
     const averageEl = root.querySelector<HTMLElement>('[data-average]')!;
     const votesEl = root.querySelector<HTMLElement>('[data-votes]')!;
     const userEl = root.querySelector<HTMLElement>('[data-user]')!;
     const clearBtn = root.querySelector<HTMLButtonElement>('[data-clear]')!;
+    const distEl = root.querySelector<HTMLElement>('[data-dist]')!;
+    const fills: Record<number, HTMLElement> = {};
+    const counts: Record<number, HTMLElement> = {};
+    for (let n = 1; n <= 5; n++) {
+      fills[n] = root.querySelector<HTMLElement>(`[data-fill="${n}"]`)!;
+      counts[n] = root.querySelector<HTMLElement>(`[data-count="${n}"]`)!;
+    }
 
     let userScore: number | null = null;
     let currentUser: AuthUser | null = null;
     let submitting = false;
+    let distOpen = false;
 
     function formatAverage(avg: number): string {
       if (!avg) return '—';
@@ -218,9 +307,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 
     function setInteractive(): void {
       const canRate = !!currentUser;
-      for (const s of stars) {
-        s.disabled = !canRate || submitting;
-      }
+      for (const s of stars) s.disabled = !canRate || submitting;
       clearBtn.hidden = !(currentUser && userScore !== null);
     }
 
@@ -236,6 +323,44 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
       updateAria();
     }
 
+    function renderDistribution(dist: Record<number, number>): void {
+      let total = 0;
+      for (let n = 1; n <= 5; n++) total += dist[n] || 0;
+
+      if (total === 0) {
+        distEl.hidden = true;
+        return;
+      }
+
+      let maxCount = 0;
+      for (let n = 1; n <= 5; n++) {
+        if (dist[n] > maxCount) maxCount = dist[n];
+      }
+
+      for (let n = 1; n <= 5; n++) {
+        const c = dist[n] || 0;
+        counts[n].textContent = String(c);
+        const pct = maxCount > 0 ? (c / maxCount) * 100 : 0;
+        fills[n].style.width = `${pct}%`;
+      }
+
+      if (distOpen) distEl.hidden = false;
+    }
+
+    function toggleDist(): void {
+      if (distEl.hidden && !distOpen) {
+        distOpen = true;
+        // only show if there is data
+        const anyCount = [1, 2, 3, 4, 5].some(
+          (n) => Number(counts[n].textContent || '0') > 0
+        );
+        if (anyCount) distEl.hidden = false;
+      } else {
+        distOpen = false;
+        distEl.hidden = true;
+      }
+    }
+
     async function fetchRating(): Promise<void> {
       try {
         const res = await fetch(
@@ -249,6 +374,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
             votes: number;
             userScore: number | null;
             canRate: boolean;
+            distribution: Record<number, number>;
           };
         };
         const d = json.data;
@@ -257,11 +383,14 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
         userScore = d.userScore;
         renderUserScore();
         setInteractive();
+        scoreBtn.disabled = d.votes === 0;
+        renderDistribution(d.distribution || {});
       } catch (err) {
         console.error('[rating] fetch failed', err);
         averageEl.textContent = '—';
         votesEl.textContent = '';
         setInteractive();
+        scoreBtn.disabled = true;
       }
     }
 
@@ -293,6 +422,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
             average: number;
             votes: number;
             userScore: number | null;
+            distribution: Record<number, number>;
           };
         };
         const d = json.data;
@@ -300,6 +430,8 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
         votesEl.textContent = d.votes ? `(${d.votes})` : '';
         userScore = d.userScore;
         renderUserScore();
+        scoreBtn.disabled = d.votes === 0;
+        renderDistribution(d.distribution || {});
       } catch (err) {
         console.error('[rating] submit failed', err);
       } finally {
@@ -334,6 +466,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
             average: number;
             votes: number;
             userScore: number | null;
+            distribution: Record<number, number>;
           };
         };
         const d = json.data;
@@ -341,6 +474,8 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
         votesEl.textContent = d.votes ? `(${d.votes})` : '';
         userScore = null;
         renderUserScore();
+        scoreBtn.disabled = d.votes === 0;
+        renderDistribution(d.distribution || {});
       } catch (err) {
         console.error('[rating] clear failed', err);
       } finally {
@@ -366,6 +501,10 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     }
 
     clearBtn.addEventListener('click', () => clearRating());
+    scoreBtn.addEventListener('click', () => {
+      if (scoreBtn.disabled) return;
+      toggleDist();
+    });
 
     function readCache(): AuthUser | null {
       try {
