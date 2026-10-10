@@ -1,0 +1,284 @@
+---
+interface Props {
+  animeId: string;
+}
+
+const { animeId } = Astro.props;
+const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
+---
+
+<div
+  class="reaction-bar"
+  data-reaction-bar
+  data-anime={animeId}
+  data-api={apiBase}
+>
+  <span class="reaction-hint" data-hint>Reaksi:</span>
+</div>
+
+<style>
+  .reaction-bar {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  .reaction-hint {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: var(--fw-semibold);
+  }
+
+  .reaction-hint[hidden] {
+    display: none;
+  }
+
+  .reaction-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+    padding: var(--s-1) var(--s-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-full);
+    font-size: var(--fs-sm);
+    line-height: 1;
+    cursor: pointer;
+    transition: all var(--t-fast);
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .reaction-btn:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .reaction-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+  }
+
+  .reaction-emoji {
+    font-size: 1rem;
+    line-height: 1;
+    display: inline-block;
+  }
+
+  .reaction-count {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    color: var(--text-muted);
+    min-width: 0.75rem;
+    text-align: center;
+  }
+
+  .reaction-count[data-empty='true'] {
+    display: none;
+  }
+
+  .reaction-btn.is-active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .reaction-btn.is-active .reaction-count {
+    color: var(--accent);
+  }
+</style>
+
+<script>
+  interface AuthUser {
+    sub: string;
+    name: string;
+    email: string;
+    picture: string | null;
+  }
+
+  (function () {
+    const root = document.querySelector<HTMLElement>('[data-reaction-bar]');
+    if (!root) return;
+
+    const ANIME_ID = root.dataset.anime || '';
+    const API = (root.dataset.api || '').replace(/\/$/, '');
+    if (!ANIME_ID || !API) return;
+
+    const hint = root.querySelector<HTMLElement>('[data-hint]')!;
+
+    let currentUser: AuthUser | null = null;
+    let allowed: string[] = ['👍', '❤️', '🔥', '😂', '😮'];
+    let counts: Record<string, number> = {};
+    let userReactions: Set<string> = new Set();
+    let canReact = false;
+    let submitting = false;
+    let buttons: Record<string, HTMLButtonElement> = {};
+
+    function buildButtons(): void {
+      for (const btn of Object.values(buttons)) btn.remove();
+      buttons = {};
+
+      for (const emoji of allowed) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'reaction-btn';
+        btn.dataset.emoji = emoji;
+        btn.setAttribute('aria-label', `Reaksi ${emoji}`);
+        btn.innerHTML = `
+          <span class="reaction-emoji">${emoji}</span>
+          <span class="reaction-count" data-count>0</span>
+        `;
+        btn.addEventListener('click', () => toggle(emoji));
+        root.appendChild(btn);
+        buttons[emoji] = btn;
+      }
+    }
+
+    function applyState(): void {
+      for (const emoji of allowed) {
+        const btn = buttons[emoji];
+        if (!btn) continue;
+        const countEl = btn.querySelector<HTMLElement>('[data-count]')!;
+        const count = counts[emoji] ?? 0;
+        countEl.textContent = String(count);
+        countEl.dataset.empty = count === 0 ? 'true' : 'false';
+
+        const active = userReactions.has(emoji);
+        btn.classList.toggle('is-active', active);
+
+        const disabled = !canReact || submitting;
+        btn.disabled = disabled;
+      }
+
+      hint.hidden = allowed.length === 0;
+    }
+
+    async function fetchReactions(): Promise<void> {
+      try {
+        const res = await fetch(
+          `${API}/api/v1/reactions/${encodeURIComponent(ANIME_ID)}`,
+          { credentials: 'include' }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as {
+          data: {
+            counts: Record<string, number>;
+            userReactions: string[];
+            canReact: boolean;
+            allowed: string[];
+          };
+        };
+        const d = json.data;
+        counts = d.counts || {};
+        userReactions = new Set(d.userReactions || []);
+        canReact = d.canReact;
+        if (Array.isArray(d.allowed) && d.allowed.length) {
+          allowed = d.allowed;
+        }
+        if (Object.keys(buttons).length !== allowed.length) {
+          buildButtons();
+        }
+        applyState();
+      } catch (err) {
+        console.error('[reaction] fetch failed', err);
+        hint.textContent = 'Gagal memuat reaksi.';
+      }
+    }
+
+    async function toggle(emoji: string): Promise<void> {
+      if (!canReact || submitting) return;
+      submitting = true;
+      applyState();
+
+      try {
+        const res = await fetch(
+          `${API}/api/v1/reactions/${encodeURIComponent(ANIME_ID)}`,
+          {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ emoji }),
+          }
+        );
+
+        if (res.status === 401) {
+          canReact = false;
+          submitting = false;
+          applyState();
+          return;
+        }
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as {
+          data: {
+            counts: Record<string, number>;
+            userReactions: string[];
+          };
+        };
+        counts = json.data.counts || {};
+        userReactions = new Set(json.data.userReactions || []);
+      } catch (err) {
+        console.error('[reaction] toggle failed', err);
+      } finally {
+        submitting = false;
+        applyState();
+      }
+    }
+
+    function readCache(): AuthUser | null {
+      try {
+        const raw = localStorage.getItem('qimochi:user-cache');
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as Partial<AuthUser> | null;
+        if (
+          parsed &&
+          typeof parsed.sub === 'string' &&
+          typeof parsed.name === 'string'
+        ) {
+          return {
+            sub: parsed.sub,
+            name: parsed.name,
+            email: typeof parsed.email === 'string' ? parsed.email : '',
+            picture:
+              typeof parsed.picture === 'string' ? parsed.picture : null,
+          };
+        }
+      } catch {}
+      return null;
+    }
+
+    function onAuthChanged(e: Event): void {
+      const detail = (e as CustomEvent<{ user: AuthUser | null }>).detail;
+      if (!detail) return;
+      const same =
+        (detail.user?.sub ?? null) === (currentUser?.sub ?? null);
+      if (same) return;
+      currentUser = detail.user;
+      fetchReactions();
+    }
+
+    document.addEventListener('qimochi:auth-changed', onAuthChanged);
+
+    (function bootstrap(): void {
+      currentUser = readCache();
+      buildButtons();
+    })();
+
+    fetchReactions();
+
+    (async () => {
+      const menu = (window as any).__qimochiUserMenu;
+      if (menu) {
+        const u = menu.getUser();
+        if ((u?.sub ?? null) !== (currentUser?.sub ?? null)) {
+          currentUser = u ?? null;
+          fetchReactions();
+        }
+      }
+    })();
+  })();
+</script>
