@@ -12,6 +12,7 @@ import ShareButton from '~/components/ShareButton.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
 import Comments from '~/components/Comments.astro';
 import LinkButton from '~/user-components/LinkButton.astro';
+import SectionLabel from '~/components/SectionLabel.astro';
 
 export async function getStaticPaths() {
   const allAnime = await getAllAnime();
@@ -153,7 +154,7 @@ const pageDescription = [
     <section class="content">
       <div class="content__grid" data-meta>
         <div class="synopsis">
-          <h2 class="section-title">Sinopsis</h2>
+          <SectionLabel>Sinopsis</SectionLabel>
           <div
             class="synopsis__body markdown markdown--prose"
             data-synopsis-body
@@ -170,7 +171,7 @@ const pageDescription = [
         </div>
 
         <div class="info">
-          <h2 class="section-title">Informasi</h2>
+          <SectionLabel as="h3" size="md">Detail anime</SectionLabel>
           <dl class="info__list">
             <div class="info__item">
               <dt>Tipe</dt>
@@ -218,8 +219,6 @@ const pageDescription = [
         </div>
       </div>
     </section>
-
-    <!-- SECTION 3 — MORE -->
     <section class="more">
       <EpisodeList
         slug={anime.id}
@@ -478,15 +477,7 @@ const pageDescription = [
     grid-template-columns: 1fr;
     gap: var(--s-6);
   }
-
-  .section-title {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
-    color: var(--text-primary);
-    text-align: start;
-    margin: 0 0 var(--s-3);
-  }
-
+  
   .synopsis {
     display: flex;
     flex-direction: column;
@@ -568,8 +559,6 @@ const pageDescription = [
     min-width: 0;
     overflow-wrap: anywhere;
   }
-
-  /* SECTION 3 — MORE */
   .more {
     max-width: var(--content-max-desktop);
     width: 100%;
