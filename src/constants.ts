@@ -16,27 +16,20 @@ export const NAV_LINKS = [
   { label: 'Blog',      href: '/blog/' },
 ] as const;
 
-// ────────────────────────────────────────────────────────
-// STATUS
-// ────────────────────────────────────────────────────────
-
-// Raw — match schema anime (baseline yukionime)
 export const RAW_STATUSES = [
   'airing', 'finished', 'upcoming', 'hiatus', 'cancelled',
 ] as const;
 export type RawStatus = typeof RAW_STATUSES[number];
 
-// Display — yang dilihat user
 export const STATUSES = ['Ongoing', 'Completed', 'Hiatus', 'Upcoming'] as const;
 export type Status = typeof STATUSES[number];
 
-// Raw → Display
 export const STATUS_LABEL: Record<RawStatus, Status> = {
   airing:    'Ongoing',
   finished:  'Completed',
   upcoming:  'Upcoming',
   hiatus:    'Hiatus',
-  cancelled: 'Completed',   // skip cancel dulu — sesuai keputusan
+  cancelled: 'Completed',
 };
 
 export const STATUS_VARIANT: Record<Status, 'success' | 'default' | 'warning' | 'accent'> = {
@@ -46,21 +39,14 @@ export const STATUS_VARIANT: Record<Status, 'success' | 'default' | 'warning' | 
   'Upcoming':  'default',
 };
 
-// ────────────────────────────────────────────────────────
-// TYPE
-// ────────────────────────────────────────────────────────
-
-// Raw — match schema anime
 export const RAW_TYPES = [
   'TV', 'Movie', 'OVA', 'ONA', 'Special', 'Music', 'Unknown',
 ] as const;
 export type RawType = typeof RAW_TYPES[number];
 
-// Display
 export const ANIME_TYPES = ['TV', 'Movie', 'OVA', 'ONA', 'Special'] as const;
 export type AnimeType = typeof ANIME_TYPES[number];
 
-// Raw → Display
 export const TYPE_LABEL: Record<RawType, AnimeType> = {
   TV:      'TV',
   Movie:   'Movie',
@@ -71,9 +57,30 @@ export const TYPE_LABEL: Record<RawType, AnimeType> = {
   Unknown: 'TV',
 };
 
-// ────────────────────────────────────────────────────────
-// LAIN-LAIN
-// ────────────────────────────────────────────────────────
+export const SOURCES = [
+  'original', 'manga', 'light_novel', 'visual_novel', 'game',
+  'web_manga', 'web_novel', 'novel', 'book', 'picture_book',
+  'radio', 'music', '4_koma_manga', 'card_game', 'other',
+] as const;
+export type Source = typeof SOURCES[number];
+
+export const SOURCE_LABEL: Record<Source, string> = {
+  original:       'Original',
+  manga:          'Manga',
+  light_novel:    'Light Novel',
+  visual_novel:   'Visual Novel',
+  game:           'Game',
+  web_manga:      'Web Manga',
+  web_novel:      'Web Novel',
+  novel:          'Novel',
+  book:           'Book',
+  picture_book:   'Picture Book',
+  radio:          'Radio',
+  music:          'Music',
+  '4_koma_manga': '4-Koma Manga',
+  card_game:      'Card Game',
+  other:          'Other',
+};
 
 export const PER_PAGE = 12;
 
