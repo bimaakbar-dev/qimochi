@@ -1,6 +1,7 @@
 ---
 import { getAllAnime } from '~/lib/anime';
 import { URLS } from '~/constants';
+import SectionLabel from './SectionLabel.astro';
 
 const RELATION_LABEL: Record<string, string> = {
   sequel: 'Sekuel',
@@ -55,7 +56,7 @@ function slugToTitle(slug: string): string {
 ---
 
 <section class="section">
-  <h2 class="section-title">{title}</h2>
+  <SectionLabel>{title}</SectionLabel>
   <div class="franchise-grid">
     {filtered.map((f) => {
       const anime = animeMap.get(f.slug);
@@ -105,14 +106,6 @@ function slugToTitle(slug: string): string {
     flex-direction: column;
     gap: var(--s-3);
   }
-  .section-title {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
-    color: var(--text-primary);
-    text-align: start;
-    margin: 0;
-  }
-
   .franchise-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -173,7 +166,7 @@ function slugToTitle(slug: string): string {
     line-height: var(--lh-tight);
     margin: 0;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
