@@ -1,5 +1,4 @@
 ---
-import Icon from '~/user-components/Icons.astro';
 import { URLS } from '~/constants';
 
 interface Props {
@@ -13,108 +12,162 @@ const {
   episodes = [],
   currentEpisode = null,
 } = Astro.props;
+
+const total = episodes.length;
+const showFilter = total > 30;
 ---
 
-<details class="episode-list" open>
-  <summary>
-    <span class="label">Episode</span>
-    <span class="count">({episodes.length})</span>
-    <span class="chevron" aria-hidden="true">
-      <Icon name="chevron-down" size={14} />
-    </span>
-  </summary>
+<section class="section" data-episode-list>
+  <h2 class="section-title">Episode ({total})</h2>
 
-  <ol class="episode-items">
+  {showFilter && (
+    <input
+      type="search"
+      class="episode-filter__input"
+      data-episode-filter
+      placeholder="Cari nomor episode..."
+      inputmode="numeric"
+      autocomplete="off"
+      aria-label="Cari nomor episode"
+    />
+  )}
+
+  <div class="episode-grid" data-episode-items>
     {episodes.map((num) => {
       const isActive = num === currentEpisode;
       return (
-        <li>
-          <a
-            href={URLS.watch(slug, num)}
-            class:list={['episode-item', { active: isActive }]}
-            aria-current={isActive ? 'page' : undefined}
-          >
-            <span class="num">{String(num).padStart(2, '0')}</span>
-          </a>
-        </li>
+        <a
+          href={URLS.watch(slug, num)}
+          class:list={['episode-btn', { active: isActive }]}
+          aria-current={isActive ? 'page' : undefined}
+          data-episode-item
+          data-number={String(num)}
+        >
+          {String(num).padStart(2, '0')}
+        </a>
       );
     })}
-  </ol>
-</details>
+  </div>
+
+  <p class="episode-empty" data-episode-empty hidden>
+    Tidak ada episode yang cocok.
+  </p>
+</section>
+
+<script>
+  (function () {
+    const root = document.querySelector<HTMLElement>('[data-episode-list]');
+    if (!root) return;
+
+    const input = root.querySelector<HTMLInputElement>('[data-episode-filter]');
+    const items = Array.from(root.querySelectorAll<HTMLElement>('[data-episode-item]'));
+    const empty = root.querySelector<HTMLElement>('[data-episode-empty]');
+
+    const active = root.querySelector<HTMLElement>('.episode-btn.active');
+    if (active) {
+      requestAnimationFrame(() => {
+        active.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+      });
+    }
+
+    if (input) {
+      input.addEventListener('input', () => {
+        const q = input.value.trim();
+        let visible = 0;
+        if (!q) {
+          for (const el of items) el.hidden = false;
+          if (empty) empty.hidden = true;
+          return;
+        }
+        for (const el of items) {
+          const num = el.dataset.number ?? '';
+          const match = num.includes(q);
+          el.hidden = !match;
+          if (match) visible++;
+        }
+        if (empty) empty.hidden = visible > 0;
+      });
+    }
+  })();
+</script>
 
 <style>
-  .episode-list {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    padding: var(--s-4);
-  }
-
-  .episode-list summary {
+  .section {
     display: flex;
-    align-items: center;
-    gap: var(--s-2);
-    cursor: pointer;
-    font-weight: var(--fw-medium);
-    font-size: var(--fs-sm);
-    list-style: none;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+  .section-title {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+    text-align: center;
+    margin: 0;
   }
 
-  .episode-list summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .episode-list summary .count {
-    color: var(--text-muted);
-    font-weight: var(--fw-normal);
-  }
-
-  .episode-list summary .chevron {
-    display: inline-flex;
-    align-items: center;
-    margin-left: auto;
-    color: var(--text-muted);
-    transition: transform var(--t-base);
-  }
-
-  .episode-list[open] summary .chevron {
-    transform: rotate(180deg);
-  }
-
-  .episode-items {
-    padding: 0;
-    margin: var(--s-3) 0 0;
-    list-style: none;
-  }
-
-  .episode-list[open] .episode-items {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
-    gap: var(--s-2);
-  }
-
-  .episode-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 2.5rem;
+  .episode-filter__input {
+    width: 100%;
+    padding: var(--s-2) var(--s-3);
     background: var(--bg-surface);
     border: 1px solid var(--border);
-    color: var(--text-secondary);
+    color: var(--text-primary);
+    font-size: var(--fs-sm);
+    border-radius: var(--r-sm);
+    transition: border-color var(--t-fast);
+  }
+  .episode-filter__input::placeholder { color: var(--text-muted); }
+  .episode-filter__input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .episode-filter__input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .episode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
+    gap: var(--s-2);
+  }
+
+  .episode-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.75rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
     font-size: var(--fs-sm);
     font-weight: var(--fw-medium);
     font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+    text-decoration: none;
     transition: all var(--t-fast);
   }
-
-  .episode-item:hover {
+  .episode-btn:hover {
+    background: var(--bg-hover);
     border-color: var(--border-hover);
     color: var(--text-primary);
   }
-
-  .episode-item.active {
+  .episode-btn.active {
     background: var(--accent);
     border-color: var(--accent);
     color: var(--accent-text);
     pointer-events: none;
+  }
+  .episode-btn[hidden] { display: none; }
+
+  .episode-empty {
+    margin: var(--s-3) 0 0;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    text-align: center;
+  }
+  .episode-empty[hidden] { display: none; }
+
+  @media (min-width: 50rem) {
+    .section-title { text-align: start; }
   }
 </style>
