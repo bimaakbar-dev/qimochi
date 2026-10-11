@@ -65,7 +65,7 @@ const shareUrl = url ?? Astro.url.href;
           try {
             await navigator.share({ title, url });
             return;
-          } catch { // fallback }
+          } catch {}
         }
 
         try {
