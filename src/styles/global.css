@@ -41,13 +41,6 @@ a { transition: color var(--t-fast); }
   color: var(--text-inverted);
 }
 
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--bg-base); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--r-full); }
-::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
-
-* { scrollbar-width: thin; scrollbar-color: var(--border) var(--bg-base); }
-
 .wrapper {
   width: 100%;
   max-width: var(--content-max-mobile);
@@ -55,7 +48,7 @@ a { transition: color var(--t-fast); }
   padding-inline: var(--pad-x);
 }
 
-@media (min-width: 56rem) {
+@media (min-width: 50rem) {
   .wrapper { max-width: var(--content-max-desktop); }
 }
 
