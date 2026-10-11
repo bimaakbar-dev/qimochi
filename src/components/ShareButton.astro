@@ -15,14 +15,15 @@ const shareUrl = url ?? Astro.url.href;
 <div class:list={['share-wrap', className]}>
   <button
     type="button"
-    class="icon-action"
+    class="action-btn"
     data-share-btn
     data-title={title}
     data-url={shareUrl}
     aria-label="Bagikan"
     title="Bagikan"
   >
-    <Icon name="share" size={18} />
+    <Icon name="share" size={28} />
+    <span class="action-btn__label">Bagikan</span>
   </button>
 
   <span
@@ -64,9 +65,7 @@ const shareUrl = url ?? Astro.url.href;
           try {
             await navigator.share({ title, url });
             return;
-          } catch {
-            // user cancel atau tidak didukung — fallback ke copy
-          }
+          } catch { // fallback }
         }
 
         try {
@@ -87,41 +86,36 @@ const shareUrl = url ?? Astro.url.href;
 <style>
   .share-wrap {
     position: relative;
-    display: inline-flex;
+    display: flex;
+    justify-content: center;
   }
 
-  .icon-action {
-    display: inline-flex;
+  .action-btn {
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    padding: 0;
-    background: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--border);
-    border-radius: var(--r-full);
-    cursor: pointer;
-    transition: color var(--t-fast), border-color var(--t-fast);
-  }
-
-  .icon-action:hover {
+    gap: var(--s-2);
+    padding: var(--s-3);
+    width: 100%;
     color: var(--accent);
-    border-color: var(--accent);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: background var(--t-fast);
   }
-
-  .icon-action :global(svg) {
-    display: block;
-    width: 18px;
-    height: 18px;
-  }
+  .action-btn:hover { background: var(--accent-soft); }
+  .action-btn__label { line-height: 1; }
 
   .share-toast {
     position: absolute;
     top: calc(100% + var(--s-2));
     left: 50%;
     transform: translateX(-50%);
-    padding: 4px var(--s-2);
+    padding: 4px var(--s-3);
     background: var(--text-primary);
     color: var(--bg-base);
     font-size: 0.6875rem;
@@ -131,8 +125,15 @@ const shareUrl = url ?? Astro.url.href;
     pointer-events: none;
     z-index: var(--z-overlay);
   }
+  .share-toast[hidden] { display: none; }
 
-  .share-toast[hidden] {
-    display: none;
+  @media (min-width: 50rem) {
+    .share-wrap { justify-content: flex-start; }
+    .action-btn {
+      flex-direction: row;
+      width: auto;
+      padding: var(--s-2) var(--s-3);
+      gap: var(--s-2);
+    }
   }
 </style>
