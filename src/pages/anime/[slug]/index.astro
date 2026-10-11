@@ -2,7 +2,12 @@
 import { render, getEntry } from 'astro:content';
 import { getAllAnime } from '~/lib/anime';
 
-import { SITE, URLS, ADS } from '~/constants';
+import {
+  SITE, URLS, ADS,
+  SOURCE_LABEL,
+  type Source,
+} from '~/constants';
+
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import AdSlot from '~/components/AdSlot.astro';
 import AnimeFranchise from '~/components/AnimeFranchise.astro';
@@ -78,7 +83,9 @@ const durationLabel = data.duration ? `${data.duration} menit / episode` : null;
 const malScore = data.stats?.score ?? null;
 const ageRating = data.rating ?? null;
 const studioName = data.studio && data.studio !== 'Unknown' ? data.studio : null;
-const sourceLabel = data.source ?? null;
+const sourceLabel = data.source
+  ? SOURCE_LABEL[data.source as Source] ?? data.source
+  : null;
 
 const year = data.releaseDate?.getFullYear() ?? null;
 const pageDescription = [
