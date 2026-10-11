@@ -1,5 +1,6 @@
 ---
 import { URLS } from '~/constants';
+import SectionLabel from './SectionLabel.astro';
 
 interface Props {
   slug?: string;
@@ -18,7 +19,7 @@ const showFilter = total > 30;
 ---
 
 <section class="section" data-episode-list>
-  <h2 class="section-title">Episode ({total})</h2>
+  <SectionLabel>Episode</SectionLabel>
 
   {showFilter && (
     <input
@@ -63,13 +64,6 @@ const showFilter = total > 30;
     const items = Array.from(root.querySelectorAll<HTMLElement>('[data-episode-item]'));
     const empty = root.querySelector<HTMLElement>('[data-episode-empty]');
 
-    const active = root.querySelector<HTMLElement>('.episode-btn.active');
-    if (active) {
-      requestAnimationFrame(() => {
-        active.scrollIntoView({ block: 'nearest', behavior: 'auto' });
-      });
-    }
-
     if (input) {
       input.addEventListener('input', () => {
         const q = input.value.trim();
@@ -97,14 +91,6 @@ const showFilter = total > 30;
     flex-direction: column;
     gap: var(--s-3);
   }
-  .section-title {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
-    color: var(--text-primary);
-    text-align: start;
-    margin: 0;
-  }
-
   .episode-filter {
     width: 100%;
     padding: var(--s-2) var(--s-3);
