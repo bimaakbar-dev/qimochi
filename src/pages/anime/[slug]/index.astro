@@ -278,7 +278,7 @@ const pageDescription = [
 
       btn.addEventListener('click', () => {
         const expanded = block.classList.toggle('is-expanded');
-        label.textContent = expanded ? 'Sembunyikan' : 'Lebih Banyak Detail';
+        label.textContent = expanded ? 'Sembunyikan' : 'Lebih Banyak';
       });
     });
   })();
@@ -555,8 +555,7 @@ const pageDescription = [
   .info__item dt {
     font-size: var(--fs-xs);
     font-weight: var(--fw-semibold);
-    color: var(--text-muted);
-    text-transform: uppercase;
+    color: var(--text-secondary);
     letter-spacing: 0.08em;
   }
   .info__item dd {
