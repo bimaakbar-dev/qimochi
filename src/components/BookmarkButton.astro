@@ -12,7 +12,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 
 <button
   type="button"
-  class:list={['icon-action', 'bookmark-btn', className]}
+  class:list={['btn-bookmark', className]}
   data-bookmark-btn
   data-anime={animeId}
   data-api={apiBase}
@@ -21,10 +21,10 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
   title="Simpan ke bookmark"
 >
   <span class="bookmark-icon bookmark-icon--idle">
-    <Icon name="bookmark" size={18} />
+    <Icon name="bookmark" size={22} />
   </span>
   <span class="bookmark-icon bookmark-icon--active">
-    <Icon name="bookmark-filled" size={18} />
+    <Icon name="bookmark-filled" size={22} />
   </span>
 </button>
 
@@ -138,7 +138,6 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
             if (menu?.open) menu.open();
             return;
           }
-
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
         } catch (err) {
           console.error('[bookmark] toggle failed', err);
@@ -188,35 +187,28 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 </script>
 
 <style>
-  .icon-action {
+  .btn-bookmark {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
+    flex-shrink: 0;
+    width: 3.5rem;
     padding: 0;
     background: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--border);
-    border-radius: var(--r-full);
-    cursor: pointer;
-    transition: color var(--t-fast), border-color var(--t-fast), background-color var(--t-fast);
-  }
-
-  .icon-action:hover:not(:disabled) {
     color: var(--accent);
-    border-color: var(--accent);
+    border: 2px solid var(--accent);
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: background var(--t-fast), color var(--t-fast);
   }
 
-  .icon-action:disabled {
+  .btn-bookmark:hover:not(:disabled) {
+    background: var(--accent-soft);
+  }
+
+  .btn-bookmark:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  .icon-action :global(svg) {
-    display: block;
-    width: 18px;
-    height: 18px;
   }
 
   .bookmark-icon {
@@ -224,22 +216,18 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     align-items: center;
     justify-content: center;
   }
+  .bookmark-icon--active { display: none; }
 
-  .bookmark-icon--active {
-    display: none;
+  .btn-bookmark.is-active {
+    background: var(--accent);
+    color: var(--accent-text);
   }
+  .btn-bookmark.is-active .bookmark-icon--idle { display: none; }
+  .btn-bookmark.is-active .bookmark-icon--active { display: inline-flex; }
 
-  .bookmark-btn.is-active {
-    color: var(--accent);
-    border-color: var(--accent);
-    background: var(--accent-soft);
-  }
-
-  .bookmark-btn.is-active .bookmark-icon--idle {
-    display: none;
-  }
-
-  .bookmark-btn.is-active .bookmark-icon--active {
-    display: inline-flex;
+  @media (min-width: 50rem) {
+    .btn-bookmark {
+      width: 4rem;
+    }
   }
 </style>
