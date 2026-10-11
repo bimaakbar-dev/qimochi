@@ -9,7 +9,7 @@ import AnimeFranchise from '~/components/AnimeFranchise.astro';
 import AnimeRatings from '~/components/AnimeRatings.astro';
 import BookmarkButton from '~/components/BookmarkButton.astro';
 import ShareButton from '~/components/ShareButton.astro';
-import DaftarKuButton from '~/components/DaftarKuButton.astro';
+import WatchList from '~/components/WatchList.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
 import Icon from '~/user-components/Icons.astro';
 
@@ -155,7 +155,7 @@ const pageDescription = [
         </div>
 
         <div class="actions-row">
-          <DaftarKuButton animeId={anime.id} />
+          <WatchList animeId={anime.id} />
           <ShareButton title={data.title} />
         </div>
 
