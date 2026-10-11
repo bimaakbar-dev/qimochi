@@ -2,18 +2,16 @@
 import { render, getEntry } from 'astro:content';
 import { getAllAnime } from '~/lib/anime';
 
-import { SITE, URLS, ADS, STATUS_VARIANT, type Status } from '~/constants';
+import { SITE, URLS, ADS } from '~/constants';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import Breadcrumb from '~/components/Breadcrumb.astro';
 import AdSlot from '~/components/AdSlot.astro';
-import EpisodeList from '~/components/EpisodeList.astro';
 import AnimeFranchise from '~/components/AnimeFranchise.astro';
-import Badge from '~/user-components/Badge.astro';
-import LinkButton from '~/user-components/LinkButton.astro';
-import Comments from '~/components/Comments.astro';
 import AnimeRatings from '~/components/AnimeRatings.astro';
-import ShareButton from '~/components/ShareButton.astro';
 import BookmarkButton from '~/components/BookmarkButton.astro';
+import ShareButton from '~/components/ShareButton.astro';
+import DaftarKuButton from '~/components/DaftarKuButton.astro';
+import EpisodeList from '~/components/EpisodeList.astro';
+import Icon from '~/user-components/Icons.astro';
 
 export async function getStaticPaths() {
   const allAnime = await getAllAnime();
@@ -35,172 +33,222 @@ const episodeNumbers = data.episodes
   .sort((a, b) => a - b);
 
 const firstEpisode = episodeNumbers[0] ?? 1;
-const statusVariant = STATUS_VARIANT[data.status as Status] ?? 'default';
+const totalEpisodes = episodeNumbers.length;
 
+const heroImage = data.banner ?? data.cover ?? '';
+
+const subtitleParts: string[] = [];
+if (data.titleEnglish && data.titleEnglish !== data.title) {
+  subtitleParts.push(data.titleEnglish);
+}
+if (data.titleNative) subtitleParts.push(data.titleNative);
+const subtitle = subtitleParts.join(' · ');
+
+const genres: { name: string; slug: string }[] = [];
+const rawGenres = data.genres ?? [];
+for (let i = 0; i < rawGenres.length; i++) {
+  const slug = rawGenres[i];
+  const name = data.genre[i] ?? slug;
+  if (slug && name && name !== 'Unknown') {
+    genres.push({ name, slug });
+  }
+}
+const MAX_GENRES = 3;
+const visibleGenres = genres.slice(0, MAX_GENRES);
+const remainingGenres = Math.max(0, genres.length - MAX_GENRES);
+
+let airedLabel: string | null = null;
+if (data.aired?.from) {
+  const from = new Intl.DateTimeFormat(SITE.locale, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(data.aired.from);
+  const to = data.aired.to
+    ? new Intl.DateTimeFormat(SITE.locale, {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }).format(data.aired.to)
+    : null;
+  airedLabel = to ? `${from} – ${to}` : from;
+}
+
+const durationLabel = data.duration ? `${data.duration} menit / episode` : null;
+const malScore = data.stats?.score ?? null;
 const ageRating = data.rating ?? null;
-const score = data.stats?.score ?? null;
-
-const releaseDateLabel = data.releaseDate
-  ? new Intl.DateTimeFormat(SITE.locale, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(data.releaseDate)
-  : null;
+const studioName = data.studio && data.studio !== 'Unknown' ? data.studio : null;
 
 const year = data.releaseDate?.getFullYear() ?? null;
-
 const pageDescription = [
-  `Nonton dan download ${data.title} batch.`,
-  data.studio,
+  `Nonton ${data.title} sub Indo.`,
+  studioName,
   year ? String(year) : null,
 ].filter(Boolean).join(' ');
-
-const breadcrumbItems = [
-  { label: 'Beranda', href: '/' },
-  { label: 'Anime', href: '/anime/' },
-  { label: data.title },
-];
 ---
 
 <BaseLayout
   title={data.title}
   description={pageDescription}
-  image={data.cover}
+  image={heroImage}
   type="video.other"
 >
-  <article>
-    <div class="breadcrumb-wrap">
-      <Breadcrumb items={breadcrumbItems} />
-    </div>
-
-    <section class="hero">
-      <div class="cover">
+  <article class="anime-page">
+    <div class="banner">
+      {heroImage && (
         <img
-          src={data.cover}
-          alt={`Cover ${data.title}`}
-          width="200"
-          height="300"
+          class="banner__img"
+          src={heroImage}
+          alt=""
           loading="eager"
           fetchpriority="high"
           decoding="async"
         />
-      </div>
-
-      <div class="hero-info">
-        <div class="hero-badges">
-          <Badge variant={statusVariant} size="md">{data.status}</Badge>
-          {ageRating && (
-            <Badge variant="default" size="md" class="badge-rating">
-              {ageRating}
-            </Badge>
-          )}
-        </div>
-
-        <h1>{data.title}</h1>
-
-        <dl class="hero-meta">
-          <div class="meta-item">
-            <dt>Tipe</dt>
-            <dd>{data.type}</dd>
-          </div>
-          {score != null && (
-            <div class="meta-item">
-              <dt>Skor MAL</dt>
-              <dd>{score.toFixed(1)} / 10</dd>
-            </div>
-          )}
-          <div class="meta-item">
-            <dt>Episode</dt>
-            <dd>{data.episodes.length}</dd>
-          </div>
-          {releaseDateLabel && (
-            <div class="meta-item">
-              <dt>Rilis</dt>
-              <dd>{releaseDateLabel}</dd>
-            </div>
-          )}
-          <div class="meta-item">
-            <dt>Studio</dt>
-            <dd>{data.studio}</dd>
-          </div>
-          <div class="meta-item">
-            <dt>Genre</dt>
-            <dd class="genre-list">
-              {data.genre.map((g, i) => (
-                <>
-                  <a href={URLS.genre(g)}>{g}</a>
-                  {i < data.genre.length - 1 && ', '}
-                </>
-              ))}
-            </dd>
-          </div>
-        </dl>
-
-        <AnimeRatings animeId={anime.id} />
-
-        <div class="hero-cta">
-          <div class="hero-cta__primary">
-            <LinkButton
-              href={URLS.watch(anime.id, firstEpisode)}
-              variant="accent"
-              size="lg"
-              icon="play"
-            >
-              Mulai dari E{firstEpisode}
-            </LinkButton>
-            <BookmarkButton animeId={anime.id} />
-          </div>
-          <div class="hero-cta__secondary">
-            <ShareButton title={data.title} />
-          </div>
+      )}
+      <div class="banner__overlay">
+        <div class="banner__inner">
+          <h1 class="banner__title">
+            {data.title}
+            {subtitle && <span class="banner__subtitle">{subtitle}</span>}
+          </h1>
         </div>
       </div>
-    </section>
+    </div>
 
-    <div class="content-grid">
-      <div class="content-main">
-        <section class="synopsis-section">
-          <h2 class="section-title">Sinopsis</h2>
-          <div class="synopsis">
-            <div
-              class="synopsis__body markdown markdown--prose"
-              data-synopsis-body
-            >
-              <Content />
-            </div>
-            <button
-              type="button"
-              class="synopsis__toggle"
-              data-synopsis-toggle
-              hidden
-            >
-              Selengkapnya
-            </button>
+    <div class="content">
+      <div class="chip-row">
+        {ageRating && <span class="chip chip--age">{ageRating}</span>}
+        <span class="chip chip--plain">Sub Indo</span>
+        {visibleGenres.length > 0 && (
+          <span class="chip chip--plain">
+            {visibleGenres.map((g, i) => (
+              <>
+                {i > 0 && <span class="chip__sep"> · </span>}
+                <a href={URLS.genre(g.name)} class="chip__link">{g.name}</a>
+              </>
+            ))}
+            {remainingGenres > 0 && (
+              <button
+                type="button"
+                class="chip__more"
+                data-genres-expand
+                aria-label={`Lihat ${remainingGenres} genre lainnya`}
+              >
+                +{remainingGenres}
+              </button>
+            )}
+          </span>
+        )}
+      </div>
+
+      <div class="main-col">
+        <AnimeRatings animeId={anime.id} malScore={malScore} />
+
+        <div class="cta-row">
+          <a href={URLS.watch(anime.id, firstEpisode)} class="btn-primary">
+            <span class="btn-primary__icon">
+              <Icon name="play" size={20} />
+            </span>
+            Mulai Menonton E{firstEpisode}
+          </a>
+          <BookmarkButton animeId={anime.id} />
+        </div>
+
+        <div class="actions-row">
+          <DaftarKuButton animeId={anime.id} />
+          <ShareButton title={data.title} />
+        </div>
+
+        <section class="synopsis" id="synopsis">
+          <h2 class="synopsis__title">Sinopsis</h2>
+          <div
+            class="synopsis__body markdown markdown--prose"
+            data-synopsis-body
+          >
+            <Content />
           </div>
+
+          <div class="synopsis__extra">
+            <h3 class="synopsis__title synopsis__title--sub">Detail Lainnya</h3>
+            <dl class="detail-grid">
+              <div class="detail-item">
+                <dt>Tipe</dt>
+                <dd>{data.type}</dd>
+              </div>
+              <div class="detail-item">
+                <dt>Episode</dt>
+                <dd>{totalEpisodes > 0 ? totalEpisodes : (data.episodes ?? '?')}</dd>
+              </div>
+              <div class="detail-item">
+                <dt>Status</dt>
+                <dd>{data.status}</dd>
+              </div>
+              {airedLabel && (
+                <div class="detail-item">
+                  <dt>Rilis</dt>
+                  <dd>{airedLabel}</dd>
+                </div>
+              )}
+              {studioName && (
+                <div class="detail-item">
+                  <dt>Studio</dt>
+                  <dd>{studioName}</dd>
+                </div>
+              )}
+              {data.source && (
+                <div class="detail-item">
+                  <dt>Sumber</dt>
+                  <dd>{data.source}</dd>
+                </div>
+              )}
+              {malScore != null && (
+                <div class="detail-item">
+                  <dt>Skor MAL</dt>
+                  <dd>{malScore.toFixed(1)} / 10</dd>
+                </div>
+              )}
+              {durationLabel && (
+                <div class="detail-item">
+                  <dt>Durasi</dt>
+                  <dd>{durationLabel}</dd>
+                </div>
+              )}
+            </dl>
+          </div>
+
+          <button
+            type="button"
+            class="synopsis__toggle"
+            data-synopsis-toggle
+            hidden
+          >
+            <span data-synopsis-label>Lebih Banyak Detail</span>
+            <span class="synopsis__toggle-icon">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 6l4 4 4-4"/>
+              </svg>
+            </span>
+          </button>
         </section>
-
-        <AdSlot
-          format="leaderboard"
-          id="ad-anime-inline"
-          code={ADS.slots.animeDetailInline}
-        />
 
         <AnimeFranchise
           currentSlug={anime.id}
           franchises={data.franchises}
         />
 
-        <Comments slug={anime.id} />
+        <AdSlot
+          format="leaderboard"
+          id="ad-anime-inline"
+          code={ADS.slots.animeDetailInline}
+        />
       </div>
 
-      <aside class="content-aside">
+      <aside class="aside-col">
         <EpisodeList
           slug={anime.id}
           episodes={episodeNumbers}
           currentEpisode={null}
         />
-
         <AdSlot
           format="rectangle"
           id="ad-anime-sidebar"
@@ -217,19 +265,18 @@ const breadcrumbItems = [
     if (bodies.length === 0) return;
 
     bodies.forEach((body) => {
-      const wrap = body.parentElement;
-      const btn = wrap?.querySelector<HTMLButtonElement>(
-        '[data-synopsis-toggle]'
-      );
-      if (!btn) return;
+      const section = body.closest<HTMLElement>('.synopsis');
+      const btn = section?.querySelector<HTMLButtonElement>('[data-synopsis-toggle]');
+      const label = section?.querySelector<HTMLElement>('[data-synopsis-label]');
+      if (!section || !btn || !label) return;
 
       function measure(): void {
-        const overflow = body.scrollHeight > body.clientHeight;
+        const overflow = body.scrollHeight > body.clientHeight + 2;
+        btn!.hidden = false;
         if (!overflow) {
-          body.classList.add('is-expanded');
-          btn!.hidden = true;
+          body.classList.add('is-short');
         } else {
-          btn!.hidden = false;
+          body.classList.remove('is-short');
         }
       }
 
@@ -242,283 +289,352 @@ const breadcrumbItems = [
       }
 
       btn.addEventListener('click', () => {
-        const isExpanded = body.classList.toggle('is-expanded');
-        btn.textContent = isExpanded ? 'Sembunyikan' : 'Selengkapnya';
+        const expanded = section.classList.toggle('is-expanded');
+        label.textContent = expanded ? 'Sembunyikan' : 'Lebih Banyak Detail';
+      });
+    });
+
+    // Genre expand → buka Detail Lainnya
+    document.querySelectorAll('[data-genres-expand]').forEach((el) => {
+      el.addEventListener('click', () => {
+        const section = document.querySelector<HTMLElement>('.synopsis');
+        if (!section || section.classList.contains('is-expanded')) return;
+        section.classList.add('is-expanded');
+        const label = section.querySelector<HTMLElement>('[data-synopsis-label]');
+        if (label) label.textContent = 'Sembunyikan';
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
   })();
 </script>
 
-<script is:inline src="https://5gvci.com/act/files/tag.min.js?z=10848206" data-cfasync="false" async></script>
-
 <style>
-  article {
-    max-width: var(--content-max-mobile);
-    margin-inline: auto;
-    padding-block: var(--s-4) var(--s-12);
-    padding-inline: var(--pad-x);
-    isolation: isolate;
+  article.anime-page {
+    display: block;
+    padding-bottom: var(--s-12);
   }
 
-  .breadcrumb-wrap {
-    padding-block: var(--s-2) var(--s-4);
-    min-width: 0;
-  }
-
-  .hero {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s-5);
-    background: var(--bg-elevated);
-    padding: var(--s-5);
-    margin-bottom: var(--s-6);
-    text-align: center;
-    align-items: center;
-    justify-items: center;
-  }
-
-  .cover {
+  /* ── Banner ──────────────────────────────── */
+  .banner {
+    position: relative;
     width: 100%;
-    max-width: 200px;
+    aspect-ratio: 16 / 9;
+    max-height: 22rem;
+    overflow: hidden;
+    background: var(--bg-footer);
   }
-
-  .cover img {
+  .banner__img {
     width: 100%;
-    height: auto;
-    aspect-ratio: 2 / 3;
+    height: 100%;
     object-fit: cover;
     display: block;
   }
-
-  .hero-info {
+  .banner__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      hsla(30, 3%, 5%, 0.92) 0%,
+      hsla(30, 3%, 5%, 0.6) 40%,
+      hsla(30, 3%, 5%, 0.1) 70%,
+      transparent 100%
+    );
     display: flex;
-    flex-direction: column;
-    gap: var(--s-4);
-    align-items: center;
+    align-items: flex-end;
+    padding: var(--s-5) var(--pad-x);
+  }
+  .banner__inner {
     width: 100%;
-
-    & h1 {
-      font-size: var(--fs-3xl);
-      line-height: var(--lh-tight);
-      font-weight: var(--fw-bold);
-      margin: 0;
-      color: var(--text-primary);
-    }
-
-    & .hero-meta {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--s-4);
-      width: 100%;
-      margin: 0;
-      text-align: center;
-      justify-items: center;
-
-      & .meta-item {
-        display: flex;
-        flex-direction: column;
-        gap: var(--s-1);
-        align-items: center;
-        min-width: 0;
-      }
-
-      & dt {
-        font-size: var(--fs-xs);
-        font-weight: var(--fw-semibold);
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-      }
-
-      & dd {
-        font-size: var(--fs-sm);
-        color: var(--text-primary);
-        margin: 0;
-        line-height: var(--lh-relaxed);
-        min-width: 0;
-        overflow-wrap: anywhere;
-      }
-    }
+    max-width: var(--content-max-desktop);
+    margin-inline: auto;
+    text-align: center;
+  }
+  .banner__title {
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-tight);
+    color: var(--text-inverted);
+    text-shadow: 0 2px 8px hsla(0, 0%, 0%, 0.5);
+    max-width: 30ch;
+    margin-inline: auto;
+  }
+  .banner__subtitle {
+    display: block;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: hsla(0, 0%, 100%, 0.75);
+    margin-top: var(--s-1);
   }
 
-  .hero-badges {
+  /* ── Content wrapper ────────────────────── */
+  .content {
+    max-width: var(--content-max-desktop);
+    margin-inline: auto;
+    padding: var(--s-5) var(--pad-x) var(--s-12);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+  }
+
+  /* ── Chip row ───────────────────────────── */
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+  }
+  .chip {
     display: inline-flex;
     align-items: center;
-    gap: var(--s-2);
+    gap: var(--s-1);
+    padding: 2px var(--s-2);
+    line-height: 1.4;
   }
-
-  .badge-rating {
-    font-style: italic;
+  .chip--age {
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    font-weight: var(--fw-semibold);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.05em;
   }
-
-  .genre-list {
-    & a {
-      position: relative;
-      color: var(--accent);
-      transition: color var(--t-fast);
-      &::after {
-        content: '';
-        position: absolute;
-        left: -3%;
-        right: -3%;
-        bottom: -0.1em;
-        height: 0.45em;
-        background-color: var(--accent);
-        -webkit-mask-image: var(--underline);
-        mask-image: var(--underline);
-        -webkit-mask-size: 100% 100%;
-        mask-size: 100% 100%;
-        -webkit-mask-repeat: no-repeat;
-        mask-repeat: no-repeat;
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity var(--t-fast);
-      }
-      &:hover {
-        color: var(--accent-hover);
-        &::after {
-          opacity: 1;
-        }
-      }
-    }
+  .chip--plain { padding: 0; }
+  .chip__sep { color: var(--text-muted); opacity: 0.6; }
+  .chip__link {
+    color: inherit;
+    transition: color var(--t-fast);
   }
+  .chip__link:hover { color: var(--accent); }
+  .chip__more {
+    color: var(--accent);
+    font-weight: var(--fw-semibold);
+    padding: 0 var(--s-1);
+    transition: color var(--t-fast);
+  }
+  .chip__more:hover { color: var(--accent-hover); }
 
-  .hero-cta {
+  /* ── CTA row ────────────────────────────── */
+  .cta-row {
     display: flex;
-    flex-direction: column;
-    gap: var(--s-2);
-    width: 100%;
+    gap: var(--s-3);
+    align-items: stretch;
+  }
+  .btn-primary {
+    flex: 1;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: var(--r-sm);
+    text-decoration: none;
+    transition: background var(--t-fast);
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary__icon {
+    display: inline-flex;
+    width: 1.25rem;
+    height: 1.25rem;
   }
 
-  .hero-cta__primary {
-    display: flex;
-    align-items: center;
-    gap: var(--s-2);
-  }
-
-  .hero-cta__secondary {
-    display: flex;
-    align-items: center;
-  }
-
-  .content-grid {
+  /* ── Actions row ────────────────────────── */
+  .actions-row {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s-6);
-    align-items: start;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-3);
+    padding: var(--s-3) 0;
   }
 
-  .content-main {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-8);
-  }
-
-  .section-title {
-    font-size: var(--fs-lg);
-    margin: 0 0 var(--s-3);
-    color: var(--text-primary);
-  }
-
+  /* ── Sinopsis ───────────────────────────── */
   .synopsis {
     display: flex;
     flex-direction: column;
     gap: var(--s-3);
-    align-items: flex-start;
   }
-
+  .synopsis__title {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+    text-align: center;
+    margin: 0;
+  }
+  .synopsis__title--sub {
+    font-size: var(--fs-base);
+  }
   .synopsis__body {
     position: relative;
-    width: 100%;
-    max-height: calc(var(--fs-base) * var(--lh-relaxed) * 4);
+    max-height: calc(var(--fs-base) * var(--lh-relaxed) * 3);
     overflow: hidden;
-    mask-image: linear-gradient(
-      to bottom,
-      black calc(100% - 2.5rem),
-      transparent
-    );
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      black calc(100% - 2.5rem),
-      transparent
-    );
+    mask-image: linear-gradient(to bottom, black calc(100% - 3rem), transparent);
+    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 3rem), transparent);
+    color: var(--text-secondary);
+    text-align: center;
+    transition: max-height var(--t-base);
   }
-
-  .synopsis__body.is-expanded {
+  .synopsis__body.is-short {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+  .synopsis.is-expanded .synopsis__body {
     max-height: none;
     mask-image: none;
     -webkit-mask-image: none;
   }
-
   .synopsis__toggle {
-    align-self: flex-start;
-    padding: 0;
-    background: transparent;
-    border: none;
+    align-self: center;
     color: var(--accent);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-semibold);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: 0;
+    background: none;
+    border: none;
     cursor: pointer;
     transition: color var(--t-fast);
   }
-
-  .synopsis__toggle:hover {
-    color: var(--accent-hover);
+  .synopsis__toggle:hover { color: var(--accent-hover); }
+  .synopsis__toggle[hidden] { display: none; }
+  .synopsis__toggle-icon {
+    display: inline-flex;
+    width: 1rem;
+    height: 1rem;
+    transition: transform var(--t-base);
+  }
+  .synopsis.is-expanded .synopsis__toggle-icon {
+    transform: rotate(180deg);
   }
 
-  .synopsis__toggle[hidden] {
+  .synopsis__extra {
     display: none;
+    flex-direction: column;
+    gap: var(--s-3);
+    margin-top: var(--s-3);
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--border);
   }
+  .synopsis.is-expanded .synopsis__extra { display: flex; }
 
-  .content-aside {
+  /* ── Detail grid ────────────────────────── */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin: 0;
+  }
+  .detail-item {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-1);
+    padding: var(--s-3) 0;
+    border-bottom: 1px solid var(--border);
+    align-items: baseline;
+    text-align: center;
+  }
+  .detail-item:last-child { border-bottom: none; }
+  .detail-item dt {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .detail-item dd {
+    font-size: var(--fs-sm);
+    color: var(--text-primary);
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .detail-item dd a {
+    color: var(--accent);
+    font-weight: var(--fw-medium);
+  }
+  .detail-item dd a:hover { color: var(--accent-hover); }
+
+  /* ── Aside ──────────────────────────────── */
+  .aside-col {
     display: flex;
     flex-direction: column;
     gap: var(--s-4);
   }
 
+  /* ── Desktop ────────────────────────────── */
   @media (min-width: 50rem) {
-    article {
-      max-width: var(--content-max-desktop);
-    }
-    .hero {
-      grid-template-columns: 200px 1fr;
-      gap: var(--s-6);
-      padding: var(--s-6);
+    .banner { max-height: 26rem; }
+    .banner__title { font-size: var(--fs-4xl); }
+    .banner__inner,
+    .banner__title,
+    .banner__subtitle { text-align: start; }
+    .banner__title { margin-inline: 0; }
+
+    .chip-row { justify-content: flex-start; }
+
+    .synopsis__title,
+    .synopsis__body { text-align: start; }
+    .synopsis__toggle { align-self: flex-start; }
+
+    .detail-item {
+      grid-template-columns: 7rem minmax(0, 1fr);
+      gap: var(--s-3);
       text-align: start;
-      justify-items: start;
-    }
-    .cover {
-      max-width: none;
-    }
-    .hero-info {
-      align-items: flex-start;
-      & .hero-meta {
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--s-4) var(--s-6);
-        text-align: start;
-        justify-items: start;
-
-        & .meta-item {
-          align-items: flex-start;
-        }
-      }
     }
 
-    .hero-cta {
-      align-items: flex-start;
+    .content {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--aside-width);
+      grid-template-areas:
+        "header header"
+        "main sidebar";
+      gap: var(--s-6) var(--s-8);
+      padding-top: var(--s-6);
     }
-
-    .content-grid {
-      grid-template-columns: 1fr var(--aside-width);
+    .content > .chip-row { grid-area: header; }
+    .content > .main-col {
+      grid-area: main;
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-5);
+      min-width: 0;
     }
-
-    .content-aside {
+    .content > .aside-col {
+      grid-area: sidebar;
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-4);
       position: sticky;
       top: var(--sticky-top);
+      align-self: start;
       max-height: calc(100vh - var(--sticky-top) - var(--s-4));
       overflow-y: auto;
+    }
+
+    .cta-row { gap: var(--s-4); }
+    .btn-primary {
+      font-size: var(--fs-base);
+      padding: var(--s-4) var(--s-6);
+    }
+
+    .actions-row {
+      grid-template-columns: max-content max-content;
+      justify-content: flex-start;
+      gap: var(--s-6);
+    }
+
+    .detail-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 var(--s-6);
     }
   }
 </style>
