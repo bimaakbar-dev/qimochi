@@ -64,9 +64,9 @@ function slugToTitle(slug: string): string {
       if (anime) {
         const epCount = anime.data.episodes?.length ?? 0;
         const year = anime.data.releaseDate?.getFullYear() ?? null;
-        const meta = [year, epCount > 0 ? `${epCount} Ep` : null]
-          .filter(Boolean)
-          .join(' · ') || '—';
+        const meta =
+          [year, epCount > 0 ? `${epCount} Ep` : null].filter(Boolean).join(' · ') ||
+          '—';
 
         return (
           <a href={URLS.anime(anime.id)} class="franchise-card">
@@ -104,14 +104,12 @@ function slugToTitle(slug: string): string {
     display: flex;
     flex-direction: column;
     gap: var(--s-3);
-    padding-top: var(--s-5);
-    border-top: 1px solid var(--border);
   }
   .section-title {
     font-size: var(--fs-lg);
     font-weight: var(--fw-bold);
     color: var(--text-primary);
-    text-align: center;
+    text-align: start;
     margin: 0;
   }
 
@@ -128,13 +126,12 @@ function slugToTitle(slug: string): string {
     color: inherit;
     text-decoration: none;
     min-width: 0;
-    text-align: center;
+    text-align: start;
   }
 
   .franchise-card__cover {
     position: relative;
     aspect-ratio: 2 / 3;
-    border-radius: var(--r-sm);
     overflow: hidden;
     background: var(--bg-surface);
   }
@@ -193,8 +190,6 @@ function slugToTitle(slug: string): string {
   }
 
   @media (min-width: 50rem) {
-    .section-title { text-align: start; }
-    .franchise-card { text-align: start; }
     .franchise-grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: var(--s-4);

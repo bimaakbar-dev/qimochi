@@ -9,9 +9,9 @@ import AnimeFranchise from '~/components/AnimeFranchise.astro';
 import AnimeRatings from '~/components/AnimeRatings.astro';
 import BookmarkButton from '~/components/BookmarkButton.astro';
 import ShareButton from '~/components/ShareButton.astro';
-import WatchList from '~/components/WatchList.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
-import Icon from '~/user-components/Icons.astro';
+import Comments from '~/components/Comments.astro';
+import LinkButton from '~/user-components/LinkButton.astro';
 
 export async function getStaticPaths() {
   const allAnime = await getAllAnime();
@@ -35,7 +35,7 @@ const episodeNumbers = data.episodes
 const firstEpisode = episodeNumbers[0] ?? 1;
 const totalEpisodes = episodeNumbers.length;
 
-const heroImage = data.banner ?? data.cover ?? '';
+const heroImage = data.cover ?? '';
 
 const subtitleParts: string[] = [];
 if (data.titleEnglish && data.titleEnglish !== data.title) {
@@ -55,7 +55,6 @@ for (let i = 0; i < rawGenres.length; i++) {
 }
 const MAX_GENRES = 3;
 const visibleGenres = genres.slice(0, MAX_GENRES);
-const remainingGenres = Math.max(0, genres.length - MAX_GENRES);
 
 let airedLabel: string | null = null;
 if (data.aired?.from) {
@@ -78,6 +77,7 @@ const durationLabel = data.duration ? `${data.duration} menit / episode` : null;
 const malScore = data.stats?.score ?? null;
 const ageRating = data.rating ?? null;
 const studioName = data.studio && data.studio !== 'Unknown' ? data.studio : null;
+const sourceLabel = data.source ?? null;
 
 const year = data.releaseDate?.getFullYear() ?? null;
 const pageDescription = [
@@ -94,128 +94,77 @@ const pageDescription = [
   type="video.other"
 >
   <article class="anime-page">
-    <div class="banner">
+
+    <!-- SECTION 1 — HERO -->
+    <section class="hero">
       {heroImage && (
-        <img
-          class="banner__img"
-          src={heroImage}
-          alt=""
-          loading="eager"
-          fetchpriority="high"
-          decoding="async"
-        />
+        <div class="hero__bg" aria-hidden="true">
+          <img
+            class="hero__bg-img"
+            src={heroImage}
+            alt=""
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </div>
       )}
-      <div class="banner__overlay">
-        <div class="banner__inner">
-          <h1 class="banner__title">
-            {data.title}
-            {subtitle && <span class="banner__subtitle">{subtitle}</span>}
-          </h1>
+
+      <div class="hero__inner">
+        <h1 class="hero__title">{data.title}</h1>
+        {subtitle && <p class="hero__subtitle">{subtitle}</p>}
+
+        <div class="hero__chips">
+          {ageRating && <span class="chip chip--age">{ageRating}</span>}
+          <span class="chip chip--plain">Sub Indo</span>
+          {visibleGenres.length > 0 && (
+            <>
+              <span class="chip__dot" aria-hidden="true">
+                <svg viewBox="0 0 8 8" width="8" height="8" fill="currentColor">
+                  <circle cx="4" cy="4" r="2" />
+                </svg>
+              </span>
+              <span class="chip chip--plain">
+                {visibleGenres.map((g) => (
+                  <a href={URLS.genre(g.name)} class="chip__link">{g.name}</a>
+                ))}
+              </span>
+            </>
+          )}
         </div>
-      </div>
-    </div>
 
-    <div class="content">
-      <div class="chip-row">
-        {ageRating && <span class="chip chip--age">{ageRating}</span>}
-        <span class="chip chip--plain">Sub Indo</span>
-        {visibleGenres.length > 0 && (
-          <span class="chip chip--plain">
-            {visibleGenres.map((g, i) => (
-              <>
-                {i > 0 && <span class="chip__sep"> · </span>}
-                <a href={URLS.genre(g.name)} class="chip__link">{g.name}</a>
-              </>
-            ))}
-            {remainingGenres > 0 && (
-              <button
-                type="button"
-                class="chip__more"
-                data-genres-expand
-                aria-label={`Lihat ${remainingGenres} genre lainnya`}
-              >
-                +{remainingGenres}
-              </button>
-            )}
-          </span>
-        )}
-      </div>
+        <div class="hero__rating">
+          <AnimeRatings animeId={anime.id} malScore={malScore} />
+        </div>
 
-      <div class="main-col">
-        <AnimeRatings animeId={anime.id} malScore={malScore} />
-
-        <div class="cta-row">
-          <a href={URLS.watch(anime.id, firstEpisode)} class="btn-primary">
-            <span class="btn-primary__icon">
-              <Icon name="play" size={20} />
-            </span>
+        <div class="hero__actions">
+          <LinkButton
+            href={URLS.watch(anime.id, firstEpisode)}
+            variant="accent"
+            size="lg"
+            icon="play"
+            iconPos="prefix"
+            class="hero-play"
+          >
             Mulai Menonton E{firstEpisode}
-          </a>
-          <BookmarkButton animeId={anime.id} />
+          </LinkButton>
+          <div class="icon-actions">
+            <BookmarkButton animeId={anime.id} />
+            <ShareButton title={data.title} />
+          </div>
         </div>
-
-        <div class="actions-row">
-          <WatchList animeId={anime.id} />
-          <ShareButton title={data.title} />
-        </div>
-
-        <section class="synopsis" id="synopsis">
-          <h2 class="synopsis__title">Sinopsis</h2>
+      </div>
+    </section>
+    <section class="content">
+      <div class="content__grid" data-meta>
+        <div class="synopsis">
+          <h2 class="section-title">Sinopsis</h2>
           <div
             class="synopsis__body markdown markdown--prose"
             data-synopsis-body
           >
             <Content />
           </div>
-
-          <div class="synopsis__extra">
-            <h3 class="synopsis__title synopsis__title--sub">Detail Lainnya</h3>
-            <dl class="detail-grid">
-              <div class="detail-item">
-                <dt>Tipe</dt>
-                <dd>{data.type}</dd>
-              </div>
-              <div class="detail-item">
-                <dt>Episode</dt>
-                <dd>{totalEpisodes > 0 ? totalEpisodes : (data.episodes ?? '?')}</dd>
-              </div>
-              <div class="detail-item">
-                <dt>Status</dt>
-                <dd>{data.status}</dd>
-              </div>
-              {airedLabel && (
-                <div class="detail-item">
-                  <dt>Rilis</dt>
-                  <dd>{airedLabel}</dd>
-                </div>
-              )}
-              {studioName && (
-                <div class="detail-item">
-                  <dt>Studio</dt>
-                  <dd>{studioName}</dd>
-                </div>
-              )}
-              {data.source && (
-                <div class="detail-item">
-                  <dt>Sumber</dt>
-                  <dd>{data.source}</dd>
-                </div>
-              )}
-              {malScore != null && (
-                <div class="detail-item">
-                  <dt>Skor MAL</dt>
-                  <dd>{malScore.toFixed(1)} / 10</dd>
-                </div>
-              )}
-              {durationLabel && (
-                <div class="detail-item">
-                  <dt>Durasi</dt>
-                  <dd>{durationLabel}</dd>
-                </div>
-              )}
-            </dl>
-          </div>
-
           <button
             type="button"
             class="synopsis__toggle"
@@ -224,38 +173,87 @@ const pageDescription = [
           >
             <span data-synopsis-label>Lebih Banyak Detail</span>
             <span class="synopsis__toggle-icon">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                aria-hidden="true">
                 <path d="M4 6l4 4 4-4"/>
               </svg>
             </span>
           </button>
-        </section>
+        </div>
 
-        <AnimeFranchise
-          currentSlug={anime.id}
-          franchises={data.franchises}
-        />
-
-        <AdSlot
-          format="leaderboard"
-          id="ad-anime-inline"
-          code={ADS.slots.animeDetailInline}
-        />
+        <div class="info">
+          <h2 class="section-title">Informasi</h2>
+          <dl class="info__list">
+            <div class="info__item">
+              <dt>Tipe</dt>
+              <dd>{data.type}</dd>
+            </div>
+            <div class="info__item">
+              <dt>Episode</dt>
+              <dd>{totalEpisodes > 0 ? totalEpisodes : '?'}</dd>
+            </div>
+            <div class="info__item">
+              <dt>Status</dt>
+              <dd>{data.status}</dd>
+            </div>
+            {airedLabel && (
+              <div class="info__item">
+                <dt>Rilis</dt>
+                <dd>{airedLabel}</dd>
+              </div>
+            )}
+            {studioName && (
+              <div class="info__item">
+                <dt>Studio</dt>
+                <dd>{studioName}</dd>
+              </div>
+            )}
+            {sourceLabel && (
+              <div class="info__item">
+                <dt>Sumber</dt>
+                <dd>{sourceLabel}</dd>
+              </div>
+            )}
+            {malScore != null && (
+              <div class="info__item">
+                <dt>Skor MAL</dt>
+                <dd>{malScore.toFixed(1)} / 10</dd>
+              </div>
+            )}
+            {durationLabel && (
+              <div class="info__item">
+                <dt>Durasi</dt>
+                <dd>{durationLabel}</dd>
+              </div>
+            )}
+          </dl>
+        </div>
       </div>
+    </section>
 
-      <aside class="aside-col">
-        <EpisodeList
-          slug={anime.id}
-          episodes={episodeNumbers}
-          currentEpisode={null}
-        />
-        <AdSlot
-          format="rectangle"
-          id="ad-anime-sidebar"
-          code={ADS.slots.animeDetailSidebar}
-        />
-      </aside>
-    </div>
+    <!-- SECTION 3 — MORE -->
+    <section class="more">
+      <EpisodeList
+        slug={anime.id}
+        episodes={episodeNumbers}
+        currentEpisode={null}
+      />
+
+      <Comments slug={anime.id} />
+
+      <AnimeFranchise
+        currentSlug={anime.id}
+        franchises={data.franchises}
+      />
+
+      <AdSlot
+        format="leaderboard"
+        id="ad-anime-inline"
+        code={ADS.slots.animeDetailInline}
+      />
+    </section>
+
   </article>
 </BaseLayout>
 
@@ -265,19 +263,16 @@ const pageDescription = [
     if (bodies.length === 0) return;
 
     bodies.forEach((body) => {
-      const section = body.closest<HTMLElement>('.synopsis');
-      const btn = section?.querySelector<HTMLButtonElement>('[data-synopsis-toggle]');
-      const label = section?.querySelector<HTMLElement>('[data-synopsis-label]');
-      if (!section || !btn || !label) return;
+      const block = body.closest<HTMLElement>('[data-meta]');
+      const btn = block?.querySelector<HTMLButtonElement>('[data-synopsis-toggle]');
+      const label = block?.querySelector<HTMLElement>('[data-synopsis-label]');
+      if (!block || !btn || !label) return;
 
       function measure(): void {
         const overflow = body.scrollHeight > body.clientHeight + 2;
         btn!.hidden = false;
-        if (!overflow) {
-          body.classList.add('is-short');
-        } else {
-          body.classList.remove('is-short');
-        }
+        if (!overflow) body.classList.add('is-short');
+        else body.classList.remove('is-short');
       }
 
       if (document.readyState === 'complete') {
@@ -289,20 +284,8 @@ const pageDescription = [
       }
 
       btn.addEventListener('click', () => {
-        const expanded = section.classList.toggle('is-expanded');
+        const expanded = block.classList.toggle('is-expanded');
         label.textContent = expanded ? 'Sembunyikan' : 'Lebih Banyak Detail';
-      });
-    });
-
-    // Genre expand → buka Detail Lainnya
-    document.querySelectorAll('[data-genres-expand]').forEach((el) => {
-      el.addEventListener('click', () => {
-        const section = document.querySelector<HTMLElement>('.synopsis');
-        if (!section || section.classList.contains('is-expanded')) return;
-        section.classList.add('is-expanded');
-        const label = section.querySelector<HTMLElement>('[data-synopsis-label]');
-        if (label) label.textContent = 'Sembunyikan';
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
   })();
@@ -310,81 +293,86 @@ const pageDescription = [
 
 <style>
   article.anime-page {
-    display: block;
-    padding-bottom: var(--s-12);
+    display: flex;
+    flex-direction: column;
   }
-
-  /* ── Banner ──────────────────────────────── */
-  .banner {
+  .hero {
     position: relative;
     width: 100%;
-    aspect-ratio: 16 / 9;
-    max-height: 22rem;
     overflow: hidden;
     background: var(--bg-footer);
+    color: var(--text-inverted);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    aspect-ratio: 2 / 3;
+    min-height: 32rem;
+    max-height: 92vh;
   }
-  .banner__img {
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .hero__bg-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
   }
-  .banner__overlay {
+  .hero::after {
+    content: '';
     position: absolute;
     inset: 0;
+    z-index: 1;
     background: linear-gradient(
       to top,
-      hsla(30, 3%, 5%, 0.92) 0%,
-      hsla(30, 3%, 5%, 0.6) 40%,
-      hsla(30, 3%, 5%, 0.1) 70%,
-      transparent 100%
+      hsla(30, 3%, 5%, 0.96) 0%,
+      hsla(30, 3%, 5%, 0.78) 32%,
+      hsla(30, 3%, 5%, 0.35) 60%,
+      hsla(30, 3%, 5%, 0) 100%
     );
-    display: flex;
-    align-items: flex-end;
-    padding: var(--s-5) var(--pad-x);
+    pointer-events: none;
   }
-  .banner__inner {
+  .hero__inner {
+    position: relative;
+    z-index: 2;
     width: 100%;
     max-width: var(--content-max-desktop);
     margin-inline: auto;
+    padding: var(--s-16) var(--pad-x) var(--s-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    align-items: center;
     text-align: center;
   }
-  .banner__title {
-    font-size: var(--fs-2xl);
+  .hero__title {
+    font-size: var(--fs-3xl);
     font-weight: var(--fw-bold);
     line-height: var(--lh-tight);
     color: var(--text-inverted);
-    text-shadow: 0 2px 8px hsla(0, 0%, 0%, 0.5);
+    text-shadow: 0 2px 12px hsla(0, 0%, 0%, 0.55);
+    margin: 0;
     max-width: 30ch;
-    margin-inline: auto;
   }
-  .banner__subtitle {
-    display: block;
+  .hero__subtitle {
     font-size: var(--fs-sm);
     font-weight: var(--fw-medium);
-    color: hsla(0, 0%, 100%, 0.75);
-    margin-top: var(--s-1);
+    color: hsla(0, 0%, 100%, 0.82);
+    line-height: 1.5;
+    margin: 0;
+    max-width: 60ch;
   }
-
-  /* ── Content wrapper ────────────────────── */
-  .content {
-    max-width: var(--content-max-desktop);
-    margin-inline: auto;
-    padding: var(--s-5) var(--pad-x) var(--s-12);
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-5);
-  }
-
-  /* ── Chip row ───────────────────────────── */
-  .chip-row {
+  .hero__chips {
     display: flex;
     flex-wrap: wrap;
     gap: var(--s-2);
     align-items: center;
     justify-content: center;
     font-size: var(--fs-sm);
-    color: var(--text-secondary);
+    color: hsla(0, 0%, 100%, 0.85);
   }
   .chip {
     display: inline-flex;
@@ -394,102 +382,149 @@ const pageDescription = [
     line-height: 1.4;
   }
   .chip--age {
-    border: 1px solid var(--border);
-    border-radius: var(--r-sm);
-    font-weight: var(--fw-semibold);
+    padding-inline: var(--s-1);
+    background: hsla(0, 0%, 100%, 0.20);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: var(--r-sm) 1px var(--r-sm) 1px;
+    font-weight: var(--fw-medium);
     font-size: var(--fs-xs);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
+    color: var(--text-inverted);
+    font-style: italic;
   }
   .chip--plain { padding: 0; }
-  .chip__sep { color: var(--text-muted); opacity: 0.6; }
+  .chip__dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: hsla(0, 0%, 100%, 0.55);
+    flex-shrink: 0;
+  }
+  .chip__dot svg {
+    display: block;
+  }
+  .chip__sep {
+    color: hsla(0, 0%, 100%, 0.55);
+  }
   .chip__link {
     color: inherit;
     transition: color var(--t-fast);
   }
+  .chip__link::after {
+    content: ',';
+    display: inline-block;
+    margin-left: 0.12em;
+    color: hsla(0, 0%, 100%, 0.55);
+    pointer-events: none;
+  }
+  .chip__link:last-child::after {
+    content: '';
+    margin: 0;
+  }
   .chip__link:hover { color: var(--accent); }
-  .chip__more {
-    color: var(--accent);
-    font-weight: var(--fw-semibold);
-    padding: 0 var(--s-1);
-    transition: color var(--t-fast);
-  }
-  .chip__more:hover { color: var(--accent-hover); }
 
-  /* ── CTA row ────────────────────────────── */
-  .cta-row {
-    display: flex;
-    gap: var(--s-3);
-    align-items: stretch;
+  .hero__rating {
+    width: 100%;
   }
-  .btn-primary {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
+  .hero__rating :global(.rating-wrap) {
+    justify-content: center;
+  }
+  .hero__rating :global(.rating-cta) {
+    text-align: center;
+  }
+  .hero__rating :global(.rating-star) {
+    color: hsla(0, 0%, 100%, 0.28);
+  }
+  .hero__rating :global(.rating-star.is-active),
+  .hero__rating :global(.rating-star.is-preview) {
+    color: var(--gold);
+  }
+  .hero__rating :global(.rating-star:not(:disabled):hover) {
+    color: var(--gold-hover);
+  }
+  .hero__rating :global(.rating-score) {
+    color: var(--text-inverted);
+  }
+  .hero__rating :global(.rating-scale),
+  .hero__rating :global(.rating-votes),
+  .hero__rating :global(.rating-cta) {
+    color: hsla(0, 0%, 100%, 0.65);
+  }
+  .hero__rating :global(.rating-cta:hover) {
+    color: var(--accent);
+  }
+
+  .hero__actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-3);
+    margin-top: var(--s-2);
+  }
+
+  :global(.hero-play) {
+    border-radius: var(--r-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .icon-actions {
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
     justify-content: center;
     gap: var(--s-3);
-    padding: var(--s-3) var(--s-4);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    border-radius: var(--r-sm);
-    text-decoration: none;
-    transition: background var(--t-fast);
-  }
-  .btn-primary:hover { background: var(--accent-hover); }
-  .btn-primary__icon {
-    display: inline-flex;
-    width: 1.25rem;
-    height: 1.25rem;
   }
 
-  /* ── Actions row ────────────────────────── */
-  .actions-row {
+  .content {
+    max-width: var(--content-max-desktop);
+    width: 100%;
+    margin-inline: auto;
+    padding: var(--s-8) var(--pad-x);
+  }
+  .content__grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--s-3);
-    padding: var(--s-3) 0;
+    grid-template-columns: 1fr;
+    gap: var(--s-6);
   }
 
-  /* ── Sinopsis ───────────────────────────── */
+  .section-title {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+    text-align: start;
+    margin: 0 0 var(--s-3);
+  }
+
   .synopsis {
     display: flex;
     flex-direction: column;
     gap: var(--s-3);
-  }
-  .synopsis__title {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
-    color: var(--text-primary);
-    text-align: center;
-    margin: 0;
-  }
-  .synopsis__title--sub {
-    font-size: var(--fs-base);
+    min-width: 0;
   }
   .synopsis__body {
     position: relative;
-    max-height: calc(var(--fs-base) * var(--lh-relaxed) * 3);
+    max-height: calc(var(--fs-base) * var(--lh-relaxed) * 4);
     overflow: hidden;
     mask-image: linear-gradient(to bottom, black calc(100% - 3rem), transparent);
     -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 3rem), transparent);
     color: var(--text-secondary);
-    text-align: center;
+    text-align: start;
     transition: max-height var(--t-base);
   }
   .synopsis__body.is-short {
     mask-image: none;
     -webkit-mask-image: none;
   }
-  .synopsis.is-expanded .synopsis__body {
+  .content__grid.is-expanded .synopsis__body {
     max-height: none;
     mask-image: none;
     -webkit-mask-image: none;
   }
   .synopsis__toggle {
-    align-self: center;
+    align-self: flex-start;
     color: var(--accent);
     font-size: var(--fs-xs);
     font-weight: var(--fw-bold);
@@ -512,129 +547,109 @@ const pageDescription = [
     height: 1rem;
     transition: transform var(--t-base);
   }
-  .synopsis.is-expanded .synopsis__toggle-icon {
+  .content__grid.is-expanded .synopsis__toggle-icon {
     transform: rotate(180deg);
   }
 
-  .synopsis__extra {
-    display: none;
+  .info {
+    display: flex;
     flex-direction: column;
-    gap: var(--s-3);
-    margin-top: var(--s-3);
     padding-top: var(--s-5);
     border-top: 1px solid var(--border);
+    min-width: 0;
   }
-  .synopsis.is-expanded .synopsis__extra { display: flex; }
-
-  /* ── Detail grid ────────────────────────── */
-  .detail-grid {
+  .info__list {
     display: grid;
     grid-template-columns: 1fr;
     gap: 0;
     margin: 0;
   }
-  .detail-item {
+  .info__item {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s-1);
+    grid-template-columns: 7rem minmax(0, 1fr);
+    gap: var(--s-3);
     padding: var(--s-3) 0;
     border-bottom: 1px solid var(--border);
     align-items: baseline;
-    text-align: center;
+    text-align: start;
   }
-  .detail-item:last-child { border-bottom: none; }
-  .detail-item dt {
+  .info__item:last-child { border-bottom: none; }
+  .info__item dt {
     font-size: var(--fs-xs);
     font-weight: var(--fw-semibold);
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
-  .detail-item dd {
+  .info__item dd {
     font-size: var(--fs-sm);
     color: var(--text-primary);
     margin: 0;
     min-width: 0;
     overflow-wrap: anywhere;
   }
-  .detail-item dd a {
-    color: var(--accent);
-    font-weight: var(--fw-medium);
-  }
-  .detail-item dd a:hover { color: var(--accent-hover); }
 
-  /* ── Aside ──────────────────────────────── */
-  .aside-col {
+  /* SECTION 3 — MORE */
+  .more {
+    max-width: var(--content-max-desktop);
+    width: 100%;
+    margin-inline: auto;
+    padding: 0 var(--pad-x) var(--s-12);
     display: flex;
     flex-direction: column;
-    gap: var(--s-4);
+    gap: var(--s-8);
   }
 
-  /* ── Desktop ────────────────────────────── */
+  /* DESKTOP */
   @media (min-width: 50rem) {
-    .banner { max-height: 26rem; }
-    .banner__title { font-size: var(--fs-4xl); }
-    .banner__inner,
-    .banner__title,
-    .banner__subtitle { text-align: start; }
-    .banner__title { margin-inline: 0; }
+    .hero {
+      aspect-ratio: 16 / 6;
+      max-height: 30rem;
+      min-height: 20rem;
+    }
 
-    .chip-row { justify-content: flex-start; }
-
-    .synopsis__title,
-    .synopsis__body { text-align: start; }
-    .synopsis__toggle { align-self: flex-start; }
-
-    .detail-item {
-      grid-template-columns: 7rem minmax(0, 1fr);
-      gap: var(--s-3);
+    .hero__inner {
+      align-items: flex-start;
       text-align: start;
+      padding: var(--s-16) var(--pad-x) var(--s-8);
+      gap: var(--s-4);
+    }
+
+    .hero__title { font-size: var(--fs-5xl); }
+    .hero__subtitle { font-size: var(--fs-base); }
+
+    .hero__chips { justify-content: flex-start; }
+
+    .hero__rating :global(.rating-wrap) { justify-content: flex-start; }
+    .hero__rating :global(.rating-cta) { text-align: start; }
+
+    .hero__actions {
+      grid-template-columns: auto auto;
+      gap: var(--s-3);
+      justify-content: start;
+      margin-top: var(--s-3);
+    }
+    :global(.hero-play) {
+      width: auto;
+      min-width: 16rem;
+    }
+    .icon-actions {
+      grid-template-columns: repeat(2, max-content);
+      justify-content: start;
+      gap: var(--s-2);
     }
 
     .content {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) var(--aside-width);
-      grid-template-areas:
-        "header header"
-        "main sidebar";
-      gap: var(--s-6) var(--s-8);
-      padding-top: var(--s-6);
+      padding: var(--s-10) var(--pad-x);
     }
-    .content > .chip-row { grid-area: header; }
-    .content > .main-col {
-      grid-area: main;
-      display: flex;
-      flex-direction: column;
-      gap: var(--s-5);
-      min-width: 0;
+    .content__grid {
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      gap: var(--s-10);
+      align-items: start;
     }
-    .content > .aside-col {
-      grid-area: sidebar;
-      display: flex;
-      flex-direction: column;
-      gap: var(--s-4);
-      position: sticky;
-      top: var(--sticky-top);
-      align-self: start;
-      max-height: calc(100vh - var(--sticky-top) - var(--s-4));
-      overflow-y: auto;
-    }
-
-    .cta-row { gap: var(--s-4); }
-    .btn-primary {
-      font-size: var(--fs-base);
-      padding: var(--s-4) var(--s-6);
-    }
-
-    .actions-row {
-      grid-template-columns: max-content max-content;
-      justify-content: flex-start;
-      gap: var(--s-6);
-    }
-
-    .detail-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0 var(--s-6);
+    .info {
+      padding-top: 0;
+      border-top: none;
     }
   }
 </style>

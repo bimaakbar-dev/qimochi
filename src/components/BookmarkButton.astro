@@ -12,7 +12,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 
 <button
   type="button"
-  class:list={['btn-bookmark', className]}
+  class:list={['icon-btn', className]}
   data-bookmark-btn
   data-anime={animeId}
   data-api={apiBase}
@@ -20,11 +20,11 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
   aria-pressed="false"
   title="Simpan ke bookmark"
 >
-  <span class="bookmark-icon bookmark-icon--idle">
-    <Icon name="bookmark" size={22} />
+  <span class="icon-btn__idle">
+    <Icon name="bookmark" size={20} />
   </span>
-  <span class="bookmark-icon bookmark-icon--active">
-    <Icon name="bookmark-filled" size={22} />
+  <span class="icon-btn__active">
+    <Icon name="bookmark-filled" size={20} />
   </span>
 </button>
 
@@ -187,47 +187,51 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 </script>
 
 <style>
-  .btn-bookmark {
+  .icon-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 3.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
     padding: 0;
     background: transparent;
-    color: var(--accent);
-    border: 2px solid var(--accent);
-    border-radius: var(--r-sm);
+    color: var(--text-inverted);
+    border: 1.5px solid hsla(0, 0%, 100%, 0.35);
+    border-radius: var(--r-full);
     cursor: pointer;
-    transition: background var(--t-fast), color var(--t-fast);
+    transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
   }
 
-  .btn-bookmark:hover:not(:disabled) {
-    background: var(--accent-soft);
+  .icon-btn:hover:not(:disabled) {
+    color: var(--accent);
+    border-color: var(--accent);
   }
 
-  .btn-bookmark:disabled {
+  .icon-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
 
-  .bookmark-icon {
+  .icon-btn :global(svg) {
+    display: block;
+    width: 20px;
+    height: 20px;
+  }
+
+  .icon-btn__idle,
+  .icon-btn__active {
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
-  .bookmark-icon--active { display: none; }
+  .icon-btn__active { display: none; }
 
-  .btn-bookmark.is-active {
+  .icon-btn.is-active {
     background: var(--accent);
+    border-color: var(--accent);
     color: var(--accent-text);
   }
-  .btn-bookmark.is-active .bookmark-icon--idle { display: none; }
-  .btn-bookmark.is-active .bookmark-icon--active { display: inline-flex; }
-
-  @media (min-width: 50rem) {
-    .btn-bookmark {
-      width: 4rem;
-    }
-  }
+  .icon-btn.is-active .icon-btn__idle { display: none; }
+  .icon-btn.is-active .icon-btn__active { display: inline-flex; }
 </style>

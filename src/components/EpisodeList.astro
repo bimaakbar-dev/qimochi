@@ -23,7 +23,7 @@ const showFilter = total > 30;
   {showFilter && (
     <input
       type="search"
-      class="episode-filter__input"
+      class="episode-filter"
       data-episode-filter
       placeholder="Cari nomor episode..."
       inputmode="numeric"
@@ -101,11 +101,11 @@ const showFilter = total > 30;
     font-size: var(--fs-lg);
     font-weight: var(--fw-bold);
     color: var(--text-primary);
-    text-align: center;
+    text-align: start;
     margin: 0;
   }
 
-  .episode-filter__input {
+  .episode-filter {
     width: 100%;
     padding: var(--s-2) var(--s-3);
     background: var(--bg-surface);
@@ -115,12 +115,12 @@ const showFilter = total > 30;
     border-radius: var(--r-sm);
     transition: border-color var(--t-fast);
   }
-  .episode-filter__input::placeholder { color: var(--text-muted); }
-  .episode-filter__input:focus {
+  .episode-filter::placeholder { color: var(--text-muted); }
+  .episode-filter:focus {
     outline: none;
     border-color: var(--accent);
   }
-  .episode-filter__input::-webkit-search-cancel-button {
+  .episode-filter::-webkit-search-cancel-button {
     -webkit-appearance: none;
     appearance: none;
   }
@@ -166,8 +166,4 @@ const showFilter = total > 30;
     text-align: center;
   }
   .episode-empty[hidden] { display: none; }
-
-  @media (min-width: 50rem) {
-    .section-title { text-align: start; }
-  }
 </style>

@@ -7,23 +7,20 @@ interface Props {
 const { animeId, class: className } = Astro.props;
 ---
 
-<div class:list={['daftarku-wrap', className]}>
-  <button
-    type="button"
-    class="action-btn"
-    data-daftarku-btn
-    data-anime={animeId}
-    aria-label="Tambah ke daftarku"
-    title="Tambah ke daftarku"
-  >
-    <svg viewBox="0 0 24 24" width="28" height="28" fill="none"
-      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      aria-hidden="true">
-      <path d="M12 5v14M5 12h14"/>
-    </svg>
-    <span class="action-btn__label">Daftarku</span>
-  </button>
-</div>
+<button
+  type="button"
+  class:list={['icon-btn', className]}
+  data-daftarku-btn
+  data-anime={animeId}
+  aria-label="Tambah ke daftarku"
+  title="Tambah ke daftarku"
+>
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+    stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+    aria-hidden="true">
+    <path d="M12 5v14M5 12h14"/>
+  </svg>
+</button>
 
 <script>
   interface AuthUser {
@@ -39,11 +36,7 @@ const { animeId, class: className } = Astro.props;
         const raw = localStorage.getItem('qimochi:user-cache');
         if (!raw) return null;
         const parsed = JSON.parse(raw) as Partial<AuthUser> | null;
-        if (
-          parsed &&
-          typeof parsed.sub === 'string' &&
-          typeof parsed.name === 'string'
-        ) {
+        if (parsed && typeof parsed.sub === 'string' && typeof parsed.name === 'string') {
           return {
             sub: parsed.sub,
             name: parsed.name,
@@ -74,6 +67,7 @@ const { animeId, class: className } = Astro.props;
           if (menu?.open) menu.open();
           return;
         }
+        // TODO: fitur daftarku (user list) — belum diimplementasi.
         console.info('[daftarku] TODO: implement user list untuk', btn.dataset.anime);
       });
     }
@@ -85,38 +79,30 @@ const { animeId, class: className } = Astro.props;
 </script>
 
 <style>
-  .daftarku-wrap {
-    display: flex;
-    justify-content: center;
-  }
-
-  .action-btn {
-    display: flex;
-    flex-direction: column;
+  .icon-btn {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--s-2);
-    padding: var(--s-3);
-    width: 100%;
-    color: var(--accent);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border-radius: var(--r-sm);
+    flex-shrink: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    background: transparent;
+    color: var(--text-inverted);
+    border: 1.5px solid hsla(0, 0%, 100%, 0.35);
+    border-radius: var(--r-full);
     cursor: pointer;
-    transition: background var(--t-fast);
+    transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
   }
-  .action-btn:hover { background: var(--accent-soft); }
-  .action-btn__label { line-height: 1; }
 
-  @media (min-width: 50rem) {
-    .daftarku-wrap { justify-content: flex-start; }
-    .action-btn {
-      flex-direction: row;
-      width: auto;
-      padding: var(--s-2) var(--s-3);
-      gap: var(--s-2);
-    }
+  .icon-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .icon-btn :global(svg) {
+    display: block;
+    width: 20px;
+    height: 20px;
   }
 </style>

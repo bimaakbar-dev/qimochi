@@ -15,15 +15,14 @@ const shareUrl = url ?? Astro.url.href;
 <div class:list={['share-wrap', className]}>
   <button
     type="button"
-    class="action-btn"
+    class="icon-btn"
     data-share-btn
     data-title={title}
     data-url={shareUrl}
     aria-label="Bagikan"
     title="Bagikan"
   >
-    <Icon name="share" size={28} />
-    <span class="action-btn__label">Bagikan</span>
+    <Icon name="share" size={20} />
   </button>
 
   <span
@@ -58,18 +57,18 @@ const shareUrl = url ?? Astro.url.href;
       }
 
       btn.addEventListener('click', async () => {
-        const title = btn.dataset.title ?? document.title;
-        const url = btn.dataset.url ?? location.href;
+        const t = btn.dataset.title ?? document.title;
+        const u = btn.dataset.url ?? location.href;
 
         if (typeof navigator.share === 'function') {
           try {
-            await navigator.share({ title, url });
+            await navigator.share({ title: t, url: u });
             return;
           } catch {}
         }
 
         try {
-          await navigator.clipboard.writeText(url);
+          await navigator.clipboard.writeText(u);
           showToast();
         } catch (err) {
           console.error('[share] copy failed', err);
@@ -86,29 +85,35 @@ const shareUrl = url ?? Astro.url.href;
 <style>
   .share-wrap {
     position: relative;
-    display: flex;
-    justify-content: center;
+    display: inline-flex;
   }
 
-  .action-btn {
-    display: flex;
-    flex-direction: column;
+  .icon-btn {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--s-2);
-    padding: var(--s-3);
-    width: 100%;
-    color: var(--accent);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border-radius: var(--r-sm);
+    flex-shrink: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    background: transparent;
+    color: var(--text-inverted);
+    border: 1.5px solid hsla(0, 0%, 100%, 0.35);
+    border-radius: var(--r-full);
     cursor: pointer;
-    transition: background var(--t-fast);
+    transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
   }
-  .action-btn:hover { background: var(--accent-soft); }
-  .action-btn__label { line-height: 1; }
+
+  .icon-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .icon-btn :global(svg) {
+    display: block;
+    width: 20px;
+    height: 20px;
+  }
 
   .share-toast {
     position: absolute;
@@ -116,24 +121,14 @@ const shareUrl = url ?? Astro.url.href;
     left: 50%;
     transform: translateX(-50%);
     padding: 4px var(--s-3);
-    background: var(--text-primary);
-    color: var(--bg-base);
+    background: var(--text-inverted);
+    color: var(--bg-footer);
     font-size: 0.6875rem;
     font-weight: var(--fw-medium);
     white-space: nowrap;
-    border-radius: var(--r-sm);
+    border-radius: var(--r-full);
     pointer-events: none;
     z-index: var(--z-overlay);
   }
   .share-toast[hidden] { display: none; }
-
-  @media (min-width: 50rem) {
-    .share-wrap { justify-content: flex-start; }
-    .action-btn {
-      flex-direction: row;
-      width: auto;
-      padding: var(--s-2) var(--s-3);
-      gap: var(--s-2);
-    }
-  }
 </style>
