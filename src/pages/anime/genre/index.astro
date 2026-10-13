@@ -5,6 +5,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import Hero from '~/components/Hero.astro';
 import LinkCard from '~/user-components/LinkCard.astro';
 import { URLS } from '~/constants';
+import Page from '~/components/Page.astro';
 
 const [allAnime, allGenres] = await Promise.all([
   getAllAnime(),
@@ -40,7 +41,7 @@ const genres = allGenres
   description="Jelajahi anime berdasarkan genre."
   canonical="/anime/genre/"
 >
-  <div class="wrapper">
+  <Page class="wrapper">
 
     <Hero
       title="Semua Genre"
@@ -62,7 +63,7 @@ const genres = allGenres
       ))}
     </div>
 
-  </div>
+  </Page>
 </BaseLayout>
 
 <style>
