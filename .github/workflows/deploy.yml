@@ -2,7 +2,7 @@ name: Deploy to Cloudflare Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'dev/**']
   repository_dispatch:
     types: [data-updated]
   workflow_dispatch:
@@ -77,4 +77,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=qimochi --branch=main --commit-dirty=true
+          command: pages deploy dist --project-name=qimochi --branch=${{ github.ref_name }} --commit-dirty=true
