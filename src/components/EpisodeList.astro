@@ -16,6 +16,8 @@ const {
 
 const total = episodes.length;
 const showFilter = total > 30;
+
+if (total === 0) return null;
 ---
 
 <section class="section" data-episode-list>
