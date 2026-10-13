@@ -23,24 +23,15 @@ export type QimochiType = 'TV' | 'Movie' | 'OVA' | 'ONA' | 'Special';
 
 export type HydratedAnime = Omit<AnimeEntry, 'data'> & {
   data: Omit<AnimeEntry['data'], 'status' | 'type'> & {
-    // display (di-derive dari raw schema)
     status: QimochiStatus;
     type: QimochiType;
-
-    // view convenience
     cover: string;
     studio: string;
     genre: string[];
     releaseDate: Date | null;
-
-    // alias eksplisit untuk skor (dari stats.score)
     score: number | null;
-
     episodes: EpisodeData[];
     franchises: Franchise[];
-
-    // CATATAN: `rating` tetap dari schema (enum umur G/PG-13/...).
-    // JANGAN di-overwrite.
   };
 };
 
@@ -148,7 +139,7 @@ async function hydrateOne(anime: AnimeEntry): Promise<HydratedAnime> {
   return {
     ...anime,
     data: {
-      ...d,   // <- bawa `rating` (enum) apa adanya, JANGAN ditimpa
+      ...d,
       status: toDisplayStatus(d.status as RawStatus),
       type: toDisplayType(d.type as RawType),
       cover: d.image ?? '',
