@@ -94,15 +94,40 @@ import Page from '~/components/Page.astro';
 
 <script>
   (function () {
-    const API = '/api/anime.json';
+    // Fetch dari yukionime API (SSG file statis, publik, CORS enabled)
+    const API = 'https://yukionime.pages.dev/api/v1/anime.json';
     const BATCH = 24;
     const DEBOUNCE_MS = 120;
     const MIN_QUERY = 2;
     const FUZZY_THRESHOLD = 0.55;
 
+    // Bentuk response dari yukionime API
+    type YukionimeItem = {
+      id: string;
+      title: string;
+      titleEnglish: string | null;
+      titleNative: string | null;
+      image: string | null;
+      type: string;      // enum: TV|Movie|OVA|ONA|Special|Music|Unknown
+      status: string;    // enum: airing|finished|upcoming|hiatus|cancelled
+      season: string | null;
+      year: number | null;
+      episodes: number | null;
+      duration: number | null;
+      rating: string | null;
+      genres: string[];
+      studios: string[];
+      stats: { score?: number; scoredBy?: number } | null;
+    };
+
+    // Bentuk yang dipakai internal search (setelah map dari yukionime)
     type IndexItem = {
-      i: string; t: string; c: string;
-      s: string; y: string; e: number;
+      id: string;
+      title: string;
+      image: string;
+      status: string;    // display: Ongoing|Completed|Upcoming|Hiatus
+      type: string;      // display: TV|Movie|OVA|ONA|Special
+      episodes: number;  // 0 kalau tidak ada
     };
 
     type Entry = {
@@ -129,6 +154,25 @@ import Page from '~/components/Page.astro';
     let visibleCount = 0;
     let ready = false;
 
+    // --- Enum mapping (raw yukionime → display qimochi) ---
+    const STATUS_MAP: Record<string, string> = {
+      airing: 'Ongoing',
+      finished: 'Completed',
+      upcoming: 'Upcoming',
+      hiatus: 'Hiatus',
+      cancelled: 'Completed',
+    };
+
+    const TYPE_MAP: Record<string, string> = {
+      TV: 'TV',
+      Movie: 'Movie',
+      OVA: 'OVA',
+      ONA: 'ONA',
+      Special: 'Special',
+      Music: 'Special',
+      Unknown: 'TV',
+    };
+
     function levenshtein(a: string, b: string): number {
       if (a === b) return 0;
       if (a.length === 0) return b.length;
@@ -153,7 +197,6 @@ import Page from '~/components/Page.astro';
 
     function fuzzyScore(q: string, t: string): number {
       if (!q || !t) return 0;
-
       const words = t.split(' ');
       let best = 0;
       for (const w of words) {
@@ -164,6 +207,7 @@ import Page from '~/components/Page.astro';
       }
       return best;
     }
+
     function statusVariant(s: string): string {
       if (s === 'Ongoing') return 'badge-success';
       if (s === 'Hiatus') return 'badge-warning';
@@ -172,26 +216,26 @@ import Page from '~/components/Page.astro';
 
     function makeCard(item: IndexItem): HTMLElement {
       const node = tmpl!.content.firstElementChild!.cloneNode(true) as HTMLElement;
-      node.setAttribute('href', `/anime/${item.i}/`);
-      node.dataset.animeTitle = item.t;
+      node.setAttribute('href', `/anime/${item.id}/`);
+      node.dataset.animeTitle = item.title;
 
       const img = node.querySelector('[data-cover-img]') as HTMLImageElement;
-      if (item.c) {
-        img.src = item.c;
-        img.alt = `Cover ${item.t}`;
+      if (item.image) {
+        img.src = item.image;
+        img.alt = `Cover ${item.title}`;
       }
 
-      (node.querySelector('.type-badge') as HTMLElement).textContent = item.y;
+      (node.querySelector('.type-badge') as HTMLElement).textContent = item.type;
 
       const badge = node.querySelector('[data-badge]') as HTMLElement;
-      badge.classList.add(statusVariant(item.s));
-      badge.textContent = item.s;
+      badge.classList.add(statusVariant(item.status));
+      badge.textContent = item.status;
 
-      (node.querySelector('h3') as HTMLElement).textContent = item.t;
+      (node.querySelector('h3') as HTMLElement).textContent = item.title;
 
       const eps = node.querySelector('.episodes') as HTMLElement;
-      if (item.e > 0) {
-        eps.textContent = `Ep ${item.e}`;
+      if (item.episodes > 0) {
+        eps.textContent = `Ep ${item.episodes}`;
         eps.hidden = false;
       }
 
@@ -225,7 +269,6 @@ import Page from '~/components/Page.astro';
       matched = [];
     }
 
-    /* ---------- FILTER ---------- */
     function runFilter(qRaw: string): IndexItem[] {
       const q = qRaw.toLowerCase().trim();
       if (!q) return [];
@@ -237,8 +280,8 @@ import Page from '~/components/Page.astro';
 
       if (substring.length > 0) {
         substring.sort((a, b) => {
-          const at = a.t.toLowerCase();
-          const bt = b.t.toLowerCase();
+          const at = a.title.toLowerCase();
+          const bt = b.title.toLowerCase();
           const ai = at.indexOf(q);
           const bi = bt.indexOf(q);
           if (ai !== bi) return ai - bi;
@@ -258,7 +301,6 @@ import Page from '~/components/Page.astro';
 
     function applyFilter(query: string): void {
       const q = query.trim();
-
       if (!ready) return;
 
       if (q.length === 0) {
@@ -299,7 +341,6 @@ import Page from '~/components/Page.astro';
       renderNext();
     }
 
-    /* ---------- EVENTS ---------- */
     let debounceId: number | null = null;
     function debouncedFilter(q: string): void {
       if (debounceId !== null) window.clearTimeout(debounceId);
@@ -359,27 +400,44 @@ import Page from '~/components/Page.astro';
       applyFilter(q);
     });
 
-    /* ---------- INIT (fetch JSON) ---------- */
     const params = new URLSearchParams(window.location.search);
     const initialQuery = params.get('q') || '';
     input.value = initialQuery;
     updateClearBtn();
 
+    // --- Fetch dari yukionime API ---
     fetch(API, { headers: { Accept: 'application/json' } })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<IndexItem[]>;
+        return res.json() as Promise<{ data: YukionimeItem[] }>;
       })
       .then(json => {
-        if (!Array.isArray(json)) {
+        const list = json?.data;
+        if (!Array.isArray(list)) {
           console.error('[Search] Invalid payload');
           return;
         }
 
-        index = json.map(item => ({
-          item,
-          search: (item.t || '').toLowerCase(),
-        }));
+        index = list.map(item => {
+          const mapped: IndexItem = {
+            id: item.id,
+            title: item.title,
+            image: item.image ?? '',
+            status: STATUS_MAP[item.status] ?? item.status,
+            type: TYPE_MAP[item.type] ?? item.type,
+            episodes: item.episodes ?? 0,
+          };
+
+          const search = [
+            item.title,
+            item.titleEnglish ?? '',
+            item.titleNative ?? '',
+          ]
+            .join(' ')
+            .toLowerCase();
+
+          return { item: mapped, search };
+        });
 
         ready = true;
 
