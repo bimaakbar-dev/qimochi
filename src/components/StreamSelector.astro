@@ -16,7 +16,8 @@ interface Props {
 
 const { streams = [] } = Astro.props;
 const defaultStream = streams[0];
-const defaultServer = defaultStream?.servers?.[0];
+const defaultServerIndex = 0;
+const defaultServer = defaultStream?.servers?.[defaultServerIndex];
 
 function encodeUrl(s: string): string {
   if (!s) return '';
@@ -25,13 +26,17 @@ function encodeUrl(s: string): string {
   for (const b of bytes) bin += String.fromCharCode(b);
   return btoa(bin);
 }
+
+function serverLabel(index: number): string {
+  return `Server ${index + 1}`;
+}
 ---
 
 <details class="stream-picker" open>
   <summary>
     <span class="label">Server &amp; Kualitas</span>
     <span class="current" data-current>
-      {defaultStream ? `${defaultStream.quality} · ${defaultServer?.name ?? '—'}` : '—'}
+      {defaultStream ? `${defaultStream.quality} · ${serverLabel(defaultServerIndex)}` : '—'}
     </span>
     <span class="chevron" aria-hidden="true">
       <Icon name="chevron-down" size={16} />
@@ -46,6 +51,7 @@ function encodeUrl(s: string): string {
           {s.servers.map((srv, j) => {
             const id = `s-${i}-${j}`;
             const isDefault = i === 0 && j === 0;
+            const label = serverLabel(j);
             return (
               <>
                 <input
@@ -54,11 +60,11 @@ function encodeUrl(s: string): string {
                   id={id}
                   data-enc={encodeUrl(srv.url)}
                   data-quality={s.quality}
-                  data-server={srv.name}
+                  data-server={label}
                   checked={isDefault}
                   hidden
                 />
-                <label for={id} class="chip">{srv.name}</label>
+                <label for={id} class="chip">{label}</label>
               </>
             );
           })}
