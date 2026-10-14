@@ -2,7 +2,6 @@
 interface Props {
   slug: string;
   episode: number;
-  /** Kalau kosong, cuma localStorage. Kalau ada, akan fetch backend. */
   apiBase?: string;
   class?: string;
 }
@@ -71,9 +70,14 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
     transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
   }
 
-  .votes__btn:hover {
+  .votes__btn:hover:not(:disabled) {
     color: var(--text-primary);
     border-color: var(--border);
+  }
+
+  .votes__btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 
   .votes__btn.is-active[data-vote='1'] {
@@ -111,6 +115,7 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
     likes: number;
     dislikes: number;
     myVote: MyVote;
+    canVote: boolean;
   }
 
   function formatCount(n: number): string {
@@ -136,6 +141,7 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
         likes: typeof p.likes === 'number' ? p.likes : 0,
         dislikes: typeof p.dislikes === 'number' ? p.dislikes : 0,
         myVote: isMyVote(p.myVote) ? p.myVote : 0,
+        canVote: false,
       };
     } catch {
       return null;
@@ -144,20 +150,35 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
 
   function saveLocal(slug: string, ep: number, state: VoteState): void {
     try {
-      localStorage.setItem(storageKey(slug, ep), JSON.stringify(state));
+      localStorage.setItem(
+        storageKey(slug, ep),
+        JSON.stringify({
+          likes: state.likes,
+          dislikes: state.dislikes,
+          myVote: state.myVote,
+        })
+      );
     } catch {}
   }
 
   function parseRemote(json: unknown): VoteState | null {
-    const data = (json as { data?: { likes?: number; dislikes?: number; userVote?: number } })?.data;
+    const data = (json as {
+      data?: {
+        likes?: number;
+        dislikes?: number;
+        userVote?: number;
+        canVote?: boolean;
+      };
+    })?.data;
     if (!data) return null;
 
     const likes = typeof data.likes === 'number' ? data.likes : 0;
     const dislikes = typeof data.dislikes === 'number' ? data.dislikes : 0;
     const myVote: MyVote =
       data.userVote === 1 || data.userVote === -1 ? data.userVote : 0;
+    const canVote = data.canVote === true;
 
-    return { likes, dislikes, myVote };
+    return { likes, dislikes, myVote, canVote };
   }
 
   async function fetchRemote(
@@ -181,8 +202,8 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
     slug: string,
     ep: number,
     value: MyVote
-  ): Promise<VoteState | null> {
-    if (!apiBase) return null;
+  ): Promise<{ state: VoteState | null; unauthorized: boolean }> {
+    if (!apiBase) return { state: null, unauthorized: false };
     try {
       const url = `${apiBase.replace(/\/$/, '')}/api/v1/votes`;
       const res = await fetch(url, {
@@ -191,11 +212,26 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target: 'episode', slug, ep, value }),
       });
-      if (!res.ok) return null;
-      return parseRemote(await res.json());
+
+      if (res.status === 401) {
+        return { state: null, unauthorized: true };
+      }
+      if (!res.ok) return { state: null, unauthorized: false };
+
+      return { state: parseRemote(await res.json()), unauthorized: false };
     } catch {
-      return null;
+      return { state: null, unauthorized: false };
     }
+  }
+
+  function openUserMenu(): void {
+    const menu = (window as any).__qimochiUserMenu;
+    if (menu?.open) {
+      menu.open();
+      return;
+    }
+    // Fallback: paksa refresh supaya user lihat tombol login
+    window.location.href = '/?login=1';
   }
 
   function init(root: HTMLElement): void {
@@ -216,6 +252,7 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
       likes: 0,
       dislikes: 0,
       myVote: 0,
+      canVote: false,
     };
     let busy = false;
 
@@ -227,21 +264,39 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
       dislikeBtn.classList.toggle('is-active', state.myVote === -1);
       likeBtn.setAttribute('aria-pressed', String(state.myVote === 1));
       dislikeBtn.setAttribute('aria-pressed', String(state.myVote === -1));
+
+      // Disable saat busy — cegah double-click
+      likeBtn.disabled = busy;
+      dislikeBtn.disabled = busy;
+
+      // Hint login kalau belum login
+      const label = state.canVote
+        ? null
+        : 'Login untuk vote';
+      likeBtn.title = label ?? 'Suka episode ini';
+      dislikeBtn.title = label ?? 'Tidak suka episode ini';
     }
 
     async function vote(next: 1 | -1): Promise<void> {
       if (busy) return;
+
+      // Belum login → buka menu login, jangan update
+      if (!state.canVote) {
+        openUserMenu();
+        return;
+      }
+
       busy = true;
+      render();
 
       const prev = state.myVote;
       const newVote: MyVote = prev === next ? 0 : next;
 
-      const likesDelta =
-        (newVote === 1 ? 1 : 0) - (prev === 1 ? 1 : 0);
-      const dislikesDelta =
-        (newVote === -1 ? 1 : 0) - (prev === -1 ? 1 : 0);
+      const likesDelta = (newVote === 1 ? 1 : 0) - (prev === 1 ? 1 : 0);
+      const dislikesDelta = (newVote === -1 ? 1 : 0) - (prev === -1 ? 1 : 0);
 
       state = {
+        ...state,
         likes: Math.max(0, state.likes + likesDelta),
         dislikes: Math.max(0, state.dislikes + dislikesDelta),
         myVote: newVote,
@@ -250,15 +305,33 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
       render();
 
       if (api) {
-        const remote = await submitRemote(api, slug, ep, newVote);
+        const { state: remote, unauthorized } = await submitRemote(
+          api,
+          slug,
+          ep,
+          newVote
+        );
+
+        if (unauthorized) {
+          // Session kadaluarsa — revert & prompt login
+          state = { ...state, canVote: false };
+          const fetched = await fetchRemote(api, slug, ep);
+          if (fetched) state = fetched;
+          saveLocal(slug, ep, state);
+          render();
+          busy = false;
+          openUserMenu();
+          return;
+        }
+
         if (remote) {
           state = remote;
           saveLocal(slug, ep, state);
-          render();
         }
       }
 
       busy = false;
+      render();
     }
 
     likeBtn.addEventListener('click', () => vote(1));
@@ -266,6 +339,7 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
 
     render();
 
+    // Sync dari backend
     if (api) {
       (async () => {
         const remote = await fetchRemote(api, slug, ep);
