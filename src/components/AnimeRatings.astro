@@ -5,7 +5,7 @@ interface Props {
 
 const { animeId } = Astro.props;
 const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
-const dialogId = `rating-dialog-${animeId}`;
+const popoverId = `rating-pop-${animeId}`;
 ---
 
 <div
@@ -13,12 +13,14 @@ const dialogId = `rating-dialog-${animeId}`;
   data-rating-widget
   data-anime={animeId}
   data-api={apiBase}
+  data-popover-id={popoverId}
 >
   <button
     type="button"
     class="rating__display"
-    data-rating-open
-    aria-haspopup="dialog"
+    popovertarget={popoverId}
+    aria-haspopup="true"
+    data-rating-trigger
   >
     <span class="rating__stars" aria-hidden="true">
       <span class="rating__stars-bg">★★★★★</span>
@@ -37,82 +39,83 @@ const dialogId = `rating-dialog-${animeId}`;
       </svg>
     </span>
   </button>
-</div>
 
-<dialog
-  class="rating-dialog"
-  id={dialogId}
-  data-rating-dialog
-  aria-labelledby={`${dialogId}-title`}
->
-  <div class="rating-dialog__inner">
-    <header class="rating-dialog__header">
-      <h2 class="rating-dialog__title" id={`${dialogId}-title`}>Rating Komunitas</h2>
-      <button
-        type="button"
-        class="rating-dialog__close"
-        data-rating-close
-        aria-label="Tutup"
-      >
-        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M3 3l10 10M13 3L3 13"/>
-        </svg>
-      </button>
-    </header>
-
-    <div class="rating-dialog__body">
-      <div class="rating-dialog__summary">
-        <span class="rating-dialog__stars" data-dialog-stars aria-hidden="true">
-          <span class="rating-dialog__stars-bg">★★★★★</span>
-          <span class="rating-dialog__stars-fill" data-dialog-stars-fill>★★★★★</span>
-        </span>
-        <div class="rating-dialog__summary-text">
-          <span class="rating-dialog__average" data-dialog-average>—</span>
-          <span class="rating-dialog__votes" data-dialog-votes></span>
-        </div>
-      </div>
-
-      <section class="rating-dialog__section">
-        <h3 class="rating-dialog__section-title">Distribusi rating</h3>
-        <div class="rating-dialog__histogram" data-histogram></div>
-      </section>
-
-      <section class="rating-dialog__section">
-        <h3 class="rating-dialog__section-title" data-user-label>Beri rating:</h3>
-
-        <div
-          class="rating-dialog__input"
-          data-rating-input
-          role="radiogroup"
-          aria-label="Rating kamu"
+  <div
+    class="rating__popover"
+    id={popoverId}
+    popover="auto"
+    aria-label="Rating komunitas"
+    data-rating-popover
+  >
+    <div class="rating__popover-inner">
+      <header class="rating__popover-header">
+        <h3 class="rating__popover-title">Rating Komunitas</h3>
+        <button
+          type="button"
+          class="rating__popover-close"
+          data-rating-close
+          aria-label="Tutup"
         >
-          {[1, 2, 3, 4, 5].map((n) => (
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M3 3l10 10M13 3L3 13"/>
+          </svg>
+        </button>
+      </header>
+
+      <div class="rating__popover-body">
+        <div class="rating__popover-summary">
+          <span class="rating__popover-stars" data-popover-stars aria-hidden="true">
+            <span class="rating__popover-stars-bg">★★★★★</span>
+            <span class="rating__popover-stars-fill" data-popover-stars-fill>★★★★★</span>
+          </span>
+          <div class="rating__popover-summary-text">
+            <span class="rating__popover-average" data-popover-average>—</span>
+            <span class="rating__popover-votes" data-popover-votes></span>
+          </div>
+        </div>
+
+        <section class="rating__popover-section">
+          <h4 class="rating__popover-section-title">Distribusi rating</h4>
+          <div class="rating__popover-histogram" data-histogram></div>
+        </section>
+
+        <section class="rating__popover-section">
+          <h4 class="rating__popover-section-title" data-user-label>Beri rating:</h4>
+
+          <div
+            class="rating__popover-input"
+            data-rating-input
+            role="radiogroup"
+            aria-label="Rating kamu"
+          >
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                type="button"
+                class="rating__popover-star"
+                data-input-star={n}
+                role="radio"
+                aria-checked="false"
+                aria-label={`${n} bintang`}
+                disabled
+              >★</button>
+            ))}
+          </div>
+
+          <div class="rating__popover-actions">
             <button
               type="button"
-              class="rating-dialog__star"
-              data-input-star={n}
-              role="radio"
-              aria-checked="false"
-              aria-label={`${n} bintang`}
-              disabled
-            >★</button>
-          ))}
-        </div>
+              class="rating__popover-clear"
+              data-clear
+              hidden
+            >Hapus rating saya</button>
+          </div>
 
-        <div class="rating-dialog__actions">
-          <button
-            type="button"
-            class="rating-dialog__clear"
-            data-clear
-            hidden
-          >Hapus rating saya</button>
-        </div>
-
-        <p class="rating-dialog__hint" data-hint hidden></p>
-      </section>
+          <p class="rating__popover-hint" data-hint hidden></p>
+        </section>
+      </div>
     </div>
   </div>
-</dialog>
+</div>
 
 <style>
   .rating {
@@ -121,11 +124,11 @@ const dialogId = `rating-dialog-${animeId}`;
     font-family: inherit;
   }
 
-  /* ==== Display (trigger) ==== */
+  /* ==== Trigger ==== */
   .rating__display {
     display: inline-flex;
     align-items: center;
-    gap: var(--s-3);
+    gap: 0;
     padding: var(--s-1) 0;
     background: transparent;
     border: none;
@@ -167,10 +170,14 @@ const dialogId = `rating-dialog-${animeId}`;
     width: 0;
   }
 
+  /* ==== Summary + separator ==== */
   .rating__summary {
     display: inline-flex;
     align-items: baseline;
     gap: var(--s-2);
+    margin-left: var(--s-3);
+    padding-left: var(--s-3);
+    border-left: 1px solid hsla(0, 0%, 100%, 0.22);
     font-size: var(--fs-sm);
     font-weight: var(--fw-semibold);
     letter-spacing: 0.01em;
@@ -207,6 +214,7 @@ const dialogId = `rating-dialog-${animeId}`;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    margin-left: var(--s-2);
     color: hsla(0, 0%, 100%, 0.55);
     transition: transform var(--t-fast), color var(--t-fast);
   }
@@ -216,56 +224,48 @@ const dialogId = `rating-dialog-${animeId}`;
     transform: translateY(1px);
   }
 
-  /* ==== Dialog ==== */
-  .rating-dialog {
-    width: 22rem;
-    max-width: calc(100vw - 2rem);
+  /* ==== Popover ==== */
+  .rating__popover {
+    position: fixed;
+    inset: auto;
+    margin: 0;
     padding: 0;
     border: 1px solid var(--border);
     background: var(--bg-elevated);
     color: var(--text-primary);
     box-shadow: var(--shadow-lg);
-    margin: auto;
+    width: 22rem;
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    opacity: 0;
+    transition: opacity 0.15s ease-out;
   }
 
-  .rating-dialog::backdrop {
-    background: hsla(0, 0%, 0%, 0.6);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+  .rating__popover:popover-open {
+    opacity: 1;
+    animation: rating-pop-in 0.18s ease-out;
   }
 
-  .rating-dialog[open] {
-    animation: rating-dialog-in 0.18s ease-out;
-  }
-
-  .rating-dialog[open]::backdrop {
-    animation: rating-backdrop-in 0.18s ease-out;
-  }
-
-  @keyframes rating-dialog-in {
-    from { opacity: 0; transform: translateY(8px) scale(0.98); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-  }
-
-  @keyframes rating-backdrop-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+  @keyframes rating-pop-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .rating-dialog[open],
-    .rating-dialog[open]::backdrop {
+    .rating__popover,
+    .rating__popover:popover-open {
+      transition: none;
       animation: none;
     }
   }
 
-  .rating-dialog__inner {
+  .rating__popover-inner {
     display: flex;
     flex-direction: column;
   }
 
-  /* Header */
-  .rating-dialog__header {
+  .rating__popover-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -274,21 +274,21 @@ const dialogId = `rating-dialog-${animeId}`;
     border-bottom: 1px solid var(--border);
   }
 
-  .rating-dialog__title {
+  .rating__popover-title {
     margin: 0;
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
     font-weight: var(--fw-bold);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-primary);
   }
 
-  .rating-dialog__close {
+  .rating__popover-close {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 1.5rem;
+    height: 1.5rem;
     padding: 0;
     background: transparent;
     border: none;
@@ -297,40 +297,38 @@ const dialogId = `rating-dialog-${animeId}`;
     transition: color var(--t-fast), background var(--t-fast);
   }
 
-  .rating-dialog__close:hover {
+  .rating__popover-close:hover {
     color: var(--text-primary);
     background: var(--bg-surface);
   }
 
-  /* Body */
-  .rating-dialog__body {
+  .rating__popover-body {
     display: flex;
     flex-direction: column;
-    gap: var(--s-5);
-    padding: var(--s-5) var(--s-4);
+    gap: var(--s-4);
+    padding: var(--s-4);
   }
 
-  /* Summary */
-  .rating-dialog__summary {
+  .rating__popover-summary {
     display: flex;
     align-items: center;
-    gap: var(--s-4);
+    gap: var(--s-3);
   }
 
-  .rating-dialog__stars {
+  .rating__popover-stars {
     position: relative;
     display: inline-block;
-    font-size: 1.25rem;
-    letter-spacing: 3px;
+    font-size: 1.125rem;
+    letter-spacing: 2px;
     line-height: 1;
     white-space: nowrap;
   }
 
-  .rating-dialog__stars-bg {
+  .rating__popover-stars-bg {
     color: var(--border);
   }
 
-  .rating-dialog__stars-fill {
+  .rating__popover-stars-fill {
     position: absolute;
     top: 0;
     left: 0;
@@ -341,57 +339,55 @@ const dialogId = `rating-dialog-${animeId}`;
     white-space: nowrap;
   }
 
-  .rating-dialog__summary-text {
+  .rating__popover-summary-text {
     display: flex;
     align-items: baseline;
     gap: var(--s-2);
   }
 
-  .rating-dialog__average {
-    font-size: var(--fs-xl);
+  .rating__popover-average {
+    font-size: var(--fs-lg);
     font-weight: var(--fw-bold);
     color: var(--text-primary);
     font-variant-numeric: tabular-nums;
   }
 
-  .rating-dialog__votes {
+  .rating__popover-votes {
     font-size: var(--fs-xs);
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
   }
 
-  /* Section */
-  .rating-dialog__section {
+  .rating__popover-section {
     display: flex;
     flex-direction: column;
-    gap: var(--s-3);
+    gap: var(--s-2);
   }
 
-  .rating-dialog__section-title {
+  .rating__popover-section-title {
     margin: 0;
-    font-size: var(--fs-xs);
+    font-size: 0.6875rem;
     font-weight: var(--fw-bold);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-secondary);
   }
 
-  /* Histogram */
-  .rating-dialog__histogram {
+  .rating__popover-histogram {
     display: flex;
     flex-direction: column;
     gap: var(--s-2);
   }
 
-  .rating-dialog__hist-row {
+  .rating__popover-hist-row {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    gap: var(--s-3);
+    gap: var(--s-2);
     font-size: var(--fs-xs);
   }
 
-  .rating-dialog__hist-label {
+  .rating__popover-hist-label {
     display: inline-flex;
     align-items: center;
     gap: 2px;
@@ -401,88 +397,88 @@ const dialogId = `rating-dialog-${animeId}`;
     white-space: nowrap;
   }
 
-  .rating-dialog__hist-label-star {
+  .rating__popover-hist-label-star {
     color: var(--gold);
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
     line-height: 1;
   }
 
-  .rating-dialog__hist-track {
+  .rating__popover-hist-track {
     position: relative;
-    height: 8px;
+    height: 6px;
     background: var(--bg-surface);
     overflow: hidden;
   }
 
-  .rating-dialog__hist-fill {
+  .rating__popover-hist-fill {
     position: absolute;
     inset: 0 auto 0 0;
     background: var(--gold);
     transition: width var(--t-base);
   }
 
-  .rating-dialog__hist-pct {
+  .rating__popover-hist-pct {
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
-    font-size: 0.6875rem;
-    min-width: 2.5rem;
+    font-size: 0.625rem;
+    min-width: 2.25rem;
     text-align: end;
   }
 
-  .rating-dialog__hist-empty {
-    padding: var(--s-4) 0;
+  .rating__popover-hist-empty {
+    padding: var(--s-3) 0;
     text-align: center;
     font-size: var(--fs-xs);
     color: var(--text-muted);
   }
 
-  /* Input */
-  .rating-dialog__input {
+  .rating__popover-input {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
   }
 
-  .rating-dialog__star {
+  .rating__popover-star {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 1.75rem;
+    height: 1.75rem;
     padding: 0;
     background: transparent;
     border: none;
     color: var(--border-hover);
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     line-height: 1;
     cursor: pointer;
     transition: color var(--t-fast), transform var(--t-fast);
   }
 
-  .rating-dialog__star:disabled {
+  .rating__popover-star:disabled {
     cursor: not-allowed;
     opacity: 0.5;
   }
 
-  .rating-dialog__star:not(:disabled):hover {
+  .rating__popover-star:not(:disabled):hover {
     color: var(--gold-hover);
-    transform: scale(1.1);
+    transform: scale(1.12);
   }
 
-  .rating-dialog__star.is-active {
+  .rating__popover-star.is-active {
     color: var(--gold);
   }
 
-  .rating-dialog__star.is-preview {
+  .rating__popover-star.is-preview {
     color: var(--gold-hover);
   }
 
-  .rating-dialog__actions {
+  .rating__popover-actions {
     display: flex;
     justify-content: flex-end;
+    min-height: 1rem;
   }
 
-  .rating-dialog__clear {
+  .rating__popover-clear {
     padding: 0;
     background: transparent;
     border: none;
@@ -495,26 +491,26 @@ const dialogId = `rating-dialog-${animeId}`;
     transition: color var(--t-fast);
   }
 
-  .rating-dialog__clear:hover {
+  .rating__popover-clear:hover {
     color: var(--danger);
   }
 
-  .rating-dialog__clear[hidden] {
+  .rating__popover-clear[hidden] {
     display: none;
   }
 
-  .rating-dialog__hint {
+  .rating__popover-hint {
     margin: 0;
     font-size: var(--fs-xs);
     color: var(--text-muted);
     line-height: var(--lh-relaxed);
   }
 
-  .rating-dialog__hint[hidden] {
+  .rating__popover-hint[hidden] {
     display: none;
   }
 
-  .rating-dialog__hint a {
+  .rating__popover-hint a {
     color: var(--accent);
     text-decoration: underline;
     text-underline-offset: 2px;
@@ -549,43 +545,112 @@ const dialogId = `rating-dialog-${animeId}`;
     }
   }
 
+  function supportsPopover(): boolean {
+    return (
+      typeof HTMLElement !== 'undefined' &&
+      'popover' in HTMLElement.prototype
+    );
+  }
+
+  function positionPopover(
+    popover: HTMLElement,
+    trigger: HTMLElement
+  ): void {
+    popover.style.top = '0px';
+    popover.style.left = '0px';
+
+    const trigRect = trigger.getBoundingClientRect();
+    const popRect = popover.getBoundingClientRect();
+    const vh = window.innerHeight;
+    const vw = window.innerWidth;
+    const MARGIN = 8;
+
+    let top = trigRect.bottom + MARGIN;
+    let left = trigRect.left;
+
+    if (top + popRect.height > vh - MARGIN) {
+      const above = trigRect.top - popRect.height - MARGIN;
+      if (above >= MARGIN) {
+        top = above;
+      } else {
+        top = Math.max(MARGIN, vh - popRect.height - MARGIN);
+      }
+    }
+
+    if (left + popRect.width > vw - MARGIN) {
+      left = vw - popRect.width - MARGIN;
+    }
+    if (left < MARGIN) left = MARGIN;
+
+    popover.style.top = `${Math.round(top)}px`;
+    popover.style.left = `${Math.round(left)}px`;
+  }
+
   function initWidget(root: HTMLElement): void {
     if (root.dataset.bound === '1') return;
     root.dataset.bound = '1';
 
     const ANIME_ID = root.dataset.anime ?? '';
     const API = (root.dataset.api ?? '').replace(/\/$/, '');
-    if (!ANIME_ID || !API) return;
+    const POPOVER_ID = root.dataset.popoverId ?? '';
+    if (!ANIME_ID || !API || !POPOVER_ID) return;
 
-    const dialog = document.querySelector<HTMLDialogElement>(
-      `[data-rating-dialog][id="rating-dialog-${CSS.escape(ANIME_ID)}"]`
-    );
-    if (!dialog) return;
+    const triggerEl = root.querySelector<HTMLButtonElement>('[data-rating-trigger]');
+    const popoverEl = document.getElementById(POPOVER_ID) as HTMLElement | null;
 
-    const openBtn = root.querySelector<HTMLButtonElement>('[data-rating-open]')!;
-    const closeBtn = dialog.querySelector<HTMLButtonElement>('[data-rating-close]')!;
-    const starsWrap = root.querySelector<HTMLElement>('.rating__stars')!;
-    const starsFill = root.querySelector<HTMLElement>('[data-stars-fill]')!;
-    const labelEl = root.querySelector<HTMLElement>('[data-label]')!;
-    const averageEl = root.querySelector<HTMLElement>('[data-average]')!;
-    const votesEl = root.querySelector<HTMLElement>('[data-votes]')!;
+    if (!triggerEl || !popoverEl) return;
 
-    const dialogStars = dialog.querySelector<HTMLElement>('[data-dialog-stars]')!;
-    const dialogStarsFill = dialog.querySelector<HTMLElement>('[data-dialog-stars-fill]')!;
-    const dialogAvg = dialog.querySelector<HTMLElement>('[data-dialog-average]')!;
-    const dialogVotes = dialog.querySelector<HTMLElement>('[data-dialog-votes]')!;
-    const histogram = dialog.querySelector<HTMLElement>('[data-histogram]')!;
-    const userLabel = dialog.querySelector<HTMLElement>('[data-user-label]')!;
+    const triggerBtn: HTMLButtonElement = triggerEl;
+    const popover: HTMLElement = popoverEl;
+
+    const closeBtnEl = popover.querySelector<HTMLButtonElement>('[data-rating-close]');
+    if (!closeBtnEl) return;
+    const closeBtn: HTMLButtonElement = closeBtnEl;
+
+    const starsWrapEl = root.querySelector<HTMLElement>('.rating__stars');
+    const starsFillEl = root.querySelector<HTMLElement>('[data-stars-fill]');
+    const labelElRaw = root.querySelector<HTMLElement>('[data-label]');
+    const averageElRaw = root.querySelector<HTMLElement>('[data-average]');
+    const votesElRaw = root.querySelector<HTMLElement>('[data-votes]');
+
+    const popStarsEl = popover.querySelector<HTMLElement>('[data-popover-stars]');
+    const popStarsFillEl = popover.querySelector<HTMLElement>('[data-popover-stars-fill]');
+    const popAvgEl = popover.querySelector<HTMLElement>('[data-popover-average]');
+    const popVotesEl = popover.querySelector<HTMLElement>('[data-popover-votes]');
+    const histogramEl = popover.querySelector<HTMLElement>('[data-histogram]');
+    const userLabelEl = popover.querySelector<HTMLElement>('[data-user-label]');
+    const clearBtnEl = popover.querySelector<HTMLButtonElement>('[data-clear]');
+    const hintElRaw = popover.querySelector<HTMLElement>('[data-hint]');
+
+    if (
+      !starsWrapEl || !starsFillEl || !labelElRaw || !averageElRaw || !votesElRaw ||
+      !popStarsEl || !popStarsFillEl || !popAvgEl || !popVotesEl ||
+      !histogramEl || !userLabelEl || !clearBtnEl || !hintElRaw
+    ) {
+      return;
+    }
+
+    const starsWrap: HTMLElement = starsWrapEl;
+    const starsFill: HTMLElement = starsFillEl;
+    const labelEl: HTMLElement = labelElRaw;
+    const averageEl: HTMLElement = averageElRaw;
+    const votesEl: HTMLElement = votesElRaw;
+    const popStars: HTMLElement = popStarsEl;
+    const popStarsFill: HTMLElement = popStarsFillEl;
+    const popAvg: HTMLElement = popAvgEl;
+    const popVotes: HTMLElement = popVotesEl;
+    const histogram: HTMLElement = histogramEl;
+    const userLabel: HTMLElement = userLabelEl;
+    const clearBtn: HTMLButtonElement = clearBtnEl;
+    const hintEl: HTMLElement = hintElRaw;
+
     const inputStars = Array.from(
-      dialog.querySelectorAll<HTMLButtonElement>('[data-input-star]')
+      popover.querySelectorAll<HTMLButtonElement>('[data-input-star]')
     );
-    const clearBtn = dialog.querySelector<HTMLButtonElement>('[data-clear]')!;
-    const hintEl = dialog.querySelector<HTMLElement>('[data-hint]')!;
 
     let state: RatingData | null = null;
     let submitting = false;
 
-    /* ---- Stars ---- */
     function fillWidth(avg5: number, hasVotes: boolean): string {
       if (!hasVotes) return '0%';
       return `${Math.max(0, Math.min(100, (avg5 / 5) * 100))}%`;
@@ -596,18 +661,17 @@ const dialogId = `rating-dialog-${animeId}`;
       starsFill.style.width = fillWidth(avg5, hasVotes);
     }
 
-    function renderDialogStars(avg5: number, hasVotes: boolean): void {
-      dialogStars.dataset.empty = hasVotes ? 'false' : 'true';
-      dialogStarsFill.style.width = fillWidth(avg5, hasVotes);
+    function renderPopStars(avg5: number, hasVotes: boolean): void {
+      popStars.dataset.empty = hasVotes ? 'false' : 'true';
+      popStarsFill.style.width = fillWidth(avg5, hasVotes);
     }
 
-    /* ---- Histogram ---- */
     function renderHistogram(dist: Record<string, number>, total: number): void {
       histogram.innerHTML = '';
 
       if (total === 0) {
         const empty = document.createElement('div');
-        empty.className = 'rating-dialog__hist-empty';
+        empty.className = 'rating__popover-hist-empty';
         empty.textContent = 'Belum ada rating. Jadilah yang pertama!';
         histogram.appendChild(empty);
         return;
@@ -618,21 +682,20 @@ const dialogId = `rating-dialog-${animeId}`;
         const pct = total > 0 ? (count / total) * 100 : 0;
 
         const row = document.createElement('div');
-        row.className = 'rating-dialog__hist-row';
+        row.className = 'rating__popover-hist-row';
         row.innerHTML = `
-          <span class="rating-dialog__hist-label">
-            ${star}<span class="rating-dialog__hist-label-star" aria-hidden="true">★</span>
+          <span class="rating__popover-hist-label">
+            ${star}<span class="rating__popover-hist-label-star" aria-hidden="true">★</span>
           </span>
-          <span class="rating-dialog__hist-track">
-            <span class="rating-dialog__hist-fill" style="width: ${pct.toFixed(1)}%"></span>
+          <span class="rating__popover-hist-track">
+            <span class="rating__popover-hist-fill" style="width: ${pct.toFixed(1)}%"></span>
           </span>
-          <span class="rating-dialog__hist-pct">${Math.round(pct)}%</span>
+          <span class="rating__popover-hist-pct">${Math.round(pct)}%</span>
         `;
         histogram.appendChild(row);
       }
     }
 
-    /* ---- Input ---- */
     function renderInput(): void {
       if (!state) return;
 
@@ -665,7 +728,6 @@ const dialogId = `rating-dialog-${animeId}`;
       clearBtn.disabled = submitting;
     }
 
-    /* ---- Trigger ---- */
     function renderTrigger(): void {
       if (!state) return;
 
@@ -685,20 +747,20 @@ const dialogId = `rating-dialog-${animeId}`;
       }
     }
 
-    function renderDialog(): void {
+    function renderPopover(): void {
       if (!state) return;
 
       const hasVotes = state.votes > 0;
       const avg5 = state.average / 2;
 
       if (hasVotes) {
-        dialogAvg.textContent = avg5.toFixed(1);
-        dialogVotes.textContent = `${formatCount(state.votes)} votes`;
-        renderDialogStars(avg5, true);
+        popAvg.textContent = avg5.toFixed(1);
+        popVotes.textContent = `${formatCount(state.votes)} votes`;
+        renderPopStars(avg5, true);
       } else {
-        dialogAvg.textContent = '—';
-        dialogVotes.textContent = 'Belum ada rating';
-        renderDialogStars(0, false);
+        popAvg.textContent = '—';
+        popVotes.textContent = 'Belum ada rating';
+        renderPopStars(0, false);
       }
 
       renderHistogram(state.distribution, state.votes);
@@ -707,10 +769,9 @@ const dialogId = `rating-dialog-${animeId}`;
 
     function render(): void {
       renderTrigger();
-      renderDialog();
+      renderPopover();
     }
 
-    /* ---- Fetch ---- */
     async function fetchRating(): Promise<void> {
       try {
         const res = await fetch(
@@ -804,22 +865,77 @@ const dialogId = `rating-dialog-${animeId}`;
       }
     }
 
-    const dlg = dialog;
+    let fallbackOpen = false;
+    let fallbackHandlersAttached = false;
 
-    function openDialog(): void {
-      if (!dlg.open) dlg.showModal();
+    function openFallback(): void {
+      popover.style.display = 'block';
+      popover.style.position = 'fixed';
+      fallbackOpen = true;
+      triggerBtn.setAttribute('aria-expanded', 'true');
+      positionPopover(popover, triggerBtn);
+
+      if (!fallbackHandlersAttached) {
+        fallbackHandlersAttached = true;
+
+        const onDocClick = (e: MouseEvent) => {
+          const target = e.target as Node;
+          if (popover.contains(target) || triggerBtn.contains(target)) return;
+          closeFallback();
+        };
+        const onKey = (e: KeyboardEvent) => {
+          if (e.key === 'Escape') closeFallback();
+        };
+        const onScrollOrResize = () => {
+          if (fallbackOpen) positionPopover(popover, triggerBtn);
+        };
+
+        document.addEventListener('click', onDocClick, true);
+        document.addEventListener('keydown', onKey);
+        window.addEventListener('scroll', onScrollOrResize, true);
+        window.addEventListener('resize', onScrollOrResize);
+      }
     }
 
-    function closeDialog(): void {
-      if (dlg.open) dlg.close();
+    function closeFallback(): void {
+      if (!fallbackOpen) return;
+      popover.style.display = 'none';
+      fallbackOpen = false;
+      triggerBtn.setAttribute('aria-expanded', 'false');
     }
 
-    openBtn.addEventListener('click', openDialog);
-    closeBtn.addEventListener('click', closeDialog);
+    if (supportsPopover()) {
+      popover.addEventListener('toggle', (e) => {
+        const ev = e as ToggleEvent;
+        if (ev.newState === 'open') {
+          positionPopover(popover, triggerBtn);
+        }
+      });
 
-    dialog.addEventListener('click', (e) => {
-      if (e.target === dialog) closeDialog();
-    });
+      const onScrollOrResize = () => {
+        if (popover.matches(':popover-open')) {
+          positionPopover(popover, triggerBtn);
+        }
+      };
+      window.addEventListener('scroll', onScrollOrResize, true);
+      window.addEventListener('resize', onScrollOrResize);
+
+      closeBtn.addEventListener('click', () => {
+        if (typeof (popover as any).hidePopover === 'function') {
+          (popover as any).hidePopover();
+        }
+      });
+    } else {
+      popover.style.display = 'none';
+
+      triggerBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (fallbackOpen) closeFallback();
+        else openFallback();
+      });
+
+      closeBtn.addEventListener('click', closeFallback);
+    }
 
     for (const btn of inputStars) {
       const n = Number(btn.dataset.inputStar);
