@@ -69,7 +69,7 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
   <div class="hero__scrim" aria-hidden="true"></div>
 
   <div class="hero__inner">
-    <TitleTag class="hero__title">{title}</TitleTag>
+    <TitleTag class="hero__title" title={title}>{title}</TitleTag>
     {hasMeta && (
       <ul class="hero__meta">
         {age && <li class="hero__age">{age}</li>}
@@ -133,7 +133,6 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
 </div>
 
 <style>
-  /* ==== Base ==== */
   .hero {
     position: relative;
     width: 100%;
@@ -203,7 +202,6 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
       );
   }
 
-  /* ==== Inner ==== */
   .hero__inner {
     position: relative;
     z-index: 2;
@@ -219,15 +217,21 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
 
   .hero__title {
     font-family: var(--font-montserrat);
-    font-size: var(--fs-3xl);
-    font-weight: var(--fw-bold);
-    line-height: 1.05;
+    font-size: clamp(1.5rem, 4vw + 0.5rem, var(--fs-4xl));
+    font-weight: 800;
+    line-height: var(--lh-tight);
     letter-spacing: -0.02em;
     color: #fff;
     margin: 0;
     max-width: 20ch;
     text-shadow: 0 2px 20px hsla(0, 0%, 0%, 0.6);
     text-wrap: balance;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .hero__meta {
@@ -238,6 +242,7 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
     padding: 0;
     margin: 0;
     font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
     color: hsla(0, 0%, 100%, 0.82);
     letter-spacing: 0.02em;
     row-gap: var(--s-1);
@@ -268,9 +273,8 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
     background: hsla(0, 0%, 100%, 0.18);
     border: none;
     border-radius: 6px 0 6px 0;
-    font-size: var(--fs-2xs);
-    font-style: italic;
-    font-weight: var(--fw-medium);
+    font-size: 0.6875rem;
+    font-weight: var(--fw-semibold);
     letter-spacing: 0.02em;
     line-height: 1.2;
     color: hsla(0, 0%, 100%, 0.95);
@@ -339,9 +343,9 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
     background: var(--accent);
     color: var(--accent-text);
     border: none;
+    border-radius: var(--r-full);
     font-size: var(--fs-xs);
     font-weight: var(--fw-semibold);
-    border-radius: var(--r-full);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     text-decoration: none;
@@ -380,7 +384,6 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
   .hero__play-icon :global(svg) {
     width: 0.875em;
     height: 0.875em;
-    flex-shrink: 0;
   }
 
   .hero__below :global(.rating-wrap) {
@@ -426,7 +429,8 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
   }
 
   .hero--detail .hero__title {
-    max-width: 30ch;
+    max-width: 22ch;
+    -webkit-line-clamp: 4;
   }
 
   .hero--detail .hero__meta {
@@ -454,12 +458,15 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
     }
 
     .hero__title {
-      font-size: var(--fs-5xl);
-      max-width: 14ch;
+      font-size: clamp(2.5rem, 3vw + 1.25rem, var(--fs-5xl));
+      max-width: 16ch;
+      -webkit-line-clamp: 3;
     }
 
     .hero--carousel .hero__title {
-      font-size: var(--fs-6xl);
+      font-size: clamp(2.75rem, 4vw + 1rem, var(--fs-6xl));
+      max-width: 18ch;
+      -webkit-line-clamp: 3;
     }
 
     .hero__meta {
@@ -479,7 +486,8 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
     }
 
     .hero--detail .hero__title {
-      max-width: 20ch;
+      max-width: 22ch;
+      -webkit-line-clamp: 3;
     }
 
     .hero--detail .hero__meta {

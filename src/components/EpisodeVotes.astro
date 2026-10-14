@@ -1,0 +1,273 @@
+---
+interface Props {
+  slug: string;
+  episode: number;
+  apiBase?: string;
+  class?: string;
+}
+
+const { slug, episode, apiBase = '', class: className } = Astro.props;
+---
+
+<div
+  class:list={['votes', className]}
+  data-votes
+  data-slug={slug}
+  data-ep={episode}
+  data-api={apiBase}
+>
+  <button
+    type="button"
+    class="votes__btn votes__btn--like"
+    data-vote="1"
+    aria-label="Suka episode ini"
+    aria-pressed="false"
+  >
+    <span class="votes__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 22V10l5-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.4 8a2 2 0 0 1-2 1.7H7z"/>
+        <path d="M7 10H3v12h4"/>
+      </svg>
+    </span>
+    <span class="votes__count" data-count="like">0</span>
+  </button>
+
+  <button
+    type="button"
+    class="votes__btn votes__btn--dislike"
+    data-vote="-1"
+    aria-label="Tidak suka episode ini"
+    aria-pressed="false"
+  >
+    <span class="votes__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 2v12l-5 8a2 2 0 0 1-2-2v-4H4.5a2 2 0 0 1-2-2.3l1.4-8a2 2 0 0 1 2-1.7H17z"/>
+        <path d="M17 14h4V2h-4"/>
+      </svg>
+    </span>
+    <span class="votes__count" data-count="dislike">0</span>
+  </button>
+</div>
+
+<style>
+  .votes {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+  }
+
+  .votes__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: var(--s-2) var(--s-3);
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    cursor: pointer;
+    transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+  }
+
+  .votes__btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border);
+  }
+
+  .votes__btn.is-active[data-vote='1'] {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .votes__btn.is-active[data-vote='-1'] {
+    color: var(--danger);
+    border-color: var(--danger);
+    background: var(--danger-soft);
+  }
+
+  .votes__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .votes__icon svg {
+    display: block;
+  }
+
+  .votes__count {
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+</style>
+
+<script>
+  interface VoteState {
+    myVote: 1 | 0 | -1;
+    baseLikes: number;
+    baseDislikes: number;
+  }
+
+  function formatCount(n: number): string {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return String(n);
+  }
+
+  function storageKey(slug: string, ep: number): string {
+    return `qimochi:votes:${slug}:${ep}`;
+  }
+
+  function loadState(slug: string, ep: number): VoteState {
+    try {
+      const raw = localStorage.getItem(storageKey(slug, ep));
+      if (!raw) return { myVote: 0, baseLikes: 0, baseDislikes: 0 };
+      const parsed = JSON.parse(raw) as Partial<VoteState>;
+      return {
+        myVote: parsed.myVote === 1 || parsed.myVote === -1 ? parsed.myVote : 0,
+        baseLikes: typeof parsed.baseLikes === 'number' ? parsed.baseLikes : 0,
+        baseDislikes: typeof parsed.baseDislikes === 'number' ? parsed.baseDislikes : 0,
+      };
+    } catch {
+      return { myVote: 0, baseLikes: 0, baseDislikes: 0 };
+    }
+  }
+
+  function saveState(slug: string, ep: number, state: VoteState): void {
+    try {
+      localStorage.setItem(storageKey(slug, ep), JSON.stringify(state));
+    } catch {}
+  }
+
+  async function fetchFromApi(
+    apiBase: string,
+    slug: string,
+    ep: number
+  ): Promise<VoteState | null> {
+    try {
+      const url = `${apiBase.replace(/\/$/, '')}/api/v1/votes?target=episode&slug=${encodeURIComponent(slug)}&ep=${ep}`;
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) return null;
+      const json = (await res.json()) as {
+        data?: { likes?: number; dislikes?: number; userVote?: number };
+      };
+      const d = json.data;
+      if (!d) return null;
+      return {
+        myVote: d.userVote === 1 || d.userVote === -1 ? d.userVote : 0,
+        baseLikes: typeof d.likes === 'number' ? d.likes : 0,
+        baseDislikes: typeof d.dislikes === 'number' ? d.dislikes : 0,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  async function submitToApi(
+    apiBase: string,
+    slug: string,
+    ep: number,
+    value: 1 | 0 | -1
+  ): Promise<VoteState | null> {
+    try {
+      const url = `${apiBase.replace(/\/$/, '')}/api/v1/votes`;
+      const res = await fetch(url, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: 'episode', slug, ep, value }),
+      });
+      if (!res.ok) return null;
+      const json = (await res.json()) as {
+        data?: { likes?: number; dislikes?: number; userVote?: number };
+      };
+      const d = json.data;
+      if (!d) return null;
+      return {
+        myVote: d.userVote === 1 || d.userVote === -1 ? d.userVote : 0,
+        baseLikes: typeof d.likes === 'number' ? d.likes : 0,
+        baseDislikes: typeof d.dislikes === 'number' ? d.dislikes : 0,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function init(root: HTMLElement): void {
+    if (root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    const slug = root.dataset.slug ?? '';
+    const ep = parseInt(root.dataset.ep ?? '0', 10);
+    const api = root.dataset.api ?? '';
+    if (!slug || !ep) return;
+
+    const likeBtn = root.querySelector<HTMLButtonElement>('[data-vote="1"]')!;
+    const dislikeBtn = root.querySelector<HTMLButtonElement>('[data-vote="-1"]')!;
+    const likeCount = root.querySelector<HTMLElement>('[data-count="like"]')!;
+    const dislikeCount = root.querySelector<HTMLElement>('[data-count="dislike"]')!;
+
+    let state = loadState(slug, ep);
+    let busy = false;
+
+    function render(): void {
+      const likes = state.baseLikes + (state.myVote === 1 ? 1 : 0);
+      const dislikes = state.baseDislikes + (state.myVote === -1 ? 1 : 0);
+
+      likeCount.textContent = formatCount(likes);
+      dislikeCount.textContent = formatCount(dislikes);
+
+      likeBtn.classList.toggle('is-active', state.myVote === 1);
+      dislikeBtn.classList.toggle('is-active', state.myVote === -1);
+      likeBtn.setAttribute('aria-pressed', String(state.myVote === 1));
+      dislikeBtn.setAttribute('aria-pressed', String(state.myVote === -1));
+    }
+
+    async function vote(next: 1 | -1): Promise<void> {
+      if (busy) return;
+      busy = true;
+
+      const prev = state.myVote;
+      const newVote: 1 | 0 | -1 = prev === next ? 0 : next;
+
+      state = { ...state, myVote: newVote };
+      saveState(slug, ep, state);
+      render();
+
+      if (api) {
+        const remote = await submitToApi(api, slug, ep, newVote);
+        if (remote) {
+          state = remote;
+          saveState(slug, ep, state);
+          render();
+        }
+      }
+
+      busy = false;
+    }
+
+    likeBtn.addEventListener('click', () => vote(1));
+    dislikeBtn.addEventListener('click', () => vote(-1));
+
+    render();
+
+    if (api) {
+      (async () => {
+        const remote = await fetchFromApi(api, slug, ep);
+        if (remote) {
+          state = remote;
+          saveState(slug, ep, state);
+          render();
+        }
+      })();
+    }
+  }
+
+  function initAll(scope: ParentNode = document): void {
+    scope.querySelectorAll<HTMLElement>('[data-votes]').forEach(init);
+  }
+
+  initAll();
+</script>

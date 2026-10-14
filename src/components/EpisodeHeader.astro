@@ -1,0 +1,250 @@
+---
+import BookmarkButton from './BookmarkButton.astro';
+import ShareButton from './ShareButton.astro';
+import EpisodeVotes from './EpisodeVotes.astro';
+
+interface Props {
+  animeSlug: string;
+  animeTitle: string;
+  episodeNumber: number;
+  episodeTitle?: string | null;
+  ageRating?: string | null;
+  votesApiBase?: string;
+  showBookmark?: boolean;
+  showShare?: boolean;
+  showVotes?: boolean;
+  class?: string;
+}
+
+const {
+  animeSlug,
+  animeTitle,
+  episodeNumber,
+  episodeTitle,
+  ageRating,
+  votesApiBase = '',
+  showBookmark = true,
+  showShare = true,
+  showVotes = true,
+  class: className,
+} = Astro.props;
+
+const AGE_LABEL: Record<string, string> = {
+  G: 'G',
+  PG: 'PG',
+  'PG-13': '13+',
+  R: '17+',
+  'R+': '17+',
+  Rx: '18+',
+};
+
+const age = ageRating ? AGE_LABEL[ageRating] ?? ageRating : null;
+const heading = episodeTitle && episodeTitle.trim() ? episodeTitle : `Episode ${episodeNumber}`;
+
+const hasMeta = Boolean(age) || true;
+const animeUrl = `/anime/${animeSlug}/`;
+---
+
+<header class:list={['ep-header', className]}>
+  <div class="ep-header__top">
+    <div class="ep-header__text">
+      <a href={animeUrl} class="ep-header__anime">{animeTitle}</a>
+      <h1 class="ep-header__episode">{heading}</h1>
+    </div>
+
+    {showBookmark && (
+      <div class="ep-header__bookmark">
+        <BookmarkButton animeId={animeSlug} />
+      </div>
+    )}
+  </div>
+
+  {hasMeta && (
+    <ul class="ep-header__meta">
+      {age && <li class="ep-header__age">{age}</li>}
+      <li class="ep-header__subindo">Sub Indo</li>
+    </ul>
+  )}
+
+  {(showVotes || showShare) && (
+    <div class="ep-header__actions">
+      {showVotes && (
+        <EpisodeVotes
+          slug={animeSlug}
+          episode={episodeNumber}
+          apiBase={votesApiBase}
+          class="ep-header__votes"
+        />
+      )}
+
+      {showShare && (
+        <div class="ep-header__share">
+          <ShareButton title={`${animeTitle} — ${heading}`} />
+        </div>
+      )}
+    </div>
+  )}
+</header>
+
+<style>
+  .ep-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    padding-bottom: var(--s-4);
+    border-bottom: 1px solid var(--border);
+    min-width: 0;
+  }
+
+  .ep-header__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--s-4);
+    min-width: 0;
+  }
+
+  .ep-header__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .ep-header__anime {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-decoration: none;
+    align-self: flex-start;
+    transition: color var(--t-fast);
+    overflow-wrap: anywhere;
+  }
+
+  .ep-header__anime:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .ep-header__episode {
+    font-family: var(--font-montserrat);
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-tight);
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ep-header__bookmark {
+    flex-shrink: 0;
+  }
+
+  .ep-header__bookmark :global(.icon-btn) {
+    width: 2.25rem;
+    height: 2.25rem;
+    color: var(--text-secondary);
+    border-color: var(--border);
+    border-width: 1px;
+  }
+
+  .ep-header__bookmark :global(.icon-btn:hover) {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .ep-header__bookmark :global(.icon-btn.is-active) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ==== Meta row ==== */
+  .ep-header__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+    row-gap: var(--s-1);
+  }
+
+  .ep-header__meta > li {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .ep-header__meta > li + li::before {
+    content: '';
+    display: inline-block;
+    flex-shrink: 0;
+    width: 3px;
+    height: 3px;
+    border-radius: var(--r-full);
+    background: currentColor;
+    opacity: 0.45;
+    margin-inline: var(--s-2);
+    align-self: center;
+  }
+
+  .ep-header__age {
+    padding: 2px 6px;
+    background: var(--bg-surface);
+    border-radius: 6px 0 6px 0;
+    font-size: 0.6875rem;
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+
+  .ep-header__subindo {
+    color: var(--text-secondary);
+    font-weight: var(--fw-medium);
+  }
+
+  .ep-header__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    margin-top: var(--s-1);
+  }
+
+  .ep-header__votes {
+    margin-inline-start: calc(var(--s-3) * -1);
+  }
+
+  .ep-header__share {
+    display: inline-flex;
+  }
+
+  .ep-header__share :global(.icon-btn) {
+    width: 2.25rem;
+    height: 2.25rem;
+    color: var(--text-secondary);
+    border-color: var(--border);
+    border-width: 1px;
+  }
+
+  .ep-header__share :global(.icon-btn:hover) {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  @media (min-width: 50rem) {
+    .ep-header__episode {
+      font-size: var(--fs-3xl);
+    }
+  }
+</style>

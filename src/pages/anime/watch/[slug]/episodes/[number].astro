@@ -6,9 +6,8 @@ import {
 } from '~/lib/anime';
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import Breadcrumb from '~/components/Breadcrumb.astro';
 import Player from '~/components/Player.astro';
-import WatchTitle from '~/components/WatchTitle.astro';
+import EpisodeHeader from '~/components/EpisodeHeader.astro';
 import StreamSelector from '~/components/StreamSelector.astro';
 import ActionBar from '~/components/ActionBar.astro';
 import DownloadPanel from '~/components/DownloadPanel.astro';
@@ -53,13 +52,6 @@ const pageTitle = `${data.title} Episode ${episode.number}`;
 const pageDesc = `Nonton ${data.title} Episode ${episode.number} subtitle Indonesia.`;
 const canonical = `/anime/watch/${anime.id}/episodes/${episode.number}/`;
 
-const breadcrumbItems = [
-  { label: 'Home', href: '/' },
-  { label: 'Anime', href: '/anime/' },
-  { label: data.title, href: `/anime/${anime.id}/` },
-  { label: `Episode ${episode.number}` },
-];
-
 const progressPayload = {
   slug: anime.id,
   title: data.title,
@@ -67,6 +59,8 @@ const progressPayload = {
   episode: episode.number,
   total: totalEpisodes,
 };
+
+const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
 ---
 
 <BaseLayout
@@ -84,15 +78,16 @@ const progressPayload = {
         title={`${data.title} Episode ${episode.number}`}
       />
     </section>
-    <div class="breadcrumb-wrap">
-      <Breadcrumb items={breadcrumbItems} />
-    </div>
+
     <div class="content-grid">
       <div class="content-main">
-        <WatchTitle
-          title={data.title}
-          slug={anime.id}
+        <EpisodeHeader
+          animeSlug={anime.id}
+          animeTitle={data.title}
           episodeNumber={episode.number}
+          episodeTitle={episode.title ?? null}
+          ageRating={data.rating ?? null}
+          votesApiBase={votesApiBase}
         />
 
         <StreamSelector streams={episode.streams} />
@@ -189,11 +184,6 @@ const progressPayload = {
 <style>
   .wrapper {
     padding-block: var(--s-2) var(--s-12);
-  }
-
-  .breadcrumb-wrap {
-    padding-block: var(--s-2);
-    min-width: 0;
   }
 
   .player-section {
