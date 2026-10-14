@@ -1,0 +1,92 @@
+---
+import SectionLabel from './SectionLabel.astro';
+
+export interface InfoItem {
+  label: string;
+  value: string | number;
+}
+
+interface Props {
+  title?: string;
+  items: InfoItem[];
+  class?: string;
+}
+
+const {
+  title = 'Detail anime',
+  items,
+  class: className,
+} = Astro.props;
+
+const visible = items.filter(
+  (it) => it.value !== null && it.value !== undefined && String(it.value).length > 0
+);
+---
+
+{visible.length > 0 && (
+  <div class:list={['info', className]}>
+    <SectionLabel as="h3" size="md">{title}</SectionLabel>
+
+    <dl class="info__list">
+      {visible.map((it) => (
+        <div class="info__item">
+          <dt>{it.label}</dt>
+          <dd>{it.value}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+)}
+
+<style>
+  .info {
+    display: flex;
+    flex-direction: column;
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--border);
+    min-width: 0;
+  }
+
+  .info__list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin: 0;
+  }
+
+  .info__item {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr);
+    gap: var(--s-3);
+    padding: var(--s-3) 0;
+    border-bottom: 1px solid var(--border);
+    align-items: baseline;
+    text-align: start;
+  }
+
+  .info__item:last-child {
+    border-bottom: none;
+  }
+
+  .info__item dt {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+  }
+
+  .info__item dd {
+    font-size: var(--fs-sm);
+    color: var(--text-primary);
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  @media (min-width: 50rem) {
+    .info {
+      padding-top: 0;
+      border-top: none;
+    }
+  }
+</style>

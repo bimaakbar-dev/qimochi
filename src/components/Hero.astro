@@ -1,61 +1,82 @@
 ---
 interface Props {
   title: string;
-  description?: string;
   size?: 'md' | 'lg';
+  class?: string;
 }
 
 const {
   title,
-  description,
   size = 'md',
+  class: className,
 } = Astro.props;
+
+const hasSlot = Astro.slots.has('default');
 ---
 
-<header class:list={['hero', `hero-${size}`]}>
-  <div class="hero-inner">
-    <h1 class="hero-title">{title}</h1>
-    {description && <p class="hero-desc">{description}</p>}
-    <slot />
+<header class:list={['hero', `hero--${size}`, className]}>
+  <div class="hero__inner">
+    <h1 class="hero__title">{title}</h1>
+    {hasSlot && (
+      <div class="hero__actions">
+        <slot />
+      </div>
+    )}
   </div>
 </header>
 
 <style>
   .hero {
-    background: var(--bg-footer);
     width: 100%;
   }
 
-  .hero-inner {
+  .hero__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4) var(--s-6);
+    flex-wrap: wrap;
     max-width: var(--content-max-mobile);
     margin-inline: auto;
     padding: var(--s-6) var(--pad-x);
-
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-3);
   }
 
-  .hero-title {
-    margin: 0;
-    font-weight: var(--fw-semibold);
+  .hero__title {
+    font-family: var(--font-montserrat);
+    font-size: var(--fs-3xl);
+    font-weight: var(--fw-bold);
     line-height: var(--lh-tight);
-    color: var(--text-inverted);
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin: 0;
+    overflow-wrap: anywhere;
+    min-width: 0;
   }
 
-  .hero-md .hero-title { font-size: var(--fs-3xl); }
-  .hero-lg .hero-title { font-size: var(--fs-4xl); }
+  .hero--lg .hero__title {
+    font-size: var(--fs-4xl);
+  }
 
-  .hero-desc {
-    margin: 0;
-    font-size: var(--fs-sm);
-    line-height: var(--lh-relaxed);
-    color: var(--text-inverted);
-    opacity: 0.75;
-    max-width: 60ch;
+  .hero__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    flex-wrap: wrap;
+    flex-shrink: 0;
   }
 
   @media (min-width: 50rem) {
-    .hero-inner { max-width: var(--content-max-desktop); }
+    .hero__inner {
+      max-width: var(--content-max-desktop);
+      padding: var(--s-8) var(--pad-x);
+    }
+
+    .hero__title {
+      font-size: var(--fs-4xl);
+    }
+
+    .hero--lg .hero__title {
+      font-size: var(--fs-5xl);
+    }
   }
 </style>

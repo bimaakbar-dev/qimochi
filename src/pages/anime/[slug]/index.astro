@@ -10,13 +10,14 @@ import {
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import AdSlot from '~/components/AdSlot.astro';
-import AnimeFranchise from '~/components/AnimeFranchise.astro';
+
+import AnimeHero from '~/components/AnimeHero.astro';
+import AnimeInfo, { type InfoItem } from '~/components/AnimeInfo.astro';
 import AnimeRatings from '~/components/AnimeRatings.astro';
-import BookmarkButton from '~/components/BookmarkButton.astro';
+import AnimeFranchise from '~/components/AnimeFranchise.astro';
 import ShareButton from '~/components/ShareButton.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
 import Comments from '~/components/Comments.astro';
-import LinkButton from '~/user-components/LinkButton.astro';
 import SectionLabel from '~/components/SectionLabel.astro';
 
 export async function getStaticPaths() {
@@ -38,17 +39,11 @@ const episodeNumbers = data.episodes
   .map((e) => e.number)
   .sort((a, b) => a - b);
 
+const hasEpisodes = episodeNumbers.length > 0;
 const firstEpisode = episodeNumbers[0] ?? 1;
 const totalEpisodes = episodeNumbers.length;
 
 const heroImage = data.cover ?? '';
-
-const subtitleParts: string[] = [];
-if (data.titleEnglish && data.titleEnglish !== data.title) {
-  subtitleParts.push(data.titleEnglish);
-}
-if (data.titleNative) subtitleParts.push(data.titleNative);
-const subtitle = subtitleParts.join(' · ');
 
 const genres: { name: string; slug: string }[] = [];
 const rawGenres = data.genres ?? [];
@@ -93,6 +88,17 @@ const pageDescription = [
   studioName,
   year ? String(year) : null,
 ].filter(Boolean).join(' ');
+
+const infoItems: { label: string; value: string }[] = [];
+
+if (data.type) infoItems.push({ label: 'Tipe', value: data.type });
+if (totalEpisodes > 0) infoItems.push({ label: 'Episode', value: String(totalEpisodes) });
+if (data.status) infoItems.push({ label: 'Status', value: data.status });
+if (airedLabel) infoItems.push({ label: 'Rilis', value: airedLabel });
+if (studioName) infoItems.push({ label: 'Studio', value: studioName });
+if (sourceLabel) infoItems.push({ label: 'Sumber', value: sourceLabel });
+if (malScore != null) infoItems.push({ label: 'Skor MAL', value: `${malScore.toFixed(1)} / 10` });
+if (durationLabel) infoItems.push({ label: 'Durasi', value: durationLabel });
 ---
 
 <BaseLayout
@@ -102,62 +108,35 @@ const pageDescription = [
   type="video.other"
 >
   <article class="anime-page">
-    <section class="hero">
-      {heroImage && (
-        <div class="hero__bg" aria-hidden="true">
-          <img
-            class="hero__bg-img"
-            src={heroImage}
-            alt=""
-            loading="eager"
-            fetchpriority="high"
-            decoding="async"
-          />
-        </div>
-      )}
+    <AnimeHero
+      item={{
+        id: anime.id,
+        title: data.title,
+        background: heroImage,
+        age: ageRating,
+        genreLinks: visibleGenres.map((g) => ({
+          name: g.name,
+          href: URLS.genre(g.name),
+        })),
+        excerpt: null,
+        watchUrl: hasEpisodes ? URLS.watch(anime.id, firstEpisode) : undefined,
+        watchLabel: hasEpisodes
+          ? `Mulai Menonton E${firstEpisode}`
+          : 'Belum Ada Episode',
+        watchDisabled: !hasEpisodes,
+      }}
+      size="detail"
+      titleTag="h1"
+    >
+      <Fragment slot="below-meta">
+        <AnimeRatings animeId={anime.id} malScore={malScore} />
+      </Fragment>
 
-      <div class="hero__inner">
-        <h1 class="hero__title">{data.title}</h1>
-        {subtitle && <p class="hero__subtitle">{subtitle}</p>}
-        <div class="hero__chips">
-          {ageRating && <span class="chip chip--age">{ageRating}</span>}
-          <span class="chip chip--plain">Sub Indo</span>
-          {visibleGenres.length > 0 && (
-            <>
-              <span class="chip__dot" aria-hidden="true">
-                <svg viewBox="0 0 8 8" width="8" height="8" fill="currentColor">
-                  <circle cx="4" cy="4" r="2" />
-                </svg>
-              </span>
-              <span class="chip chip--plain">
-                {visibleGenres.map((g) => (
-                  <a href={URLS.genre(g.name)} class="chip__link">{g.name}</a>
-                ))}
-              </span>
-            </>
-          )}
-        </div>
-        <div class="hero__rating">
-          <AnimeRatings animeId={anime.id} malScore={malScore} />
-        </div>
-        <div class="hero__actions">
-          <LinkButton
-            href={URLS.watch(anime.id, firstEpisode)}
-            variant="accent"
-            size="lg"
-            icon="play"
-            iconPos="prefix"
-            class="hero-play"
-          >
-            Mulai Menonton E{firstEpisode}
-          </LinkButton>
-          <div class="icon-actions">
-            <BookmarkButton animeId={anime.id} />
-            <ShareButton title={data.title} />
-          </div>
-        </div>
-      </div>
-    </section>
+      <Fragment slot="actions">
+        <ShareButton title={data.title} />
+      </Fragment>
+    </AnimeHero>
+
     <section class="content">
       <div class="content__grid" data-meta>
         <div class="synopsis">
@@ -176,56 +155,10 @@ const pageDescription = [
             <span data-synopsis-label>Lebih Banyak</span>
           </button>
         </div>
-
-        <div class="info">
-          <SectionLabel as="h3" size="md">Detail anime</SectionLabel>
-          <dl class="info__list">
-            <div class="info__item">
-              <dt>Tipe</dt>
-              <dd>{data.type}</dd>
-            </div>
-            <div class="info__item">
-              <dt>Episode</dt>
-              <dd>{totalEpisodes > 0 ? totalEpisodes : '?'}</dd>
-            </div>
-            <div class="info__item">
-              <dt>Status</dt>
-              <dd>{data.status}</dd>
-            </div>
-            {airedLabel && (
-              <div class="info__item">
-                <dt>Rilis</dt>
-                <dd>{airedLabel}</dd>
-              </div>
-            )}
-            {studioName && (
-              <div class="info__item">
-                <dt>Studio</dt>
-                <dd>{studioName}</dd>
-              </div>
-            )}
-            {sourceLabel && (
-              <div class="info__item">
-                <dt>Sumber</dt>
-                <dd>{sourceLabel}</dd>
-              </div>
-            )}
-            {malScore != null && (
-              <div class="info__item">
-                <dt>Skor MAL</dt>
-                <dd>{malScore.toFixed(1)} / 10</dd>
-              </div>
-            )}
-            {durationLabel && (
-              <div class="info__item">
-                <dt>Durasi</dt>
-                <dd>{durationLabel}</dd>
-              </div>
-            )}
-          </dl>
-        </div>
+        <AnimeInfo items={infoItems} />
       </div>
     </section>
+
     <section class="more">
       <EpisodeList
         slug={anime.id}
@@ -246,7 +179,6 @@ const pageDescription = [
         code={ADS.slots.animeDetailInline}
       />
     </section>
-
   </article>
 </BaseLayout>
 
@@ -289,209 +221,33 @@ const pageDescription = [
     display: flex;
     flex-direction: column;
   }
-  .hero {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    background: var(--bg-footer);
-    color: var(--text-inverted);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    aspect-ratio: 2 / 3;
-    min-height: 32rem;
-    max-height: 92vh;
-  }
-  .hero__bg {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    overflow: hidden;
-  }
-  .hero__bg-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .hero::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(
-      to top,
-      hsla(30, 3%, 5%, 1) 0%,
-      hsla(30, 3%, 5%, 1) 22%,
-      hsla(30, 3%, 5%, 0.92) 45%,
-      hsla(30, 3%, 5%, 0.65) 68%,
-      hsla(30, 3%, 5%, 0.25) 88%,
-      hsla(30, 3%, 5%, 0) 100%
-    );
-    pointer-events: none;
-  }
-  .hero__inner {
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    max-width: var(--content-max-desktop);
-    margin-inline: auto;
-    padding: var(--s-16) var(--pad-x) var(--s-6);
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-3);
+  .hero-subindo {
+    display: inline-flex;
     align-items: center;
-    text-align: center;
-  }
-  .hero__title {
-    font-size: var(--fs-2xl);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-tight);
-    color: var(--text-inverted);
-    text-shadow: 0 2px 12px hsla(0, 0%, 0%, 0.55);
-    margin: 0;
-    max-width: 30ch;
-  }
-  .hero__subtitle {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
     font-weight: var(--fw-medium);
     color: hsla(0, 0%, 100%, 0.82);
-    line-height: 1.5;
-    margin: 0;
-    max-width: 60ch;
-    display: none;
   }
-  .hero__chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-2);
-    align-items: center;
-    justify-content: center;
-    font-size: var(--fs-sm);
-    color: hsla(0, 0%, 100%, 0.85);
-  }
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-1);
-    padding: 2px var(--s-2);
-    line-height: 1.4;
-  }
-  .chip--age {
-    padding-inline: var(--s-1);
-    background: hsla(0, 0%, 100%, 0.20);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-radius: var(--r-sm) 1px var(--r-sm) 1px;
-    font-weight: var(--fw-medium);
-    font-size: var(--fs-xs);
-    letter-spacing: 0.08em;
-    color: var(--text-inverted);
-    font-style: italic;
-  }
-  .chip--plain { padding: 0; }
-  .chip__dot {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: hsla(0, 0%, 100%, 0.55);
-    flex-shrink: 0;
-  }
-  .chip__dot svg {
-    display: block;
-  }
-  .chip__sep {
-    color: hsla(0, 0%, 100%, 0.55);
-  }
-  .chip__link {
-    color: inherit;
-    transition: color var(--t-fast);
-  }
-  .chip__link::after {
-    content: ',';
-    display: inline-block;
-    margin-left: 0.12em;
-    color: hsla(0, 0%, 100%, 0.55);
-    pointer-events: none;
-  }
-  .chip__link:last-child::after {
-    content: '';
-    margin: 0;
-  }
-  .chip__link:hover { color: var(--accent); }
-
-  .hero__rating {
-    width: 100%;
-  }
-  .hero__rating :global(.rating-wrap) {
-    justify-content: center;
-  }
-  .hero__rating :global(.rating-cta) {
-    text-align: center;
-  }
-  .hero__rating :global(.rating-star) {
-    color: hsla(0, 0%, 100%, 0.28);
-  }
-  .hero__rating :global(.rating-star.is-active),
-  .hero__rating :global(.rating-star.is-preview) {
-    color: var(--gold);
-  }
-  .hero__rating :global(.rating-star:not(:disabled):hover) {
-    color: var(--gold-hover);
-  }
-  .hero__rating :global(.rating-score) {
-    color: var(--text-inverted);
-  }
-  .hero__rating :global(.rating-scale),
-  .hero__rating :global(.rating-votes),
-  .hero__rating :global(.rating-cta) {
-    color: hsla(0, 0%, 100%, 0.65);
-  }
-  .hero__rating :global(.rating-cta:hover) {
-    color: var(--accent);
-  }
-
-  .hero__actions {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s-3);
-    margin-top: var(--s-2);
-  }
-
-  :global(.hero-play) {
-    border-radius: var(--r-sm);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    width: 100%;
-    justify-content: center;
-  }
-
-  .icon-actions {
-    display: grid;
-    grid-template-columns: repeat(2, max-content);
-    justify-content: center;
-    gap: var(--s-3);
-  }
-
   .content {
     max-width: var(--content-max-desktop);
     width: 100%;
     margin-inline: auto;
     padding: var(--s-8) var(--pad-x);
   }
+
   .content__grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--s-6);
   }
-  
+
   .synopsis {
     display: flex;
     flex-direction: column;
     gap: var(--s-3);
     min-width: 0;
   }
+
   .synopsis__body {
     position: relative;
     max-height: calc(var(--fs-base) * var(--lh-relaxed) * 4);
@@ -502,15 +258,18 @@ const pageDescription = [
     text-align: start;
     transition: max-height var(--t-base);
   }
+
   .synopsis__body.is-short {
     mask-image: none;
     -webkit-mask-image: none;
   }
+
   .content__grid.is-expanded .synopsis__body {
     max-height: none;
     mask-image: none;
     -webkit-mask-image: none;
   }
+
   .synopsis__toggle {
     align-self: flex-start;
     color: var(--accent);
@@ -527,45 +286,15 @@ const pageDescription = [
     cursor: pointer;
     transition: color var(--t-fast);
   }
-  .synopsis__toggle:hover { color: var(--accent-hover); }
-  .synopsis__toggle.is-hidden { display: none; }
 
-  .info {
-    display: flex;
-    flex-direction: column;
-    padding-top: var(--s-5);
-    border-top: 1px solid var(--border);
-    min-width: 0;
+  .synopsis__toggle:hover {
+    color: var(--accent-hover);
   }
-  .info__list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0;
-    margin: 0;
+
+  .synopsis__toggle.is-hidden {
+    display: none;
   }
-  .info__item {
-    display: grid;
-    grid-template-columns: 7rem minmax(0, 1fr);
-    gap: var(--s-3);
-    padding: var(--s-3) 0;
-    border-bottom: 1px solid var(--border);
-    align-items: baseline;
-    text-align: start;
-  }
-  .info__item:last-child { border-bottom: none; }
-  .info__item dt {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    color: var(--text-secondary);
-    letter-spacing: 0.08em;
-  }
-  .info__item dd {
-    font-size: var(--fs-sm);
-    color: var(--text-primary);
-    margin: 0;
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
+
   .more {
     max-width: var(--content-max-desktop);
     width: 100%;
@@ -577,43 +306,6 @@ const pageDescription = [
   }
 
   @media (min-width: 50rem) {
-    .hero {
-      aspect-ratio: 16 / 6;
-      max-height: 30rem;
-      min-height: 20rem;
-    }
-
-    .hero__inner {
-      align-items: flex-start;
-      text-align: start;
-      padding: var(--s-16) var(--pad-x) var(--s-8);
-      gap: var(--s-4);
-    }
-
-    .hero__title { font-size: var(--fs-5xl); }
-    .hero__subtitle { font-size: var(--fs-base); }
-
-    .hero__chips { justify-content: flex-start; }
-
-    .hero__rating :global(.rating-wrap) { justify-content: flex-start; }
-    .hero__rating :global(.rating-cta) { text-align: start; }
-
-    .hero__actions {
-      grid-template-columns: auto auto;
-      gap: var(--s-3);
-      justify-content: start;
-      margin-top: var(--s-3);
-    }
-    :global(.hero-play) {
-      width: auto;
-      min-width: 16rem;
-    }
-    .icon-actions {
-      grid-template-columns: repeat(2, max-content);
-      justify-content: start;
-      gap: var(--s-2);
-    }
-
     .content {
       padding: var(--s-10) var(--pad-x);
     }
@@ -621,10 +313,6 @@ const pageDescription = [
       grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
       gap: var(--s-10);
       align-items: start;
-    }
-    .info {
-      padding-top: 0;
-      border-top: none;
     }
   }
 </style>
