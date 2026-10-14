@@ -2,6 +2,7 @@
 interface Props {
   slug: string;
   episode: number;
+  /** Kalau kosong, cuma localStorage. Kalau ada, akan fetch backend. */
   apiBase?: string;
   class?: string;
 }
@@ -104,10 +105,12 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
 </style>
 
 <script>
+  type MyVote = 1 | 0 | -1;
+
   interface VoteState {
-    myVote: 1 | 0 | -1;
-    baseLikes: number;
-    baseDislikes: number;
+    likes: number;
+    dislikes: number;
+    myVote: MyVote;
   }
 
   function formatCount(n: number): string {
@@ -117,60 +120,69 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
   }
 
   function storageKey(slug: string, ep: number): string {
-    return `qimochi:votes:${slug}:${ep}`;
+    return `qimochi:votes:v2:${slug}:${ep}`;
   }
 
-  function loadState(slug: string, ep: number): VoteState {
+  function isMyVote(v: unknown): v is MyVote {
+    return v === 1 || v === -1 || v === 0;
+  }
+
+  function loadLocal(slug: string, ep: number): VoteState | null {
     try {
       const raw = localStorage.getItem(storageKey(slug, ep));
-      if (!raw) return { myVote: 0, baseLikes: 0, baseDislikes: 0 };
-      const parsed = JSON.parse(raw) as Partial<VoteState>;
+      if (!raw) return null;
+      const p = JSON.parse(raw) as Partial<VoteState>;
       return {
-        myVote: parsed.myVote === 1 || parsed.myVote === -1 ? parsed.myVote : 0,
-        baseLikes: typeof parsed.baseLikes === 'number' ? parsed.baseLikes : 0,
-        baseDislikes: typeof parsed.baseDislikes === 'number' ? parsed.baseDislikes : 0,
-      };
-    } catch {
-      return { myVote: 0, baseLikes: 0, baseDislikes: 0 };
-    }
-  }
-
-  function saveState(slug: string, ep: number, state: VoteState): void {
-    try {
-      localStorage.setItem(storageKey(slug, ep), JSON.stringify(state));
-    } catch {}
-  }
-
-  async function fetchFromApi(
-    apiBase: string,
-    slug: string,
-    ep: number
-  ): Promise<VoteState | null> {
-    try {
-      const url = `${apiBase.replace(/\/$/, '')}/api/v1/votes?target=episode&slug=${encodeURIComponent(slug)}&ep=${ep}`;
-      const res = await fetch(url, { credentials: 'include' });
-      if (!res.ok) return null;
-      const json = (await res.json()) as {
-        data?: { likes?: number; dislikes?: number; userVote?: number };
-      };
-      const d = json.data;
-      if (!d) return null;
-      return {
-        myVote: d.userVote === 1 || d.userVote === -1 ? d.userVote : 0,
-        baseLikes: typeof d.likes === 'number' ? d.likes : 0,
-        baseDislikes: typeof d.dislikes === 'number' ? d.dislikes : 0,
+        likes: typeof p.likes === 'number' ? p.likes : 0,
+        dislikes: typeof p.dislikes === 'number' ? p.dislikes : 0,
+        myVote: isMyVote(p.myVote) ? p.myVote : 0,
       };
     } catch {
       return null;
     }
   }
 
-  async function submitToApi(
+  function saveLocal(slug: string, ep: number, state: VoteState): void {
+    try {
+      localStorage.setItem(storageKey(slug, ep), JSON.stringify(state));
+    } catch {}
+  }
+
+  function parseRemote(json: unknown): VoteState | null {
+    const data = (json as { data?: { likes?: number; dislikes?: number; userVote?: number } })?.data;
+    if (!data) return null;
+
+    const likes = typeof data.likes === 'number' ? data.likes : 0;
+    const dislikes = typeof data.dislikes === 'number' ? data.dislikes : 0;
+    const myVote: MyVote =
+      data.userVote === 1 || data.userVote === -1 ? data.userVote : 0;
+
+    return { likes, dislikes, myVote };
+  }
+
+  async function fetchRemote(
+    apiBase: string,
+    slug: string,
+    ep: number
+  ): Promise<VoteState | null> {
+    if (!apiBase) return null;
+    try {
+      const url = `${apiBase.replace(/\/$/, '')}/api/v1/votes?target=episode&slug=${encodeURIComponent(slug)}&ep=${ep}`;
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) return null;
+      return parseRemote(await res.json());
+    } catch {
+      return null;
+    }
+  }
+
+  async function submitRemote(
     apiBase: string,
     slug: string,
     ep: number,
-    value: 1 | 0 | -1
+    value: MyVote
   ): Promise<VoteState | null> {
+    if (!apiBase) return null;
     try {
       const url = `${apiBase.replace(/\/$/, '')}/api/v1/votes`;
       const res = await fetch(url, {
@@ -180,16 +192,7 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
         body: JSON.stringify({ target: 'episode', slug, ep, value }),
       });
       if (!res.ok) return null;
-      const json = (await res.json()) as {
-        data?: { likes?: number; dislikes?: number; userVote?: number };
-      };
-      const d = json.data;
-      if (!d) return null;
-      return {
-        myVote: d.userVote === 1 || d.userVote === -1 ? d.userVote : 0,
-        baseLikes: typeof d.likes === 'number' ? d.likes : 0,
-        baseDislikes: typeof d.dislikes === 'number' ? d.dislikes : 0,
-      };
+      return parseRemote(await res.json());
     } catch {
       return null;
     }
@@ -209,15 +212,16 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
     const likeCount = root.querySelector<HTMLElement>('[data-count="like"]')!;
     const dislikeCount = root.querySelector<HTMLElement>('[data-count="dislike"]')!;
 
-    let state = loadState(slug, ep);
+    let state: VoteState = loadLocal(slug, ep) ?? {
+      likes: 0,
+      dislikes: 0,
+      myVote: 0,
+    };
     let busy = false;
 
     function render(): void {
-      const likes = state.baseLikes + (state.myVote === 1 ? 1 : 0);
-      const dislikes = state.baseDislikes + (state.myVote === -1 ? 1 : 0);
-
-      likeCount.textContent = formatCount(likes);
-      dislikeCount.textContent = formatCount(dislikes);
+      likeCount.textContent = formatCount(state.likes);
+      dislikeCount.textContent = formatCount(state.dislikes);
 
       likeBtn.classList.toggle('is-active', state.myVote === 1);
       dislikeBtn.classList.toggle('is-active', state.myVote === -1);
@@ -230,17 +234,26 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
       busy = true;
 
       const prev = state.myVote;
-      const newVote: 1 | 0 | -1 = prev === next ? 0 : next;
+      const newVote: MyVote = prev === next ? 0 : next;
 
-      state = { ...state, myVote: newVote };
-      saveState(slug, ep, state);
+      const likesDelta =
+        (newVote === 1 ? 1 : 0) - (prev === 1 ? 1 : 0);
+      const dislikesDelta =
+        (newVote === -1 ? 1 : 0) - (prev === -1 ? 1 : 0);
+
+      state = {
+        likes: Math.max(0, state.likes + likesDelta),
+        dislikes: Math.max(0, state.dislikes + dislikesDelta),
+        myVote: newVote,
+      };
+      saveLocal(slug, ep, state);
       render();
 
       if (api) {
-        const remote = await submitToApi(api, slug, ep, newVote);
+        const remote = await submitRemote(api, slug, ep, newVote);
         if (remote) {
           state = remote;
-          saveState(slug, ep, state);
+          saveLocal(slug, ep, state);
           render();
         }
       }
@@ -255,10 +268,10 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
 
     if (api) {
       (async () => {
-        const remote = await fetchFromApi(api, slug, ep);
+        const remote = await fetchRemote(api, slug, ep);
         if (remote) {
           state = remote;
-          saveState(slug, ep, state);
+          saveLocal(slug, ep, state);
           render();
         }
       })();
@@ -270,4 +283,5 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
   }
 
   initAll();
+  document.addEventListener('astro:page-load', () => initAll());
 </script>
