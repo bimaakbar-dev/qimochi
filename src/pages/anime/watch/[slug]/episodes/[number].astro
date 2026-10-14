@@ -78,17 +78,15 @@ const progressPayload = {
   noindex={true}
 >
   <Page class="wrapper">
-    <div class="breadcrumb-wrap">
-      <Breadcrumb items={breadcrumbItems} />
-    </div>
-
     <section class="player-section">
       <Player
         src={playerSrc}
         title={`${data.title} Episode ${episode.number}`}
       />
     </section>
-
+    <div class="breadcrumb-wrap">
+      <Breadcrumb items={breadcrumbItems} />
+    </div>
     <div class="content-grid">
       <div class="content-main">
         <WatchTitle
@@ -194,7 +192,7 @@ const progressPayload = {
   }
 
   .breadcrumb-wrap {
-    padding-block: var(--s-2) var(--s-3);
+    padding-block: var(--s-2);
     min-width: 0;
   }
 
