@@ -1,6 +1,7 @@
 ---
 const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
 const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
+const dialogId = 'qimochi-user-dialog';
 ---
 
 <div
@@ -8,13 +9,13 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
   data-user-menu
   data-clientid={clientId}
   data-api={apiBase}
+  data-dialog-id={dialogId}
 >
   <button
     type="button"
     class="user-trigger"
     data-trigger
-    aria-haspopup="true"
-    aria-expanded="false"
+    aria-haspopup="dialog"
     aria-label="Akun"
   >
     <span class="user-trigger-guest" data-guest>
@@ -25,26 +26,54 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     </span>
     <img class="user-trigger-avatar" data-avatar alt="" width="28" height="28" hidden />
   </button>
+</div>
 
-  <div class="user-panel" data-panel hidden>
-    <div class="user-panel-gsi" data-gsi></div>
+<dialog
+  class="user-dialog"
+  id={dialogId}
+  data-user-dialog
+  aria-labelledby={`${dialogId}-title`}
+>
+  <div class="user-dialog__inner">
+    <header class="user-dialog__header">
+      <h2 class="user-dialog__title" id={`${dialogId}-title`} data-dialog-title>Masuk</h2>
+      <button
+        type="button"
+        class="user-dialog__close"
+        data-dialog-close
+        aria-label="Tutup"
+      >
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M3 3l10 10M13 3L3 13"/>
+        </svg>
+      </button>
+    </header>
 
-    <div class="user-panel-profile" data-profile hidden>
-      <div class="user-panel-head">
-        <img data-info-avatar alt="" width="40" height="40" />
-        <div class="user-panel-meta">
-          <strong data-info-name></strong>
-          <span data-info-email></span>
-        </div>
+    <div class="user-dialog__body">
+      <div class="user-dialog__guest" data-guest-view>
+        <p class="user-dialog__hint">
+          Masuk dengan Google untuk menyimpan bookmark, memberi rating,
+          dan ikut berkomentar.
+        </p>
+        <div class="user-dialog__gsi" data-gsi></div>
       </div>
-      <button type="button" class="user-panel-logout" data-logout>Keluar</button>
+
+      <div class="user-dialog__profile" data-profile hidden>
+        <div class="user-dialog__profile-head">
+          <img data-info-avatar alt="" width="56" height="56" />
+          <div class="user-dialog__profile-meta">
+            <strong data-info-name></strong>
+            <span data-info-email></span>
+          </div>
+        </div>
+        <button type="button" class="user-dialog__logout" data-logout>Keluar</button>
+      </div>
     </div>
   </div>
-</div>
+</dialog>
 
 <style>
   .user-menu {
-    position: relative;
     display: inline-flex;
     align-items: center;
   }
@@ -92,75 +121,165 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     display: none;
   }
 
-  .user-panel {
-    position: absolute;
-    top: calc(100% + var(--s-2));
-    right: 0;
-    z-index: var(--z-overlay);
-    min-width: 16rem;
-    max-width: 20rem;
-    padding: var(--s-3);
-    background: var(--bg-elevated);
+  /* ==== Dialog ==== */
+  .user-dialog {
+    width: 24rem;
+    max-width: calc(100vw - 2rem);
+    padding: 0;
     border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text-primary);
     box-shadow: var(--shadow-lg);
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-3);
+    margin: auto;
   }
 
-  .user-panel[hidden] {
+  .user-dialog::backdrop {
+    background: hsla(0, 0%, 0%, 0.6);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .user-dialog[open] {
+    animation: user-dialog-in 0.18s ease-out;
+  }
+
+  .user-dialog[open]::backdrop {
+    animation: user-backdrop-in 0.18s ease-out;
+  }
+
+  @keyframes user-dialog-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes user-backdrop-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .user-dialog[open],
+    .user-dialog[open]::backdrop {
+      animation: none;
+    }
+  }
+
+  .user-dialog__inner {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .user-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .user-dialog__title {
+    margin: 0;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+
+  .user-dialog__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+
+  .user-dialog__close:hover {
+    color: var(--text-primary);
+    background: var(--bg-surface);
+  }
+
+  .user-dialog__body {
+    padding: var(--s-5) var(--s-4);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Guest view */
+  .user-dialog__guest {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .user-dialog__guest[hidden] {
     display: none;
   }
 
-  .user-panel-gsi {
+  .user-dialog__hint {
+    margin: 0;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-relaxed);
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  .user-dialog__gsi {
     display: flex;
     justify-content: center;
-    min-height: 40px;
+    min-height: 44px;
+    align-items: center;
   }
 
-  .user-panel-gsi[hidden] {
-    display: none;
+  .user-dialog__gsi:empty::before {
+    content: 'Memuat tombol login...';
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
   }
 
-  .user-panel-gsi:empty {
-    min-height: 0;
-  }
-
-  .user-panel-profile {
+  /* Profile view */
+  .user-dialog__profile {
     display: flex;
     flex-direction: column;
-    gap: var(--s-3);
+    gap: var(--s-5);
   }
 
-  .user-panel-profile[hidden] {
+  .user-dialog__profile[hidden] {
     display: none;
   }
 
-  .user-panel-head {
+  .user-dialog__profile-head {
     display: flex;
     align-items: center;
     gap: var(--s-3);
     min-width: 0;
   }
 
-  .user-panel-head img {
-    width: 40px;
-    height: 40px;
+  .user-dialog__profile-head img {
+    width: 56px;
+    height: 56px;
     border-radius: var(--r-full);
     object-fit: cover;
     flex-shrink: 0;
     background: var(--bg-surface);
   }
 
-  .user-panel-meta {
+  .user-dialog__profile-meta {
     display: flex;
     flex-direction: column;
     gap: 2px;
     min-width: 0;
   }
 
-  .user-panel-meta strong {
-    font-size: var(--fs-sm);
+  .user-dialog__profile-meta strong {
+    font-size: var(--fs-base);
     color: var(--text-primary);
     font-weight: var(--fw-semibold);
     white-space: nowrap;
@@ -168,7 +287,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     text-overflow: ellipsis;
   }
 
-  .user-panel-meta span {
+  .user-dialog__profile-meta span {
     font-size: var(--fs-xs);
     color: var(--text-muted);
     white-space: nowrap;
@@ -176,7 +295,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     text-overflow: ellipsis;
   }
 
-  .user-panel-logout {
+  .user-dialog__logout {
     align-self: stretch;
     padding: var(--s-2) var(--s-3);
     background: transparent;
@@ -190,7 +309,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     transition: all var(--t-fast);
   }
 
-  .user-panel-logout:hover {
+  .user-dialog__logout:hover {
     border-color: var(--danger);
     color: var(--danger);
   }
@@ -207,26 +326,58 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
   (function () {
     const CACHE_KEY = 'qimochi:user-cache';
 
-    const root = document.querySelector<HTMLElement>('[data-user-menu]');
-    if (!root) return;
+    const rootEl = document.querySelector<HTMLElement>('[data-user-menu]');
+    if (!rootEl) return;
+    const root: HTMLElement = rootEl;
 
     const CLIENT_ID = root.dataset.clientid || '';
     const API = (root.dataset.api || '').replace(/\/$/, '');
+    const DIALOG_ID = root.dataset.dialogId || '';
 
-    const trigger = root.querySelector<HTMLButtonElement>('[data-trigger]')!;
-    const guestIcon = root.querySelector<HTMLElement>('[data-guest]')!;
-    const triggerAvatar = root.querySelector<HTMLImageElement>('[data-avatar]')!;
-    const panel = root.querySelector<HTMLElement>('[data-panel]')!;
-    const gsiSlot = root.querySelector<HTMLElement>('[data-gsi]')!;
-    const profileBox = root.querySelector<HTMLElement>('[data-profile]')!;
-    const infoAvatar = root.querySelector<HTMLImageElement>('[data-info-avatar]')!;
-    const infoName = root.querySelector<HTMLElement>('[data-info-name]')!;
-    const infoEmail = root.querySelector<HTMLElement>('[data-info-email]')!;
-    const logoutBtn = root.querySelector<HTMLButtonElement>('[data-logout]')!;
+    const dialogEl = DIALOG_ID
+      ? (document.getElementById(DIALOG_ID) as HTMLDialogElement | null)
+      : null;
+    if (!dialogEl) return;
+    const dialog: HTMLDialogElement = dialogEl;
+
+    const triggerEl = root.querySelector<HTMLButtonElement>('[data-trigger]');
+    const guestIconEl = root.querySelector<HTMLElement>('[data-guest]');
+    const triggerAvatarEl = root.querySelector<HTMLImageElement>('[data-avatar]');
+
+    const dialogCloseEl = dialog.querySelector<HTMLButtonElement>('[data-dialog-close]');
+    const dialogTitleEl = dialog.querySelector<HTMLElement>('[data-dialog-title]');
+    const guestViewEl = dialog.querySelector<HTMLElement>('[data-guest-view]');
+    const gsiSlotEl = dialog.querySelector<HTMLElement>('[data-gsi]');
+    const profileBoxEl = dialog.querySelector<HTMLElement>('[data-profile]');
+    const infoAvatarEl = dialog.querySelector<HTMLImageElement>('[data-info-avatar]');
+    const infoNameEl = dialog.querySelector<HTMLElement>('[data-info-name]');
+    const infoEmailEl = dialog.querySelector<HTMLElement>('[data-info-email]');
+    const logoutBtnEl = dialog.querySelector<HTMLButtonElement>('[data-logout]');
+
+    if (
+      !triggerEl || !guestIconEl || !triggerAvatarEl ||
+      !dialogCloseEl || !dialogTitleEl || !guestViewEl || !gsiSlotEl ||
+      !profileBoxEl || !infoAvatarEl || !infoNameEl || !infoEmailEl || !logoutBtnEl
+    ) {
+      return;
+    }
+
+    // Typed const — non-null setelah guard di atas
+    const trigger: HTMLButtonElement = triggerEl;
+    const guestIcon: HTMLElement = guestIconEl;
+    const triggerAvatar: HTMLImageElement = triggerAvatarEl;
+    const dialogClose: HTMLButtonElement = dialogCloseEl;
+    const dialogTitle: HTMLElement = dialogTitleEl;
+    const guestView: HTMLElement = guestViewEl;
+    const gsiSlot: HTMLElement = gsiSlotEl;
+    const profileBox: HTMLElement = profileBoxEl;
+    const infoAvatar: HTMLImageElement = infoAvatarEl;
+    const infoName: HTMLElement = infoNameEl;
+    const infoEmail: HTMLElement = infoEmailEl;
+    const logoutBtn: HTMLButtonElement = logoutBtnEl;
 
     let currentUser: AuthUser | null = null;
     let gsiRendered = false;
-    let panelOpen = false;
 
     function readCache(): AuthUser | null {
       try {
@@ -287,9 +438,11 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
         } else {
           triggerAvatar.removeAttribute('src');
         }
-        gsiSlot.innerHTML = '';
-        gsiSlot.hidden = true;
+
+        dialogTitle.textContent = 'Akun Saya';
+        guestView.hidden = true;
         profileBox.hidden = false;
+
         if (currentUser.picture) {
           infoAvatar.src = currentUser.picture;
         } else {
@@ -302,8 +455,10 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
         guestIcon.hidden = false;
         triggerAvatar.hidden = true;
         triggerAvatar.removeAttribute('src');
+
+        dialogTitle.textContent = 'Masuk';
+        guestView.hidden = false;
         profileBox.hidden = true;
-        gsiSlot.hidden = false;
         ensureGsi();
       }
     }
@@ -313,16 +468,16 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
       if (!CLIENT_ID) return;
       const g = (window as any).google;
       if (!g?.accounts?.id) return;
-      if (!panelOpen) return;
 
       try {
+        gsiSlot.innerHTML = '';
         g.accounts.id.renderButton(gsiSlot, {
           theme: 'outline',
           size: 'large',
           text: 'signin_with',
           shape: 'rect',
           logo_alignment: 'left',
-          width: 240,
+          width: 280,
         });
         gsiRendered = true;
       } catch (err) {
@@ -330,33 +485,25 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
       }
     }
 
-    function openPanel(): void {
-      panelOpen = true;
-      panel.hidden = false;
-      trigger.setAttribute('aria-expanded', 'true');
+    function openDialog(): void {
+      if (dialog.open) return;
+      dialog.showModal();
       if (!currentUser) ensureGsi();
     }
 
-    function closePanel(): void {
-      panelOpen = false;
-      panel.hidden = true;
-      trigger.setAttribute('aria-expanded', 'false');
+    function closeDialog(): void {
+      if (dialog.open) dialog.close();
     }
 
     trigger.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (panelOpen) closePanel();
-      else openPanel();
+      openDialog();
     });
 
-    document.addEventListener('click', (e) => {
-      if (!panelOpen) return;
-      if (root.contains(e.target as Node)) return;
-      closePanel();
-    });
+    dialogClose.addEventListener('click', closeDialog);
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && panelOpen) closePanel();
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) closeDialog();
     });
 
     async function handleCredential(response: { credential: string }): Promise<void> {
@@ -373,7 +520,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
           currentUser = json.user;
           writeCache(json.user);
           applyUser();
-          closePanel();
+          closeDialog();
           dispatchAuthChanged();
         }
       } catch (err) {
@@ -392,7 +539,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
       gsiRendered = false;
       writeCache(null);
       applyUser();
-      closePanel();
+      closeDialog();
       dispatchAuthChanged();
     });
 
@@ -455,8 +602,8 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 
     (window as any).__qimochiUserMenu = {
       getUser: () => currentUser,
-      open: () => openPanel(),
-      close: () => closePanel(),
+      open: () => openDialog(),
+      close: () => closeDialog(),
     };
   })();
 </script>
