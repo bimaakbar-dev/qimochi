@@ -1,265 +1,716 @@
 ---
 interface Props {
   animeId: string;
-  malScore?: number | null;
 }
 
-const { animeId, malScore = null } = Astro.props;
+const { animeId } = Astro.props;
 const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
+const dialogId = `rating-dialog-${animeId}`;
 ---
 
 <div
-  class="rating-wrap"
+  class="rating"
   data-rating-widget
   data-anime={animeId}
   data-api={apiBase}
-  data-mal-score={malScore ?? ''}
 >
-  <span class="rating-stars" data-stars role="radiogroup" aria-label="Rating">
-    {[1, 2, 3, 4, 5].map((n) => (
-      <button
-        type="button"
-        class="rating-star"
-        data-star={n}
-        role="radio"
-        aria-checked="false"
-        aria-label={`${n} bintang`}
-        disabled
-      >★</button>
-    ))}
-  </span>
-
-  <span class="rating-score">
-    <span class="rating-average" data-average>—</span>
-    <span class="rating-scale">/10</span>
-  </span>
-
-  <span class="rating-votes" data-votes></span>
-
-  <span class="rating-user" data-user hidden></span>
-
   <button
     type="button"
-    class="rating-clear"
-    data-clear
-    hidden
-    aria-label="Hapus rating"
-  >×</button>
+    class="rating__display"
+    data-rating-open
+    aria-haspopup="dialog"
+  >
+    <span class="rating__stars" aria-hidden="true">
+      <span class="rating__stars-bg">★★★★★</span>
+      <span class="rating__stars-fill" data-stars-fill>★★★★★</span>
+    </span>
 
-  <button
-    type="button"
-    class="rating-cta"
-    data-rating-cta
-    hidden
-  ></button>
+    <span class="rating__summary">
+      <span class="rating__label" data-label>Belum ada rating</span>
+      <span class="rating__average" data-average></span>
+      <span class="rating__votes" data-votes></span>
+    </span>
+
+    <span class="rating__chevron" aria-hidden="true">
+      <svg viewBox="0 0 12 8" width="12" height="8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 1.5l5 5 5-5"/>
+      </svg>
+    </span>
+  </button>
 </div>
 
+<dialog
+  class="rating-dialog"
+  id={dialogId}
+  data-rating-dialog
+  aria-labelledby={`${dialogId}-title`}
+>
+  <div class="rating-dialog__inner">
+    <header class="rating-dialog__header">
+      <h2 class="rating-dialog__title" id={`${dialogId}-title`}>Rating Komunitas</h2>
+      <button
+        type="button"
+        class="rating-dialog__close"
+        data-rating-close
+        aria-label="Tutup"
+      >
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M3 3l10 10M13 3L3 13"/>
+        </svg>
+      </button>
+    </header>
+
+    <div class="rating-dialog__body">
+      <div class="rating-dialog__summary">
+        <span class="rating-dialog__stars" data-dialog-stars aria-hidden="true">
+          <span class="rating-dialog__stars-bg">★★★★★</span>
+          <span class="rating-dialog__stars-fill" data-dialog-stars-fill>★★★★★</span>
+        </span>
+        <div class="rating-dialog__summary-text">
+          <span class="rating-dialog__average" data-dialog-average>—</span>
+          <span class="rating-dialog__votes" data-dialog-votes></span>
+        </div>
+      </div>
+
+      <section class="rating-dialog__section">
+        <h3 class="rating-dialog__section-title">Distribusi rating</h3>
+        <div class="rating-dialog__histogram" data-histogram></div>
+      </section>
+
+      <section class="rating-dialog__section">
+        <h3 class="rating-dialog__section-title" data-user-label>Beri rating:</h3>
+
+        <div
+          class="rating-dialog__input"
+          data-rating-input
+          role="radiogroup"
+          aria-label="Rating kamu"
+        >
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              type="button"
+              class="rating-dialog__star"
+              data-input-star={n}
+              role="radio"
+              aria-checked="false"
+              aria-label={`${n} bintang`}
+              disabled
+            >★</button>
+          ))}
+        </div>
+
+        <div class="rating-dialog__actions">
+          <button
+            type="button"
+            class="rating-dialog__clear"
+            data-clear
+            hidden
+          >Hapus rating saya</button>
+        </div>
+
+        <p class="rating-dialog__hint" data-hint hidden></p>
+      </section>
+    </div>
+  </div>
+</dialog>
+
 <style>
-  .rating-wrap {
-    display: flex;
-    flex-wrap: wrap;
+  .rating {
+    display: inline-flex;
     align-items: center;
+    font-family: inherit;
+  }
+
+  /* ==== Display (trigger) ==== */
+  .rating__display {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-1) 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    text-align: start;
+    transition: opacity var(--t-fast);
+  }
+
+  .rating__display:hover {
+    opacity: 0.88;
+  }
+
+  .rating__stars {
+    position: relative;
+    display: inline-block;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .rating__stars-bg {
+    color: hsla(0, 0%, 100%, 0.28);
+  }
+
+  .rating__stars-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: var(--gold);
+    overflow: hidden;
+    width: 0;
+    transition: width var(--t-base);
+    white-space: nowrap;
+  }
+
+  .rating__stars[data-empty='true'] .rating__stars-fill {
+    width: 0;
+  }
+
+  .rating__summary {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .rating__label {
+    color: hsla(0, 0%, 100%, 0.72);
+    font-weight: var(--fw-medium);
+  }
+
+  .rating__average {
+    color: #fff;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rating__average:empty {
+    display: none;
+  }
+
+  .rating__votes {
+    color: hsla(0, 0%, 100%, 0.65);
+    font-weight: var(--fw-medium);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rating__votes:empty {
+    display: none;
+  }
+
+  .rating__chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: hsla(0, 0%, 100%, 0.55);
+    transition: transform var(--t-fast), color var(--t-fast);
+  }
+
+  .rating__display:hover .rating__chevron {
+    color: hsla(0, 0%, 100%, 0.9);
+    transform: translateY(1px);
+  }
+
+  /* ==== Dialog ==== */
+  .rating-dialog {
+    width: 22rem;
+    max-width: calc(100vw - 2rem);
+    padding: 0;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-lg);
+    margin: auto;
+  }
+
+  .rating-dialog::backdrop {
+    background: hsla(0, 0%, 0%, 0.6);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .rating-dialog[open] {
+    animation: rating-dialog-in 0.18s ease-out;
+  }
+
+  .rating-dialog[open]::backdrop {
+    animation: rating-backdrop-in 0.18s ease-out;
+  }
+
+  @keyframes rating-dialog-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes rating-backdrop-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rating-dialog[open],
+    .rating-dialog[open]::backdrop {
+      animation: none;
+    }
+  }
+
+  .rating-dialog__inner {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .rating-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rating-dialog__title {
+    margin: 0;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+
+  .rating-dialog__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+
+  .rating-dialog__close:hover {
+    color: var(--text-primary);
+    background: var(--bg-surface);
+  }
+
+  /* Body */
+  .rating-dialog__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+    padding: var(--s-5) var(--s-4);
+  }
+
+  /* Summary */
+  .rating-dialog__summary {
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+  }
+
+  .rating-dialog__stars {
+    position: relative;
+    display: inline-block;
+    font-size: 1.25rem;
+    letter-spacing: 3px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .rating-dialog__stars-bg {
+    color: var(--border);
+  }
+
+  .rating-dialog__stars-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: var(--gold);
+    overflow: hidden;
+    width: 0;
+    transition: width var(--t-base);
+    white-space: nowrap;
+  }
+
+  .rating-dialog__summary-text {
+    display: flex;
+    align-items: baseline;
     gap: var(--s-2);
   }
 
-  .rating-stars {
-    display: inline-flex;
-    align-items: center;
-    gap: 1px;
+  .rating-dialog__average {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
   }
 
-  .rating-star {
+  .rating-dialog__votes {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Section */
+  .rating-dialog__section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .rating-dialog__section-title {
+    margin: 0;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  /* Histogram */
+  .rating-dialog__histogram {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .rating-dialog__hist-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--s-3);
+    font-size: var(--fs-xs);
+  }
+
+  .rating-dialog__hist-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--text-secondary);
+    font-weight: var(--fw-semibold);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .rating-dialog__hist-label-star {
+    color: var(--gold);
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .rating-dialog__hist-track {
+    position: relative;
+    height: 8px;
+    background: var(--bg-surface);
+    overflow: hidden;
+  }
+
+  .rating-dialog__hist-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--gold);
+    transition: width var(--t-base);
+  }
+
+  .rating-dialog__hist-pct {
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.6875rem;
+    min-width: 2.5rem;
+    text-align: end;
+  }
+
+  .rating-dialog__hist-empty {
+    padding: var(--s-4) 0;
+    text-align: center;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  /* Input */
+  .rating-dialog__input {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .rating-dialog__star {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 2rem;
+    height: 2rem;
     padding: 0;
-    width: 1.25rem;
-    height: 1.25rem;
     background: transparent;
     border: none;
     color: var(--border-hover);
-    font-size: 1.125rem;
+    font-size: 1.75rem;
     line-height: 1;
     cursor: pointer;
+    transition: color var(--t-fast), transform var(--t-fast);
+  }
+
+  .rating-dialog__star:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .rating-dialog__star:not(:disabled):hover {
+    color: var(--gold-hover);
+    transform: scale(1.1);
+  }
+
+  .rating-dialog__star.is-active {
+    color: var(--gold);
+  }
+
+  .rating-dialog__star.is-preview {
+    color: var(--gold-hover);
+  }
+
+  .rating-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .rating-dialog__clear {
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
     transition: color var(--t-fast);
   }
-  .rating-star:disabled { cursor: not-allowed; }
-  .rating-star:not(:disabled):hover { color: var(--gold-hover); }
-  .rating-star.is-active { color: var(--gold); }
-  .rating-star.is-preview { color: var(--gold-hover); }
 
-  .rating-score {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 2px;
-    font-variant-numeric: tabular-nums;
-    color: var(--text-primary);
-    font-weight: var(--fw-bold);
-  }
-  .rating-score.is-fallback {
-    color: var(--text-muted);
-    font-weight: var(--fw-semibold);
-  }
-  .rating-average { font-size: var(--fs-lg); }
-  .rating-scale {
-    font-size: var(--fs-xs);
-    color: var(--text-muted);
-    font-weight: var(--fw-normal);
+  .rating-dialog__clear:hover {
+    color: var(--danger);
   }
 
-  .rating-votes {
+  .rating-dialog__clear[hidden] {
+    display: none;
+  }
+
+  .rating-dialog__hint {
+    margin: 0;
     font-size: var(--fs-xs);
     color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
+    line-height: var(--lh-relaxed);
   }
-  .rating-votes:empty { display: none; }
 
-  .rating-user {
-    font-size: var(--fs-xs);
+  .rating-dialog__hint[hidden] {
+    display: none;
+  }
+
+  .rating-dialog__hint a {
     color: var(--accent);
-    font-weight: var(--fw-medium);
-    font-variant-numeric: tabular-nums;
-  }
-  .rating-user[hidden] { display: none; }
-
-  .rating-clear {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1rem;
-    height: 1rem;
-    padding: 0;
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 0.875rem;
-    line-height: 1;
+    text-decoration: underline;
+    text-underline-offset: 2px;
     cursor: pointer;
-    transition: color var(--t-fast);
   }
-  .rating-clear:hover { color: var(--danger); }
-  .rating-clear[hidden] { display: none; }
-
-  .rating-cta {
-    flex-basis: 100%;
-    padding: 0;
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-medium);
-    line-height: var(--lh-tight);
-    text-align: start;
-    cursor: pointer;
-    transition: color var(--t-fast);
-  }
-  .rating-cta:hover { color: var(--accent); }
-  .rating-cta[hidden] { display: none; }
 </style>
 
 <script>
-  interface AuthUser {
-    sub: string;
-    name: string;
-    email: string;
-    picture: string | null;
+  interface RatingData {
+    animeId: string;
+    average: number;
+    votes: number;
+    userScore: number | null;
+    canRate: boolean;
+    distribution: Record<string, number>;
   }
 
-  (function () {
-    const root = document.querySelector<HTMLElement>('[data-rating-widget]');
-    if (!root) return;
+  function formatCount(n: number): string {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return String(n);
+  }
 
-    const ANIME_ID = root.dataset.anime || '';
-    const API = (root.dataset.api || '').replace(/\/$/, '');
-    const MAL_SCORE_RAW = root.dataset.malScore || '';
-    const MAL_SCORE = MAL_SCORE_RAW ? parseFloat(MAL_SCORE_RAW) : null;
+  function openUserMenu(): void {
+    const menu = (window as any).__qimochiUserMenu;
+    if (menu?.open) {
+      menu.open();
+    } else {
+      document.dispatchEvent(
+        new CustomEvent('qimochi:auth-required', { detail: { feature: 'rating' } })
+      );
+    }
+  }
+
+  function initWidget(root: HTMLElement): void {
+    if (root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    const ANIME_ID = root.dataset.anime ?? '';
+    const API = (root.dataset.api ?? '').replace(/\/$/, '');
     if (!ANIME_ID || !API) return;
 
-    const stars = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-star]'));
-    const scoreWrap = root.querySelector<HTMLElement>('.rating-score')!;
+    const dialog = document.querySelector<HTMLDialogElement>(
+      `[data-rating-dialog][id="rating-dialog-${CSS.escape(ANIME_ID)}"]`
+    );
+    if (!dialog) return;
+
+    const openBtn = root.querySelector<HTMLButtonElement>('[data-rating-open]')!;
+    const closeBtn = dialog.querySelector<HTMLButtonElement>('[data-rating-close]')!;
+    const starsWrap = root.querySelector<HTMLElement>('.rating__stars')!;
+    const starsFill = root.querySelector<HTMLElement>('[data-stars-fill]')!;
+    const labelEl = root.querySelector<HTMLElement>('[data-label]')!;
     const averageEl = root.querySelector<HTMLElement>('[data-average]')!;
     const votesEl = root.querySelector<HTMLElement>('[data-votes]')!;
-    const userEl = root.querySelector<HTMLElement>('[data-user]')!;
-    const clearBtn = root.querySelector<HTMLButtonElement>('[data-clear]')!;
-    const ctaBtn = root.querySelector<HTMLButtonElement>('[data-rating-cta]')!;
 
-    let userScore: number | null = null;
-    let currentUser: AuthUser | null = null;
+    const dialogStars = dialog.querySelector<HTMLElement>('[data-dialog-stars]')!;
+    const dialogStarsFill = dialog.querySelector<HTMLElement>('[data-dialog-stars-fill]')!;
+    const dialogAvg = dialog.querySelector<HTMLElement>('[data-dialog-average]')!;
+    const dialogVotes = dialog.querySelector<HTMLElement>('[data-dialog-votes]')!;
+    const histogram = dialog.querySelector<HTMLElement>('[data-histogram]')!;
+    const userLabel = dialog.querySelector<HTMLElement>('[data-user-label]')!;
+    const inputStars = Array.from(
+      dialog.querySelectorAll<HTMLButtonElement>('[data-input-star]')
+    );
+    const clearBtn = dialog.querySelector<HTMLButtonElement>('[data-clear]')!;
+    const hintEl = dialog.querySelector<HTMLElement>('[data-hint]')!;
+
+    let state: RatingData | null = null;
     let submitting = false;
 
-    function paintStars(filled: number | null, preview = false): void {
-      for (const s of stars) {
-        const n = Number(s.dataset.star);
-        s.classList.remove('is-active', 'is-preview');
-        if (filled !== null && n <= filled) {
-          s.classList.add(preview ? 'is-preview' : 'is-active');
+    /* ---- Stars ---- */
+    function fillWidth(avg5: number, hasVotes: boolean): string {
+      if (!hasVotes) return '0%';
+      return `${Math.max(0, Math.min(100, (avg5 / 5) * 100))}%`;
+    }
+
+    function renderTriggerStars(avg5: number, hasVotes: boolean): void {
+      starsWrap.dataset.empty = hasVotes ? 'false' : 'true';
+      starsFill.style.width = fillWidth(avg5, hasVotes);
+    }
+
+    function renderDialogStars(avg5: number, hasVotes: boolean): void {
+      dialogStars.dataset.empty = hasVotes ? 'false' : 'true';
+      dialogStarsFill.style.width = fillWidth(avg5, hasVotes);
+    }
+
+    /* ---- Histogram ---- */
+    function renderHistogram(dist: Record<string, number>, total: number): void {
+      histogram.innerHTML = '';
+
+      if (total === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'rating-dialog__hist-empty';
+        empty.textContent = 'Belum ada rating. Jadilah yang pertama!';
+        histogram.appendChild(empty);
+        return;
+      }
+
+      for (let star = 5; star >= 1; star--) {
+        const count = dist[String(star)] ?? 0;
+        const pct = total > 0 ? (count / total) * 100 : 0;
+
+        const row = document.createElement('div');
+        row.className = 'rating-dialog__hist-row';
+        row.innerHTML = `
+          <span class="rating-dialog__hist-label">
+            ${star}<span class="rating-dialog__hist-label-star" aria-hidden="true">★</span>
+          </span>
+          <span class="rating-dialog__hist-track">
+            <span class="rating-dialog__hist-fill" style="width: ${pct.toFixed(1)}%"></span>
+          </span>
+          <span class="rating-dialog__hist-pct">${Math.round(pct)}%</span>
+        `;
+        histogram.appendChild(row);
+      }
+    }
+
+    /* ---- Input ---- */
+    function renderInput(): void {
+      if (!state) return;
+
+      const canRate = state.canRate;
+      const userScore = state.userScore;
+
+      for (const btn of inputStars) {
+        const n = Number(btn.dataset.inputStar);
+        btn.disabled = !canRate || submitting;
+        btn.classList.remove('is-active', 'is-preview');
+        if (userScore != null && n <= userScore) {
+          btn.classList.add('is-active');
         }
+        btn.setAttribute('aria-checked', String(userScore === n));
       }
-    }
 
-    function paintStarsFromScore(score: number | null): void {
-      if (score === null || score <= 0) return paintStars(null);
-      const filled = Math.max(1, Math.min(5, Math.round(score / 2)));
-      paintStars(filled);
-    }
-
-    function updateAria(): void {
-      for (const s of stars) {
-        const n = Number(s.dataset.star);
-        s.setAttribute('aria-checked', String(n === userScore));
-      }
-    }
-
-    function updateCta(): void {
-      if (!currentUser) {
-        ctaBtn.textContent = 'Login atau daftar untuk memberi rating';
-        ctaBtn.hidden = false;
-        return;
-      }
-      if (userScore === null) {
-        ctaBtn.textContent = 'Beri rating';
-        ctaBtn.hidden = false;
-        return;
-      }
-      ctaBtn.hidden = true;
-      ctaBtn.textContent = '';
-    }
-
-    function setInteractive(): void {
-      const canRate = !!currentUser;
-      for (const s of stars) s.disabled = !canRate || submitting;
-      clearBtn.hidden = !(currentUser && userScore !== null);
-    }
-
-    function renderUserScore(): void {
-      if (userScore !== null) {
-        userEl.textContent = `kamu: ${userScore}`;
-        userEl.hidden = false;
+      if (!canRate) {
+        userLabel.textContent = 'Rating:';
+        hintEl.innerHTML = `<a href="#" data-login-link>Login</a> untuk memberi rating.`;
+        hintEl.hidden = false;
+      } else if (userScore != null) {
+        userLabel.textContent = `Rating kamu: ${userScore}★`;
+        hintEl.hidden = true;
       } else {
-        userEl.hidden = true;
+        userLabel.textContent = 'Beri rating:';
+        hintEl.hidden = true;
       }
-      updateAria();
-      updateCta();
+
+      clearBtn.hidden = !(canRate && userScore != null);
+      clearBtn.disabled = submitting;
     }
 
-    function renderDisplayScore(communityAvg: number, votes: number): void {
-      if (communityAvg > 0 && votes > 0) {
-        averageEl.textContent = communityAvg.toFixed(1);
-        scoreWrap.classList.remove('is-fallback');
-        if (userScore === null) paintStarsFromScore(communityAvg);
-        return;
+    /* ---- Trigger ---- */
+    function renderTrigger(): void {
+      if (!state) return;
+
+      const hasVotes = state.votes > 0;
+
+      if (hasVotes) {
+        const avg5 = state.average / 2;
+        labelEl.textContent = 'Rating:';
+        averageEl.textContent = avg5.toFixed(1);
+        votesEl.textContent = `(${formatCount(state.votes)})`;
+        renderTriggerStars(avg5, true);
+      } else {
+        labelEl.textContent = 'Belum ada rating';
+        averageEl.textContent = '';
+        votesEl.textContent = '';
+        renderTriggerStars(0, false);
       }
-      if (MAL_SCORE != null && MAL_SCORE > 0) {
-        averageEl.textContent = MAL_SCORE.toFixed(1);
-        scoreWrap.classList.add('is-fallback');
-        if (userScore === null) paintStarsFromScore(MAL_SCORE);
-        return;
-      }
-      averageEl.textContent = '—';
-      scoreWrap.classList.remove('is-fallback');
-      paintStars(null);
     }
 
+    function renderDialog(): void {
+      if (!state) return;
+
+      const hasVotes = state.votes > 0;
+      const avg5 = state.average / 2;
+
+      if (hasVotes) {
+        dialogAvg.textContent = avg5.toFixed(1);
+        dialogVotes.textContent = `${formatCount(state.votes)} votes`;
+        renderDialogStars(avg5, true);
+      } else {
+        dialogAvg.textContent = '—';
+        dialogVotes.textContent = 'Belum ada rating';
+        renderDialogStars(0, false);
+      }
+
+      renderHistogram(state.distribution, state.votes);
+      renderInput();
+    }
+
+    function render(): void {
+      renderTrigger();
+      renderDialog();
+    }
+
+    /* ---- Fetch ---- */
     async function fetchRating(): Promise<void> {
       try {
         const res = await fetch(
@@ -267,36 +718,27 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
           { credentials: 'include' }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = (await res.json()) as {
-          data: {
-            average: number;
-            votes: number;
-            userScore: number | null;
-            canRate: boolean;
-            distribution: Record<number, number>;
-          };
-        };
-        const d = json.data;
-        userScore = d.userScore;
-        const hasVotes = d.votes > 0;
-        renderDisplayScore(d.average, d.votes);
-        if (userScore !== null) paintStars(userScore);
-        votesEl.textContent = hasVotes ? `(${d.votes})` : '';
-        renderUserScore();
-        setInteractive();
+        const json = (await res.json()) as { data: RatingData };
+        state = json.data;
+        render();
       } catch (err) {
         console.error('[rating] fetch failed', err);
-        renderDisplayScore(0, 0);
-        votesEl.textContent = '';
-        setInteractive();
-        updateCta();
+        state = {
+          animeId: ANIME_ID,
+          average: 0,
+          votes: 0,
+          userScore: null,
+          canRate: false,
+          distribution: {},
+        };
+        render();
       }
     }
 
     async function submitRating(score: number): Promise<void> {
-      if (!currentUser || submitting) return;
+      if (!state?.canRate || submitting) return;
       submitting = true;
-      setInteractive();
+      renderInput();
 
       try {
         const res = await fetch(
@@ -308,156 +750,122 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
             body: JSON.stringify({ score }),
           }
         );
+
         if (res.status === 401) {
-          currentUser = null;
-          setInteractive();
-          updateCta();
+          state.canRate = false;
+          render();
+          submitting = false;
+          openUserMenu();
           return;
         }
+
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        const json = (await res.json()) as {
-          data: {
-            average: number;
-            votes: number;
-            userScore: number | null;
-            distribution: Record<number, number>;
-          };
-        };
-        const d = json.data;
-        userScore = d.userScore;
-        renderDisplayScore(d.average, d.votes);
-        if (userScore !== null) paintStars(userScore);
-        votesEl.textContent = d.votes > 0 ? `(${d.votes})` : '';
-        renderUserScore();
+        const json = (await res.json()) as { data: RatingData };
+        state = { ...state, ...json.data };
+        render();
       } catch (err) {
         console.error('[rating] submit failed', err);
       } finally {
         submitting = false;
-        setInteractive();
+        renderInput();
       }
     }
 
     async function clearRating(): Promise<void> {
-      if (!currentUser || submitting) return;
+      if (!state?.userScore || submitting) return;
       submitting = true;
-      setInteractive();
+      renderInput();
 
       try {
         const res = await fetch(
           `${API}/api/v1/ratings/${encodeURIComponent(ANIME_ID)}`,
           { method: 'DELETE', credentials: 'include' }
         );
+
         if (res.status === 401) {
-          currentUser = null;
-          setInteractive();
-          updateCta();
+          state.canRate = false;
+          render();
+          submitting = false;
+          openUserMenu();
           return;
         }
+
         if (!res.ok && res.status !== 404) throw new Error(`HTTP ${res.status}`);
 
-        const json = (await res.json()) as {
-          data: {
-            average: number;
-            votes: number;
-            userScore: number | null;
-            distribution: Record<number, number>;
-          };
-        };
-        const d = json.data;
-        userScore = null;
-        renderDisplayScore(d.average, d.votes);
-        votesEl.textContent = d.votes > 0 ? `(${d.votes})` : '';
-        renderUserScore();
+        const json = (await res.json()) as { data: RatingData };
+        state = { ...state, ...json.data };
+        render();
       } catch (err) {
         console.error('[rating] clear failed', err);
       } finally {
         submitting = false;
-        setInteractive();
+        renderInput();
       }
     }
 
-    for (const s of stars) {
-      const n = Number(s.dataset.star);
-      s.addEventListener('mouseenter', () => {
-        if (!currentUser || submitting) return;
-        paintStars(n, true);
+    const dlg = dialog;
+
+    function openDialog(): void {
+      if (!dlg.open) dlg.showModal();
+    }
+
+    function closeDialog(): void {
+      if (dlg.open) dlg.close();
+    }
+
+    openBtn.addEventListener('click', openDialog);
+    closeBtn.addEventListener('click', closeDialog);
+
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) closeDialog();
+    });
+
+    for (const btn of inputStars) {
+      const n = Number(btn.dataset.inputStar);
+
+      btn.addEventListener('mouseenter', () => {
+        if (!state?.canRate || submitting) return;
+        for (const b of inputStars) {
+          const bn = Number(b.dataset.inputStar);
+          b.classList.remove('is-active', 'is-preview');
+          if (bn <= n) b.classList.add('is-preview');
+        }
       });
-      s.addEventListener('mouseleave', () => {
-        if (!currentUser || submitting) return;
-        if (userScore !== null) paintStars(userScore);
-        else fetchRating();
+
+      btn.addEventListener('mouseleave', () => {
+        if (!state?.canRate || submitting) return;
+        renderInput();
       });
-      s.addEventListener('click', () => {
-        if (!currentUser || submitting) return;
+
+      btn.addEventListener('click', () => {
+        if (!state?.canRate || submitting) return;
         submitRating(n);
       });
     }
 
-    clearBtn.addEventListener('click', () => clearRating());
+    clearBtn.addEventListener('click', clearRating);
 
-    ctaBtn.addEventListener('click', () => {
-      if (!currentUser) {
-        const menu = (window as any).__qimochiUserMenu;
-        if (menu?.open) menu.open();
-        return;
+    hintEl.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.dataset.loginLink !== undefined) {
+        e.preventDefault();
+        openUserMenu();
       }
-      const first = stars[0];
-      if (first) first.focus();
     });
 
-    function readCache(): AuthUser | null {
-      try {
-        const raw = localStorage.getItem('qimochi:user-cache');
-        if (!raw) return null;
-        const parsed = JSON.parse(raw) as Partial<AuthUser> | null;
-        if (parsed && typeof parsed.sub === 'string' && typeof parsed.name === 'string') {
-          return {
-            sub: parsed.sub,
-            name: parsed.name,
-            email: typeof parsed.email === 'string' ? parsed.email : '',
-            picture: typeof parsed.picture === 'string' ? parsed.picture : null,
-          };
-        }
-      } catch {}
-      return null;
-    }
-
-    function onAuthChanged(e: Event): void {
-      const detail = (e as CustomEvent<{ user: AuthUser | null }>).detail;
-      if (!detail) return;
-      const same = (detail.user?.sub ?? null) === (currentUser?.sub ?? null);
-      if (same) return;
-      currentUser = detail.user;
-      if (!currentUser) {
-        userScore = null;
-        renderUserScore();
-      }
-      setInteractive();
+    document.addEventListener('qimochi:auth-changed', () => {
       fetchRating();
-    }
+    });
 
-    document.addEventListener('qimochi:auth-changed', onAuthChanged);
-
-    (function bootstrap(): void {
-      currentUser = readCache();
-      setInteractive();
-      updateCta();
-      renderDisplayScore(0, 0);
-    })();
-
+    renderTriggerStars(0, false);
     fetchRating();
+  }
 
-    (async () => {
-      const menu = (window as any).__qimochiUserMenu;
-      if (menu?.getUser) {
-        const u = menu.getUser();
-        if ((u?.sub ?? null) !== (currentUser?.sub ?? null)) {
-          currentUser = u ?? null;
-          setInteractive();
-          fetchRating();
-        }
-      }
-    })();
-  })();
+  function initAll(scope: ParentNode = document): void {
+    scope.querySelectorAll<HTMLElement>('[data-rating-widget]').forEach(initWidget);
+  }
+
+  initAll();
+  document.addEventListener('astro:page-load', () => initAll());
 </script>
