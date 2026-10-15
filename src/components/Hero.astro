@@ -11,15 +11,24 @@ const {
   class: className,
 } = Astro.props;
 
-const hasSlot = Astro.slots.has('default');
+const hasAction = Astro.slots.has('action');
+const hasDefault = Astro.slots.has('default');
 ---
 
 <header class:list={['hero', `hero--${size}`, className]}>
   <div class="hero__inner">
-    <h1 class="hero__title">{title}</h1>
-    {hasSlot && (
-      <div class="hero__actions">
-        <slot />
+    <div class="hero__main">
+      <h1 class="hero__title">{title}</h1>
+      {hasDefault && (
+        <div class="hero__extra">
+          <slot />
+        </div>
+      )}
+    </div>
+
+    {hasAction && (
+      <div class="hero__action">
+        <slot name="action" />
       </div>
     )}
   </div>
@@ -41,6 +50,14 @@ const hasSlot = Astro.slots.has('default');
     padding-block: var(--s-2);
   }
 
+  .hero__main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
   .hero__title {
     font-family: var(--font-montserrat);
     font-size: var(--fs-3xl);
@@ -57,7 +74,15 @@ const hasSlot = Astro.slots.has('default');
     font-size: var(--fs-4xl);
   }
 
-  .hero__actions {
+  .hero__extra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3);
+    min-width: 0;
+  }
+
+  .hero__action {
     display: flex;
     align-items: center;
     gap: var(--s-3);
