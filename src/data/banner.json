@@ -5,8 +5,8 @@
       "active": true,
       "type": "info",
       "icon": "info",
-      "message": "Qimochi sedang proses Sync Data.",
-      "dismissible": true
+      "message": "Qimochi sedang proses Sync Data, Refresh halaman jika menemukan error.",
+      "dismissible": false
     }
   ]
 }
