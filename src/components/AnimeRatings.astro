@@ -29,8 +29,10 @@ const popoverId = `rating-pop-${animeId}`;
       <span class="rating__stars-fill" data-stars-fill>★★★★★</span>
     </span>
 
-    <span class="rating__value" data-value></span>
-    <span class="rating__votes" data-votes></span>
+    <span class="rating__counter">
+      <span class="rating__value" data-value></span>
+      <span class="rating__votes" data-votes></span>
+    </span>
 
     <span class="rating__chevron" aria-hidden="true">
       <Icons name="chevron-down" size={14} />
@@ -95,14 +97,13 @@ const popoverId = `rating-pop-${animeId}`;
   </div>
 </div>
 
-<style>
+<style is:global>
   .rating {
     display: inline-flex;
     align-items: center;
     font-family: inherit;
   }
 
-  /* ==== Trigger ==== */
   .rating__display {
     display: inline-flex;
     align-items: center;
@@ -142,6 +143,16 @@ const popoverId = `rating-pop-${animeId}`;
     width: 0;
     transition: width var(--t-base);
     white-space: nowrap;
+  }
+
+  /* ==== Counter (value + votes) dengan separator ==== */
+  .rating__counter {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    margin-left: var(--s-1);
+    padding-left: var(--s-3);
+    border-left: 1px solid hsla(0, 0%, 100%, 0.22);
   }
 
   .rating__value {
@@ -185,13 +196,13 @@ const popoverId = `rating-pop-${animeId}`;
     transform: translateY(1px);
   }
 
-  /* ==== Popover ==== */
   .rating__popover {
     position: fixed;
     inset: auto;
     margin: 0;
     padding: var(--s-5) var(--s-4) var(--s-4);
     background: var(--bg-elevated);
+    border: 1px solid transparent;
     color: var(--text-primary);
     box-shadow: var(--shadow-lg);
     width: 22rem;
@@ -248,7 +259,6 @@ const popoverId = `rating-pop-${animeId}`;
     gap: var(--s-5);
   }
 
-  /* ==== Summary ==== */
   .rating__summary {
     display: flex;
     flex-direction: column;
@@ -275,7 +285,6 @@ const popoverId = `rating-pop-${animeId}`;
     display: none;
   }
 
-  /* ==== Histogram ==== */
   .rating__histogram {
     display: flex;
     flex-direction: column;
@@ -336,7 +345,6 @@ const popoverId = `rating-pop-${animeId}`;
     color: var(--text-muted);
   }
 
-  /* ==== Input ==== */
   .rating__input-section {
     display: flex;
     flex-direction: column;
