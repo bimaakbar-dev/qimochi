@@ -38,11 +38,17 @@ const {
   />
 </head>
 <body>
-  <a href="#main" class="skip-link">Lewati ke konten</a>
+  <a href="#main-content" class="skip-link">Lewati ke konten</a>
   <Header />
-  <main id="main-content">
+  <main id="main-content" tabindex="-1">
     <slot />
   </main>
   <Footer />
 </body>
 </html>
+
+<style>
+  main:focus {
+    outline: none;
+  }
+</style>
