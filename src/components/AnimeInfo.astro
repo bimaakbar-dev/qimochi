@@ -1,92 +1,99 @@
 ---
-import SectionLabel from './SectionLabel.astro';
-
-export interface InfoItem {
+interface InfoItem {
   label: string;
   value: string | number;
 }
 
+interface GenreLink {
+  name: string;
+  href: string;
+}
+
 interface Props {
-  title?: string;
   items: InfoItem[];
+  genres?: GenreLink[];
   class?: string;
 }
 
-const {
-  title = 'Detail anime',
-  items,
-  class: className,
-} = Astro.props;
+const { items, genres = [], class: className } = Astro.props;
 
 const visible = items.filter(
   (it) => it.value !== null && it.value !== undefined && String(it.value).length > 0
 );
 ---
 
-{visible.length > 0 && (
-  <div class:list={['info', className]}>
-    <SectionLabel as="h3" size="md">{title}</SectionLabel>
+{(visible.length > 0 || genres.length > 0) && (
+  <dl class:list={['anime-info', className]}>
+    {visible.map((it) => (
+      <div class="anime-info__row">
+        <dt class="anime-info__label">{it.label}:</dt>
+        <dd class="anime-info__value">{it.value}</dd>
+      </div>
+    ))}
 
-    <dl class="info__list">
-      {visible.map((it) => (
-        <div class="info__item">
-          <dt>{it.label}</dt>
-          <dd>{it.value}</dd>
-        </div>
-      ))}
-    </dl>
-  </div>
+    {genres.length > 0 && (
+      <div class="anime-info__row">
+        <dt class="anime-info__label">Genre:</dt>
+        <dd class="anime-info__value anime-info__value--genres">
+          {genres.map((g) => (
+            <a href={g.href} class="anime-info__link">{g.name}</a>
+          ))}
+        </dd>
+      </div>
+    )}
+  </dl>
 )}
 
 <style>
-  .info {
+  .anime-info {
     display: flex;
     flex-direction: column;
-    padding-top: var(--s-5);
-    border-top: 1px solid var(--border);
+    gap: var(--s-2);
+    margin: 0;
+    padding: 0;
+  }
+
+  .anime-info__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-1);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-relaxed);
     min-width: 0;
   }
 
-  .info__list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0;
-    margin: 0;
-  }
-
-  .info__item {
-    display: grid;
-    grid-template-columns: 7rem minmax(0, 1fr);
-    gap: var(--s-3);
-    padding: var(--s-3) 0;
-    border-bottom: 1px solid var(--border);
-    align-items: baseline;
-    text-align: start;
-  }
-
-  .info__item:last-child {
-    border-bottom: none;
-  }
-
-  .info__item dt {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-medium);
-    color: var(--text-secondary);
-    letter-spacing: 0.08em;
-  }
-
-  .info__item dd {
-    font-size: var(--fs-sm);
+  .anime-info__label {
     color: var(--text-primary);
+    flex-shrink: 0;
+  }
+
+  .anime-info__value {
     margin: 0;
+    color: var(--text-secondary);
     min-width: 0;
     overflow-wrap: anywhere;
   }
 
-  @media (min-width: 50rem) {
-    .info {
-      padding-top: 0;
-      border-top: none;
-    }
+  .anime-info__value--genres {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
   }
+
+  .anime-info__link {
+    color: var(--accent);
+    transition: color var(--t-fast);
+  }
+
+  .anime-info__link:not(:last-child)::after {
+    content: ',';
+    margin-right: 0.35em;
+    pointer-events: none;
+  }
+
+  .anime-info__link:hover {
+    color: var(--accent-hover);
+  }
+
 </style>
