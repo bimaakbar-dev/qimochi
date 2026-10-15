@@ -3,7 +3,6 @@ import Icon from '~/user-components/Icons.astro';
 import bannerData from '~/data/banner.json';
 
 type BannerType = 'info' | 'warning' | 'success' | 'danger';
-type IconName = Parameters<typeof Icon>[0]['name'];
 
 interface BannerLink {
   href: string;
@@ -14,7 +13,6 @@ interface Banner {
   id: string;
   active?: boolean;
   type?: BannerType;
-  icon?: IconName;
   message: string;
   link?: BannerLink;
   dismissible?: boolean;
@@ -26,13 +24,6 @@ interface Props {
 
 const { class: className } = Astro.props;
 
-const DEFAULT_ICON: Record<BannerType, IconName> = {
-  info: 'info',
-  warning: 'alert',
-  success: 'check',
-  danger: 'alert',
-};
-
 const banners = ((bannerData as { banners?: Banner[] }).banners ?? []).filter(
   (b) => b.active !== false && b.message
 );
@@ -43,7 +34,6 @@ if (banners.length === 0) return null;
 <div class:list={['site-banner-stack', className]} data-site-banner-stack>
   {banners.map((b) => {
     const type = b.type ?? 'info';
-    const iconName = b.icon ?? DEFAULT_ICON[type];
     const dismissible = b.dismissible !== false;
 
     return (
@@ -55,10 +45,6 @@ if (banners.length === 0) return null;
         role={type === 'danger' || type === 'warning' ? 'alert' : 'status'}
       >
         <div class="site-banner__inner">
-          <span class="site-banner__icon" aria-hidden="true">
-            <Icon name={iconName} size={16} />
-          </span>
-
           <p class="site-banner__message">
             <span>{b.message}</span>
             {b.link && (
@@ -170,34 +156,17 @@ if (banners.length === 0) return null;
     padding-block: var(--s-3);
     box-shadow: var(--shadow-sm);
     isolation: isolate;
-    text-align: center;
-    text-wrap: balance;
   }
-
   .site-banner__inner {
     display: flex;
     align-items: center;
+    text-align: center;
+    text-wrap: balance;
     gap: var(--s-3);
     max-width: var(--content-max-mobile);
     margin-inline: auto;
     line-height: 1.4;
     min-width: 0;
-  }
-
-  .site-banner__icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1em;
-    height: 1em;
-    font-size: 1.333em;
-    color: currentColor;
-  }
-
-  .site-banner__icon :global(svg) {
-    width: 100%;
-    height: 100%;
-    flex-shrink: 0;
   }
 
   .site-banner__message {
