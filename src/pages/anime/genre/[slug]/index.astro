@@ -47,11 +47,11 @@ const canonical = `/anime/genre/${genreId}/`;
     <!-- Section: Populer -->
     <section class="section" data-popular-section hidden>
       <SectionLabel>Populer</SectionLabel>
-      <div class="anime-grid anime-grid--popular" data-popular-grid></div>
+      <div class="anime-grid" data-popular-grid></div>
     </section>
 
     <!-- Section: Anime Genre {genreName} -->
-    <section class="section">
+    <section class="section" data-list-section hidden>
       <SectionLabel>Anime Genre {genreName}</SectionLabel>
       <div class="anime-grid" data-grid hidden></div>
 
@@ -61,6 +61,14 @@ const canonical = `/anime/genre/${genreId}/`;
         </button>
       </div>
     </section>
+
+    <!-- Fallback -->
+    <div class="empty" data-empty hidden>
+      <p>Belum ada anime untuk genre ini.</p>
+      <p class="empty-hint">
+        Coba jelajahi <a href="/anime/genre/">genre lain</a>.
+      </p>
+    </div>
   </Page>
 
   <AnimeCard mode="template" />
@@ -78,18 +86,13 @@ const canonical = `/anime/genre/${genreId}/`;
   } from '~/constants';
 
   (function () {
-    const root = document.querySelector('[data-grid]');
-    if (!root) return;
-
-    const GENRE_ID = document.body.dataset.genreId || (window as any).__genreId || '';
-
-    // Ambil genre id dari URL
     const pathMatch = window.location.pathname.match(/\/anime\/genre\/([^/]+)\/?$/);
     const SLUG = pathMatch ? decodeURIComponent(pathMatch[1]) : '';
+    if (!SLUG) return;
 
     const API = 'https://yukionime.pages.dev/api/v1/anime.json';
     const BATCH = 24;
-    const POPULAR_LIMIT = 12;
+    const POPULAR_LIMIT = 6;
     const DEFAULT_SORT = 'popular';
 
     type YukionimeItem = {
@@ -113,13 +116,15 @@ const canonical = `/anime/genre/${genreId}/`;
     const grid = document.querySelector('[data-grid]');
     const popularSection = document.querySelector('[data-popular-section]');
     const popularGrid = document.querySelector('[data-popular-grid]');
+    const listSection = document.querySelector('[data-list-section]');
+    const emptyState = document.querySelector('[data-empty]');
     const loadMoreWrap = document.querySelector('[data-load-more-wrap]');
     const loadMoreBtn = document.querySelector('[data-load-more]');
     const loadMoreText = document.querySelector('[data-load-more-text]');
     const sortEl = document.querySelector('[data-sort]');
     const tpl = document.getElementById('anime-card-template');
 
-    if (!grid || !tpl || !sortEl || !SLUG) return;
+    if (!grid || !tpl || !sortEl) return;
 
     let all: YukionimeItem[] = [];
     let sorted: YukionimeItem[] = [];
@@ -206,13 +211,6 @@ const canonical = `/anime/genre/${genreId}/`;
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
 
-      const metaEl = card.querySelector('[data-card-meta]');
-      if (metaEl && item.episodes && item.episodes > 0) {
-        const li = document.createElement('li');
-        li.textContent = `${item.episodes} Episode`;
-        metaEl.appendChild(li);
-      }
-
       const playEl = card.querySelector('[data-card-play]');
       if (playEl) {
         playEl.href = `/anime/watch/${item.id}/episodes/1/`;
@@ -222,16 +220,10 @@ const canonical = `/anime/genre/${genreId}/`;
       const bookmarkEl = card.querySelector('[data-bookmark-btn]');
       if (bookmarkEl) bookmarkEl.dataset.anime = item.id;
 
-      const epEl = card.querySelector('[data-card-episodes]');
-      if (epEl && item.episodes && item.episodes > 0) {
-        epEl.textContent = `Ep ${item.episodes}`;
-        epEl.hidden = false;
-      }
-
       return card;
     }
 
-    function sortList(list, sort) {
+    function sortList(list: YukionimeItem[], sort: string): YukionimeItem[] {
       const copy = [...list];
       if (sort === 'newest') {
         return copy.sort((a, b) => {
@@ -244,19 +236,7 @@ const canonical = `/anime/genre/${genreId}/`;
       if (sort === 'title') {
         return copy.sort((a, b) => a.title.localeCompare(b.title));
       }
-      // popular
       return copy.sort((a, b) => {
-        const sa = a.stats?.score ?? 0;
-        const sb = b.stats?.score ?? 0;
-        if (sb !== sa) return sb - sa;
-        const va = a.stats?.scoredBy ?? 0;
-        const vb = b.stats?.scoredBy ?? 0;
-        return vb - va;
-      });
-    }
-
-    function sortByPopularity(list) {
-      return [...list].sort((a, b) => {
         const sa = a.stats?.score ?? 0;
         const sb = b.stats?.score ?? 0;
         if (sb !== sa) return sb - sa;
@@ -268,12 +248,10 @@ const canonical = `/anime/genre/${genreId}/`;
 
     function renderPopular(): void {
       if (!popularGrid || !popularSection) return;
-      if (all.length === 0) {
-        popularSection.hidden = true;
-        return;
-      }
 
-      const top = sortByPopularity(all).slice(0, POPULAR_LIMIT);
+      // Popular = 6 teratas dari hasil yang sudah di-sort
+      const top = sorted.slice(0, POPULAR_LIMIT);
+
       if (top.length === 0) {
         popularSection.hidden = true;
         return;
@@ -323,7 +301,15 @@ const canonical = `/anime/genre/${genreId}/`;
       }
 
       const hasItems = sorted.length > 0;
+
+      // Section kedua
+      if (listSection) listSection.hidden = !hasItems;
+      if (emptyState) emptyState.hidden = hasItems;
+
       grid.hidden = !hasItems;
+
+      // Popular selalu dirender ulang (ikut sort + filter)
+      renderPopular();
 
       if (hasItems) {
         renderNext();
@@ -357,7 +343,13 @@ const canonical = `/anime/genre/${genreId}/`;
           return item.genres.includes(SLUG);
         });
 
-        renderPopular();
+        // Kalau tidak ada item, tampilkan fallback
+        if (all.length === 0) {
+          if (popularSection) popularSection.hidden = true;
+          if (listSection) listSection.hidden = true;
+          if (emptyState) emptyState.hidden = false;
+          return;
+        }
 
         sortEl.value = DEFAULT_SORT;
         applySort(DEFAULT_SORT);
@@ -382,6 +374,38 @@ const canonical = `/anime/genre/${genreId}/`;
 
   .section[hidden] {
     display: none;
+  }
+
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s-2);
+    padding: var(--s-12) var(--s-4);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+  }
+
+  .empty[hidden] {
+    display: none;
+  }
+
+  .empty p {
+    margin: 0;
+  }
+
+  .empty-hint {
+    font-size: var(--fs-xs);
+  }
+
+  .empty a {
+    color: var(--accent);
+    transition: color var(--t-fast);
+  }
+
+  .empty a:hover {
+    color: var(--accent-hover);
   }
 </style>
 
