@@ -5,20 +5,20 @@ import { getAllAnime } from '~/lib/anime';
 import {
   SITE, URLS, ADS,
   SOURCE_LABEL,
+  AGE_RATING_LABEL,
   type Source,
+  type AgeRating,
 } from '~/constants';
 
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import AdSlot from '~/components/AdSlot.astro';
-
 import AnimeHero from '~/components/AnimeHero.astro';
-import AnimeInfo, { type InfoItem } from '~/components/AnimeInfo.astro';
+import AnimeInfo from '~/components/AnimeInfo.astro';
 import AnimeRatings from '~/components/AnimeRatings.astro';
 import AnimeFranchise from '~/components/AnimeFranchise.astro';
 import ShareButton from '~/components/ShareButton.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
 import Comments from '~/components/Comments.astro';
-import SectionLabel from '~/components/SectionLabel.astro';
+import AdSlot from '~/components/AdSlot.astro';
 
 export async function getStaticPaths() {
   const allAnime = await getAllAnime();
@@ -103,6 +103,17 @@ if (studioName) infoItems.push({ label: 'Studio', value: studioName });
 if (sourceLabel) infoItems.push({ label: 'Sumber', value: sourceLabel });
 if (malScore != null) infoItems.push({ label: 'Skor MAL', value: `${malScore.toFixed(1)} / 10` });
 if (durationLabel) infoItems.push({ label: 'Durasi', value: durationLabel });
+if (ageRating) {
+  infoItems.push({
+    label: 'Rating',
+    value: AGE_RATING_LABEL[ageRating as AgeRating] ?? ageRating,
+  });
+}
+
+const genreLinks = visibleGenres.map((g) => ({
+  name: g.name,
+  href: URLS.genre(g.name),
+}));
 ---
 
 <BaseLayout
@@ -144,25 +155,22 @@ if (durationLabel) infoItems.push({ label: 'Durasi', value: durationLabel });
     <section class="content">
       <div class="content__grid" data-meta>
         <div class="synopsis">
-          <SectionLabel>Sinopsis</SectionLabel>
           <div
-            class="synopsis__body markdown markdown--prose"
             data-synopsis-body
-          >
-            <Content />
+            class="synopsis__body markdown markdown--prose"
+          ><Content />
           </div>
-          <button
-            type="button"
-            class="synopsis__toggle"
-            data-synopsis-toggle
-          >
-            <span data-synopsis-label>Lebih Banyak</span>
-          </button>
         </div>
-        <AnimeInfo items={infoItems} />
+        <AnimeInfo items={infoItems} genres={genreLinks} />
       </div>
+      <button
+        type="button"
+        class="synopsis__toggle"
+        data-synopsis-toggle
+      >
+        <span data-synopsis-label>Lebih Banyak</span>
+      </button>
     </section>
-
     <section class="more">
       <EpisodeList
         slug={anime.id}
@@ -189,34 +197,57 @@ if (durationLabel) infoItems.push({ label: 'Durasi', value: durationLabel });
 
 <script>
   (function () {
-    const bodies = document.querySelectorAll<HTMLElement>('[data-synopsis-body]');
-    if (bodies.length === 0) return;
+    const gridEl = document.querySelector<HTMLElement>('[data-meta]');
+    if (!gridEl) return;
+    const grid: HTMLElement = gridEl;
 
-    bodies.forEach((body) => {
-      const block = body.closest<HTMLElement>('[data-meta]');
-      const btn = block?.querySelector<HTMLButtonElement>('[data-synopsis-toggle]');
-      const label = block?.querySelector<HTMLElement>('[data-synopsis-label]');
-      if (!block || !btn || !label) return;
+    const btnEl = document.querySelector<HTMLButtonElement>('[data-synopsis-toggle]');
+    if (!btnEl) return;
+    const btn: HTMLButtonElement = btnEl;
 
-      function measure(): void {
-        const overflow = body.scrollHeight > body.clientHeight + 2;
-        btn!.classList.toggle('is-hidden', !overflow);
-        if (!overflow) body.classList.add('is-short');
-        else body.classList.remove('is-short');
+    const labelEl = document.querySelector<HTMLElement>('[data-synopsis-label]');
+    if (!labelEl) return;
+    const label: HTMLElement = labelEl;
+
+    let collapsedHeight = 0;
+
+    function measure() {
+      if (!grid.classList.contains('is-expanded')) {
+        collapsedHeight = grid.clientHeight;
       }
 
+      const prevMax = grid.style.maxHeight;
+      grid.style.maxHeight = 'none';
+      const full = grid.scrollHeight;
+      grid.style.maxHeight = prevMax;
+
+      const hasOverflow = full > collapsedHeight + 2;
+      btn.classList.toggle('is-hidden', !hasOverflow);
+    }
+
+    function run() {
       if (document.readyState === 'complete') {
         requestAnimationFrame(measure);
       } else {
-        window.addEventListener('load', () => requestAnimationFrame(measure), {
-          once: true,
-        });
+        window.addEventListener(
+          'load',
+          () => requestAnimationFrame(measure),
+          { once: true }
+        );
       }
+    }
 
-      btn.addEventListener('click', () => {
-        const expanded = block.classList.toggle('is-expanded');
-        label.textContent = expanded ? 'Sembunyikan' : 'Lebih Banyak';
-      });
+    run();
+
+    let resizeTimer = 0;
+    window.addEventListener('resize', () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(measure, 200);
+    });
+
+    btn.addEventListener('click', () => {
+      const expanded = grid.classList.toggle('is-expanded');
+      label.textContent = expanded ? 'Sembunyikan' : 'Lebih Banyak';
     });
   })();
 </script>
@@ -226,61 +257,59 @@ if (durationLabel) infoItems.push({ label: 'Durasi', value: durationLabel });
     display: flex;
     flex-direction: column;
   }
-  .hero-subindo {
-    display: inline-flex;
-    align-items: center;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-medium);
-    color: hsla(0, 0%, 100%, 0.82);
-  }
+
   .content {
     max-width: var(--content-max-desktop);
     width: 100%;
     margin-inline: auto;
     padding: var(--s-8) var(--pad-x);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
   }
 
   .content__grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--s-6);
+    max-height: calc(var(--fs-base) * var(--lh-relaxed) * 4);
+    overflow: hidden;
+    transition: max-height var(--t-base);
+    position: relative;
+    mask-image: linear-gradient(
+      to bottom,
+      black calc(100% - 3rem),
+      transparent
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      black calc(100% - 3rem),
+      transparent
+    );
+  }
+
+  .content__grid.is-expanded {
+    max-height: none;
+    mask-image: none;
+    -webkit-mask-image: none;
   }
 
   .synopsis {
     display: flex;
     flex-direction: column;
-    gap: var(--s-3);
     min-width: 0;
   }
 
   .synopsis__body {
-    position: relative;
-    max-height: calc(var(--fs-base) * var(--lh-relaxed) * 4);
-    overflow: hidden;
-    mask-image: linear-gradient(to bottom, black calc(100% - 3rem), transparent);
-    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 3rem), transparent);
-    color: var(--text-secondary);
+    color: var(--text-primary);
     text-align: start;
-    transition: max-height var(--t-base);
-  }
-
-  .synopsis__body.is-short {
-    mask-image: none;
-    -webkit-mask-image: none;
-  }
-
-  .content__grid.is-expanded .synopsis__body {
-    max-height: none;
-    mask-image: none;
-    -webkit-mask-image: none;
   }
 
   .synopsis__toggle {
     align-self: flex-start;
     color: var(--accent);
     font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    letter-spacing: 0.08em;
+    font-weight: var(--fw-medium);
     text-transform: uppercase;
     display: inline-flex;
     align-items: center;
