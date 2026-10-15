@@ -35,7 +35,7 @@ const entry = await getEntry('anime', anime.id);
 if (!entry) return Astro.redirect('/404/');
 const { Content } = await render(entry);
 
-const episodeNumbers = data.episodes
+const episodeNumbers = data.episodeList
   .map((e) => e.number)
   .sort((a, b) => a - b);
 
