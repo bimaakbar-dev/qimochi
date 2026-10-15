@@ -1,0 +1,54 @@
+---
+import Icon from '~/user-components/Icons.astro';
+---
+
+<details class="menu">
+    <summary class="menu-btn" aria-label="Menu navigasi">
+        <span class="icon-menu"><Icon name="menu" size={22} /></span>
+        <span class="icon-close"><Icon name="close" size={22} /></span>
+    </summary>
+    <nav class="nav nav--mobile" aria-label="Navigasi utama">
+        <slot />
+    </nav>
+</details>
+
+<style>
+    .menu {
+        display: flex;
+        align-items: center;
+    }
+    .menu-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        color: var(--text-inverted);
+        cursor: pointer;
+        list-style: none;
+        transition: color var(--t-fast);
+    }
+    .menu-btn::-webkit-details-marker {
+        display: none;
+    }
+    .menu-btn:hover {
+        color: var(--accent);
+    }
+    .icon-menu {
+        display: inline-flex;
+    }
+    .icon-close {
+        display: none;
+    }
+    .menu[open] .icon-menu {
+        display: none;
+    }
+    .menu[open] .icon-close {
+        display: inline-flex;
+    }
+    @media (min-width: 50rem) {
+        .menu {
+        display: none;
+        }
+    }
+</style>
