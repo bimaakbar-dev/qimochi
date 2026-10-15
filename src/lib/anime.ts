@@ -30,7 +30,8 @@ export type HydratedAnime = Omit<AnimeEntry, 'data'> & {
     genre: string[];
     releaseDate: Date | null;
     score: number | null;
-    episodes: EpisodeData[];
+    /** Episode yang punya data stream/download. Jumlah total episode ada di `episodes` (skema bersama). */
+    episodeList: EpisodeData[];
     franchises: Franchise[];
   };
 };
@@ -147,7 +148,7 @@ async function hydrateOne(anime: AnimeEntry): Promise<HydratedAnime> {
       genre: resolveGenre(d.genres),
       releaseDate,
       score: resolveScore(d.stats),
-      episodes: episodesBySlug[slug] ?? [],
+      episodeList: episodesBySlug[slug] ?? [],
       franchises: franchisesBySlug[slug] ?? [],
     },
   };
@@ -188,7 +189,7 @@ export async function getAllEpisodePaths(): Promise<EpisodePathItem[]> {
   const all = await getAllAnime();
   const paths: EpisodePathItem[] = [];
   for (const anime of all) {
-    const eps = anime.data.episodes;
+    const eps = anime.data.episodeList;
     const total = eps.length;
     eps.forEach((episode, episodeIndex) => {
       paths.push({ slug: anime.id, anime, episode, episodeIndex, totalEpisodes: total });
@@ -198,5 +199,5 @@ export async function getAllEpisodePaths(): Promise<EpisodePathItem[]> {
 }
 
 export function findEpisode(anime: HydratedAnime, episodeNumber: number): EpisodeData | null {
-  return anime.data.episodes.find((e) => e.number === episodeNumber) ?? null;
+  return anime.data.episodeList.find((e) => e.number === episodeNumber) ?? null;
 }
