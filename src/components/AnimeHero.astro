@@ -1,5 +1,6 @@
 ---
 import Icon from '~/user-components/Icons.astro';
+import LinkButton from '~/user-components/LinkButton.astro';
 import BookmarkButton from './BookmarkButton.astro';
 
 export interface HeroGenreLink {
@@ -62,6 +63,7 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
         loading="eager"
         fetchpriority="high"
         decoding="async"
+        draggable="false"
       />
     </div>
   )}
@@ -70,6 +72,7 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
 
   <div class="hero__inner">
     <TitleTag class="hero__title" title={title}>{title}</TitleTag>
+
     {hasMeta && (
       <ul class="hero__meta">
         {age && <li class="hero__age">{age}</li>}
@@ -100,28 +103,17 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
     {(showWatch || showBookmark || actionsSlot) && (
       <div class="hero__actions">
         {showWatch && (
-          watchDisabled ? (
-            <span
-              class="hero__play hero__play--disabled"
-              aria-disabled="true"
-            >
-              <span class="hero__play-icon" aria-hidden="true">
-                <Icon name="play" size={16} />
-              </span>
-              <span>{watchLabel}</span>
-            </span>
-          ) : (
-            <a
-              href={watchUrl}
-              class="hero__play"
-              aria-label={`${watchLabel}: ${title}`}
-            >
-              <span class="hero__play-icon" aria-hidden="true">
-                <Icon name="play" size={16} />
-              </span>
-              <span>{watchLabel}</span>
-            </a>
-          )
+          <LinkButton
+            href={watchUrl}
+            variant="accent"
+            size="lg"
+            icon="play"
+            disabled={watchDisabled}
+            ariaLabel={watchDisabled ? undefined : `${watchLabel}: ${title}`}
+            class="hero__play"
+          >
+            {watchLabel}
+          </LinkButton>
         )}
 
         {showBookmark && <BookmarkButton animeId={id} class="hero__bookmark" />}
@@ -333,57 +325,43 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
     flex-wrap: wrap;
   }
 
-  .hero__play {
-    display: inline-flex;
-    align-items: center;
+  /* ---- LinkButton override (menggantikan .hero__play lama) ---- */
+  .hero__actions :global(.hero__play) {
     gap: var(--s-3);
     padding: var(--s-3) var(--s-5);
-    background: var(--accent);
-    color: var(--accent-text);
-    border: none;
-    border-radius: var(--r-full);
     font-size: var(--fs-xs);
     font-weight: var(--fw-semibold);
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background var(--t-fast), transform var(--t-fast);
     box-shadow: 0 4px 20px hsla(3, 81%, 48%, 0.35);
   }
 
-  .hero__play:hover {
-    background: var(--accent-hover);
+  .hero__actions :global(.hero__play:hover) {
     transform: translateY(-1px);
   }
 
-  .hero__play:active {
+  .hero__actions :global(.hero__play:active) {
     transform: translateY(0);
   }
 
-  .hero__play--disabled {
-    background: hsla(0, 0%, 100%, 0.12);
-    color: hsla(0, 0%, 100%, 0.5);
-    cursor: not-allowed;
-    box-shadow: none;
-    pointer-events: none;
-  }
-
-  .hero__play--disabled .hero__play-icon :global(svg) {
-    opacity: 0.5;
-  }
-
-  .hero__play-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .hero__play-icon :global(svg) {
+  .hero__actions :global(.hero__play svg) {
     width: 0.875em;
     height: 0.875em;
   }
 
+  .hero__actions :global(.hero__play.link-btn--disabled) {
+    background: hsla(0, 0%, 100%, 0.12);
+    color: hsla(0, 0%, 100%, 0.5);
+    border-color: transparent;
+    box-shadow: none;
+    opacity: 1;
+  }
+
+  .hero__actions :global(.hero__play.link-btn--disabled svg) {
+    opacity: 0.5;
+  }
+
+  /* ---- Rating (slot below-meta) ---- */
   .hero__below :global(.rating-wrap) {
     justify-content: center;
   }
@@ -506,7 +484,7 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hero__play {
+    .hero__actions :global(.hero__play) {
       transition: none;
     }
   }
