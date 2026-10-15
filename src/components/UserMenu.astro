@@ -63,6 +63,44 @@ const dialogId = 'qimochi-user-dialog';
             <span data-info-email></span>
           </div>
         </div>
+
+        <nav class="user-dialog__menu" aria-label="Menu akun">
+          <a href="/bookmark/" class="user-dialog__menu-item">
+            <span class="user-dialog__menu-icon" aria-hidden="true">
+              <Icons name="bookmark" size={18} />
+            </span>
+            <span class="user-dialog__menu-label">Daftar Saya</span>
+            <span class="user-dialog__menu-arrow" aria-hidden="true">
+              <Icons name="arrow-right" size={14} />
+            </span>
+          </a>
+
+          <a href="/bookmark/?tab=history" class="user-dialog__menu-item">
+            <span class="user-dialog__menu-icon" aria-hidden="true">
+              <Icons name="history" size={18} />
+            </span>
+            <span class="user-dialog__menu-label">Riwayat</span>
+            <span class="user-dialog__menu-arrow" aria-hidden="true">
+              <Icons name="arrow-right" size={14} />
+            </span>
+          </a>
+
+          <a
+            href="https://github.com/bimaakbar-dev/yukio-data"
+            class="user-dialog__menu-item"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span class="user-dialog__menu-icon" aria-hidden="true">
+              <Icons name="external" size={18} />
+            </span>
+            <span class="user-dialog__menu-label">Kontribusi Data</span>
+            <span class="user-dialog__menu-arrow" aria-hidden="true">
+              <Icons name="external" size={14} />
+            </span>
+          </a>
+        </nav>
+
         <button type="button" class="user-dialog__logout" data-logout>Keluar</button>
       </div>
     </div>
@@ -290,6 +328,84 @@ const dialogId = 'qimochi-user-dialog';
     text-overflow: ellipsis;
   }
 
+  /* Menu */
+  .user-dialog__menu {
+    display: flex;
+    flex-direction: column;
+    margin: 0 calc(var(--s-4) * -1);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .user-dialog__menu-item {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: background var(--t-fast), color var(--t-fast);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .user-dialog__menu-item:last-child {
+    border-bottom: none;
+  }
+
+  .user-dialog__menu-item:hover {
+    background: var(--bg-surface);
+    color: var(--accent);
+  }
+
+  .user-dialog__menu-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: color var(--t-fast);
+  }
+
+  .user-dialog__menu-item:hover .user-dialog__menu-icon {
+    color: var(--accent);
+  }
+
+  .user-dialog__menu-icon :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .user-dialog__menu-label {
+    flex: 1;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .user-dialog__menu-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform var(--t-fast), color var(--t-fast);
+  }
+
+  .user-dialog__menu-item:hover .user-dialog__menu-arrow {
+    color: var(--accent);
+    transform: translateX(2px);
+  }
+
+  .user-dialog__menu-arrow :global(svg) {
+    display: block;
+  }
+
+  /* Logout */
   .user-dialog__logout {
     align-self: stretch;
     padding: var(--s-2) var(--s-3);
@@ -307,6 +423,38 @@ const dialogId = 'qimochi-user-dialog';
   .user-dialog__logout:hover {
     border-color: var(--danger);
     color: var(--danger);
+  }
+
+  /* ==== Mobile: full screen ==== */
+  @media (max-width: 50rem) {
+    .user-dialog {
+      width: 100%;
+      max-width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      margin: 0;
+      border-radius: 0;
+    }
+
+    .user-dialog__inner {
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .user-dialog__header {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .user-dialog__body {
+      flex: 1;
+      padding: var(--s-4);
+    }
   }
 </style>
 
@@ -357,7 +505,6 @@ const dialogId = 'qimochi-user-dialog';
       return;
     }
 
-    // Typed const — non-null setelah guard di atas
     const trigger: HTMLButtonElement = triggerEl;
     const guestIcon: HTMLElement = guestIconEl;
     const triggerAvatar: HTMLImageElement = triggerAvatarEl;
