@@ -91,8 +91,6 @@ const animeUrl = `/anime/${animeSlug}/`;
     display: flex;
     flex-direction: column;
     gap: var(--s-3);
-    padding-bottom: var(--s-4);
-    border-bottom: 1px solid var(--border);
     min-width: 0;
   }
 
@@ -102,6 +100,8 @@ const animeUrl = `/anime/${animeSlug}/`;
     justify-content: space-between;
     gap: var(--s-4);
     min-width: 0;
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: var(--s-4);
   }
 
   .ep-header__text {
@@ -161,10 +161,9 @@ const animeUrl = `/anime/${animeSlug}/`;
   .ep-header__bookmark :global(.icon-btn.is-active) {
     background: var(--accent);
     border-color: var(--accent);
-    color: #fff;
+    color: var(--accent-text);
   }
 
-  /* ==== Meta row ==== */
   .ep-header__meta {
     display: flex;
     flex-wrap: wrap;
@@ -243,6 +242,9 @@ const animeUrl = `/anime/${animeSlug}/`;
   }
 
   @media (min-width: 50rem) {
+    .ep-header__top {
+      border: none;
+    }
     .ep-header__episode {
       font-size: var(--fs-3xl);
     }
