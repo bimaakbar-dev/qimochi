@@ -1,0 +1,283 @@
+---
+import Icon from '~/user-components/Icons.astro';
+import bannerData from '~/data/banner.json';
+
+type BannerType = 'info' | 'warning' | 'success' | 'danger';
+type IconName = Parameters<typeof Icon>[0]['name'];
+
+interface BannerLink {
+  href: string;
+  label: string;
+}
+
+interface Banner {
+  id: string;
+  active?: boolean;
+  type?: BannerType;
+  icon?: IconName;
+  message: string;
+  link?: BannerLink;
+  dismissible?: boolean;
+}
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+
+const DEFAULT_ICON: Record<BannerType, IconName> = {
+  info: 'info',
+  warning: 'alert',
+  success: 'check',
+  danger: 'alert',
+};
+
+const banners = ((bannerData as { banners?: Banner[] }).banners ?? []).filter(
+  (b) => b.active !== false && b.message
+);
+
+if (banners.length === 0) return null;
+---
+
+<div class:list={['site-banner-stack', className]} data-site-banner-stack>
+  {banners.map((b) => {
+    const type = b.type ?? 'info';
+    const iconName = b.icon ?? DEFAULT_ICON[type];
+    const dismissible = b.dismissible !== false;
+
+    return (
+      <div
+        class:list={['site-banner', `site-banner--${type}`]}
+        data-site-banner
+        data-banner-id={b.id}
+        data-dismissible={dismissible ? '1' : '0'}
+        role={type === 'danger' || type === 'warning' ? 'alert' : 'status'}
+      >
+        <div class="site-banner__inner">
+          <span class="site-banner__icon" aria-hidden="true">
+            <Icon name={iconName} size={16} />
+          </span>
+
+          <p class="site-banner__message">
+            <span>{b.message}</span>
+            {b.link && (
+              <>
+                {' '}
+                <a class="site-banner__link" href={b.link.href}>
+                  {b.link.label}
+                </a>
+              </>
+            )}
+          </p>
+
+          {dismissible && (
+            <button
+              type="button"
+              class="site-banner__close"
+              data-banner-close
+              aria-label="Tutup pengumuman"
+            >
+              <Icon name="close" size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+<script>
+  (function () {
+    const STORAGE_KEY = 'qimochi:banner-dismissed';
+
+    function loadDismissed(): Set<string> {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return new Set();
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return new Set();
+        return new Set(parsed.filter((x) => typeof x === 'string'));
+      } catch {
+        return new Set();
+      }
+    }
+
+    function saveDismissed(ids: Set<string>): void {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
+      } catch {}
+    }
+
+    function init(): void {
+      const stack = document.querySelector<HTMLElement>('[data-site-banner-stack]');
+      if (!stack) return;
+
+      const dismissed = loadDismissed();
+      const items = stack.querySelectorAll<HTMLElement>('[data-site-banner]');
+
+      items.forEach((el) => {
+        const id = el.dataset.bannerId ?? '';
+        const dismissible = el.dataset.dismissible === '1';
+
+        // Sembunyikan kalau sudah pernah ditutup
+        if (id && dismissed.has(id)) {
+          el.remove();
+          return;
+        }
+
+        if (!dismissible || !id) return;
+
+        const btn = el.querySelector<HTMLButtonElement>('[data-banner-close]');
+        if (!btn) return;
+
+        btn.addEventListener('click', () => {
+          dismissed.add(id);
+          saveDismissed(dismissed);
+          el.remove();
+
+          // Hapus container kalau semua banner sudah hilang
+          if (stack.querySelectorAll('[data-site-banner]').length === 0) {
+            stack.remove();
+          }
+        });
+      });
+
+      if (stack.querySelectorAll('[data-site-banner]').length === 0) {
+        stack.remove();
+      }
+    }
+
+    init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>
+
+<style>
+  .site-banner-stack {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .site-banner {
+    position: relative;
+    width: 100%;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    font-size: var(--fs-xs);
+  }
+
+  .site-banner__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    max-width: var(--content-max-mobile);
+    margin-inline: auto;
+    padding: var(--s-2) var(--pad-x);
+    min-width: 0;
+  }
+
+  .site-banner__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: currentColor;
+  }
+
+  .site-banner__icon :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .site-banner__message {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-1);
+    margin: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+    line-height: var(--lh-tight);
+    font-weight: var(--fw-medium);
+  }
+
+  .site-banner__message > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .site-banner__link {
+    position: relative;
+    color: inherit;
+    font-weight: var(--fw-semibold);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space: nowrap;
+    transition: opacity var(--t-fast);
+  }
+
+  .site-banner__link:hover {
+    opacity: 0.75;
+  }
+
+  .site-banner__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: currentColor;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity var(--t-fast), background var(--t-fast);
+  }
+
+  .site-banner__close:hover {
+    opacity: 1;
+    background: hsla(0, 0%, 0%, 0.06);
+  }
+
+  .site-banner__close :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .site-banner--info {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border-bottom-color: var(--border);
+  }
+
+  .site-banner--warning {
+    background: var(--warning-soft);
+    color: var(--warning);
+    border-bottom-color: hsla(40, 53%, 51%, 0.35);
+  }
+
+  .site-banner--success {
+    background: var(--success-soft);
+    color: var(--success);
+    border-bottom-color: hsla(142, 71%, 40%, 0.35);
+  }
+
+  .site-banner--danger {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-bottom-color: hsla(3, 81%, 48%, 0.35);
+  }
+
+  @media (min-width: 50rem) {
+    .site-banner__inner {
+      max-width: var(--content-max-desktop);
+    }
+  }
+</style>
