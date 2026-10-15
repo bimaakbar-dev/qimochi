@@ -163,10 +163,15 @@ if (banners.length === 0) return null;
   .site-banner {
     position: relative;
     width: 100%;
-    border-bottom: 1px solid var(--border);
     background: var(--bg-elevated);
     color: var(--text-primary);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
+    padding-inline: var(--pad-x);
+    padding-block: var(--s-3);
+    box-shadow: var(--shadow-sm);
+    isolation: isolate;
+    text-align: center;
+    text-wrap: balance;
   }
 
   .site-banner__inner {
@@ -175,7 +180,7 @@ if (banners.length === 0) return null;
     gap: var(--s-3);
     max-width: var(--content-max-mobile);
     margin-inline: auto;
-    padding: var(--s-2) var(--pad-x);
+    line-height: 1.4;
     min-width: 0;
   }
 
@@ -183,15 +188,16 @@ if (banners.length === 0) return null;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1em;
+    height: 1em;
+    font-size: 1.333em;
     color: currentColor;
   }
 
   .site-banner__icon :global(svg) {
     width: 100%;
     height: 100%;
+    flex-shrink: 0;
   }
 
   .site-banner__message {
@@ -202,8 +208,6 @@ if (banners.length === 0) return null;
     margin: 0;
     min-width: 0;
     flex: 1 1 auto;
-    line-height: var(--lh-tight);
-    font-weight: var(--fw-medium);
   }
 
   .site-banner__message > span {
@@ -214,9 +218,7 @@ if (banners.length === 0) return null;
   .site-banner__link {
     position: relative;
     color: inherit;
-    font-weight: var(--fw-semibold);
-    text-decoration: underline;
-    text-underline-offset: 3px;
+    font-weight: var(--fw-medium);
     white-space: nowrap;
     transition: opacity var(--t-fast);
   }
@@ -230,49 +232,43 @@ if (banners.length === 0) return null;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 1.5rem;
-    height: 1.5rem;
-    padding: 0;
+    width: 1.333em;
+    height: 1.333em;
     background: transparent;
     border: none;
     color: currentColor;
     cursor: pointer;
-    opacity: 0.7;
     transition: opacity var(--t-fast), background var(--t-fast);
   }
 
   .site-banner__close:hover {
-    opacity: 1;
     background: hsla(0, 0%, 0%, 0.06);
   }
 
   .site-banner__close :global(svg) {
     width: 100%;
     height: 100%;
+    flex-shrink: 0;
   }
 
   .site-banner--info {
-    background: var(--bg-elevated);
-    color: var(--text-primary);
-    border-bottom-color: var(--border);
+    background: var(--accent);
+    color: var(--accent-text);
   }
 
   .site-banner--warning {
     background: var(--warning-soft);
     color: var(--warning);
-    border-bottom-color: hsla(40, 53%, 51%, 0.35);
   }
 
   .site-banner--success {
     background: var(--success-soft);
     color: var(--success);
-    border-bottom-color: hsla(142, 71%, 40%, 0.35);
   }
 
   .site-banner--danger {
     background: var(--danger-soft);
     color: var(--danger);
-    border-bottom-color: hsla(3, 81%, 48%, 0.35);
   }
 
   @media (min-width: 50rem) {
