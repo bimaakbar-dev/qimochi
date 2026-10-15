@@ -5,27 +5,20 @@ import PostCard from '~/components/PostCard.astro';
 import Badge from '~/user-components/Badge.astro';
 import Icon from '~/user-components/Icons.astro';
 import {
-  getPublishedPostBySlug,
-  getAllPostSlugs,
   getPublishedPosts,
   getRelatedPosts,
   formatDate,
 } from '~/lib/blog';
 
 export async function getStaticPaths() {
-  const slugs = await getAllPostSlugs();
-  return slugs.map(slug => ({
-    params: { slug },
+  const posts = await getPublishedPosts();
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
   }));
 }
 
-const { slug } = Astro.params;
-const post = await getPublishedPostBySlug(slug!);
-
-if (!post) {
-  return Astro.redirect('/404');
-}
-
+const { post } = Astro.props;
 const { data } = post;
 const { Content } = await render(post);
 
