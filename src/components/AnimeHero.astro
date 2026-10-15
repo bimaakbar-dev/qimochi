@@ -1,5 +1,4 @@
 ---
-import Icon from '~/user-components/Icons.astro';
 import LinkButton from '~/user-components/LinkButton.astro';
 import BookmarkButton from './BookmarkButton.astro';
 
@@ -326,7 +325,6 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
     flex-wrap: wrap;
   }
 
-  /* ---- LinkButton override (menggantikan .hero__play lama) ---- */
   .hero__actions :global(.hero__play) {
     gap: var(--s-3);
     padding: var(--s-3) var(--s-5);
@@ -362,7 +360,6 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
     opacity: 0.5;
   }
 
-  /* ---- Rating (slot below-meta) ---- */
   .hero__below :global(.rating-wrap) {
     justify-content: center;
   }
