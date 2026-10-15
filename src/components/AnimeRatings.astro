@@ -29,14 +29,11 @@ const popoverId = `rating-pop-${animeId}`;
       <span class="rating__stars-fill" data-stars-fill>★★★★★</span>
     </span>
 
-    <span class="rating__summary">
-      <span class="rating__label" data-label>Belum ada rating</span>
-      <span class="rating__average" data-average></span>
-      <span class="rating__votes" data-votes></span>
-    </span>
+    <span class="rating__value" data-value></span>
+    <span class="rating__votes" data-votes></span>
 
     <span class="rating__chevron" aria-hidden="true">
-      <Icons name="chevron-down" size={16} />
+      <Icons name="chevron-down" size={14} />
     </span>
   </button>
 
@@ -47,70 +44,53 @@ const popoverId = `rating-pop-${animeId}`;
     aria-label="Rating komunitas"
     data-rating-popover
   >
-    <div class="rating__popover-inner">
-      <header class="rating__popover-header">
-        <h3 class="rating__popover-title">Rating Komunitas</h3>
-        <button
-          type="button"
-          class="rating__popover-close"
-          data-rating-close
-          aria-label="Tutup"
+    <button
+      type="button"
+      class="rating__popover-close"
+      data-rating-close
+      aria-label="Tutup"
+    >
+      <Icons name="close" size={14} />
+    </button>
+
+    <div class="rating__popover-body">
+      <div class="rating__summary">
+        <p class="rating__summary-title" data-summary-title>Belum ada rating</p>
+        <p class="rating__summary-count" data-summary-count></p>
+      </div>
+
+      <div class="rating__histogram" data-histogram></div>
+
+      <section class="rating__input-section">
+        <h4 class="rating__input-title" data-user-label>Beri rating:</h4>
+        <div
+          class="rating__input"
+          data-rating-input
+          role="radiogroup"
+          aria-label="Rating kamu"
         >
-          <Icons name="close" size={16} />
-        </button>
-      </header>
-
-      <div class="rating__popover-body">
-        <div class="rating__popover-summary">
-          <span class="rating__popover-stars" data-popover-stars aria-hidden="true">
-            <span class="rating__popover-stars-bg">★★★★★</span>
-            <span class="rating__popover-stars-fill" data-popover-stars-fill>★★★★★</span>
-          </span>
-          <div class="rating__popover-summary-text">
-            <span class="rating__popover-average" data-popover-average>—</span>
-            <span class="rating__popover-votes" data-popover-votes></span>
-          </div>
-        </div>
-
-        <section class="rating__popover-section">
-          <h4 class="rating__popover-section-title">Distribusi rating</h4>
-          <div class="rating__popover-histogram" data-histogram></div>
-        </section>
-
-        <section class="rating__popover-section">
-          <h4 class="rating__popover-section-title" data-user-label>Beri rating:</h4>
-
-          <div
-            class="rating__popover-input"
-            data-rating-input
-            role="radiogroup"
-            aria-label="Rating kamu"
-          >
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                type="button"
-                class="rating__popover-star"
-                data-input-star={n}
-                role="radio"
-                aria-checked="false"
-                aria-label={`${n} bintang`}
-                disabled
-              >★</button>
-            ))}
-          </div>
-
-          <div class="rating__popover-actions">
+          {[1, 2, 3, 4, 5].map((n) => (
             <button
               type="button"
-              class="rating__popover-clear"
-              data-clear
-              hidden
-            >Hapus rating saya</button>
-          </div>
-
-          <p class="rating__popover-hint" data-hint hidden></p>
-        </section>
-      </div>
+              class="rating__input-star"
+              data-input-star={n}
+              role="radio"
+              aria-checked="false"
+              aria-label={`${n} bintang`}
+              disabled
+            >★</button>
+          ))}
+        </div>
+        <div class="rating__actions">
+          <button
+            type="button"
+            class="rating__clear"
+            data-clear
+            hidden
+          >Hapus rating saya</button>
+        </div>
+        <p class="rating__hint" data-hint hidden></p>
+      </section>
     </div>
   </div>
 </div>
@@ -122,10 +102,11 @@ const popoverId = `rating-pop-${animeId}`;
     font-family: inherit;
   }
 
+  /* ==== Trigger ==== */
   .rating__display {
     display: inline-flex;
     align-items: center;
-    gap: 0;
+    gap: var(--s-2);
     padding: var(--s-1) 0;
     background: transparent;
     border: none;
@@ -143,7 +124,7 @@ const popoverId = `rating-pop-${animeId}`;
     position: relative;
     display: inline-block;
     font-size: 1rem;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     line-height: 1;
     white-space: nowrap;
   }
@@ -163,43 +144,28 @@ const popoverId = `rating-pop-${animeId}`;
     white-space: nowrap;
   }
 
-  .rating__stars[data-empty='true'] .rating__stars-fill {
-    width: 0;
-  }
-
-  .rating__summary {
-    display: inline-flex;
-    align-items: baseline;
-    gap: var(--s-2);
-    margin-left: var(--s-3);
-    padding-left: var(--s-3);
-    border-left: 1px solid hsla(0, 0%, 100%, 0.22);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-semibold);
-    letter-spacing: 0.01em;
+  .rating__value {
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
+    color: var(--text-inverted);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
     white-space: nowrap;
   }
 
-  .rating__label {
-    color: hsla(0, 0%, 100%, 0.72);
+  .rating__value.is-empty {
+    font-size: var(--fs-sm);
     font-weight: var(--fw-medium);
-  }
-
-  .rating__average {
-    color: #fff;
-    font-size: var(--fs-base);
-    font-weight: var(--fw-semibold);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .rating__average:empty {
-    display: none;
+    color: hsla(0, 0%, 100%, 0.72);
   }
 
   .rating__votes {
-    color: hsla(0, 0%, 100%, 0.65);
+    font-size: var(--fs-sm);
     font-weight: var(--fw-medium);
+    color: hsla(0, 0%, 100%, 0.65);
     font-variant-numeric: tabular-nums;
+    line-height: 1;
+    white-space: nowrap;
   }
 
   .rating__votes:empty {
@@ -210,7 +176,6 @@ const popoverId = `rating-pop-${animeId}`;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-left: var(--s-2);
     color: hsla(0, 0%, 100%, 0.55);
     transition: transform var(--t-fast), color var(--t-fast);
   }
@@ -220,13 +185,12 @@ const popoverId = `rating-pop-${animeId}`;
     transform: translateY(1px);
   }
 
+  /* ==== Popover ==== */
   .rating__popover {
     position: fixed;
     inset: auto;
     margin: 0;
-    padding: 0;
-    border: 1px solid var(--border);
-    border-radius: var(--r-lg);
+    padding: var(--s-5) var(--s-4) var(--s-4);
     background: var(--bg-elevated);
     color: var(--text-primary);
     box-shadow: var(--shadow-lg);
@@ -256,28 +220,10 @@ const popoverId = `rating-pop-${animeId}`;
     }
   }
 
-  .rating__popover-inner {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .rating__popover-header {
-    display: flex;
-    align-items: start;
-    justify-content: space-between;
-    gap: var(--s-3);
-    padding: var(--s-3) var(--s-4);
-  }
-
-  .rating__popover-title {
-    margin: 0;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    letter-spacing: 0.08em;
-    color: var(--text-primary);
-  }
-
   .rating__popover-close {
+    position: absolute;
+    top: var(--s-2);
+    right: var(--s-2);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -299,181 +245,162 @@ const popoverId = `rating-pop-${animeId}`;
   .rating__popover-body {
     display: flex;
     flex-direction: column;
-    gap: var(--s-4);
-    padding: var(--s-4);
+    gap: var(--s-5);
   }
 
-  .rating__popover-summary {
+  /* ==== Summary ==== */
+  .rating__summary {
     display: flex;
-    align-items: start;
-    gap: var(--s-3);
+    flex-direction: column;
+    gap: var(--s-1);
+    padding-right: var(--s-5);
   }
 
-  .rating__popover-stars {
-    position: relative;
-    display: inline-block;
-    font-size: 1.125rem;
-    letter-spacing: 2px;
-    line-height: 1;
-    white-space: nowrap;
-  }
-
-  .rating__popover-stars-bg {
-    color: var(--border);
-  }
-
-  .rating__popover-stars-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    color: var(--gold);
-    overflow: hidden;
-    width: 0;
-    transition: width var(--t-base);
-    white-space: nowrap;
-  }
-
-  .rating__popover-summary-text {
-    display: flex;
-    align-items: baseline;
-    gap: var(--s-2);
-  }
-
-  .rating__popover-average {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
+  .rating__summary-title {
+    margin: 0;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-semibold);
     color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
+    line-height: var(--lh-tight);
   }
 
-  .rating__popover-votes {
-    font-size: var(--fs-xs);
+  .rating__summary-count {
+    margin: 0;
+    font-size: var(--fs-sm);
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
   }
 
-  .rating__popover-section {
+  .rating__summary-count:empty {
+    display: none;
+  }
+
+  /* ==== Histogram ==== */
+  .rating__histogram {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .rating__hist-row {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr 2.5rem;
+    align-items: center;
+    gap: var(--s-3);
+  }
+
+  .rating__hist-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rating__hist-label-star {
+    color: var(--gold);
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .rating__hist-track {
+    position: relative;
+    height: 8px;
+    background: var(--bg-surface);
+    border-radius: var(--r-full);
+    overflow: hidden;
+  }
+
+  .rating__hist-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--gold);
+    border-radius: var(--r-full);
+    transition: width var(--t-base);
+  }
+
+  .rating__hist-pct {
+    text-align: right;
+    font-size: var(--fs-sm);
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--fw-medium);
+  }
+
+  .rating__hist-empty {
+    padding: var(--s-4) 0;
+    text-align: center;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  /* ==== Input ==== */
+  .rating__input-section {
     display: flex;
     flex-direction: column;
     gap: var(--s-2);
-    align-items: start;
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--border);
   }
 
-  .rating__popover-section-title {
+  .rating__input-title {
     margin: 0;
     font-size: 0.6875rem;
-    font-weight: var(--fw-semibold);
+    font-weight: var(--fw-bold);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-secondary);
   }
 
-  .rating__popover-histogram {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-2);
-  }
-
-  .rating__popover-hist-row {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: var(--s-2);
-    font-size: var(--fs-xs);
-  }
-
-  .rating__popover-hist-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    color: var(--text-secondary);
-    font-weight: var(--fw-semibold);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  .rating__popover-hist-label-star {
-    color: var(--gold);
-    font-size: 0.6875rem;
-    line-height: 1;
-  }
-
-  .rating__popover-hist-track {
-    position: relative;
-    height: 6px;
-    background: var(--bg-surface);
-    overflow: hidden;
-  }
-
-  .rating__popover-hist-fill {
-    position: absolute;
-    inset: 0 auto 0 0;
-    background: var(--gold);
-    transition: width var(--t-base);
-  }
-
-  .rating__popover-hist-pct {
-    color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-    font-size: 0.625rem;
-    min-width: 2.25rem;
-    text-align: end;
-  }
-
-  .rating__popover-hist-empty {
-    padding: var(--s-3) 0;
-    text-align: center;
-    font-size: var(--fs-xs);
-    color: var(--text-muted);
-  }
-
-  .rating__popover-input {
+  .rating__input {
     display: inline-flex;
     align-items: center;
     gap: 2px;
   }
 
-  .rating__popover-star {
+  .rating__input-star {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 2rem;
+    height: 2rem;
     padding: 0;
     background: transparent;
     border: none;
     color: var(--border-hover);
-    font-size: 1.5rem;
+    font-size: 1.625rem;
     line-height: 1;
     cursor: pointer;
     transition: color var(--t-fast), transform var(--t-fast);
   }
 
-  .rating__popover-star:disabled {
+  .rating__input-star:disabled {
     cursor: not-allowed;
     opacity: 0.5;
   }
 
-  .rating__popover-star:not(:disabled):hover {
+  .rating__input-star:not(:disabled):hover {
     color: var(--gold-hover);
     transform: scale(1.12);
   }
 
-  .rating__popover-star.is-active {
+  .rating__input-star.is-active {
     color: var(--gold);
   }
 
-  .rating__popover-star.is-preview {
+  .rating__input-star.is-preview {
     color: var(--gold-hover);
   }
 
-  .rating__popover-actions {
+  .rating__actions {
     display: flex;
     justify-content: flex-end;
     min-height: 1rem;
   }
 
-  .rating__popover-clear {
+  .rating__clear {
     padding: 0;
     background: transparent;
     border: none;
@@ -484,26 +411,26 @@ const popoverId = `rating-pop-${animeId}`;
     transition: color var(--t-fast);
   }
 
-  .rating__popover-clear:hover {
+  .rating__clear:hover {
     color: var(--danger);
   }
 
-  .rating__popover-clear[hidden] {
+  .rating__clear[hidden] {
     display: none;
   }
 
-  .rating__popover-hint {
+  .rating__hint {
     margin: 0;
     font-size: var(--fs-xs);
     color: var(--text-muted);
     line-height: var(--lh-relaxed);
   }
 
-  .rating__popover-hint[hidden] {
+  .rating__hint[hidden] {
     display: none;
   }
 
-  .rating__popover-hint a {
+  .rating__hint a {
     color: var(--accent);
     cursor: pointer;
   }
@@ -523,6 +450,10 @@ const popoverId = `rating-pop-${animeId}`;
     if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
     if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
     return String(n);
+  }
+
+  function formatFull(n: number): string {
+    return n.toLocaleString('id-ID');
   }
 
   function openUserMenu(): void {
@@ -558,11 +489,8 @@ const popoverId = `rating-pop-${animeId}`;
 
     if (top + popRect.height > vh - MARGIN) {
       const above = trigRect.top - popRect.height - MARGIN;
-      if (above >= MARGIN) {
-        top = above;
-      } else {
-        top = Math.max(MARGIN, vh - popRect.height - MARGIN);
-      }
+      if (above >= MARGIN) top = above;
+      else top = Math.max(MARGIN, vh - popRect.height - MARGIN);
     }
 
     if (left + popRect.width > vw - MARGIN) {
@@ -585,52 +513,33 @@ const popoverId = `rating-pop-${animeId}`;
 
     const triggerEl = root.querySelector<HTMLButtonElement>('[data-rating-trigger]');
     const popoverEl = document.getElementById(POPOVER_ID) as HTMLElement | null;
-
     if (!triggerEl || !popoverEl) return;
 
     const triggerBtn = triggerEl;
     const popover = popoverEl;
 
-    const closeBtnEl = popover.querySelector<HTMLButtonElement>('[data-rating-close]');
-    if (!closeBtnEl) return;
-    const closeBtn = closeBtnEl;
+    const closeBtn = popover.querySelector<HTMLButtonElement>('[data-rating-close]');
+    if (!closeBtn) return;
 
-    const starsWrapEl = root.querySelector<HTMLElement>('.rating__stars');
-    const starsFillEl = root.querySelector<HTMLElement>('[data-stars-fill]');
-    const labelElRaw = root.querySelector<HTMLElement>('[data-label]');
-    const averageElRaw = root.querySelector<HTMLElement>('[data-average]');
-    const votesElRaw = root.querySelector<HTMLElement>('[data-votes]');
+    const starsWrap = root.querySelector<HTMLElement>('.rating__stars');
+    const starsFill = root.querySelector<HTMLElement>('[data-stars-fill]');
+    const valueEl = root.querySelector<HTMLElement>('[data-value]');
+    const votesEl = root.querySelector<HTMLElement>('[data-votes]');
 
-    const popStarsEl = popover.querySelector<HTMLElement>('[data-popover-stars]');
-    const popStarsFillEl = popover.querySelector<HTMLElement>('[data-popover-stars-fill]');
-    const popAvgEl = popover.querySelector<HTMLElement>('[data-popover-average]');
-    const popVotesEl = popover.querySelector<HTMLElement>('[data-popover-votes]');
-    const histogramEl = popover.querySelector<HTMLElement>('[data-histogram]');
-    const userLabelEl = popover.querySelector<HTMLElement>('[data-user-label]');
-    const clearBtnEl = popover.querySelector<HTMLButtonElement>('[data-clear]');
-    const hintElRaw = popover.querySelector<HTMLElement>('[data-hint]');
+    const summaryTitle = popover.querySelector<HTMLElement>('[data-summary-title]');
+    const summaryCount = popover.querySelector<HTMLElement>('[data-summary-count]');
+    const histogram = popover.querySelector<HTMLElement>('[data-histogram]');
+    const userLabel = popover.querySelector<HTMLElement>('[data-user-label]');
+    const clearBtn = popover.querySelector<HTMLButtonElement>('[data-clear]');
+    const hintEl = popover.querySelector<HTMLElement>('[data-hint]');
 
     if (
-      !starsWrapEl || !starsFillEl || !labelElRaw || !averageElRaw || !votesElRaw ||
-      !popStarsEl || !popStarsFillEl || !popAvgEl || !popVotesEl ||
-      !histogramEl || !userLabelEl || !clearBtnEl || !hintElRaw
+      !starsWrap || !starsFill || !valueEl || !votesEl ||
+      !summaryTitle || !summaryCount || !histogram || !userLabel ||
+      !clearBtn || !hintEl
     ) {
       return;
     }
-
-    const starsWrap = starsWrapEl;
-    const starsFill = starsFillEl;
-    const labelEl = labelElRaw;
-    const averageEl = averageElRaw;
-    const votesEl = votesElRaw;
-    const popStars = popStarsEl;
-    const popStarsFill = popStarsFillEl;
-    const popAvg = popAvgEl;
-    const popVotes = popVotesEl;
-    const histogram = histogramEl;
-    const userLabel = userLabelEl;
-    const clearBtn = clearBtnEl;
-    const hintEl = hintElRaw;
 
     const inputStars = Array.from(
       popover.querySelectorAll<HTMLButtonElement>('[data-input-star]')
@@ -645,23 +554,36 @@ const popoverId = `rating-pop-${animeId}`;
     }
 
     function renderTriggerStars(avg5: number, hasVotes: boolean): void {
-      starsWrap.dataset.empty = hasVotes ? 'false' : 'true';
-      starsFill.style.width = fillWidth(avg5, hasVotes);
+      starsWrap!.dataset.empty = hasVotes ? 'false' : 'true';
+      starsFill!.style.width = fillWidth(avg5, hasVotes);
     }
 
-    function renderPopStars(avg5: number, hasVotes: boolean): void {
-      popStars.dataset.empty = hasVotes ? 'false' : 'true';
-      popStarsFill.style.width = fillWidth(avg5, hasVotes);
+    function renderTrigger(): void {
+      if (!state) return;
+      const hasVotes = state.votes > 0;
+
+      if (hasVotes) {
+        const avg5 = state.average / 2;
+        valueEl!.textContent = avg5.toFixed(1);
+        valueEl!.classList.remove('is-empty');
+        votesEl!.textContent = `(${formatCount(state.votes)})`;
+        renderTriggerStars(avg5, true);
+      } else {
+        valueEl!.textContent = 'Belum ada rating';
+        valueEl!.classList.add('is-empty');
+        votesEl!.textContent = '';
+        renderTriggerStars(0, false);
+      }
     }
 
     function renderHistogram(dist: Record<string, number>, total: number): void {
-      histogram.innerHTML = '';
+      histogram!.innerHTML = '';
 
       if (total === 0) {
         const empty = document.createElement('div');
-        empty.className = 'rating__popover-hist-empty';
+        empty.className = 'rating__hist-empty';
         empty.textContent = 'Belum ada rating. Jadilah yang pertama!';
-        histogram.appendChild(empty);
+        histogram!.appendChild(empty);
         return;
       }
 
@@ -670,23 +592,22 @@ const popoverId = `rating-pop-${animeId}`;
         const pct = total > 0 ? (count / total) * 100 : 0;
 
         const row = document.createElement('div');
-        row.className = 'rating__popover-hist-row';
+        row.className = 'rating__hist-row';
         row.innerHTML = `
-          <span class="rating__popover-hist-label">
-            ${star}<span class="rating__popover-hist-label-star" aria-hidden="true">★</span>
+          <span class="rating__hist-label">
+            <span class="rating__hist-label-star" aria-hidden="true">★</span>${star}
           </span>
-          <span class="rating__popover-hist-track">
-            <span class="rating__popover-hist-fill" style="width: ${pct.toFixed(1)}%"></span>
+          <span class="rating__hist-track">
+            <span class="rating__hist-fill" style="width: ${pct.toFixed(1)}%"></span>
           </span>
-          <span class="rating__popover-hist-pct">${Math.round(pct)}%</span>
+          <span class="rating__hist-pct">${Math.round(pct)}%</span>
         `;
-        histogram.appendChild(row);
+        histogram!.appendChild(row);
       }
     }
 
     function renderInput(): void {
       if (!state) return;
-
       const canRate = state.canRate;
       const userScore = state.userScore;
 
@@ -694,61 +615,37 @@ const popoverId = `rating-pop-${animeId}`;
         const n = Number(btn.dataset.inputStar);
         btn.disabled = !canRate || submitting;
         btn.classList.remove('is-active', 'is-preview');
-        if (userScore != null && n <= userScore) {
-          btn.classList.add('is-active');
-        }
+        if (userScore != null && n <= userScore) btn.classList.add('is-active');
         btn.setAttribute('aria-checked', String(userScore === n));
       }
 
       if (!canRate) {
-        userLabel.textContent = 'Rating:';
-        hintEl.innerHTML = `<a href="#" data-login-link>Login</a> untuk memberi rating.`;
-        hintEl.hidden = false;
+        userLabel!.textContent = 'Beri rating:';
+        hintEl!.innerHTML = `<a href="#" data-login-link>Login</a> untuk memberi rating.`;
+        hintEl!.hidden = false;
       } else if (userScore != null) {
-        userLabel.textContent = `Rating kamu: ${userScore}★`;
-        hintEl.hidden = true;
+        userLabel!.textContent = `Rating kamu: ${userScore}★`;
+        hintEl!.hidden = true;
       } else {
-        userLabel.textContent = 'Beri rating:';
-        hintEl.hidden = true;
+        userLabel!.textContent = 'Beri rating:';
+        hintEl!.hidden = true;
       }
 
-      clearBtn.hidden = !(canRate && userScore != null);
-      clearBtn.disabled = submitting;
-    }
-
-    function renderTrigger(): void {
-      if (!state) return;
-
-      const hasVotes = state.votes > 0;
-
-      if (hasVotes) {
-        const avg5 = state.average / 2;
-        labelEl.textContent = 'Rating:';
-        averageEl.textContent = avg5.toFixed(1);
-        votesEl.textContent = `(${formatCount(state.votes)})`;
-        renderTriggerStars(avg5, true);
-      } else {
-        labelEl.textContent = 'Belum ada rating';
-        averageEl.textContent = '';
-        votesEl.textContent = '';
-        renderTriggerStars(0, false);
-      }
+      clearBtn!.hidden = !(canRate && userScore != null);
+      clearBtn!.disabled = submitting;
     }
 
     function renderPopover(): void {
       if (!state) return;
-
       const hasVotes = state.votes > 0;
       const avg5 = state.average / 2;
 
       if (hasVotes) {
-        popAvg.textContent = avg5.toFixed(1);
-        popVotes.textContent = `${formatCount(state.votes)} votes`;
-        renderPopStars(avg5, true);
+        summaryTitle!.textContent = `Rata-rata ${avg5.toFixed(1)} dari 5 bintang`;
+        summaryCount!.textContent = `${formatFull(state.votes)} rating`;
       } else {
-        popAvg.textContent = '—';
-        popVotes.textContent = 'Belum ada rating';
-        renderPopStars(0, false);
+        summaryTitle!.textContent = 'Belum ada rating';
+        summaryCount!.textContent = '';
       }
 
       renderHistogram(state.distribution, state.votes);
@@ -895,15 +792,11 @@ const popoverId = `rating-pop-${animeId}`;
     if (supportsPopover()) {
       popover.addEventListener('toggle', (e) => {
         const ev = e as ToggleEvent;
-        if (ev.newState === 'open') {
-          positionPopover(popover, triggerBtn);
-        }
+        if (ev.newState === 'open') positionPopover(popover, triggerBtn);
       });
 
       const onScrollOrResize = () => {
-        if (popover.matches(':popover-open')) {
-          positionPopover(popover, triggerBtn);
-        }
+        if (popover.matches(':popover-open')) positionPopover(popover, triggerBtn);
       };
       window.addEventListener('scroll', onScrollOrResize, true);
       window.addEventListener('resize', onScrollOrResize);
