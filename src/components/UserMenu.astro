@@ -1,4 +1,6 @@
 ---
+import Icons from "~/user-components/Icons.astro";
+
 const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
 const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 const dialogId = 'qimochi-user-dialog';
@@ -19,10 +21,7 @@ const dialogId = 'qimochi-user-dialog';
     aria-label="Akun"
   >
     <span class="user-trigger-guest" data-guest>
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="12" cy="8" r="4" />
-        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-      </svg>
+      <Icons name="user" size={16} />
     </span>
     <img class="user-trigger-avatar" data-avatar alt="" width="28" height="28" hidden />
   </button>
@@ -43,9 +42,7 @@ const dialogId = 'qimochi-user-dialog';
         data-dialog-close
         aria-label="Tutup"
       >
-        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M3 3l10 10M13 3L3 13"/>
-        </svg>
+        <Icons name="close" size={16} />
       </button>
     </header>
 
@@ -102,7 +99,7 @@ const dialogId = 'qimochi-user-dialog';
     width: 28px;
     height: 28px;
     border-radius: var(--r-full);
-    border: 1.5px solid var(--border-hover);
+    border: 1px solid var(--border);
     object-fit: cover;
     flex-shrink: 0;
     box-sizing: border-box;
@@ -121,16 +118,15 @@ const dialogId = 'qimochi-user-dialog';
     display: none;
   }
 
-  /* ==== Dialog ==== */
   .user-dialog {
     width: 24rem;
     max-width: calc(100vw - 2rem);
     padding: 0;
-    border: 1px solid var(--border);
     background: var(--bg-elevated);
     color: var(--text-primary);
     box-shadow: var(--shadow-lg);
     margin: auto;
+    border-radius: var(--r-lg);
   }
 
   .user-dialog::backdrop {
@@ -175,7 +171,6 @@ const dialogId = 'qimochi-user-dialog';
     justify-content: space-between;
     gap: var(--s-3);
     padding: var(--s-3) var(--s-4);
-    border-bottom: 1px solid var(--border);
   }
 
   .user-dialog__title {
