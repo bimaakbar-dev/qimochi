@@ -1,10 +1,11 @@
 export const SITE = {
   name: 'Qimochi',
   title: 'Nonton Anime Subtitle Indonesia',
-  description: 'Koleksi anime subtitle bahasa indonesia. Ringan, cepat, tanpa ribet.',
+  description: 'Koleksi anime subtitle Bahasa Indonesia. Ringan, cepat, tanpa ribet.',
   url: 'https://qimochi.web.id',
   locale: 'id-ID',
   lang: 'id',
+  ogImage: '' as string,
 } as const;
 
 export const NAV_LINKS = [
