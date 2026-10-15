@@ -1,6 +1,5 @@
 ---
 import Icons from "~/user-components/Icons.astro";
-import Button from "~/user-components/Button.astro";
 
 const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
 const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
@@ -102,15 +101,11 @@ const dialogId = 'qimochi-user-dialog';
           </a>
         </nav>
 
-        <Button
+        <button
           type="button"
-          variant="outline"
-          size="md"
-          block
+          class="user-dialog__logout"
           data-logout
-        >
-          Keluar
-        </Button>
+        >Keluar</button>
       </div>
     </div>
   </div>
@@ -254,6 +249,7 @@ const dialogId = 'qimochi-user-dialog';
     flex-direction: column;
   }
 
+  /* Guest view */
   .user-dialog__guest {
     display: flex;
     flex-direction: column;
@@ -285,6 +281,7 @@ const dialogId = 'qimochi-user-dialog';
     color: var(--text-muted);
   }
 
+  /* Profile view */
   .user-dialog__profile {
     display: flex;
     flex-direction: column;
@@ -335,6 +332,7 @@ const dialogId = 'qimochi-user-dialog';
     text-overflow: ellipsis;
   }
 
+  /* Menu */
   .user-dialog__menu {
     display: flex;
     flex-direction: column;
@@ -409,6 +407,26 @@ const dialogId = 'qimochi-user-dialog';
 
   .user-dialog__menu-arrow :global(svg) {
     display: block;
+  }
+
+  /* Logout */
+  .user-dialog__logout {
+    align-self: stretch;
+    padding: var(--s-2) var(--s-3);
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .user-dialog__logout:hover {
+    border-color: var(--danger);
+    color: var(--danger);
   }
 
   /* ==== Mobile: full screen ==== */
@@ -631,7 +649,7 @@ const dialogId = 'qimochi-user-dialog';
     function closeDialog(): void {
       if (dialog.open) dialog.close();
     }
-    
+
     dialog.addEventListener('close', unlockBodyScroll);
     dialog.addEventListener('cancel', unlockBodyScroll);
 
@@ -733,7 +751,7 @@ const dialogId = 'qimochi-user-dialog';
             document.dispatchEvent(new CustomEvent('qimochi:gsi-ready'));
           }
         } catch (err) {
-          console.error('[usermenu] gsi load failed', err);
+          console.error('[usermenu] load gsi failed', err);
         }
       }
 
