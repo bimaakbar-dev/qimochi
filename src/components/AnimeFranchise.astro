@@ -1,23 +1,13 @@
 ---
 import { getAllAnime } from '~/lib/anime';
-import { URLS } from '~/constants';
+import {
+  URLS,
+  RELATION_LABEL,
+  type RelationType,
+} from '~/constants';
 import SectionLabel from './SectionLabel.astro';
-
-const RELATION_LABEL: Record<string, string> = {
-  sequel: 'Sekuel',
-  prequel: 'Prekuel',
-  side_story: 'Cerita Sampingan',
-  parent_story: 'Cerita Induk',
-  alternative: 'Versi Alternatif',
-  spin_off: 'Spin-off',
-  adaptation: 'Adaptasi',
-  character: 'Karakter',
-  summary: 'Ringkasan',
-  full_story: 'Cerita Lengkap',
-  compilation: 'Kompilasi',
-  contains: 'Berisi',
-  other: 'Terkait',
-};
+import AnimeCard from './AnimeCard.astro';
+import Badge from '~/user-components/Badge.astro';
 
 interface Franchise {
   relation: string;
@@ -40,11 +30,33 @@ const {
 const filtered = franchises.filter((f) => f.slug !== currentSlug);
 if (filtered.length === 0) return null;
 
+const RELATION_PRIORITY: Record<RelationType, number> = {
+  prequel: 1,
+  sequel: 2,
+  parent_story: 3,
+  side_story: 4,
+  spin_off: 5,
+  alternative: 6,
+  full_story: 7,
+  summary: 8,
+  compilation: 9,
+  contains: 10,
+  adaptation: 11,
+  character: 12,
+  other: 13,
+};
+
+const sorted = [...filtered].sort((a, b) => {
+  const pa = RELATION_PRIORITY[a.relation as RelationType] ?? 99;
+  const pb = RELATION_PRIORITY[b.relation as RelationType] ?? 99;
+  return pa - pb;
+});
+
 const allAnime = await getAllAnime();
 const animeMap = new Map(allAnime.map((a) => [a.id, a]));
 
 function labelFor(relation: string): string {
-  return RELATION_LABEL[relation] ?? relation;
+  return RELATION_LABEL[relation as RelationType] ?? relation;
 }
 
 function slugToTitle(slug: string): string {
@@ -58,43 +70,31 @@ function slugToTitle(slug: string): string {
 <section class="section">
   <SectionLabel>{title}</SectionLabel>
   <div class="franchise-grid">
-    {filtered.map((f) => {
+    {sorted.map((f) => {
       const anime = animeMap.get(f.slug);
       const label = labelFor(f.relation);
 
       if (anime) {
-        const epCount = anime.data.episodeList?.length ?? 0;
-        const year = anime.data.releaseDate?.getFullYear() ?? null;
-        const meta =
-          [year, epCount > 0 ? `${epCount} Ep` : null].filter(Boolean).join(' · ') ||
-          '—';
-
         return (
-          <a href={URLS.anime(anime.id)} class="franchise-card">
-            <div class="franchise-card__cover">
-              {anime.data.cover ? (
-                <img src={anime.data.cover} alt="" loading="lazy" />
-              ) : (
-                <div class="franchise-card__cover--empty" />
-              )}
-              <span class="franchise-card__badge">{label}</span>
-            </div>
-            <p class="franchise-card__title">{anime.data.title}</p>
-            <p class="franchise-card__meta">{meta}</p>
-          </a>
+          <AnimeCard
+            anime={anime}
+            relationBadge={label}
+          />
         );
       }
 
       const displayTitle = f.title ?? slugToTitle(f.slug);
 
       return (
-        <div class="franchise-card franchise-card--disabled" aria-disabled="true">
-          <div class="franchise-card__cover franchise-card__cover--empty">
-            <span class="franchise-card__badge">{label}</span>
+        <article class="anime-card anime-card--disabled" aria-disabled="true">
+          <div class="disabled-cover">
+            <Badge variant="outline" size="sm">{label}</Badge>
           </div>
-          <p class="franchise-card__title">{displayTitle}</p>
-          <p class="franchise-card__meta">Belum tersedia</p>
-        </div>
+          <div class="disabled-info">
+            <h3>{displayTitle}</h3>
+            <span class="disabled-meta">Belum tersedia</span>
+          </div>
+        </article>
       );
     })}
   </div>
@@ -106,86 +106,62 @@ function slugToTitle(slug: string): string {
     flex-direction: column;
     gap: var(--s-3);
   }
+
   .franchise-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-3);
   }
 
-  .franchise-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-2);
-    color: inherit;
-    text-decoration: none;
-    min-width: 0;
-    text-align: start;
+  @media (min-width: 50rem) {
+    .franchise-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: var(--s-4);
+    }
   }
 
-  .franchise-card__cover {
+  /* ==== Disabled card (franchise belum ada di DB) ==== */
+  .anime-card--disabled {
+    display: block;
+    min-width: 0;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .disabled-cover {
     position: relative;
     aspect-ratio: 2 / 3;
-    overflow: hidden;
     background: var(--bg-surface);
-  }
-  .franchise-card__cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: opacity var(--t-base);
-  }
-  .franchise-card:hover .franchise-card__cover img { opacity: 0.85; }
-  .franchise-card__cover--empty {
-    width: 100%;
-    height: 100%;
-    background: var(--bg-elevated);
     border: 1px dashed var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: var(--s-2);
   }
 
-  .franchise-card__badge {
-    position: absolute;
-    top: var(--s-2);
-    left: var(--s-2);
-    z-index: 2;
-    padding: 2px var(--s-2);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-size: 0.625rem;
-    font-weight: var(--fw-semibold);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    line-height: 1.3;
-    border-radius: var(--r-sm);
+  .disabled-info {
+    padding: var(--s-3) 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    min-width: 0;
   }
 
-  .franchise-card__title {
+  .disabled-info h3 {
+    margin: 0;
     font-size: var(--fs-sm);
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
     line-height: var(--lh-tight);
-    margin: 0;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    overflow-wrap: anywhere;
   }
-  .franchise-card__meta {
+
+  .disabled-meta {
     font-size: var(--fs-xs);
     color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-    margin: 0;
-  }
-
-  .franchise-card--disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
-
-  @media (min-width: 50rem) {
-    .franchise-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: var(--s-4);
-    }
   }
 </style>
