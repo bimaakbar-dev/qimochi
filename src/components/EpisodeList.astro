@@ -90,7 +90,7 @@ function formatEp(n: number): string {
 <section class="section" data-episode-list>
   {nextEpisode && (
     <div class="next-block">
-      <p class="next-block__label">Episode Selanjutnya</p>
+      <SectionLabel as="h2" size="md" underlined={false} class="next-block__label">Episode Selanjutnya</SectionLabel>
       <a class="next-card" href={URLS.watch(slug, nextEpisode.number)}>
         <div class="next-card__thumb">
           {nextThumb ? (
@@ -110,7 +110,7 @@ function formatEp(n: number): string {
     </div>
   )}
 
-  <SectionLabel>Episode</SectionLabel>
+  <SectionLabel as="h3" size="md">Episode</SectionLabel>
 
   {showFilter && (
     <input
@@ -238,7 +238,6 @@ function formatEp(n: number): string {
     gap: var(--s-3);
   }
 
-  /* ==== Next episode card ==== */
   .next-block {
     display: flex;
     flex-direction: column;
@@ -248,11 +247,11 @@ function formatEp(n: number): string {
 
   .next-block__label {
     margin: 0;
-    font-size: 0.6875rem;
-    font-weight: var(--fw-bold);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--text-primary);
   }
 
   .next-card {
@@ -320,7 +319,6 @@ function formatEp(n: number): string {
     color: var(--text-muted);
   }
 
-  /* ==== Filter ==== */
   .episode-filter {
     width: 100%;
     padding: var(--s-2) var(--s-3);
@@ -341,7 +339,6 @@ function formatEp(n: number): string {
     appearance: none;
   }
 
-  /* ==== Batches ==== */
   .episode-batches {
     display: flex;
     flex-wrap: wrap;
