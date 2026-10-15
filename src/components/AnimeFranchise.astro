@@ -1,7 +1,6 @@
 ---
 import { getAllAnime } from '~/lib/anime';
 import {
-  URLS,
   RELATION_LABEL,
   type RelationType,
 } from '~/constants';
@@ -22,7 +21,7 @@ interface Props {
 }
 
 const {
-  title = 'Franchise',
+  title = 'Seri Terkait',
   currentSlug,
   franchises = [],
 } = Astro.props;
@@ -46,57 +45,96 @@ const RELATION_PRIORITY: Record<RelationType, number> = {
   other: 13,
 };
 
-const sorted = [...filtered].sort((a, b) => {
-  const pa = RELATION_PRIORITY[a.relation as RelationType] ?? 99;
-  const pb = RELATION_PRIORITY[b.relation as RelationType] ?? 99;
-  return pa - pb;
-});
-
 const allAnime = await getAllAnime();
 const animeMap = new Map(allAnime.map((a) => [a.id, a]));
 
-function labelFor(relation: string): string {
-  return RELATION_LABEL[relation as RelationType] ?? relation;
+interface Item {
+  relation: string;
+  relationLabel: string;
+  slug: string;
+  anime: (typeof allAnime)[number] | null;
+  displayTitle: string;
+  year: number | null;
 }
 
-function slugToTitle(slug: string): string {
-  return slug
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+const items: Item[] = filtered.map((f) => {
+  const anime = animeMap.get(f.slug) ?? null;
+  const relationLabel = RELATION_LABEL[f.relation as RelationType] ?? f.relation;
+
+  let displayTitle: string;
+  if (anime) {
+    displayTitle = anime.data.title;
+  } else if (f.title) {
+    displayTitle = f.title;
+  } else {
+    displayTitle = f.slug
+      .split('-')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+  }
+
+  return {
+    relation: f.relation,
+    relationLabel,
+    slug: f.slug,
+    anime,
+    displayTitle,
+    year: anime?.data.releaseDate?.getFullYear() ?? null,
+  };
+});
+
+const groupMap = new Map<string, Item[]>();
+for (const item of items) {
+  const list = groupMap.get(item.relation) ?? [];
+  list.push(item);
+  groupMap.set(item.relation, list);
 }
+
+const groups = [...groupMap.entries()]
+  .map(([relation, groupItems]) => ({
+    relation,
+    label: RELATION_LABEL[relation as RelationType] ?? relation,
+    items: [...groupItems].sort((a, b) => {
+      const ya = a.year ?? 9999;
+      const yb = b.year ?? 9999;
+      if (ya !== yb) return ya - yb;
+      return a.displayTitle.localeCompare(b.displayTitle);
+    }),
+  }))
+  .sort((a, b) => {
+    const pa = RELATION_PRIORITY[a.relation as RelationType] ?? 99;
+    const pb = RELATION_PRIORITY[b.relation as RelationType] ?? 99;
+    return pa - pb;
+  });
 ---
 
 <section class="section">
   <SectionLabel>{title}</SectionLabel>
-  <div class="franchise-grid">
-    {sorted.map((f) => {
-      const anime = animeMap.get(f.slug);
-      const label = labelFor(f.relation);
 
-      if (anime) {
-        return (
-          <AnimeCard
-            anime={anime}
-            relationBadge={label}
-          />
-        );
-      }
-
-      const displayTitle = f.title ?? slugToTitle(f.slug);
-
-      return (
-        <article class="anime-card anime-card--disabled" aria-disabled="true">
-          <div class="disabled-cover">
-            <Badge variant="outline" size="sm">{label}</Badge>
-          </div>
-          <div class="disabled-info">
-            <h3>{displayTitle}</h3>
-            <span class="disabled-meta">Belum tersedia</span>
-          </div>
-        </article>
-      );
-    })}
+  <div class="franchise-groups">
+    {groups.map((group) => (
+      <div class="franchise-group">
+        <h3 class="franchise-group__label">{group.label}</h3>
+        <div class="franchise-grid">
+          {group.items.map((item) => {
+            if (item.anime) {
+              return <AnimeCard anime={item.anime} />;
+            }
+            return (
+              <article class="anime-card anime-card--disabled" aria-disabled="true">
+                <div class="disabled-cover">
+                  <Badge variant="outline" size="sm">{item.relationLabel}</Badge>
+                </div>
+                <div class="disabled-info">
+                  <h3>{item.displayTitle}</h3>
+                  <span class="disabled-meta">Belum tersedia</span>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    ))}
   </div>
 </section>
 
@@ -104,7 +142,30 @@ function slugToTitle(slug: string): string {
   .section {
     display: flex;
     flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .franchise-groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-6);
+  }
+
+  .franchise-group {
+    display: flex;
+    flex-direction: column;
     gap: var(--s-3);
+  }
+
+  .franchise-group__label {
+    margin: 0;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding-bottom: var(--s-2);
+    border-bottom: 1px solid var(--border);
   }
 
   .franchise-grid {
@@ -120,7 +181,7 @@ function slugToTitle(slug: string): string {
     }
   }
 
-  /* ==== Disabled card (franchise belum ada di DB) ==== */
+  /* ==== Disabled card ==== */
   .anime-card--disabled {
     display: block;
     min-width: 0;
