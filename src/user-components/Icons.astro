@@ -22,7 +22,11 @@ type IconName =
   | 'prev'
   | 'next'
   | 'like'
-  | 'dislike';
+  | 'dislike'
+  | 'info'
+  | 'alert'
+  | 'check'
+  | 'x-circle';
 
 interface Props {
   name: IconName;
@@ -105,7 +109,26 @@ const paths: Record<IconName, string> = {
   'dislike': `
     <path d="M17 2v12l-5 8a2 2 0 0 1-2-2v-4H4.5a2 2 0 0 1-2-2.3l1.4-8a2 2 0 0 1 2-1.7H17z"/>
     <path d="M17 14h4V2h-4"/>
-  `
+  `,
+  'info': `
+ 	 <circle cx="12" cy="12" r="9" />
+	  <path d="M12 8v.01" />
+	  <path d="M11 12h1v4h1" />
+  `,
+  'alert': `
+	  <path d="M12 3l9 16H3z" />
+	  <path d="M12 9v4" />
+	  <path d="M12 17v.01" />
+  `,
+  'check': `
+	  <circle cx="12" cy="12" r="9" />
+	  <path d="M8 12l3 3l5 -6" />
+  `,
+  'x-circle': `
+	  <circle cx="12" cy="12" r="9" />
+	  <path d="M15 9l-6 6" />
+	  <path d="M9 9l6 6" />
+  `,
 };
 ---
 
@@ -120,4 +143,12 @@ const paths: Record<IconName, string> = {
   stroke-linejoin="miter"
   aria-hidden="true"
   set:html={paths[name]}
+  class="icon"
 />
+
+<style>
+  .icon {
+    display: block;
+    flex-shrink: 0;
+  }
+</style>
