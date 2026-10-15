@@ -32,7 +32,11 @@ const { anime } = Astro.props;
 const { data } = anime;
 
 const entry = await getEntry('anime', anime.id);
-if (!entry) return Astro.redirect('/404/');
+
+if (!entry) {
+  throw new Error(`Entri anime '${anime.id}' tidak ditemukan.`);
+}
+
 const { Content } = await render(entry);
 
 const episodeNumbers = data.episodeList
