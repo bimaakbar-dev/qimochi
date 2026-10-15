@@ -10,6 +10,7 @@ interface CardAnime {
   data: {
     title: string;
     cover: string;
+    banner?: string;
     status: string;
     type: string;
     releaseDate: Date | null;
@@ -21,7 +22,7 @@ interface CardAnime {
 }
 
 interface Props {
-  mode?: 'card' | 'template';
+  mode?: 'grid' | 'compact' | 'featured' | 'template';
   anime?: CardAnime;
   featured?: boolean;
   relationBadge?: string;
@@ -29,7 +30,7 @@ interface Props {
 }
 
 const {
-  mode = 'card',
+  mode = 'grid',
   anime,
   featured = false,
   relationBadge,
@@ -37,9 +38,12 @@ const {
 } = Astro.props;
 
 const isTemplate = mode === 'template';
+const isGrid = mode === 'grid' || isTemplate;
+const isCompact = mode === 'compact';
+const isFeatured = mode === 'featured';
 
 if (!isTemplate && !anime) {
-  throw new Error('[AnimeCard] Prop "anime" wajib saat mode="card".');
+  throw new Error('[AnimeCard] Prop "anime" wajib diisi.');
 }
 
 const id = anime?.id ?? '';
@@ -64,6 +68,8 @@ const votedBy = data?.stats?.scoredBy ?? 0;
 const studio =
   data?.studio && data.studio !== 'Unknown' ? data.studio : null;
 
+const landscape = data?.banner || data?.cover || '';
+
 function formatCount(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
   if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
@@ -87,7 +93,7 @@ const excerpt = plainExcerpt(anime?.body);
 const scorePercent = score != null ? (score / 10) * 100 : 0;
 ---
 
-{isTemplate ? (
+{isTemplate && (
   <template id="anime-card-template">
     <article class="anime-card anime-card-rich">
       <a class="anime-card__link" data-card-link>
@@ -125,21 +131,18 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
       </div>
     </article>
   </template>
-) : (
+)}
+
+{isGrid && !isTemplate && (
   <article
     class:list={[
       'anime-card',
       { 'anime-card-featured': featured, 'anime-card-rich': rich },
     ]}
   >
-    <a
-      href={URLS.anime(id)}
-      class="anime-card__link"
-      aria-label={data!.title}
-    >
+    <a href={URLS.anime(id)} class="anime-card__link" aria-label={data!.title}>
       <div class="cover">
         <div class="cover-placeholder is-loading" aria-hidden="true"></div>
-
         <img
           src={data!.cover}
           alt={`Cover ${data!.title}`}
@@ -149,9 +152,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
           decoding="async"
           data-cover-img
         />
-
         <span class="type-badge">{data!.type}</span>
-
         <div class="status-overlay">
           <Badge variant={variant} size="sm">{data!.status}</Badge>
         </div>
@@ -162,48 +163,31 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
       <div class="preview" aria-hidden="true">
         <div class="preview__inner">
           <h4 class="preview__title">{data!.title}</h4>
-
           {score != null && (
             <div class="preview__rating">
               <span class="preview__stars" aria-hidden="true">
                 <span class="preview__stars-bg">★★★★★</span>
-                <span
-                  class="preview__stars-fill"
-                  style={`width:${scorePercent}%`}
-                >★★★★★</span>
+                <span class="preview__stars-fill" style={`width:${scorePercent}%`}>★★★★★</span>
               </span>
               <span class="preview__score">{score.toFixed(1)}</span>
-              {votedBy > 0 && (
-                <span class="preview__votes">({formatCount(votedBy)})</span>
-              )}
+              {votedBy > 0 && <span class="preview__votes">({formatCount(votedBy)})</span>}
             </div>
           )}
-
           <ul class="preview__meta">
             {totalEpisodes > 0 && <li>{totalEpisodes} Episode</li>}
             {studio && <li>{studio}</li>}
           </ul>
-
           {excerpt && <p class="preview__excerpt">{excerpt}</p>}
-
           <div class="preview__actions">
             {hasEpisodes ? (
-              <a
-                href={URLS.watch(id, firstEpisode)}
-                class="preview__btn preview__btn--play"
-                aria-label={`Mulai menonton episode ${firstEpisode}`}
-              >
+              <a href={URLS.watch(id, firstEpisode)} class="preview__btn preview__btn--play" aria-label={`Mulai menonton episode ${firstEpisode}`}>
                 <Icon name="play" size={16} />
               </a>
             ) : (
-              <span
-                class="preview__btn preview__btn--play is-disabled"
-                aria-disabled="true"
-              >
+              <span class="preview__btn preview__btn--play is-disabled" aria-disabled="true">
                 <Icon name="play" size={16} />
               </span>
             )}
-
             <BookmarkButton animeId={id} variant="plain" />
           </div>
         </div>
@@ -212,19 +196,88 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
 
     <div class="info">
       <h3 set:html={data!.title} />
-
       {relationBadge && <span class="relation-badge">{relationBadge}</span>}
+      {lastEpisode > 0 && !relationBadge && <span class="episodes">Ep {lastEpisode}</span>}
+      {lastEpisode > 0 && relationBadge && <span class="episodes">{relationBadge} · Ep {lastEpisode}</span>}
+    </div>
+  </article>
+)}
 
-      {lastEpisode > 0 && !relationBadge && (
-        <span class="episodes">Ep {lastEpisode}</span>
-      )}
-
-      {lastEpisode > 0 && relationBadge && (
-        <span class="episodes">
-          {relationBadge} · Ep {lastEpisode}
+{isCompact && (
+  <article class="anime-card anime-card--compact">
+    <a href={URLS.anime(id)} class="compact__link" aria-label={data!.title}>
+      <div class="compact__thumb">
+        <div class="cover-placeholder is-loading" aria-hidden="true"></div>
+        <img
+          src={data!.cover}
+          alt=""
+          width="80"
+          height="120"
+          loading="lazy"
+          decoding="async"
+          data-cover-img
+        />
+      </div>
+      <div class="compact__body">
+        <h3 class="compact__title" set:html={data!.title} />
+        {totalEpisodes > 0 && (
+          <p class="compact__meta">{totalEpisodes} Episode</p>
+        )}
+        {score != null && (
+          <div class="compact__rating">
+            <span class="compact__stars" aria-hidden="true">
+              <span class="compact__stars-bg">★★★★★</span>
+              <span class="compact__stars-fill" style={`width:${scorePercent}%`}>★★★★★</span>
+            </span>
+            <span class="compact__score">{score.toFixed(1)}</span>
+            {votedBy > 0 && <span class="compact__votes">({formatCount(votedBy)})</span>}
+          </div>
+        )}
+      </div>
+    </a>
+    <div class="compact__actions">
+      {hasEpisodes ? (
+        <a href={URLS.watch(id, firstEpisode)} class="compact__btn" aria-label={`Mulai menonton episode ${firstEpisode}`}>
+          <Icon name="play" size={16} />
+        </a>
+      ) : (
+        <span class="compact__btn is-disabled" aria-disabled="true">
+          <Icon name="play" size={16} />
         </span>
       )}
+      <BookmarkButton animeId={id} variant="plain" />
     </div>
+  </article>
+)}
+
+{isFeatured && (
+  <article class="anime-card anime-card--featured">
+    <a href={URLS.anime(id)} class="featured__link" aria-label={data!.title}>
+      <div class="featured__cover">
+        <div class="cover-placeholder is-loading" aria-hidden="true"></div>
+        <img
+          src={landscape}
+          alt=""
+          width="480"
+          height="320"
+          loading="lazy"
+          decoding="async"
+          data-cover-img
+        />
+        <span class="type-badge">{data!.type}</span>
+        <div class="status-overlay">
+          <Badge variant={variant} size="sm">{data!.status}</Badge>
+        </div>
+      </div>
+      <div class="featured__info">
+        <h3 class="featured__title" set:html={data!.title} />
+        <p class="featured__meta">
+          {[data!.type, lastEpisode > 0 ? `${lastEpisode} Episode` : null]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+      </div>
+    </a>
   </article>
 )}
 
@@ -238,15 +291,11 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
       const placeholder =
         wrap?.querySelector<HTMLElement>('.cover-placeholder') ?? null;
 
-      const stopShimmer = () => {
-        placeholder?.classList.remove('is-loading');
-      };
-
+      const stopShimmer = () => placeholder?.classList.remove('is-loading');
       const done = () => {
         img.classList.add('is-loaded');
         stopShimmer();
       };
-
       const fail = () => {
         img.hidden = true;
         stopShimmer();
@@ -257,7 +306,6 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
         else fail();
         return;
       }
-
       img.addEventListener('load', done, { once: true });
       img.addEventListener('error', fail, { once: true });
     }
@@ -278,30 +326,11 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
 </script>
 
 <style>
+  /* ========== BASE ========== */
   .anime-card {
     position: relative;
     display: block;
     min-width: 0;
-  }
-
-  .anime-card__link {
-    display: block;
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .anime-card__link::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-  }
-
-  .cover {
-    position: relative;
-    aspect-ratio: 2 / 3;
-    overflow: hidden;
-    background: var(--bg-surface);
   }
 
   .cover-placeholder {
@@ -337,32 +366,12 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     }
   }
 
-  .cover img {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+  [data-cover-img] {
     opacity: 0;
     transition: opacity var(--t-base);
   }
-
-  .cover img.is-loaded { opacity: 1; }
-  .cover img[hidden] { display: none; }
-
-  .cover::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    background: linear-gradient(
-      to bottom,
-      transparent 50%,
-      rgba(0, 0, 0, 0.6) 100%
-    );
-    pointer-events: none;
-  }
+  [data-cover-img].is-loaded { opacity: 1; }
+  [data-cover-img][hidden] { display: none; }
 
   .type-badge {
     position: absolute;
@@ -392,7 +401,44 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     text-transform: uppercase;
   }
 
-  /* ==== Card status badge (untuk template mode) ==== */
+  .anime-card .anime-card__link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .anime-card .anime-card__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .anime-card .cover {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    background: var(--bg-surface);
+  }
+
+  .anime-card .cover img {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .anime-card .cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.6) 100%);
+    pointer-events: none;
+  }
+
   .card-status {
     display: inline-flex;
     align-items: center;
@@ -406,28 +452,12 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     border: 1px solid transparent;
     white-space: nowrap;
   }
+  .card-status[data-variant='default'] { background: var(--bg-surface); color: var(--text-secondary); }
+  .card-status[data-variant='success'] { background: var(--success-soft); color: var(--success); }
+  .card-status[data-variant='warning'] { background: var(--warning-soft); color: var(--warning); }
+  .card-status[data-variant='accent']  { background: var(--accent); color: var(--accent-text); }
 
-  .card-status[data-variant='default'] {
-    background: var(--bg-surface);
-    color: var(--text-secondary);
-  }
-
-  .card-status[data-variant='success'] {
-    background: var(--success-soft);
-    color: var(--success);
-  }
-
-  .card-status[data-variant='warning'] {
-    background: var(--warning-soft);
-    color: var(--warning);
-  }
-
-  .card-status[data-variant='accent'] {
-    background: var(--accent);
-    color: var(--accent-text);
-  }
-
-  .info {
+  .anime-card .info {
     padding: var(--s-3) 0 0;
     display: flex;
     flex-direction: column;
@@ -435,7 +465,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     min-width: 0;
   }
 
-  .info h3 {
+  .anime-card .info h3 {
     font-size: var(--fs-sm);
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
@@ -473,6 +503,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     background: transparent;
   }
 
+  /* Preview (grid mode) */
   .preview {
     position: absolute;
     inset: 0;
@@ -517,10 +548,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     font-size: var(--fs-xs);
     flex-shrink: 0;
   }
-
-  .preview__rating[hidden] {
-    display: none;
-  }
+  .preview__rating[hidden] { display: none; }
 
   .preview__stars {
     position: relative;
@@ -531,9 +559,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     white-space: nowrap;
   }
 
-  .preview__stars-bg {
-    color: hsla(0, 0%, 100%, 0.25);
-  }
+  .preview__stars-bg { color: hsla(0, 0%, 100%, 0.25); }
 
   .preview__stars-fill {
     position: absolute;
@@ -571,10 +597,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     line-height: 1.3;
     flex-shrink: 0;
   }
-
-  .preview__meta:empty {
-    display: none;
-  }
+  .preview__meta:empty { display: none; }
 
   .preview__excerpt {
     margin: 0;
@@ -588,10 +611,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     overflow-wrap: anywhere;
     text-overflow: ellipsis;
   }
-
-  .preview__excerpt:empty {
-    display: none;
-  }
+  .preview__excerpt:empty { display: none; }
 
   .preview__actions {
     display: flex;
@@ -615,17 +635,9 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     border-radius: var(--r-sm);
     cursor: pointer;
     transition: color var(--t-fast);
-    & svg {
-      width: 1.333em;
-      height: 1.333em;
-      flex-shrink: 0;
-    }
+    & svg { width: 1.333em; height: 1.333em; flex-shrink: 0; }
   }
-
-  .preview__btn:hover {
-    color: var(--accent-hover);
-  }
-
+  .preview__btn:hover { color: var(--accent-hover); }
   .preview__btn.is-disabled {
     color: hsla(0, 0%, 100%, 0.3);
     cursor: not-allowed;
@@ -633,23 +645,212 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .anime-card-rich:hover .preview {
-      opacity: 1;
-    }
-
-    .anime-card-rich:hover .preview__btn {
-      pointer-events: auto;
-    }
-
-    .anime-card-rich:hover .cover img {
-      opacity: 0.15;
-    }
-
+    .anime-card-rich:hover .preview { opacity: 1; }
+    .anime-card-rich:hover .preview__btn { pointer-events: auto; }
+    .anime-card-rich:hover .cover img { opacity: 0.15; }
     .anime-card-rich:hover .cover::after,
     .anime-card-rich:hover .type-badge,
     .anime-card-rich:hover .status-overlay {
       opacity: 0;
       transition: opacity var(--t-fast);
     }
+  }
+
+  .anime-card--compact {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-2);
+    background: var(--bg-elevated);
+    border: 1px solid transparent;
+    transition: background var(--t-fast), border-color var(--t-fast);
+  }
+
+  .anime-card--compact:hover {
+    background: var(--bg-surface);
+    border-color: var(--border);
+  }
+
+  .compact__link {
+    display: contents;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .compact__thumb {
+    position: relative;
+    width: 3.75rem;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    background: var(--bg-surface);
+    flex-shrink: 0;
+  }
+
+  .compact__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .compact__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .compact__title {
+    margin: 0;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    line-height: var(--lh-tight);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+
+  .compact__meta {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .compact__rating {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-size: var(--fs-xs);
+  }
+
+  .compact__stars {
+    position: relative;
+    display: inline-block;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .compact__stars-bg { color: hsla(30, 3%, 55%, 0.4); }
+
+  .compact__stars-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: var(--gold);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .compact__score {
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .compact__votes {
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .compact__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+    flex-shrink: 0;
+  }
+
+  .compact__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: color var(--t-fast);
+    & svg { width: 1.333em; height: 1.333em; flex-shrink: 0; }
+  }
+  .compact__btn:hover { color: var(--accent-hover); }
+  .compact__btn.is-disabled {
+    color: var(--text-disabled);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .anime-card--featured {
+    display: block;
+  }
+
+  .featured__link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .featured__cover {
+    position: relative;
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    background: var(--bg-surface);
+  }
+
+  .featured__cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--t-base);
+  }
+
+  .featured__link:hover .featured__cover img {
+    transform: scale(1.03);
+  }
+
+  .featured__cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.6) 100%);
+    pointer-events: none;
+  }
+
+  .featured__info {
+    padding: var(--s-3) 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    min-width: 0;
+  }
+
+  .featured__title {
+    margin: 0;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    line-height: var(--lh-tight);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+
+  .featured__meta {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
   }
 </style>
