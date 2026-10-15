@@ -1,9 +1,14 @@
 ---
+import { 
+  getStatusData, 
+  buildStatusPaths, 
+  paginate 
+} from '~/lib/status';
+
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Hero from '~/components/Hero.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
 import Pagination from '~/components/Pagination.astro';
-import { getStatusData, buildStatusPaths, paginate } from '~/lib/status';
 import Page from '~/components/Page.astro';
 
 export async function getStaticPaths() {
@@ -27,7 +32,6 @@ const description = isFirstPage
 <BaseLayout
   title={title}
   description={description}
-  canonical="/anime/complete/"
   noindex={!isFirstPage}
 >
   <Page class="wrapper">
