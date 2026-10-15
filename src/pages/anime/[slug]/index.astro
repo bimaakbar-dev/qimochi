@@ -39,13 +39,13 @@ if (!entry) {
 
 const { Content } = await render(entry);
 
-const episodeNumbers = data.episodeList
-  .map((e) => e.number)
-  .sort((a, b) => a - b);
+const episodeItems = data.episodeList
+  .map((e) => ({ number: e.number, title: e.title ?? null }))
+  .sort((a, b) => a.number - b.number);
 
-const hasEpisodes = episodeNumbers.length > 0;
-const firstEpisode = episodeNumbers[0] ?? 1;
-const totalEpisodes = episodeNumbers.length;
+const hasEpisodes = episodeItems.length > 0;
+const firstEpisode = episodeItems[0]?.number ?? 1;
+const totalEpisodes = episodeItems.length;
 
 const heroImage = data.cover ?? '';
 
@@ -133,7 +133,7 @@ if (durationLabel) infoItems.push({ label: 'Durasi', value: durationLabel });
       titleTag="h1"
     >
       <Fragment slot="below-meta">
-        <AnimeRatings animeId={anime.id} malScore={malScore} />
+        <AnimeRatings animeId={anime.id} />
       </Fragment>
 
       <Fragment slot="actions">
@@ -166,8 +166,9 @@ if (durationLabel) infoItems.push({ label: 'Durasi', value: durationLabel });
     <section class="more">
       <EpisodeList
         slug={anime.id}
-        episodes={episodeNumbers}
+        episodes={episodeItems}
         currentEpisode={null}
+        mode="detail"
       />
 
       <Comments slug={anime.id} />
