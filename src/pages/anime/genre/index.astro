@@ -1,23 +1,12 @@
 ---
 import { getCollection } from 'astro:content';
-import { getAllAnime } from '~/lib/anime';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Hero from '~/components/Hero.astro';
 import LinkCard from '~/user-components/LinkCard.astro';
 import { URLS } from '~/constants';
 import Page from '~/components/Page.astro';
 
-const [allAnime, allGenres] = await Promise.all([
-  getAllAnime(),
-  getCollection('genres'),
-]);
-
-const countMap = new Map<string, number>();
-allAnime.forEach(a => {
-  a.data.genres.forEach(slug => {
-    countMap.set(slug, (countMap.get(slug) ?? 0) + 1);
-  });
-});
+const allGenres = await getCollection('genres');
 
 const categoryOrder = { genre: 0, theme: 1, demographic: 2 } as const;
 
@@ -26,9 +15,7 @@ const genres = allGenres
     id: g.data.id,
     name: g.data.name,
     category: g.data.category,
-    count: countMap.get(g.data.id) ?? 0,
   }))
-  .filter(g => g.count > 0)
   .sort((a, b) => {
     const diff = categoryOrder[a.category] - categoryOrder[b.category];
     if (diff !== 0) return diff;
@@ -43,9 +30,7 @@ const genres = allGenres
 >
   <Page class="wrapper">
 
-    <Hero
-      title="Semua Genre"
-    />
+    <Hero title="Semua Genre" />
 
     <div class="genre-grid">
       {genres.map(g => (
@@ -56,7 +41,6 @@ const genres = allGenres
         >
           <div class="genre-content">
             <span class="genre-name">{g.name}</span>
-            <span class="genre-count">{g.count}</span>
           </div>
         </LinkCard>
       ))}
@@ -70,6 +54,7 @@ const genres = allGenres
     padding-block: var(--s-6) var(--s-12);
     gap: var(--s-6);
   }
+
   .genre-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -82,24 +67,18 @@ const genres = allGenres
       gap: var(--s-4);
     }
   }
+
   .genre-content {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--s-3);
     min-width: 0;
   }
+
   .genre-name {
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
     font-size: var(--fs-base);
     min-width: 0;
     overflow-wrap: anywhere;
-  }
-  .genre-count {
-    font-size: var(--fs-xs);
-    color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
   }
 </style>
