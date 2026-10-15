@@ -1,0 +1,1063 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Page from '~/components/Page.astro';
+import Icons from '~/user-components/Icons.astro';
+
+const API = 'https://api.qimochi.web.id';
+const ANIME_API = 'https://yukionime.pages.dev/api/v1/anime.json';
+---
+
+<BaseLayout
+  title="Daftar Saya"
+  description="Daftar tonton dan riwayat nonton kamu."
+  noindex={true}
+>
+  <template id="bookmark-card-template">
+    <article class="bookmark-card" data-card>
+      <a class="bookmark-card__link" data-link>
+        <div class="bookmark-card__cover">
+          <div class="cover-placeholder is-loading" aria-hidden="true" data-placeholder></div>
+          <img width="300" height="450" loading="lazy" decoding="async" data-img />
+          <span class="type-badge" data-type></span>
+        </div>
+        <div class="bookmark-card__info">
+          <h3 data-title></h3>
+        </div>
+      </a>
+      <button
+        type="button"
+        class="bookmark-card__remove"
+        data-remove
+        aria-label="Hapus dari daftar"
+        title="Hapus dari daftar"
+      >
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+    </article>
+  </template>
+
+  <template id="history-item-template">
+    <li class="history-item">
+      <a class="history-item__link" data-history-link>
+        <span class="history-item__ep" data-history-ep></span>
+        <span class="history-item__body">
+          <span class="history-item__title" data-history-title></span>
+          <span class="history-item__meta" data-history-meta></span>
+          <span class="history-item__progress" data-history-progress hidden>
+            <span class="history-item__progress-fill" data-history-progress-fill></span>
+          </span>
+        </span>
+        <span class="history-item__arrow" aria-hidden="true">
+          <Icons name="arrow-right" size={16} />
+        </span>
+      </a>
+    </li>
+  </template>
+
+  <Page class="wrapper">
+    <header class="page-hero">
+      <span class="page-hero__icon" aria-hidden="true">
+        <Icons name="bookmark" size={26} />
+      </span>
+      <h1 class="page-hero__title">Daftar Saya</h1>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Tab daftar saya">
+      <button
+        type="button"
+        class="tab is-active"
+        data-tab="list"
+        role="tab"
+        aria-selected="true"
+        aria-controls="panel-list"
+      >
+        Daftar Tonton
+      </button>
+      <button
+        type="button"
+        class="tab"
+        data-tab="history"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-history"
+      >
+        Riwayat
+      </button>
+    </nav>
+
+    <section class="panel" data-panel="list" id="panel-list" role="tabpanel">
+      <div class="loading" data-list-loading hidden>Memuat…</div>
+
+      <div class="placeholder" data-list-guest hidden>
+        <p>
+          Silakan <a href="#" data-login>login</a> untuk melihat daftar tonton kamu.
+        </p>
+      </div>
+
+      <div class="toolbar" data-list-toolbar hidden>
+        <label class="toolbar__sort">
+          <span class="toolbar__label">Urutkan</span>
+          <select class="toolbar__select" data-list-sort>
+            <option value="recent">Terbaru</option>
+            <option value="oldest">Terlama</option>
+            <option value="title">A-Z</option>
+          </select>
+        </label>
+        <span class="toolbar__count" data-list-count></span>
+      </div>
+
+      <div class="anime-grid" data-list-grid hidden></div>
+
+      <div class="empty" data-list-empty hidden>
+        <p class="empty__title">Buat Feed anda agar terlihat keren</p>
+        <a class="empty__btn" href="/">Buka Feed</a>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="history" id="panel-history" role="tabpanel" hidden>
+      <div class="toolbar" data-history-toolbar hidden>
+        <span class="toolbar__count" data-history-count></span>
+        <button type="button" class="toolbar__clear" data-history-clear>
+          Hapus semua
+        </button>
+      </div>
+
+      <ol class="history-list" data-history-list></ol>
+
+      <div class="empty" data-history-empty hidden>
+        <p class="empty__title">Belum ada riwayat tonton</p>
+        <p class="empty__hint">Mulai nonton anime untuk mengisi riwayat.</p>
+        <a class="empty__btn" href="/">Buka Feed</a>
+      </div>
+    </section>
+  </Page>
+</BaseLayout>
+
+<script>
+  // @ts-nocheck
+  const API = 'https://api.qimochi.web.id';
+  const ANIME_API = 'https://yukionime.pages.dev/api/v1/anime.json';
+  const CACHE_KEY = 'qimochi:user-cache';
+  const HISTORY_KEY = 'qimochi:continue';
+
+  const tabs = Array.from(document.querySelectorAll('[data-tab]'));
+  const panels = Array.from(document.querySelectorAll('[data-panel]'));
+
+  const listLoading = document.querySelector('[data-list-loading]');
+  const listGuest = document.querySelector('[data-list-guest]');
+  const listToolbar = document.querySelector('[data-list-toolbar]');
+  const listCount = document.querySelector('[data-list-count]');
+  const listGrid = document.querySelector('[data-list-grid]');
+  const listEmpty = document.querySelector('[data-list-empty]');
+  const listSort = document.querySelector('[data-list-sort]');
+
+  const historyToolbar = document.querySelector('[data-history-toolbar]');
+  const historyCount = document.querySelector('[data-history-count]');
+  const historyClear = document.querySelector('[data-history-clear]');
+  const historyList = document.querySelector('[data-history-list]');
+  const historyEmpty = document.querySelector('[data-history-empty]');
+
+  const loginLinks = Array.from(document.querySelectorAll('[data-login]'));
+
+  const bookmarkTpl = document.getElementById('bookmark-card-template');
+  const historyTpl = document.getElementById('history-item-template');
+
+  let bookmarks = [];
+  let animeMap = new Map();
+  let listSortKey = 'recent';
+
+  function getUser() {
+    try {
+      const menu = window.__qimochiUserMenu;
+      if (menu?.getUser) return menu.getUser();
+    } catch {}
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  /* ==== Tabs ==== */
+  function setActiveTab(name) {
+    for (const t of tabs) {
+      const isActive = t.dataset.tab === name;
+      t.classList.toggle('is-active', isActive);
+      t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }
+    for (const p of panels) {
+      p.hidden = p.dataset.panel !== name;
+    }
+  }
+
+  function readTab() {
+    const sp = new URLSearchParams(location.search);
+    return sp.get('tab') === 'history' ? 'history' : 'list';
+  }
+
+  function setTab(name, push = true) {
+    setActiveTab(name);
+    if (push) {
+      const url = new URL(location.href);
+      if (name === 'history') url.searchParams.set('tab', 'history');
+      else url.searchParams.delete('tab');
+      history_pushState(url);
+    }
+    if (name === 'history') renderHistory();
+  }
+
+  function history_pushState(url) {
+    window.history.pushState({}, '', url.toString());
+  }
+
+  for (const t of tabs) {
+    t.addEventListener('click', () => setTab(t.dataset.tab));
+  }
+
+  window.addEventListener('popstate', () => {
+    setActiveTab(readTab());
+    if (readTab() === 'history') renderHistory();
+  });
+
+  /* ==== Login links ==== */
+  for (const link of loginLinks) {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const menu = window.__qimochiUserMenu;
+      if (menu?.open) menu.open();
+    });
+  }
+
+  /* ==== Bookmark list ==== */
+  function showListState(state) {
+    // state: 'loading' | 'guest' | 'toolbar' | 'grid' | 'empty'
+    listLoading.hidden = state !== 'loading';
+    listGuest.hidden = state !== 'guest';
+    listToolbar.hidden = state !== 'toolbar' && state !== 'grid';
+    listGrid.hidden = state !== 'grid';
+    listEmpty.hidden = state !== 'empty';
+  }
+
+  function formatCount(n) {
+    return n.toLocaleString('id-ID');
+  }
+
+  async function loadBookmarks() {
+    const res = await fetch(`${API}/api/v1/bookmarks`, { credentials: 'include' });
+    if (res.status === 401) return null;
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    return Array.isArray(json.data) ? json.data : [];
+  }
+
+  async function loadAnimeIndex() {
+    const res = await fetch(ANIME_API, { headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const list = Array.isArray(json.data) ? json.data : [];
+    const map = new Map();
+    for (const a of list) map.set(a.id, a);
+    return map;
+  }
+
+  function sortBookmarks(list) {
+    const copy = [...list];
+    if (listSortKey === 'oldest') {
+      copy.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+    } else if (listSortKey === 'title') {
+      copy.sort((a, b) => {
+        const ta = animeMap.get(a.animeId)?.title ?? a.animeId;
+        const tb = animeMap.get(b.animeId)?.title ?? b.animeId;
+        return ta.localeCompare(tb);
+      });
+    } else {
+      copy.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+    }
+    return copy;
+  }
+
+  function createBookmarkCard(item) {
+    if (!bookmarkTpl) return null;
+    const anime = animeMap.get(item.animeId);
+    if (!anime) return null;
+
+    const frag = bookmarkTpl.content.cloneNode(true);
+    const card = frag.firstElementChild;
+    const link = frag.querySelector('[data-link]');
+    const img = frag.querySelector('[data-img]');
+    const placeholder = frag.querySelector('[data-placeholder]');
+    const title = frag.querySelector('[data-title]');
+    const type = frag.querySelector('[data-type]');
+    const removeBtn = frag.querySelector('[data-remove]');
+
+    link.href = `/anime/${anime.id}/`;
+    link.setAttribute('aria-label', anime.title);
+    title.textContent = anime.title;
+    if (type) type.textContent = anime.type ?? '';
+
+    if (anime.image) {
+      img.src = anime.image;
+      img.alt = `Cover ${anime.title}`;
+      img.hidden = false;
+      placeholder.hidden = true;
+
+      const onLoad = () => {
+        img.classList.add('is-loaded');
+        placeholder.classList.remove('is-loading');
+      };
+      const onError = () => {
+        img.hidden = true;
+        placeholder.classList.remove('is-loading');
+      };
+
+      if (img.complete && img.naturalWidth > 0) onLoad();
+      else {
+        img.addEventListener('load', onLoad, { once: true });
+        img.addEventListener('error', onError, { once: true });
+      }
+    } else {
+      img.hidden = true;
+      placeholder.hidden = false;
+      placeholder.classList.remove('is-loading');
+    }
+
+    if (removeBtn) {
+      removeBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        removeBtn.disabled = true;
+        try {
+          const res = await fetch(
+            `${API}/api/v1/bookmarks/${encodeURIComponent(anime.id)}`,
+            { method: 'DELETE', credentials: 'include' }
+          );
+          if (!res.ok && res.status !== 404) throw new Error(`HTTP ${res.status}`);
+          bookmarks = bookmarks.filter((b) => b.animeId !== anime.id);
+          card.remove();
+          updateListCount();
+          if (bookmarks.length === 0) showListState('empty');
+        } catch (err) {
+          console.error('[bookmark] remove failed', err);
+          removeBtn.disabled = false;
+        }
+      });
+    }
+
+    return card;
+  }
+
+  function updateListCount() {
+    if (!listCount) return;
+    listCount.textContent = `${bookmarks.length} anime`;
+  }
+
+  function renderList() {
+    if (!listGrid) return;
+    const sorted = sortBookmarks(bookmarks).filter((b) => animeMap.has(b.animeId));
+    listGrid.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    for (const b of sorted) {
+      const card = createBookmarkCard(b);
+      if (card) frag.appendChild(card);
+    }
+    listGrid.appendChild(frag);
+    updateListCount();
+    showListState('grid');
+  }
+
+  async function loadList() {
+    const user = getUser();
+    if (!user) {
+      showListState('guest');
+      return;
+    }
+
+    showListState('loading');
+    try {
+      const [bm, index] = await Promise.all([loadBookmarks(), loadAnimeIndex()]);
+      if (bm === null) {
+        showListState('guest');
+        return;
+      }
+      bookmarks = bm;
+      animeMap = index;
+
+      if (bookmarks.length === 0) {
+        showListState('empty');
+        return;
+      }
+      renderList();
+    } catch (err) {
+      console.error('[bookmark] load failed', err);
+      showListState('guest');
+    }
+  }
+
+  if (listSort) {
+    listSort.addEventListener('change', () => {
+      listSortKey = listSort.value;
+      if (bookmarks.length > 0) renderList();
+    });
+  }
+
+  /* ==== History ==== */
+  function readHistory() {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter(
+          (x) =>
+            x &&
+            typeof x.slug === 'string' &&
+            typeof x.title === 'string' &&
+            typeof x.episode === 'number'
+        )
+        .sort((a, b) => (b.ts ?? 0) - (a.ts ?? 0));
+    } catch {
+      return [];
+    }
+  }
+
+  function saveHistory(list) {
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    } catch {}
+  }
+
+  function createHistoryItem(item) {
+    if (!historyTpl) return null;
+    const frag = historyTpl.content.cloneNode(true);
+    const node = frag.firstElementChild;
+    const link = frag.querySelector('[data-history-link]');
+    const ep = frag.querySelector('[data-history-ep]');
+    const title = frag.querySelector('[data-history-title]');
+    const meta = frag.querySelector('[data-history-meta]');
+    const progress = frag.querySelector('[data-history-progress]');
+    const progressFill = frag.querySelector('[data-history-progress-fill]');
+
+    link.href = `/anime/watch/${item.slug}/episodes/${item.episode}/`;
+    ep.textContent = String(item.episode).padStart(2, '0');
+    title.textContent = item.title;
+
+    if (item.total > 0) {
+      meta.textContent = `Episode ${item.episode} dari ${item.total}`;
+    } else {
+      meta.textContent = `Episode ${item.episode}`;
+    }
+
+    if (progress && progressFill && item.total > 0 && item.episode > 0) {
+      const pct = Math.min(100, Math.round((item.episode / item.total) * 100));
+      progressFill.style.width = `${pct}%`;
+      progress.hidden = false;
+      if (item.episode >= item.total) {
+        progressFill.classList.add('is-complete');
+      }
+    }
+
+    return node;
+  }
+
+  function renderHistory() {
+    const items = readHistory();
+
+    if (items.length === 0) {
+      historyToolbar.hidden = true;
+      historyList.innerHTML = '';
+      historyEmpty.hidden = false;
+      return;
+    }
+
+    historyEmpty.hidden = true;
+    historyToolbar.hidden = false;
+    historyCount.textContent = `${items.length} riwayat`;
+
+    historyList.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    for (const item of items) {
+      const node = createHistoryItem(item);
+      if (node) frag.appendChild(node);
+    }
+    historyList.appendChild(frag);
+  }
+
+  if (historyClear) {
+    historyClear.addEventListener('click', () => {
+      if (!window.confirm('Hapus semua riwayat tonton?')) return;
+      saveHistory([]);
+      renderHistory();
+    });
+  }
+
+  /* ==== Auth changed ==== */
+  document.addEventListener('qimochi:auth-changed', () => {
+    loadList();
+  });
+
+  /* ==== Init ==== */
+  const initialTab = readTab();
+  setActiveTab(initialTab);
+  if (initialTab === 'history') {
+    renderHistory();
+  }
+  loadList();
+</script>
+
+<style>
+  .wrapper {
+    padding-block: var(--s-6) var(--s-12);
+    gap: var(--s-6);
+  }
+
+  /* ==== Hero ==== */
+  .page-hero {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+  }
+
+  .page-hero__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .page-hero__title {
+    margin: 0;
+    font-family: var(--font-montserrat);
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-tight);
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  @media (min-width: 50rem) {
+    .page-hero__title {
+      font-size: var(--fs-3xl);
+    }
+  }
+
+  /* ==== Tabs ==== */
+  .tabs {
+    display: flex;
+    gap: var(--s-1);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    position: relative;
+    padding: var(--s-3) var(--s-4);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: color var(--t-fast);
+    white-space: nowrap;
+  }
+
+  .tab:hover {
+    color: var(--text-primary);
+  }
+
+  .tab::after {
+    content: '';
+    position: absolute;
+    left: var(--s-4);
+    right: var(--s-4);
+    bottom: -1px;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity var(--t-fast);
+  }
+
+  .tab.is-active {
+    color: var(--accent);
+  }
+
+  .tab.is-active::after {
+    opacity: 1;
+  }
+
+  /* ==== Panel ==== */
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .panel[hidden] {
+    display: none;
+  }
+
+  /* ==== Loading ==== */
+  .loading {
+    padding: var(--s-10) var(--s-4);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+  }
+
+  .loading[hidden] {
+    display: none;
+  }
+
+  /* ==== Placeholder ==== */
+  .placeholder {
+    padding: var(--s-10) var(--s-4);
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--fs-sm);
+  }
+
+  .placeholder[hidden] {
+    display: none;
+  }
+
+  .placeholder p {
+    margin: 0;
+  }
+
+  .placeholder a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: var(--fw-semibold);
+  }
+
+  .placeholder a:hover {
+    color: var(--accent-hover);
+  }
+
+  /* ==== Toolbar ==== */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+  }
+
+  .toolbar[hidden] {
+    display: none;
+  }
+
+  .toolbar__sort {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  .toolbar__label {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .toolbar__select {
+    padding: var(--s-2) var(--s-8) var(--s-2) var(--s-3);
+    font: inherit;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right var(--s-2) center;
+  }
+
+  .toolbar__select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .toolbar__count {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .toolbar__clear {
+    padding: var(--s-1) var(--s-3);
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .toolbar__clear:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+
+  /* ==== Grid ==== */
+  .anime-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-3);
+  }
+
+  .anime-grid[hidden] {
+    display: none;
+  }
+
+  @media (min-width: 50rem) {
+    .anime-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: var(--s-4);
+    }
+  }
+
+  /* ==== Empty ==== */
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-12) var(--s-4);
+    text-align: center;
+  }
+
+  .empty[hidden] {
+    display: none;
+  }
+
+  .empty__title {
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+  }
+
+  .empty__hint {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .empty__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--s-1);
+    padding: var(--s-3) var(--s-6);
+    background: var(--accent);
+    color: var(--accent-text);
+    border: 1px solid var(--accent);
+    border-radius: var(--r-full);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background var(--t-fast), border-color var(--t-fast);
+  }
+
+  .empty__btn:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  /* ==== History list ==== */
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .history-list:empty {
+    border-top: none;
+  }
+
+  .history-item {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .history-item__link {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--s-4);
+    padding-block: var(--s-4);
+    text-decoration: none;
+    color: inherit;
+    transition: color var(--t-fast);
+  }
+
+  .history-item__ep {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+    min-width: 1.5rem;
+    transition: color var(--t-fast);
+  }
+
+  .history-item__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    min-width: 0;
+  }
+
+  .history-item__title {
+    font-size: var(--fs-base);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    line-height: var(--lh-tight);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color var(--t-fast);
+  }
+
+  .history-item__meta {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .history-item__progress {
+    display: block;
+    width: 100%;
+    max-width: 12rem;
+    height: 2px;
+    background: var(--bg-surface);
+    margin-top: var(--s-1);
+    overflow: hidden;
+  }
+
+  .history-item__progress[hidden] {
+    display: none;
+  }
+
+  .history-item__progress-fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    transition: width var(--t-base);
+  }
+
+  .history-item__progress-fill.is-complete {
+    background: var(--success);
+  }
+
+  .history-item__arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: color var(--t-fast), transform var(--t-fast);
+  }
+
+  .history-item__link:hover .history-item__ep,
+  .history-item__link:hover .history-item__title {
+    color: var(--accent);
+  }
+
+  .history-item__link:hover .history-item__arrow {
+    color: var(--accent);
+    transform: translateX(2px);
+  }
+
+  @media (min-width: 50rem) {
+    .history-item__link {
+      gap: var(--s-6);
+    }
+
+    .history-item__title {
+      font-size: var(--fs-lg);
+    }
+  }
+</style>
+
+<style is:global>
+  /* ==== Bookmark card ==== */
+  .bookmark-card {
+    position: relative;
+    display: block;
+    min-width: 0;
+  }
+
+  .bookmark-card__link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .bookmark-card__cover {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    background: var(--bg-surface);
+  }
+
+  .bookmark-card__cover .cover-placeholder {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: var(--bg-surface);
+    pointer-events: none;
+  }
+
+  .bookmark-card__cover .cover-placeholder.is-loading::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 20%, var(--bg-hover) 50%, transparent 80%);
+    transform: translateX(-100%);
+    animation: cover-shimmer 1.6s infinite;
+  }
+
+  @keyframes cover-shimmer {
+    100% { transform: translateX(100%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bookmark-card__cover .cover-placeholder.is-loading::before {
+      animation: none;
+      opacity: 0;
+    }
+  }
+
+  .bookmark-card__cover img {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    opacity: 0;
+    transition: opacity var(--t-base);
+  }
+
+  .bookmark-card__cover img.is-loaded { opacity: 1; }
+  .bookmark-card__cover img[hidden] { display: none; }
+
+  .bookmark-card__cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.6) 100%);
+    pointer-events: none;
+  }
+
+  .bookmark-card__cover .type-badge {
+    position: absolute;
+    top: var(--s-2);
+    left: var(--s-2);
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--text-inverted);
+    font-size: 0.625rem;
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+  }
+
+  .bookmark-card__remove {
+    position: absolute;
+    top: var(--s-2);
+    right: var(--s-2);
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.75);
+    color: var(--text-inverted);
+    border: none;
+    border-radius: var(--r-full);
+    cursor: pointer;
+    transition: background var(--t-fast), transform var(--t-fast);
+  }
+  .bookmark-card__remove:hover {
+    background: var(--danger);
+    transform: scale(1.08);
+  }
+  .bookmark-card__remove:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .bookmark-card__info {
+    padding: var(--s-3) 0 0;
+    min-width: 0;
+  }
+
+  .bookmark-card__info h3 {
+    position: relative;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    line-height: var(--lh-tight);
+    margin: 0;
+    min-width: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+
+  .bookmark-card__info h3::after {
+    content: '';
+    position: absolute;
+    left: -3%;
+    right: -3%;
+    bottom: -0.1em;
+    height: 0.45em;
+    background-color: var(--text-primary);
+    -webkit-mask-image: var(--underline);
+    mask-image: var(--underline);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--t-fast);
+  }
+
+  .bookmark-card__link:hover .bookmark-card__info h3::after {
+    opacity: 1;
+  }
+</style>
