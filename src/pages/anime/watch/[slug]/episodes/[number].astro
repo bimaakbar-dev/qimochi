@@ -40,7 +40,7 @@ interface Props {
 const { anime, episode, totalEpisodes } = Astro.props as Props;
 const { data } = anime;
 
-const episodeNumbers = data.episodeList
+const episodeNumbers = data.episodes
   .map((e) => e.number)
   .sort((a, b) => a - b);
 
@@ -71,18 +71,20 @@ const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
   canonical={canonical}
   noindex={true}
 >
+  <section class="player-bleed">
+    <Player
+      src={playerSrc}
+      title={`${data.title} Episode ${episode.number}`}
+    />
+  </section>
+
   <Page class="wrapper">
-    <section class="player-section">
-      <Player
-        src={playerSrc}
-        title={`${data.title} Episode ${episode.number}`}
-      />
-      <EpisodeActionBar
-        slug={anime.id}
-        episodeNumber={episode.number}
-        totalEpisodes={totalEpisodes}
-      />
-    </section>
+    <EpisodeActionBar
+      slug={anime.id}
+      episodeNumber={episode.number}
+      totalEpisodes={totalEpisodes}
+    />
+
     <div class="content-grid">
       <div class="content-main">
         <EpisodeHeader
@@ -151,8 +153,8 @@ const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
         }
       } catch {}
 
-      list = list.filter(x => x && typeof x.slug === 'string');
-      list = list.filter(x => x.slug !== payload.slug);
+      list = list.filter((x) => x && typeof x.slug === 'string');
+      list = list.filter((x) => x.slug !== payload.slug);
 
       list.unshift({
         ...payload,
@@ -176,14 +178,22 @@ const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
 </BaseLayout>
 
 <style>
-  .wrapper {
-    padding-block: var(--s-2) var(--s-12);
+  .player-bleed {
+    width: 100%;
+    background: #000;
+    display: flex;
+    justify-content: center;
   }
 
-  .player-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-4);
+  .player-bleed :global(.player-wrapper) {
+    width: min(100%, calc(min(480px, 60vh) * 16 / 9));
+    aspect-ratio: 16 / 9;
+    margin-inline: auto;
+    border: none;
+  }
+
+  .wrapper {
+    padding-block: var(--s-4) var(--s-12);
   }
 
   .content-grid {
@@ -191,6 +201,7 @@ const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
     grid-template-columns: 1fr;
     gap: var(--s-4);
     align-items: start;
+    margin-top: var(--s-5);
   }
 
   .content-main {
