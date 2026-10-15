@@ -14,7 +14,6 @@ export const NAV_LINKS = [
   { label: 'Completed', href: '/anime/completed/' },
   { label: 'Anime',     href: '/anime/' },
   { label: 'Genre',     href: '/anime/genre/' },
-  { label: 'Daftarku', href: '/anime/bookmark/' },
   { label: 'Blog',      href: '/blog/' },
 ] as const;
 
@@ -82,6 +81,41 @@ export const SOURCE_LABEL: Record<Source, string> = {
   '4_koma_manga': '4-Koma Manga',
   card_game:      'Card Game',
   other:          'Other',
+};
+
+export const AGE_RATINGS = ['G', 'PG', 'PG-13', 'R', 'R+', 'Rx'] as const;
+export type AgeRating = typeof AGE_RATINGS[number];
+
+export const AGE_RATING_LABEL: Record<AgeRating, string> = {
+  G:        'G - Semua Umur',
+  PG:       'PG - Anak-anak',
+  'PG-13':  'PG-13 - Remaja 13+',
+  R:        'R - 17+ (kekerasan & bahasa kasar)',
+  'R+':     'R+ - Nudity ringan',
+  Rx:       'Rx - Hentai',
+};
+
+export const RELATION_TYPES = [
+  'sequel', 'prequel', 'side_story', 'parent_story', 'alternative',
+  'spin_off', 'adaptation', 'character', 'summary', 'full_story',
+  'compilation', 'contains', 'other',
+] as const;
+export type RelationType = typeof RELATION_TYPES[number];
+
+export const RELATION_LABEL: Record<RelationType, string> = {
+  sequel:      'Sekuel',
+  prequel:     'Prekuel',
+  side_story:  'Cerita Sampingan',
+  parent_story:'Cerita Induk',
+  alternative: 'Versi Alternatif',
+  spin_off:    'Spin-off',
+  adaptation:  'Adaptasi',
+  character:   'Karakter',
+  summary:     'Ringkasan',
+  full_story:  'Cerita Lengkap',
+  compilation: 'Kompilasi',
+  contains:    'Berisi',
+  other:       'Terkait',
 };
 
 export const PER_PAGE = 12;
