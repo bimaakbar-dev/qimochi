@@ -185,9 +185,18 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
       })();
     }
 
-    document
-      .querySelectorAll<HTMLButtonElement>('[data-bookmark-btn]')
-      .forEach(init);
+    function initAll(scope: ParentNode = document): void {
+      scope
+        .querySelectorAll<HTMLButtonElement>('[data-bookmark-btn]')
+        .forEach(init);
+    }
+
+    initAll();
+
+    window.addEventListener('qimochi:bookmarks', (e) => {
+      const detail = (e as CustomEvent<ParentNode>).detail;
+      if (detail) initAll(detail);
+    });
   })();
 </script>
 
@@ -214,8 +223,8 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 
   .icon-btn :global(svg) {
     display: block;
-    width: 1em;
-    height: 1em;
+    width: 1.333em;
+    height: 1.333em;
     flex-shrink: 0;
   }
 
