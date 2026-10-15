@@ -1,0 +1,471 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Page from '~/components/Page.astro';
+import Hero from '~/components/Hero.astro';
+import AnimeCard from '~/components/AnimeCard.astro';
+import SectionLabel from '~/components/SectionLabel.astro';
+
+export async function getStaticPaths() {
+  const genres = await getCollection('genres');
+  return genres.map((g) => ({
+    params: { slug: g.data.id },
+    props: {
+      genreId: g.data.id,
+      genreName: g.data.name,
+      genreCategory: g.data.category,
+    },
+  }));
+}
+
+const { genreId, genreName, genreCategory } = Astro.props;
+
+const pageTitle = `Anime ${genreName}`;
+const pageDesc = `Koleksi anime genre ${genreName} subtitle Indonesia.`;
+const canonical = `/anime/genre/${genreId}/`;
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDesc}
+  canonical={canonical}
+>
+  <Page class="wrapper">
+    <Hero title={genreName}>
+      <Fragment slot="action">
+        <label class="sort-wrap">
+          <span class="sort-label">Urutkan</span>
+          <select class="sort-select" data-sort>
+            <option value="popular">Populer</option>
+            <option value="newest">Terbaru</option>
+            <option value="title">A-Z</option>
+          </select>
+        </label>
+      </Fragment>
+    </Hero>
+
+    <!-- Section: Populer -->
+    <section class="section" data-popular-section hidden>
+      <SectionLabel>Populer</SectionLabel>
+      <div class="anime-grid anime-grid--popular" data-popular-grid></div>
+    </section>
+
+    <!-- Section: Anime Genre {genreName} -->
+    <section class="section">
+      <SectionLabel>Anime Genre {genreName}</SectionLabel>
+      <div class="anime-grid" data-grid hidden></div>
+
+      <div class="load-more-wrap" data-load-more-wrap hidden>
+        <button type="button" class="load-more-btn" data-load-more>
+          <span data-load-more-text>Muat Lebih Banyak</span>
+        </button>
+      </div>
+    </section>
+  </Page>
+
+  <AnimeCard mode="template" />
+</BaseLayout>
+
+<script>
+  // @ts-nocheck
+  import {
+    STATUS_LABEL,
+    STATUS_VARIANT,
+    TYPE_LABEL,
+    type RawStatus,
+    type RawType,
+    type Status,
+  } from '~/constants';
+
+  (function () {
+    const root = document.querySelector('[data-grid]');
+    if (!root) return;
+
+    const GENRE_ID = document.body.dataset.genreId || (window as any).__genreId || '';
+
+    // Ambil genre id dari URL
+    const pathMatch = window.location.pathname.match(/\/anime\/genre\/([^/]+)\/?$/);
+    const SLUG = pathMatch ? decodeURIComponent(pathMatch[1]) : '';
+
+    const API = 'https://yukionime.pages.dev/api/v1/anime.json';
+    const BATCH = 24;
+    const POPULAR_LIMIT = 12;
+    const DEFAULT_SORT = 'popular';
+
+    type YukionimeItem = {
+      id: string;
+      title: string;
+      titleEnglish: string | null;
+      titleNative: string | null;
+      image: string | null;
+      type: string;
+      status: string;
+      season: string | null;
+      year: number | null;
+      episodes: number | null;
+      duration: number | null;
+      rating: string | null;
+      genres: string[];
+      studios: string[];
+      stats: { score?: number; scoredBy?: number } | null;
+    };
+
+    const grid = document.querySelector('[data-grid]');
+    const popularSection = document.querySelector('[data-popular-section]');
+    const popularGrid = document.querySelector('[data-popular-grid]');
+    const loadMoreWrap = document.querySelector('[data-load-more-wrap]');
+    const loadMoreBtn = document.querySelector('[data-load-more]');
+    const loadMoreText = document.querySelector('[data-load-more-text]');
+    const sortEl = document.querySelector('[data-sort]');
+    const tpl = document.getElementById('anime-card-template');
+
+    if (!grid || !tpl || !sortEl || !SLUG) return;
+
+    let all: YukionimeItem[] = [];
+    let sorted: YukionimeItem[] = [];
+    let visibleCount = 0;
+
+    function formatCount(n: number): string {
+      if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+      if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+      return String(n);
+    }
+
+    function mapStatus(raw: string) {
+      const label = STATUS_LABEL[raw as RawStatus] ?? raw;
+      const variant = STATUS_VARIANT[label as Status] ?? 'default';
+      return { label, variant };
+    }
+
+    function mapType(raw: string): string {
+      return TYPE_LABEL[raw as RawType] ?? raw;
+    }
+
+    function buildCard(item: YukionimeItem): HTMLElement | null {
+      const frag = tpl!.content.cloneNode(true);
+      const card = frag.firstElementChild;
+      if (!card) return null;
+
+      const link = card.querySelector('[data-card-link]');
+      if (link) {
+        link.href = `/anime/${item.id}/`;
+        link.setAttribute('aria-label', item.title);
+      }
+
+      const img = card.querySelector('[data-cover-img]');
+      const placeholder = card.querySelector('.cover-placeholder');
+
+      if (img && item.image) {
+        img.src = item.image;
+        img.alt = `Cover ${item.title}`;
+
+        const stopShimmer = () => placeholder?.classList.remove('is-loading');
+        const fail = () => {
+          img.hidden = true;
+          stopShimmer();
+        };
+
+        if (img.complete && img.naturalWidth > 0) {
+          stopShimmer();
+        } else {
+          img.addEventListener('load', stopShimmer, { once: true });
+          img.addEventListener('error', fail, { once: true });
+        }
+
+        img.dataset.ready = '1';
+      } else if (placeholder) {
+        placeholder.classList.remove('is-loading');
+      }
+
+      const typeEl = card.querySelector('[data-card-type]');
+      if (typeEl) typeEl.textContent = mapType(item.type);
+
+      const statusEl = card.querySelector('[data-card-status]');
+      if (statusEl) {
+        const { label, variant: v } = mapStatus(item.status);
+        statusEl.textContent = label;
+        statusEl.dataset.variant = v;
+      }
+
+      const titleEl = card.querySelector('[data-card-title]');
+      if (titleEl) titleEl.textContent = item.title;
+
+      const titleInfoEl = card.querySelector('[data-card-title-info]');
+      if (titleInfoEl) titleInfoEl.textContent = item.title;
+
+      const score = item.stats?.score ?? null;
+      const votes = item.stats?.scoredBy ?? 0;
+      const ratingEl = card.querySelector('[data-card-rating]');
+      if (ratingEl && score != null) {
+        ratingEl.hidden = false;
+        const fill = card.querySelector('[data-card-stars-fill]');
+        if (fill) fill.style.width = `${(score / 10) * 100}%`;
+        const scoreEl = card.querySelector('[data-card-score]');
+        if (scoreEl) scoreEl.textContent = score.toFixed(1);
+        const votesEl = card.querySelector('[data-card-votes]');
+        if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
+      }
+
+      const metaEl = card.querySelector('[data-card-meta]');
+      if (metaEl && item.episodes && item.episodes > 0) {
+        const li = document.createElement('li');
+        li.textContent = `${item.episodes} Episode`;
+        metaEl.appendChild(li);
+      }
+
+      const playEl = card.querySelector('[data-card-play]');
+      if (playEl) {
+        playEl.href = `/anime/watch/${item.id}/episodes/1/`;
+        playEl.setAttribute('aria-label', `Mulai menonton ${item.title}`);
+      }
+
+      const bookmarkEl = card.querySelector('[data-bookmark-btn]');
+      if (bookmarkEl) bookmarkEl.dataset.anime = item.id;
+
+      const epEl = card.querySelector('[data-card-episodes]');
+      if (epEl && item.episodes && item.episodes > 0) {
+        epEl.textContent = `Ep ${item.episodes}`;
+        epEl.hidden = false;
+      }
+
+      return card;
+    }
+
+    function sortList(list, sort) {
+      const copy = [...list];
+      if (sort === 'newest') {
+        return copy.sort((a, b) => {
+          const ya = a.year ?? 0;
+          const yb = b.year ?? 0;
+          if (yb !== ya) return yb - ya;
+          return a.title.localeCompare(b.title);
+        });
+      }
+      if (sort === 'title') {
+        return copy.sort((a, b) => a.title.localeCompare(b.title));
+      }
+      // popular
+      return copy.sort((a, b) => {
+        const sa = a.stats?.score ?? 0;
+        const sb = b.stats?.score ?? 0;
+        if (sb !== sa) return sb - sa;
+        const va = a.stats?.scoredBy ?? 0;
+        const vb = b.stats?.scoredBy ?? 0;
+        return vb - va;
+      });
+    }
+
+    function sortByPopularity(list) {
+      return [...list].sort((a, b) => {
+        const sa = a.stats?.score ?? 0;
+        const sb = b.stats?.score ?? 0;
+        if (sb !== sa) return sb - sa;
+        const va = a.stats?.scoredBy ?? 0;
+        const vb = b.stats?.scoredBy ?? 0;
+        return vb - va;
+      });
+    }
+
+    function renderPopular(): void {
+      if (!popularGrid || !popularSection) return;
+      if (all.length === 0) {
+        popularSection.hidden = true;
+        return;
+      }
+
+      const top = sortByPopularity(all).slice(0, POPULAR_LIMIT);
+      if (top.length === 0) {
+        popularSection.hidden = true;
+        return;
+      }
+
+      popularGrid.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      for (const item of top) {
+        const card = buildCard(item);
+        if (card) frag.appendChild(card);
+      }
+      popularGrid.appendChild(frag);
+      popularSection.hidden = false;
+
+      window.dispatchEvent(new CustomEvent('qimochi:bookmarks', { detail: popularGrid }));
+    }
+
+    function renderNext(): void {
+      const end = Math.min(visibleCount + BATCH, sorted.length);
+      if (end <= visibleCount) return;
+
+      const frag = document.createDocumentFragment();
+      for (let i = visibleCount; i < end; i++) {
+        const card = buildCard(sorted[i]);
+        if (card) frag.appendChild(card);
+      }
+      grid.appendChild(frag);
+      visibleCount = end;
+
+      window.dispatchEvent(new CustomEvent('qimochi:bookmarks', { detail: grid }));
+      updateLoadMore();
+    }
+
+    function updateLoadMore(): void {
+      const remaining = sorted.length - visibleCount;
+      if (!loadMoreWrap || !loadMoreText) return;
+      loadMoreWrap.hidden = remaining <= 0;
+      if (remaining > 0) {
+        loadMoreText.textContent = `Muat Lebih Banyak (${remaining} lagi)`;
+      }
+    }
+
+    function render(reset = false): void {
+      if (reset) {
+        grid.innerHTML = '';
+        visibleCount = 0;
+      }
+
+      const hasItems = sorted.length > 0;
+      grid.hidden = !hasItems;
+
+      if (hasItems) {
+        renderNext();
+      }
+    }
+
+    function applySort(sort: string): void {
+      sorted = sortList(all, sort);
+      render(true);
+    }
+
+    sortEl.addEventListener('change', () => {
+      applySort(sortEl.value || DEFAULT_SORT);
+    });
+
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener('click', () => renderNext());
+    }
+
+    fetch(API, { headers: { Accept: 'application/json' } })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((json) => {
+        const list = json?.data;
+        if (!Array.isArray(list)) return;
+
+        all = list.filter((item) => {
+          if (!Array.isArray(item.genres)) return false;
+          return item.genres.includes(SLUG);
+        });
+
+        renderPopular();
+
+        sortEl.value = DEFAULT_SORT;
+        applySort(DEFAULT_SORT);
+      })
+      .catch((err) => {
+        console.error('[genre] fetch failed:', err);
+      });
+  })();
+</script>
+
+<style>
+  .wrapper {
+    padding-block: var(--s-6) var(--s-12);
+    gap: var(--s-8);
+  }
+
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .section[hidden] {
+    display: none;
+  }
+</style>
+
+<style is:global>
+  .sort-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  .sort-label {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .sort-select {
+    padding: var(--s-1) var(--s-8) var(--s-1) var(--s-3);
+    font: inherit;
+    font-size: var(--fs-sm);
+    text-transform: uppercase;
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-full);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right var(--s-3) center;
+    transition: border-color var(--t-fast);
+  }
+
+  .sort-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .anime-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-3);
+  }
+
+  .anime-grid[hidden] {
+    display: none;
+  }
+
+  .load-more-wrap {
+    display: flex;
+    justify-content: center;
+    padding-block: var(--s-4);
+  }
+
+  .load-more-wrap[hidden] {
+    display: none;
+  }
+
+  .load-more-btn {
+    padding: var(--s-3) var(--s-6);
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    border-radius: var(--r-full);
+    font-family: inherit;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .load-more-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  @media (min-width: 50rem) {
+    .anime-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: var(--s-4);
+    }
+  }
+</style>
