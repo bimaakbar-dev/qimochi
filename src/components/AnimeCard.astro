@@ -1,67 +1,167 @@
 ---
-import LinkCard from '~/user-components/LinkCard.astro';
 import Badge from '~/user-components/Badge.astro';
+import Icon from '~/user-components/Icons.astro';
+import BookmarkButton from './BookmarkButton.astro';
 import { URLS, STATUS_VARIANT, type Status } from '~/constants';
 
 interface Props {
   anime: {
     id: string;
+    body?: string;
     data: {
       title: string;
       cover: string;
       status: string;
       type: string;
       releaseDate: Date | null;
+      score?: number | null;
+      stats?: { scoredBy?: number } | null;
+      studio?: string;
       episodeList?: { number: number }[];
     };
   };
   featured?: boolean;
   relationBadge?: string;
+  rich?: boolean;
 }
 
-const { anime, featured = false, relationBadge } = Astro.props;
+const {
+  anime,
+  featured = false,
+  relationBadge,
+  rich = true,
+} = Astro.props;
+
 const { id, data } = anime;
 
 const variant = STATUS_VARIANT[data.status as Status] ?? 'default';
 
-const lastEpisode = data.episodeList?.length
-  ? Math.max(...data.episodeList.map(e => e.number))
+const episodes = data.episodeList ?? [];
+const lastEpisode = episodes.length
+  ? Math.max(...episodes.map((e) => e.number))
   : 0;
+const firstEpisode = episodes.length
+  ? Math.min(...episodes.map((e) => e.number))
+  : 1;
+const totalEpisodes = episodes.length;
+const hasEpisodes = totalEpisodes > 0;
+
+const score = data.score ?? null;
+const votedBy = data.stats?.scoredBy ?? 0;
+const studio =
+  data.studio && data.studio !== 'Unknown' ? data.studio : null;
+
+function formatCount(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(n);
+}
+
+function plainExcerpt(input: string | undefined, maxLen = 110): string {
+  if (!input) return '';
+  const cleaned = input
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/[*_`>#]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned.length <= maxLen
+    ? cleaned
+    : cleaned.slice(0, maxLen).trimEnd() + '…';
+}
+
+const excerpt = plainExcerpt(anime.body);
+const scorePercent = score != null ? (score / 10) * 100 : 0;
 ---
 
-<LinkCard
-  href={URLS.anime(id)}
-  variant="trans"
-  padding="none"
-  lift={false}
-  class:list={['anime-card', { 'anime-card-featured': featured }]}
+<article
+  class:list={[
+    'anime-card',
+    { 'anime-card-featured': featured, 'anime-card-rich': rich },
+  ]}
 >
-  <div class="cover">
-    <div class="cover-placeholder is-loading" aria-hidden="true"></div>
+  <a
+    href={URLS.anime(id)}
+    class="anime-card__link"
+    aria-label={data.title}
+  >
+    <div class="cover">
+      <div class="cover-placeholder is-loading" aria-hidden="true"></div>
 
-    <img
-      src={data.cover}
-      alt={`Cover ${data.title}`}
-      width="300"
-      height="450"
-      loading="lazy"
-      decoding="async"
-      data-cover-img
-    />
+      <img
+        src={data.cover}
+        alt={`Cover ${data.title}`}
+        width="300"
+        height="450"
+        loading="lazy"
+        decoding="async"
+        data-cover-img
+      />
 
-    <span class="type-badge">{data.type}</span>
+      <span class="type-badge">{data.type}</span>
 
-    <div class="status-overlay">
-      <Badge variant={variant} size="sm">{data.status}</Badge>
+      <div class="status-overlay">
+        <Badge variant={variant} size="sm">{data.status}</Badge>
+      </div>
     </div>
-  </div>
+  </a>
+
+  {rich && (
+    <div class="preview" aria-hidden="true">
+      <div class="preview__inner">
+        <h4 class="preview__title">{data.title}</h4>
+
+        {score != null && (
+          <div class="preview__rating">
+            <span class="preview__stars" aria-hidden="true">
+              <span class="preview__stars-bg">★★★★★</span>
+              <span
+                class="preview__stars-fill"
+                style={`width:${scorePercent}%`}
+              >★★★★★</span>
+            </span>
+            <span class="preview__score">{score.toFixed(1)}</span>
+            {votedBy > 0 && (
+              <span class="preview__votes">({formatCount(votedBy)})</span>
+            )}
+          </div>
+        )}
+
+        <ul class="preview__meta">
+          {totalEpisodes > 0 && <li>{totalEpisodes} Episode</li>}
+          {studio && <li>{studio}</li>}
+        </ul>
+
+        {excerpt && <p class="preview__excerpt">{excerpt}</p>}
+
+        <div class="preview__actions">
+          {hasEpisodes ? (
+            <a
+              href={URLS.watch(id, firstEpisode)}
+              class="preview__btn preview__btn--play"
+              aria-label={`Mulai menonton episode ${firstEpisode}`}
+            >
+              <Icon name="play" size={16} />
+            </a>
+          ) : (
+            <span
+              class="preview__btn preview__btn--play is-disabled"
+              aria-disabled="true"
+            >
+              <Icon name="play" size={16} />
+            </span>
+          )}
+
+          <BookmarkButton animeId={id} variant="plain" />
+        </div>
+      </div>
+    </div>
+  )}
 
   <div class="info">
     <h3 set:html={data.title} />
 
-    {relationBadge && (
-      <span class="relation-badge">{relationBadge}</span>
-    )}
+    {relationBadge && <span class="relation-badge">{relationBadge}</span>}
 
     {lastEpisode > 0 && !relationBadge && (
       <span class="episodes">Ep {lastEpisode}</span>
@@ -73,7 +173,7 @@ const lastEpisode = data.episodeList?.length
       </span>
     )}
   </div>
-</LinkCard>
+</article>
 
 <script>
   (function () {
@@ -82,7 +182,8 @@ const lastEpisode = data.episodeList?.length
       img.dataset.ready = '1';
 
       const wrap = img.parentElement;
-      const placeholder = wrap?.querySelector<HTMLElement>('.cover-placeholder') ?? null;
+      const placeholder =
+        wrap?.querySelector<HTMLElement>('.cover-placeholder') ?? null;
 
       const stopShimmer = () => {
         placeholder?.classList.remove('is-loading');
@@ -125,10 +226,22 @@ const lastEpisode = data.episodeList?.length
 
 <style>
   .anime-card {
+    position: relative;
     display: block;
     min-width: 0;
-    text-decoration: none;
+  }
+
+  .anime-card__link {
+    display: block;
     color: inherit;
+    text-decoration: none;
+  }
+
+  .anime-card__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
   }
 
   .cover {
@@ -182,17 +295,8 @@ const lastEpisode = data.episodeList?.length
     transition: opacity var(--t-base);
   }
 
-  .cover img.is-loaded {
-    opacity: 1;
-  }
-
-  .cover img[hidden] {
-    display: none;
-  }
-
-  .anime-card:hover h3::after {
-    opacity: 1;
-  }
+  .cover img.is-loaded { opacity: 1; }
+  .cover img[hidden] { display: none; }
 
   .cover::after {
     content: '';
@@ -229,9 +333,10 @@ const lastEpisode = data.episodeList?.length
     bottom: var(--s-2);
     left: var(--s-2);
     z-index: 3;
-    & span {
-      text-transform: uppercase;
-    }
+  }
+
+  .status-overlay :global(span) {
+    text-transform: uppercase;
   }
 
   .info {
@@ -250,30 +355,34 @@ const lastEpisode = data.episodeList?.length
     line-height: var(--lh-tight);
     margin: 0;
     min-width: 0;
-
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     overflow-wrap: anywhere;
-    &::after {
-      content: '';
-      position: absolute;
-      left: -3%;
-      right: -3%;
-      bottom: -0.1em;
-      height: 0.45em;
-      background-color: var(--text-primary);
-      -webkit-mask-image: var(--underline);
-      mask-image: var(--underline);
-      -webkit-mask-size: 100% 100%;
-      mask-size: 100% 100%;
-      -webkit-mask-repeat: no-repeat;
-      mask-repeat: no-repeat;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity var(--t-fast);
-    }
+  }
+
+  .info h3::after {
+    content: '';
+    position: absolute;
+    left: -3%;
+    right: -3%;
+    bottom: -0.1em;
+    height: 0.45em;
+    background-color: var(--text-primary);
+    -webkit-mask-image: var(--underline);
+    mask-image: var(--underline);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--t-fast);
+  }
+
+  .anime-card:hover .info h3::after {
+    opacity: 1;
   }
 
   .relation-badge {
@@ -298,5 +407,170 @@ const lastEpisode = data.episodeList?.length
 
   .anime-card-featured {
     background: transparent;
+  }
+
+  .preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    z-index: 5;
+    background: hsla(30, 3%, 5%, 0.94);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    padding: var(--s-3);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--t-base);
+    overflow: hidden;
+  }
+
+  .preview__inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    height: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .preview__title {
+    margin: 0;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+    line-height: var(--lh-tight);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    flex-shrink: 0;
+  }
+
+  .preview__rating {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-size: var(--fs-xs);
+    flex-shrink: 0;
+  }
+
+  .preview__stars {
+    position: relative;
+    display: inline-block;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .preview__stars-bg {
+    color: hsla(0, 0%, 100%, 0.25);
+  }
+
+  .preview__stars-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: var(--gold);
+    overflow: hidden;
+    white-space: nowrap;
+    transition: width var(--t-base);
+  }
+
+  .preview__score {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .preview__votes {
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .preview__meta {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    line-height: 1.3;
+    flex-shrink: 0;
+  }
+
+  .preview__excerpt {
+    margin: 0;
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+    color: hsla(0, 0%, 100%, 0.7);
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
+  }
+
+  .preview__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+    margin-top: auto;
+    flex-shrink: 0;
+    padding-top: var(--s-1);
+  }
+
+  .preview__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: color var(--t-fast);
+  }
+
+  .preview__btn:hover {
+    color: var(--accent-hover);
+  }
+
+  .preview__btn.is-disabled {
+    color: hsla(0, 0%, 100%, 0.3);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .anime-card-rich:hover .preview {
+      opacity: 1;
+    }
+
+    .anime-card-rich:hover .preview__btn {
+      pointer-events: auto;
+    }
+
+    .anime-card-rich:hover .cover img {
+      opacity: 0.15;
+    }
+
+    .anime-card-rich:hover .cover::after,
+    .anime-card-rich:hover .type-badge,
+    .anime-card-rich:hover .status-overlay {
+      opacity: 0;
+      transition: opacity var(--t-fast);
+    }
   }
 </style>
