@@ -12,7 +12,6 @@ import StreamSelector from '~/components/StreamSelector.astro';
 import EpisodeActionBar from '~/components/EpisodeActionBar.astro';
 import DownloadPanel from '~/components/DownloadPanel.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
-import AnimeFranchise from '~/components/AnimeFranchise.astro';
 import Page from '~/components/Page.astro';
 
 export async function getStaticPaths() {
@@ -97,10 +96,6 @@ const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
         />
         <StreamSelector streams={episode.streams} />
         <DownloadPanel downloads={episode.downloads ?? []} />
-        <AnimeFranchise
-          currentSlug={anime.id}
-          franchises={data.franchises}
-        />
       </div>
       <aside class="content-aside">
         <EpisodeList
