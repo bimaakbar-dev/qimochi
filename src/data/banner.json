@@ -4,7 +4,6 @@
       "id": "sync-data-2026-10",
       "active": true,
       "type": "info",
-      "icon": "info",
       "message": "Qimochi sedang proses Sync Data, Refresh halaman jika menemukan error.",
       "dismissible": false
     }
