@@ -94,43 +94,112 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
 ---
 
 {isTemplate && (
-  <template id="anime-card-template">
-    <article class="anime-card anime-card-rich">
-      <a class="anime-card__link" data-card-link>
-        <div class="cover">
-          <div class="cover-placeholder is-loading" aria-hidden="true"></div>
-          <img width="300" height="450" loading="lazy" decoding="async" data-cover-img />
-          <span class="type-badge" data-card-type></span>
-          <div class="status-overlay">
-            <span class="card-status" data-card-status></span>
+  <>
+    <template id="anime-card-template">
+      <article class="anime-card anime-card-rich">
+        <a class="anime-card__link" data-card-link>
+          <div class="cover">
+            <div class="cover-placeholder is-loading" aria-hidden="true"></div>
+            <img width="300" height="450" loading="lazy" decoding="async" data-cover-img />
+            <span class="type-badge" data-card-type></span>
+            <div class="status-overlay">
+              <span class="card-status" data-card-status></span>
+            </div>
+          </div>
+        </a>
+        <div class="preview" aria-hidden="true">
+          <div class="preview__inner">
+            <h4 class="preview__title" data-card-title></h4>
+            <div class="preview__rating" data-card-rating hidden>
+              <span class="preview__stars" aria-hidden="true">
+                <span class="preview__stars-bg">★★★★★</span>
+                <span class="preview__stars-fill" data-card-stars-fill>★★★★★</span>
+              </span>
+              <span class="preview__score" data-card-score></span>
+              <span class="preview__votes" data-card-votes></span>
+            </div>
+            <ul class="preview__meta" data-card-meta></ul>
+            <div class="preview__actions">
+              <a class="preview__btn preview__btn--play" data-card-play>
+                <Icon name="play" size={16} />
+              </a>
+              <BookmarkButton animeId="__placeholder" variant="plain" class="preview__bookmark" />
+            </div>
           </div>
         </div>
-      </a>
-      <div class="preview" aria-hidden="true">
-        <div class="preview__inner">
-          <h4 class="preview__title" data-card-title></h4>
-          <div class="preview__rating" data-card-rating hidden>
-            <span class="preview__stars" aria-hidden="true">
-              <span class="preview__stars-bg">★★★★★</span>
-              <span class="preview__stars-fill" data-card-stars-fill>★★★★★</span>
-            </span>
-            <span class="preview__score" data-card-score></span>
-            <span class="preview__votes" data-card-votes></span>
+        <div class="info">
+          <h3 data-card-title-info></h3>
+          <span class="episodes" data-card-episodes hidden></span>
+        </div>
+      </article>
+    </template>
+    <template id="anime-card-featured-template">
+      <article class="anime-card anime-card--featured anime-card-rich">
+        <a class="featured__link" data-card-link>
+          <div class="featured__cover">
+            <div class="cover-placeholder is-loading" aria-hidden="true"></div>
+            <img width="480" height="360" loading="lazy" decoding="async" data-cover-img />
+            <span class="type-badge" data-card-type></span>
+            <div class="status-overlay">
+              <span class="card-status" data-card-status></span>
+            </div>
           </div>
-          <ul class="preview__meta" data-card-meta></ul>
-          <div class="preview__actions">
-            <a class="preview__btn preview__btn--play" data-card-play>
-              <Icon name="play" size={16} />
-            </a>
+          <div class="featured__info">
+            <h3 class="featured__title" data-card-title-info></h3>
+            <p class="featured__meta" data-card-meta-text></p>
+          </div>
+        </a>
+        <div class="preview" aria-hidden="true">
+          <div class="preview__inner">
+            <h4 class="preview__title" data-card-title></h4>
+            <div class="preview__rating" data-card-rating hidden>
+              <span class="preview__stars" aria-hidden="true">
+                <span class="preview__stars-bg">★★★★★</span>
+                <span class="preview__stars-fill" data-card-stars-fill>★★★★★</span>
+              </span>
+              <span class="preview__score" data-card-score></span>
+              <span class="preview__votes" data-card-votes></span>
+            </div>
+            <ul class="preview__meta" data-card-meta></ul>
+            <div class="preview__actions">
+              <a class="preview__btn preview__btn--play" data-card-play>
+                <Icon name="play" size={16} />
+              </a>
+              <BookmarkButton animeId="__placeholder" variant="plain" class="preview__bookmark" />
+            </div>
           </div>
         </div>
-      </div>
-      <div class="info">
-        <h3 data-card-title-info></h3>
-        <span class="episodes" data-card-episodes hidden></span>
-      </div>
-    </article>
-  </template>
+      </article>
+    </template>
+    <template id="anime-card-compact-template">
+      <article class="anime-card anime-card--compact">
+        <a class="compact__link" data-card-link>
+          <div class="compact__thumb">
+            <div class="cover-placeholder is-loading" aria-hidden="true"></div>
+            <img width="80" height="120" loading="lazy" decoding="async" data-cover-img />
+          </div>
+          <div class="compact__body">
+            <h3 class="compact__title" data-card-title-info></h3>
+            <p class="compact__meta" data-card-meta-text></p>
+            <div class="compact__rating" data-card-rating hidden>
+              <span class="compact__stars" aria-hidden="true">
+                <span class="compact__stars-bg">★★★★★</span>
+                <span class="compact__stars-fill" data-card-stars-fill>★★★★★</span>
+              </span>
+              <span class="compact__score" data-card-score></span>
+              <span class="compact__votes" data-card-votes></span>
+            </div>
+          </div>
+        </a>
+        <div class="compact__actions">
+          <a class="compact__btn" data-card-play>
+            <Icon name="play" size={16} />
+          </a>
+          <BookmarkButton animeId="__placeholder" variant="plain" class="preview__bookmark" />
+        </div>
+      </article>
+    </template>
+  </>
 )}
 
 {isGrid && !isTemplate && (
@@ -251,7 +320,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
 )}
 
 {isFeatured && (
-  <article class="anime-card anime-card--featured">
+  <article class="anime-card anime-card--featured anime-card-rich">
     <a href={URLS.anime(id)} class="featured__link" aria-label={data!.title}>
       <div class="featured__cover">
         <div class="cover-placeholder is-loading" aria-hidden="true"></div>
@@ -259,7 +328,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
           src={landscape}
           alt=""
           width="480"
-          height="320"
+          height="360"
           loading="lazy"
           decoding="async"
           data-cover-img
@@ -278,13 +347,48 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
         </p>
       </div>
     </a>
+
+    {rich && (
+      <div class="preview" aria-hidden="true">
+        <div class="preview__inner">
+          <h4 class="preview__title">{data!.title}</h4>
+          {score != null && (
+            <div class="preview__rating">
+              <span class="preview__stars" aria-hidden="true">
+                <span class="preview__stars-bg">★★★★★</span>
+                <span class="preview__stars-fill" style={`width:${scorePercent}%`}>★★★★★</span>
+              </span>
+              <span class="preview__score">{score.toFixed(1)}</span>
+              {votedBy > 0 && <span class="preview__votes">({formatCount(votedBy)})</span>}
+            </div>
+          )}
+          <ul class="preview__meta">
+            {totalEpisodes > 0 && <li>{totalEpisodes} Episode</li>}
+            {studio && <li>{studio}</li>}
+          </ul>
+          {excerpt && <p class="preview__excerpt">{excerpt}</p>}
+          <div class="preview__actions">
+            {hasEpisodes ? (
+              <a href={URLS.watch(id, firstEpisode)} class="preview__btn preview__btn--play" aria-label={`Mulai menonton episode ${firstEpisode}`}>
+                <Icon name="play" size={16} />
+              </a>
+            ) : (
+              <span class="preview__btn preview__btn--play is-disabled" aria-disabled="true">
+                <Icon name="play" size={16} />
+              </span>
+            )}
+            <BookmarkButton animeId={id} variant="plain" />
+          </div>
+        </div>
+      </div>
+    )}
   </article>
 )}
 
 <script>
   (function () {
     function setupCoverImage(img: HTMLImageElement): void {
-      if (img.dataset.ready) return;
+      if (img.dataset.ready === '1') return;
       img.dataset.ready = '1';
 
       const wrap = img.parentElement;
@@ -292,21 +396,21 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
         wrap?.querySelector<HTMLElement>('.cover-placeholder') ?? null;
 
       const stopShimmer = () => placeholder?.classList.remove('is-loading');
-      const done = () => {
-        img.classList.add('is-loaded');
-        stopShimmer();
-      };
       const fail = () => {
         img.hidden = true;
         stopShimmer();
       };
 
-      if (img.complete) {
-        if (img.naturalWidth > 0) done();
-        else fail();
+      if (img.complete && img.naturalWidth > 0) {
+        stopShimmer();
         return;
       }
-      img.addEventListener('load', done, { once: true });
+      if (img.complete && img.naturalWidth === 0) {
+        fail();
+        return;
+      }
+
+      img.addEventListener('load', stopShimmer, { once: true });
       img.addEventListener('error', fail, { once: true });
     }
 
@@ -325,8 +429,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
   })();
 </script>
 
-<style>
-  /* ========== BASE ========== */
+<style is:global>
   .anime-card {
     position: relative;
     display: block;
@@ -336,6 +439,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
   .cover-placeholder {
     position: absolute;
     inset: 0;
+    z-index: 0;
     overflow: hidden;
     background: var(--bg-surface);
     pointer-events: none;
@@ -367,10 +471,14 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
   }
 
   [data-cover-img] {
-    opacity: 0;
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     transition: opacity var(--t-base);
   }
-  [data-cover-img].is-loaded { opacity: 1; }
   [data-cover-img][hidden] { display: none; }
 
   .type-badge {
@@ -397,7 +505,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     z-index: 3;
   }
 
-  .status-overlay :global(span) {
+  .status-overlay span {
     text-transform: uppercase;
   }
 
@@ -421,15 +529,6 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     background: var(--bg-surface);
   }
 
-  .anime-card .cover img {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
   .anime-card .cover::after {
     content: '';
     position: absolute;
@@ -437,6 +536,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     z-index: 2;
     background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.6) 100%);
     pointer-events: none;
+    transition: opacity var(--t-fast);
   }
 
   .card-status {
@@ -503,7 +603,6 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     background: transparent;
   }
 
-  /* Preview (grid mode) */
   .preview {
     position: absolute;
     inset: 0;
@@ -635,8 +734,8 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     border-radius: var(--r-sm);
     cursor: pointer;
     transition: color var(--t-fast);
-    & svg { width: 1.333em; height: 1.333em; flex-shrink: 0; }
   }
+  .preview__btn svg { width: 1.333em; height: 1.333em; flex-shrink: 0; }
   .preview__btn:hover { color: var(--accent-hover); }
   .preview__btn.is-disabled {
     color: hsla(0, 0%, 100%, 0.3);
@@ -647,12 +746,17 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
   @media (hover: hover) and (pointer: fine) {
     .anime-card-rich:hover .preview { opacity: 1; }
     .anime-card-rich:hover .preview__btn { pointer-events: auto; }
-    .anime-card-rich:hover .cover img { opacity: 0.15; }
+
+    .anime-card-rich:hover .cover img,
+    .anime-card-rich:hover .featured__cover img {
+      opacity: 0.15;
+    }
+
     .anime-card-rich:hover .cover::after,
+    .anime-card-rich:hover .featured__cover::after,
     .anime-card-rich:hover .type-badge,
     .anime-card-rich:hover .status-overlay {
       opacity: 0;
-      transition: opacity var(--t-fast);
     }
   }
 
@@ -685,13 +789,6 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     overflow: hidden;
     background: var(--bg-surface);
     flex-shrink: 0;
-  }
-
-  .compact__thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
   }
 
   .compact__body {
@@ -727,6 +824,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     gap: var(--s-2);
     font-size: var(--fs-xs);
   }
+  .compact__rating[hidden] { display: none; }
 
   .compact__stars {
     position: relative;
@@ -764,6 +862,22 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     align-items: center;
     gap: var(--s-1);
     flex-shrink: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--t-fast);
+  }
+
+  .anime-card--compact:hover .compact__actions,
+  .anime-card--compact:focus-within .compact__actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (hover: none) {
+    .compact__actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
 
   .compact__btn {
@@ -779,8 +893,8 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     border-radius: var(--r-sm);
     cursor: pointer;
     transition: color var(--t-fast);
-    & svg { width: 1.333em; height: 1.333em; flex-shrink: 0; }
   }
+  .compact__btn svg { width: 1.333em; height: 1.333em; flex-shrink: 0; }
   .compact__btn:hover { color: var(--accent-hover); }
   .compact__btn.is-disabled {
     color: var(--text-disabled);
@@ -800,21 +914,9 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
 
   .featured__cover {
     position: relative;
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 4 / 3;
     overflow: hidden;
     background: var(--bg-surface);
-  }
-
-  .featured__cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform var(--t-base);
-  }
-
-  .featured__link:hover .featured__cover img {
-    transform: scale(1.03);
   }
 
   .featured__cover::after {
@@ -824,6 +926,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     z-index: 2;
     background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.6) 100%);
     pointer-events: none;
+    transition: opacity var(--t-fast);
   }
 
   .featured__info {
@@ -852,5 +955,24 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     font-size: var(--fs-xs);
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
+  }
+
+  .preview__bookmark {
+    width: 2rem !important;
+    height: 2rem !important;
+    border: none !important;
+    background: transparent !important;
+    color: var(--accent) !important;
+    border-radius: var(--r-sm) !important;
+  }
+
+  .preview__bookmark:hover {
+    color: var(--accent-hover) !important;
+  }
+
+  .preview__bookmark.is-active {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: var(--accent) !important;
   }
 </style>
