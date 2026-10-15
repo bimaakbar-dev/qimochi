@@ -26,7 +26,7 @@ const nextEp = hasNext ? episodeNumber + 1 : null;
       href={URLS.watch(slug, prevEp!)}
       variant="outline"
       size="md"
-      icon="arrow-left"
+      icon="prev"
     >
       Ep {prevEp}
     </LinkButton>
@@ -34,7 +34,7 @@ const nextEp = hasNext ? episodeNumber + 1 : null;
     <LinkButton
       variant="outline"
       size="md"
-      icon="arrow-left"
+      icon="prev"
       disabled
     >
       Ep —
@@ -46,7 +46,7 @@ const nextEp = hasNext ? episodeNumber + 1 : null;
       href={URLS.watch(slug, nextEp!)}
       variant="outline"
       size="md"
-      icon="arrow-right"
+      icon="next"
       iconPos="suffix"
     >
       Ep {nextEp}
@@ -55,7 +55,7 @@ const nextEp = hasNext ? episodeNumber + 1 : null;
     <LinkButton
       variant="outline"
       size="md"
-      icon="arrow-right"
+      icon="next"
       iconPos="suffix"
       disabled
     >
