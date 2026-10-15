@@ -48,8 +48,6 @@ import AnimeCard from '~/components/AnimeCard.astro';
 
     <div id="search-sections" class="search-sections" hidden></div>
 
-    <div id="load-sentinel" aria-hidden="true"></div>
-
   </Page>
 
   <AnimeCard mode="template" />
@@ -68,9 +66,14 @@ import AnimeCard from '~/components/AnimeCard.astro';
 
   (function () {
     const API = 'https://yukionime.pages.dev/api/v1/anime.json';
-    const DEBOUNCE_MS = 120;
+
+    // ==== Performance tuning ====
+    const DEBOUNCE_MS = 300;        // dulu 120 — dinaikkan biar typing responsif
     const MIN_QUERY = 2;
+    const FUZZY_MIN_QUERY = 3;      // fuzzy baru jalan kalau query ≥ 3 huruf
     const FUZZY_THRESHOLD = 0.55;
+    const FUZZY_LIMIT = 50;         // batasi hasil fuzzy
+    const SUBSTRING_MIN = 20;       // kalau substring ≥ 20, skip fuzzy
     const TOP_RESULTS = 3;
     const SECTION_LIMIT = 6;
     const SECTION_ORDER = ['TV', 'Movie', 'OVA', 'ONA', 'Special', 'Music', 'Unknown'];
@@ -113,6 +116,18 @@ import AnimeCard from '~/components/AnimeCard.astro';
     let index: Entry[] = [];
     let ready = false;
 
+    // Cache hasil filter
+    const resultCache = new Map<string, YukionimeItem[]>();
+    const CACHE_LIMIT = 50;
+
+    function cacheSet(key: string, value: YukionimeItem[]) {
+      if (resultCache.size >= CACHE_LIMIT) {
+        const firstKey = resultCache.keys().next().value;
+        if (firstKey !== undefined) resultCache.delete(firstKey);
+      }
+      resultCache.set(key, value);
+    }
+
     function levenshtein(a: string, b: string): number {
       if (a === b) return 0;
       if (a.length === 0) return b.length;
@@ -134,10 +149,12 @@ import AnimeCard from '~/components/AnimeCard.astro';
       const words = t.split(' ');
       let best = 0;
       for (const w of words) {
+        if (Math.abs(w.length - q.length) > 3) continue;  // skip word jauh beda
         const dist = levenshtein(q, w);
         const max = Math.max(q.length, w.length);
         const sim = 1 - dist / max;
         if (sim > best) best = sim;
+        if (best === 1) break;
       }
       return best;
     }
@@ -181,9 +198,28 @@ import AnimeCard from '~/components/AnimeCard.astro';
       }
 
       const img = card.querySelector('[data-cover-img]') as HTMLImageElement | null;
-      if (img) {
-        img.src = item.image ?? '';
+      const placeholder = card.querySelector('.cover-placeholder') as HTMLElement | null;
+
+      if (img && item.image) {
+        img.src = item.image;
         img.alt = variant === 'grid' ? `Cover ${item.title}` : '';
+
+        const stopShimmer = () => placeholder?.classList.remove('is-loading');
+        const fail = () => {
+          img.hidden = true;
+          stopShimmer();
+        };
+
+        if (img.complete && img.naturalWidth > 0) {
+          stopShimmer();
+        } else {
+          img.addEventListener('load', stopShimmer, { once: true });
+          img.addEventListener('error', fail, { once: true });
+        }
+
+        img.dataset.ready = '1';
+      } else if (placeholder) {
+        placeholder.classList.remove('is-loading');
       }
 
       const typeEl = card.querySelector('[data-card-type]') as HTMLElement | null;
@@ -215,23 +251,6 @@ import AnimeCard from '~/components/AnimeCard.astro';
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
 
-      const metaTextEl = card.querySelector('[data-card-meta-text]') as HTMLElement | null;
-      if (metaTextEl) {
-        const parts: string[] = [];
-        if (item.type) parts.push(mapType(item.type));
-        if (item.episodes && item.episodes > 0) parts.push(`${item.episodes} Episode`);
-        metaTextEl.textContent = parts.join(' · ');
-      }
-
-      const metaEl = card.querySelector('[data-card-meta]') as HTMLElement | null;
-      if (metaEl) {
-        if (item.episodes && item.episodes > 0) {
-          const li = document.createElement('li');
-          li.textContent = `${item.episodes} Episode`;
-          metaEl.appendChild(li);
-        }
-      }
-
       const playEl = card.querySelector('[data-card-play]') as HTMLAnchorElement | null;
       if (playEl) {
         playEl.href = `/anime/watch/${item.id}/episodes/1/`;
@@ -243,12 +262,6 @@ import AnimeCard from '~/components/AnimeCard.astro';
         bookmarkEl.dataset.anime = item.id;
       }
 
-      const epEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
-      if (epEl && item.episodes && item.episodes > 0) {
-        epEl.textContent = `Ep ${item.episodes}`;
-        epEl.hidden = false;
-      }
-
       return card;
     }
 
@@ -256,12 +269,17 @@ import AnimeCard from '~/components/AnimeCard.astro';
       const q = qRaw.toLowerCase().trim();
       if (!q) return [];
 
+      // Cek cache
+      if (resultCache.has(q)) {
+        return resultCache.get(q)!;
+      }
+
       const substring: YukionimeItem[] = [];
       for (const entry of index) {
         if (entry.search.includes(q)) substring.push(entry.item);
       }
 
-      if (substring.length > 0) {
+      if (substring.length >= SUBSTRING_MIN) {
         substring.sort((a, b) => {
           const at = a.title.toLowerCase();
           const bt = b.title.toLowerCase();
@@ -270,14 +288,58 @@ import AnimeCard from '~/components/AnimeCard.astro';
           if (ai !== bi) return ai - bi;
           return at.length - bt.length;
         });
+        cacheSet(q, substring);
         return substring;
       }
 
-      return index
+      // Kalau query pendek, jangan fuzzy (mahal)
+      if (q.length < FUZZY_MIN_QUERY) {
+        substring.sort((a, b) => {
+          const at = a.title.toLowerCase();
+          const bt = b.title.toLowerCase();
+          const ai = at.indexOf(q);
+          const bi = bt.indexOf(q);
+          if (ai !== bi) return ai - bi;
+          return at.length - bt.length;
+        });
+        cacheSet(q, substring);
+        return substring;
+      }
+
+      // Fuzzy — batasi hasil
+      const fuzzy = index
         .map((e) => ({ item: e.item, score: fuzzyScore(q, e.search) }))
         .filter(({ score }) => score >= FUZZY_THRESHOLD)
         .sort((a, b) => b.score - a.score)
+        .slice(0, FUZZY_LIMIT)
         .map((s) => s.item);
+
+      // Gabung: substring dulu, baru fuzzy (dedupe)
+      const seen = new Set<string>();
+      const merged: YukionimeItem[] = [];
+
+      substring.sort((a, b) => {
+        const at = a.title.toLowerCase();
+        const bt = b.title.toLowerCase();
+        const ai = at.indexOf(q);
+        const bi = bt.indexOf(q);
+        if (ai !== bi) return ai - bi;
+        return at.length - bt.length;
+      });
+
+      for (const item of substring) {
+        if (seen.has(item.id)) continue;
+        seen.add(item.id);
+        merged.push(item);
+      }
+      for (const item of fuzzy) {
+        if (seen.has(item.id)) continue;
+        seen.add(item.id);
+        merged.push(item);
+      }
+
+      cacheSet(q, merged);
+      return merged;
     }
 
     function buildSection(
