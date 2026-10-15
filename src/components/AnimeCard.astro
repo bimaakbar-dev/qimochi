@@ -348,7 +348,6 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
   }
 
   .info h3 {
-    position: relative;
     font-size: var(--fs-sm);
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
@@ -360,29 +359,6 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     -webkit-box-orient: vertical;
     overflow: hidden;
     overflow-wrap: anywhere;
-  }
-
-  .info h3::after {
-    content: '';
-    position: absolute;
-    left: -3%;
-    right: -3%;
-    bottom: -0.1em;
-    height: 0.45em;
-    background-color: var(--text-primary);
-    -webkit-mask-image: var(--underline);
-    mask-image: var(--underline);
-    -webkit-mask-size: 100% 100%;
-    mask-size: 100% 100%;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity var(--t-fast);
-  }
-
-  .anime-card:hover .info h3::after {
-    opacity: 1;
   }
 
   .relation-badge {
@@ -411,10 +387,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
 
   .preview {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    aspect-ratio: 2 / 3;
+    inset: 0;
     z-index: 5;
     background: hsla(30, 3%, 5%, 0.94);
     backdrop-filter: blur(4px);
@@ -438,7 +411,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
   .preview__title {
     margin: 0;
     font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
+    font-weight: var(--fw-semibold);
     color: var(--text-primary);
     line-height: var(--lh-tight);
     display: -webkit-box;
@@ -460,7 +433,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
   .preview__stars {
     position: relative;
     display: inline-block;
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
     letter-spacing: 1px;
     line-height: 1;
     white-space: nowrap;
@@ -501,7 +474,8 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     flex-direction: column;
     gap: 2px;
     font-size: var(--fs-xs);
-    color: var(--text-muted);
+    color: var(--text-primary);
+    font-weight: var(--fw-medium);
     line-height: 1.3;
     flex-shrink: 0;
   }
@@ -510,9 +484,9 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     margin: 0;
     font-size: var(--fs-xs);
     line-height: 1.4;
-    color: hsla(0, 0%, 100%, 0.7);
+    color: var(--text-secondary);
     display: -webkit-box;
-    -webkit-line-clamp: 4;
+    -webkit-line-clamp: 6;
     -webkit-box-orient: vertical;
     overflow: hidden;
     overflow-wrap: anywhere;
@@ -541,6 +515,11 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     border-radius: var(--r-sm);
     cursor: pointer;
     transition: color var(--t-fast);
+    & svg {
+      width: 1.333em;
+      height: 1.333em;
+      flex-shrink: 0;
+    }
   }
 
   .preview__btn:hover {
