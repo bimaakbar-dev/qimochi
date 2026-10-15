@@ -210,10 +210,10 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
   .hero__title {
     font-family: var(--font-montserrat);
     font-size: clamp(1.5rem, 4vw + 0.5rem, var(--fs-4xl));
-    font-weight: 800;
+    font-weight: var(--fw-bold);
     line-height: var(--lh-tight);
     letter-spacing: -0.02em;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0;
     max-width: 20ch;
     text-wrap: balance;
@@ -264,13 +264,14 @@ const showWatch = Boolean(watchUrl) || watchDisabled;
     background: hsla(0, 0%, 100%, 0.18);
     border: none;
     border-radius: 6px 0 6px 0;
-    font-size: 0.6875rem;
-    font-weight: var(--fw-semibold);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
     letter-spacing: 0.02em;
-    line-height: 1.2;
+    line-height: 1.1;
     color: hsla(0, 0%, 100%, 0.95);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
+    font-style: italic;
   }
 
   .hero__subindo {
