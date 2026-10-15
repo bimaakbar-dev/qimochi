@@ -40,7 +40,7 @@ interface Props {
 const { anime, episode, totalEpisodes } = Astro.props as Props;
 const { data } = anime;
 
-const episodeNumbers = data.episodes
+const episodeNumbers = data.episodeList
   .map((e) => e.number)
   .sort((a, b) => a - b);
 
