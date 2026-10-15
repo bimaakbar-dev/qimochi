@@ -40,9 +40,9 @@ interface Props {
 const { anime, episode, totalEpisodes } = Astro.props as Props;
 const { data } = anime;
 
-const episodeNumbers = data.episodes
-  .map((e) => e.number)
-  .sort((a, b) => a - b);
+const episodeItems = data.episodeList
+  .map((e) => ({ number: e.number, title: e.title ?? null }))
+  .sort((a, b) => a.number - b.number);
 
 const defaultStream = episode.streams?.[0];
 const defaultServer = defaultStream?.servers?.[0];
@@ -105,8 +105,11 @@ const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
       <aside class="content-aside">
         <EpisodeList
           slug={anime.id}
-          episodes={episodeNumbers}
+          episodes={episodeItems}
           currentEpisode={episode.number}
+          mode="watch"
+          cover={data.cover}
+          banner={data.banner}
         />
       </aside>
     </div>
