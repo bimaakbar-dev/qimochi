@@ -77,8 +77,12 @@ const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
         src={playerSrc}
         title={`${data.title} Episode ${episode.number}`}
       />
+      <ActionBar
+        slug={anime.id}
+        episodeNumber={episode.number}
+        totalEpisodes={totalEpisodes}
+      />
     </section>
-
     <div class="content-grid">
       <div class="content-main">
         <EpisodeHeader
@@ -89,23 +93,13 @@ const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
           ageRating={data.rating ?? null}
           votesApiBase={votesApiBase}
         />
-
         <StreamSelector streams={episode.streams} />
-
-        <ActionBar
-          slug={anime.id}
-          episodeNumber={episode.number}
-          totalEpisodes={totalEpisodes}
-        />
-
         <DownloadPanel downloads={episode.downloads ?? []} />
-
         <AnimeFranchise
           currentSlug={anime.id}
           franchises={data.franchises}
         />
       </div>
-
       <aside class="content-aside">
         <EpisodeList
           slug={anime.id}
@@ -187,7 +181,9 @@ const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
   }
 
   .player-section {
-    margin-bottom: var(--s-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
   }
 
   .content-grid {
@@ -211,10 +207,13 @@ const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
     }
 
     .content-aside {
+      display: flex;
+      flex-direction: column;
       position: sticky;
       top: var(--sticky-top);
       max-height: calc(100vh - var(--sticky-top) - var(--s-4));
       overflow-y: auto;
+      gap: var(--s-4);
     }
   }
 </style>
