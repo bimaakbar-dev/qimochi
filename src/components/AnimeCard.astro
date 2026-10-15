@@ -118,7 +118,6 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
               <span class="preview__score" data-card-score></span>
               <span class="preview__votes" data-card-votes></span>
             </div>
-            <ul class="preview__meta" data-card-meta></ul>
             <div class="preview__actions">
               <a class="preview__btn preview__btn--play" data-card-play>
                 <Icon name="play" size={16} />
@@ -129,10 +128,10 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
         </div>
         <div class="info">
           <h3 data-card-title-info></h3>
-          <span class="episodes" data-card-episodes hidden></span>
         </div>
       </article>
     </template>
+
     <template id="anime-card-featured-template">
       <article class="anime-card anime-card--featured anime-card-rich">
         <a class="featured__link" data-card-link>
@@ -160,7 +159,6 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
               <span class="preview__score" data-card-score></span>
               <span class="preview__votes" data-card-votes></span>
             </div>
-            <ul class="preview__meta" data-card-meta></ul>
             <div class="preview__actions">
               <a class="preview__btn preview__btn--play" data-card-play>
                 <Icon name="play" size={16} />
@@ -171,6 +169,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
         </div>
       </article>
     </template>
+
     <template id="anime-card-compact-template">
       <article class="anime-card anime-card--compact">
         <a class="compact__link" data-card-link>
