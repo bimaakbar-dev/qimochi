@@ -62,22 +62,6 @@ a { transition: color var(--t-fast); }
   border: 0;
 }
 
-.skip-link {
-  position: absolute;
-  top: -3rem;
-  left: var(--pad-x);
-  z-index: var(--z-toast);
-  padding: var(--s-2) var(--s-4);
-  background: var(--accent);
-  color: var(--accent-text);
-  border-radius: var(--r-sm);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-  transition: top var(--t-fast);
-}
-
-.skip-link:focus { top: var(--s-2); }
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
