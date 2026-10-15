@@ -63,7 +63,7 @@ function slugToTitle(slug: string): string {
       const label = labelFor(f.relation);
 
       if (anime) {
-        const epCount = anime.data.episodes?.length ?? 0;
+        const epCount = anime.data.episodeList?.length ?? 0;
         const year = anime.data.releaseDate?.getFullYear() ?? null;
         const meta =
           [year, epCount > 0 ? `${epCount} Ep` : null].filter(Boolean).join(' · ') ||
