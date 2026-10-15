@@ -4,6 +4,7 @@ import { Image } from 'astro:assets';
 import logoImg from '~/assets/images/logo/logo.png';
 import Icon from '~/user-components/Icons.astro';
 import UserMenu from '~/components/UserMenu.astro';
+import MobileMenu from './MobileMenu.astro';
 
 const currentPath = Astro.url.pathname;
 
@@ -23,36 +24,41 @@ function isActive(href: string): boolean {
 
 <header class="site-header">
   <div class="header-inner">
-    <a href="/" class="logo" aria-label={`${SITE.name} — Home`}>
-      <Image
-        src={logoImg}
-        alt={SITE.name}
-        width={64}
-        height={64}
-        loading="eager"
-        fetchpriority="high"
-        decoding="async"
-        class="logo-img"
-      />
-    </a>
-    <nav class="nav nav--desktop" aria-label="Navigasi utama">
-      {NAV_LINKS.map(({ label, href }) => (
-        <a
-          href={href}
-          class:list={[{ active: isActive(href) }]}
-          aria-current={isActive(href) ? 'page' : undefined}
-        >
-          {label}
-        </a>
-      ))}
-    </nav>
+    <div class="header-left">
+      <a href="/" class="logo" aria-label={`${SITE.name} — Home`}>
+        <Image
+          src={logoImg}
+          alt={SITE.name}
+          width={64}
+          height={64}
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+          class="logo-img"
+        />
+      </a>
+      <nav class="nav nav--desktop" aria-label="Navigasi utama">
+        {NAV_LINKS.map(({ label, href }) => (
+          <a
+            href={href}
+            class:list={[{ active: isActive(href) }]}
+            aria-current={isActive(href) ? 'page' : undefined}
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
+    </div>
+    
     <div class="header-right">
+      <a href="/search/" class="icon-btn" aria-label="Cari anime">
+        <Icon name="search" size={20} />
+      </a>
+      <a href="/anime/watchlist/" class="icon-btn" aria-label="Daftar tontonan">
+        <Icon name="bookmark" size={20} />
+      </a>
       <UserMenu />
-      <details class="menu">
-        <summary class="menu-btn" aria-label="Menu navigasi">
-          <span class="icon-menu"><Icon name="menu" size={22} /></span>
-          <span class="icon-close"><Icon name="close" size={22} /></span>
-        </summary>
+      <MobileMenu>
         <nav class="nav nav--mobile" aria-label="Navigasi utama">
           {NAV_LINKS.map(({ label, href }) => (
             <a
@@ -64,10 +70,7 @@ function isActive(href: string): boolean {
             </a>
           ))}
         </nav>
-      </details>
-      <a href="/search/" class="icon-btn" aria-label="Cari anime">
-        <Icon name="search" size={20} />
-      </a>
+      </MobileMenu>
     </div>
   </div>
 </header>
@@ -125,6 +128,11 @@ function isActive(href: string): boolean {
     margin-inline: auto;
     padding-inline: var(--pad-x);
   }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--s-8);
+  }
   .logo {
     display: inline-flex;
     align-items: center;
@@ -144,15 +152,6 @@ function isActive(href: string): boolean {
     align-items: center;
     gap: var(--s-1);
   }
-  .header-right .icon-btn {
-  order: 2;
-}
-.header-right .menu {
-  order: 3;
-}
-.header-right .user-menu {
-  order: 1;
-}
   .icon-btn {
     display: inline-flex;
     align-items: center;
@@ -165,39 +164,7 @@ function isActive(href: string): boolean {
   .icon-btn:hover {
     color: var(--accent);
   }
-  .menu {
-    display: flex;
-    align-items: center;
-  }
-  .menu-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    color: var(--text-inverted);
-    cursor: pointer;
-    list-style: none;
-    transition: color var(--t-fast);
-  }
-  .menu-btn::-webkit-details-marker {
-    display: none;
-  }
-  .menu-btn:hover {
-    color: var(--accent);
-  }
-  .icon-menu {
-    display: inline-flex;
-  }
-  .icon-close {
-    display: none;
-  }
-  .menu[open] .icon-menu {
-    display: none;
-  }
-  .menu[open] .icon-close {
-    display: inline-flex;
-  }
+ 
   .nav {
     display: flex;
     align-items: center;
@@ -265,20 +232,8 @@ function isActive(href: string): boolean {
     .header-right {
       gap: var(--s-4);
     }
-    .header-right .menu {
-  order: 2;
-}
-.header-right .icon-btn {
-  order: 3;
-}
-.header-right .user-menu {
-  order: 1;
-}
     .nav--desktop {
       display: flex;
-    }
-    .menu {
-      display: none;
     }
   }
 </style>
