@@ -31,7 +31,7 @@ function plainExcerpt(input: string | undefined, maxLen = 180): string {
 
 const slides: HeroItem[] = items.map((anime) => {
   const d = anime.data;
-  const epNumbers = d.episodes.map((e) => e.number).sort((a, b) => a - b);
+  const epNumbers = d.episodeList.map((e) => e.number).sort((a, b) => a - b);
   const hasEpisodes = epNumbers.length > 0;
   const firstEpisode = epNumbers[0] ?? 1;
 
