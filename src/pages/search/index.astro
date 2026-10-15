@@ -532,14 +532,16 @@ import AnimeCard from '~/components/AnimeCard.astro';
   })();
 </script>
 
-<style is:global>
+<style>
   .wrapper {
     padding-block: var(--s-12) var(--s-12);
     display: flex;
     flex-direction: column;
     gap: var(--s-8);
   }
+</style>
 
+<style is:global>
   .search-form {
     display: flex;
     justify-content: center;
@@ -594,12 +596,11 @@ import AnimeCard from '~/components/AnimeCard.astro';
     justify-content: center;
     color: var(--text-muted);
     pointer-events: none;
-  }
-
-  .search-input-icon :global(svg) {
-    width: 1.25em;
-    height: 1.25em;
-    flex-shrink: 0;
+    & svg {
+      width: 1.25em;
+      height: 1.25em;
+      flex-shrink: 0;
+    }
   }
 
   .search-clear {
@@ -618,13 +619,14 @@ import AnimeCard from '~/components/AnimeCard.astro';
     color: var(--text-muted);
     cursor: pointer;
     transition: color var(--t-fast);
+    & svg {
+      width: 1em; height: 1em; flex-shrink: 0
+    }
   }
 
   .search-clear:hover { color: var(--text-primary); }
   .search-clear[hidden] { display: none; }
-  .search-clear :global(svg) { width: 1em; height: 1em; flex-shrink: 0; }
 
-  /* ==== Empty state ==== */
   .search-empty {
     display: flex;
     flex-direction: column;
