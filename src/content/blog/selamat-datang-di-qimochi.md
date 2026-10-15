@@ -1,16 +1,16 @@
 ---
-title: "Selamat Datang di Qimochi — Situs Streaming & Download Anime Batch"
+title: "Selamat Datang di Qimochi — Nonton Anime Sub Indo, Ringan & Cepat"
 description: "Perkenalan lengkap tentang Qimochi — fitur, cara pakai, dan komitmen kami untuk pengalaman nonton anime yang ringan dan cepat."
-cover: https://cdn.myanimelist.net/images/anime/1171/109222.jpg
+cover: /og.jpg
 date: 2026-02-15
-updatedAt: 2026-02-25
+updatedAt: 2026-10-16
 author: Admin
 category: Update
 tags: [Announcement, Qimochi, Guide]
 draft: false
 ---
 
-Selamat datang di **Qimochi** — tempat untuk streaming dan download anime batch
+Selamat datang di **Qimochi** — tempat nonton anime subtitle Indonesia
 dengan pengalaman yang ringan, cepat, dan tanpa ribet.
 
 ## Apa Itu Qimochi?
@@ -25,8 +25,8 @@ waktu kurang dari 1 detik, bahkan di koneksi lambat.
 
 ### 2. Kemudahan
 
-Navigasi simpel — tidak ada popup, tidak ada iklan mengganggu, tidak ada
-redirect aneh. Kamu datang untuk nonton, kami pastikan itu yang kamu dapat.
+Navigasi simpel — tanpa popup, tanpa iklan mengganggu, tanpa redirect aneh.
+Kamu datang untuk nonton, kami pastikan itu yang kamu dapat.
 
 ### 3. Kelengkapan
 
@@ -36,26 +36,38 @@ semuanya ada di satu tempat.
 ## Fitur Utama
 
 - **Streaming langsung** — tonton tanpa download
-- **Download batch** — unduh semua episode sekaligus
+- **Download** — pilih kualitas, unduh per episode
 - **Multi-kualitas** — 360p, 480p, 720p, 1080p
-- **Multiple server** — ganti server kalau yang satu lag
+- **Multi-server** — ganti server kalau yang satu lag
 - **Pencarian canggih** — cari dengan typo tetap ketemu
-- **Archive lengkap** — browse berdasarkan abjad
-- **Genre filter** — temukan sesuai selera
+- **Archive lengkap** — jelajahi berdasarkan abjad
+- **Genre** — temukan sesuai selera
+- **Daftar Saya** — simpan anime favorit (login Google)
+- **Riwayat tonton** — lanjut dari episode terakhir
+- **Rating komunitas** — beri nilai dan lihat rekomendasi
+- **Komentar & reaksi** — diskusi bareng penggemar lain
 
 ## Cara Menggunakan
 
-### 1. Browse Anime
+### 1. Jelajahi Anime
 
-Buka halaman [Archive](/anime/) untuk melihat semua anime. Atau jelajahi
-berdasarkan [genre](/genre/) kalau kamu punya preferensi tertentu.
+Buka halaman [Anime](/anime/) untuk daftar lengkap, atau langsung ke:
 
-### 2. Pilih Episode
+- [Ongoing](/anime/ongoing/) — anime yang sedang tayang
+- [Completed](/anime/completed/) — anime yang sudah tamat
+- [Genre](/anime/genre/) — jelajahi berdasarkan genre
 
-Setiap anime punya halaman detail dengan daftar episode lengkap. Klik
-episode yang mau ditonton.
+### 2. Cari Anime
 
-### 3. Pilih Server & Kualitas
+Halaman [Cari](/search/) mendukung pencarian dengan toleransi typo.
+Ketik judul dengan salah huruf pun tetap ketemu.
+
+### 3. Pilih Episode
+
+Buka halaman detail anime untuk daftar episode lengkap. Klik episode
+yang mau ditonton.
+
+### 4. Pilih Server & Kualitas
 
 Di halaman tonton, kamu bisa memilih:
 
@@ -64,10 +76,14 @@ Di halaman tonton, kamu bisa memilih:
 
 Pilihanmu akan **diingat otomatis** untuk kunjungan berikutnya.
 
-### 4. Nonton atau Download
+### 5. Simpan & Beri Rating
 
-- **Nonton langsung** — klik server, video langsung main
-- **Download** — pilih kualitas, klik server download
+**Login dengan Google** untuk:
+
+- **Bookmark** anime favoritmu
+- **Catat riwayat tonton** — lanjut nonton dari episode terakhir
+- **Beri rating** — bantu pengguna lain temukan anime bagus
+- **Komentar** — diskusi bareng komunitas
 
 ## Yang Perlu Diketahui
 
@@ -78,22 +94,21 @@ menyediakan tautan untuk keperluan referensi.
 Untuk informasi lebih lanjut, lihat halaman [DMCA](/dmca/) dan
 [Disclaimer](/disclaimer/).
 
-## Bergabung dengan Komunitas
+## Tetap Update
 
-Punya pertanyaan, saran, atau menemukan bug? Kami selalu terbuka untuk
-masukan. Sampaikan lewat:
+Jangan lewatkan anime baru:
 
 - **RSS Feed** — subscribe di [RSS](/rss.xml) untuk update artikel baru
-- **Komentar** — (segera hadir)
+- **Blog** — pantau [Blog](/blog/) untuk review dan berita
 
 ## Apa Selanjutnya?
 
 Kami terus mengembangkan Qimochi. Beberapa fitur yang sedang dalam
 perencanaan:
 
-- Sistem komentar untuk diskusi
-- Watchlist pribadi
 - Notifikasi episode baru
-- Rekomendasi personal
+- Rekomendasi personal berdasarkan rating kamu
+- Integrasi komunitas Discord
+- Peningkatan pencarian dan filter
 
 Pantau terus blog ini untuk update terbaru. Selamat menjelajah! 🎉
