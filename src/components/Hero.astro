@@ -38,13 +38,13 @@ const hasSlot = Astro.slots.has('default');
     flex-wrap: wrap;
     max-width: var(--content-max-mobile);
     margin-inline: auto;
-    padding: var(--s-6) var(--pad-x);
+    padding-block: var(--s-2);
   }
 
   .hero__title {
     font-family: var(--font-montserrat);
     font-size: var(--fs-3xl);
-    font-weight: var(--fw-bold);
+    font-weight: var(--fw-semibold);
     line-height: var(--lh-tight);
     letter-spacing: -0.02em;
     color: var(--text-primary);
@@ -68,7 +68,7 @@ const hasSlot = Astro.slots.has('default');
   @media (min-width: 50rem) {
     .hero__inner {
       max-width: var(--content-max-desktop);
-      padding: var(--s-8) var(--pad-x);
+      padding-block: var(--s-4);
     }
 
     .hero__title {
