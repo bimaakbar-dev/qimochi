@@ -4,15 +4,20 @@ import Icon from '~/user-components/Icons.astro';
 interface Props {
   animeId: string;
   class?: string;
+  variant?: 'default' | 'plain';
 }
 
-const { animeId, class: className } = Astro.props;
+const { animeId, class: className, variant = 'default' } = Astro.props;
 const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 ---
 
 <button
   type="button"
-  class:list={['icon-btn', className]}
+  class:list={[
+    'icon-btn',
+    `icon-btn--${variant}`,
+    className,
+  ]}
   data-bookmark-btn
   data-anime={animeId}
   data-api={apiBase}
@@ -192,20 +197,14 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 2.75rem;
-    height: 2.75rem;
     padding: 0;
     background: transparent;
     color: var(--text-inverted);
     border: 1.5px solid hsla(0, 0%, 100%, 0.35);
     border-radius: var(--r-full);
     cursor: pointer;
-    transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
-  }
-
-  .icon-btn:hover:not(:disabled) {
-    color: var(--accent);
-    border-color: var(--accent);
+    transition: color var(--t-fast), border-color var(--t-fast),
+      background var(--t-fast);
   }
 
   .icon-btn:disabled {
@@ -215,8 +214,9 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
 
   .icon-btn :global(svg) {
     display: block;
-    width: 20px;
-    height: 20px;
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
   }
 
   .icon-btn__idle,
@@ -225,13 +225,49 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
     align-items: center;
     justify-content: center;
   }
-  .icon-btn__active { display: none; }
+  .icon-btn__active {
+    display: none;
+  }
 
-  .icon-btn.is-active {
+  .icon-btn--default {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .icon-btn--default:hover:not(:disabled) {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .icon-btn--default.is-active {
     background: var(--accent);
     border-color: var(--accent);
     color: var(--accent-text);
   }
-  .icon-btn.is-active .icon-btn__idle { display: none; }
-  .icon-btn.is-active .icon-btn__active { display: inline-flex; }
+
+  .icon-btn--plain {
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: var(--r-sm);
+    color: var(--accent);
+  }
+
+  .icon-btn--plain:hover:not(:disabled) {
+    color: var(--accent-hover);
+    background: transparent;
+  }
+
+  .icon-btn--plain.is-active {
+    background: transparent;
+    border-color: transparent;
+    color: var(--accent);
+  }
+
+  .icon-btn.is-active .icon-btn__idle {
+    display: none;
+  }
+  .icon-btn.is-active .icon-btn__active {
+    display: inline-flex;
+  }
 </style>
