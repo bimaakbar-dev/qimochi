@@ -188,7 +188,7 @@ const popoverId = `rating-pop-${animeId}`;
   .rating__average {
     color: #fff;
     font-size: var(--fs-base);
-    font-weight: var(--fw-bold);
+    font-weight: var(--fw-semibold);
     font-variant-numeric: tabular-nums;
   }
 
@@ -226,7 +226,7 @@ const popoverId = `rating-pop-${animeId}`;
     margin: 0;
     padding: 0;
     border: 1px solid var(--border);
-    border-radius: var(--r-md);
+    border-radius: var(--r-lg);
     background: var(--bg-elevated);
     color: var(--text-primary);
     box-shadow: var(--shadow-lg);
@@ -263,19 +263,17 @@ const popoverId = `rating-pop-${animeId}`;
 
   .rating__popover-header {
     display: flex;
-    align-items: center;
+    align-items: start;
     justify-content: space-between;
     gap: var(--s-3);
     padding: var(--s-3) var(--s-4);
-    border-bottom: 1px solid var(--border);
   }
 
   .rating__popover-title {
     margin: 0;
     font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
+    font-weight: var(--fw-semibold);
     letter-spacing: 0.08em;
-    text-transform: uppercase;
     color: var(--text-primary);
   }
 
@@ -307,7 +305,7 @@ const popoverId = `rating-pop-${animeId}`;
 
   .rating__popover-summary {
     display: flex;
-    align-items: center;
+    align-items: start;
     gap: var(--s-3);
   }
 
@@ -358,12 +356,13 @@ const popoverId = `rating-pop-${animeId}`;
     display: flex;
     flex-direction: column;
     gap: var(--s-2);
+    align-items: start;
   }
 
   .rating__popover-section-title {
     margin: 0;
     font-size: 0.6875rem;
-    font-weight: var(--fw-bold);
+    font-weight: var(--fw-semibold);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-secondary);
