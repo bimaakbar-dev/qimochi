@@ -5,7 +5,7 @@ export const SITE = {
   url: 'https://qimochi.web.id',
   locale: 'id-ID',
   lang: 'id',
-  ogImage: '' as string,
+  ogImage: '/og.jpg' as string,
 } as const;
 
 export const NAV_LINKS = [
