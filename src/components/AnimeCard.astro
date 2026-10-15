@@ -4,39 +4,52 @@ import Icon from '~/user-components/Icons.astro';
 import BookmarkButton from './BookmarkButton.astro';
 import { URLS, STATUS_VARIANT, type Status } from '~/constants';
 
-interface Props {
-  anime: {
-    id: string;
-    body?: string;
-    data: {
-      title: string;
-      cover: string;
-      status: string;
-      type: string;
-      releaseDate: Date | null;
-      score?: number | null;
-      stats?: { scoredBy?: number } | null;
-      studio?: string;
-      episodeList?: { number: number }[];
-    };
+interface CardAnime {
+  id: string;
+  body?: string;
+  data: {
+    title: string;
+    cover: string;
+    status: string;
+    type: string;
+    releaseDate: Date | null;
+    score?: number | null;
+    stats?: { scoredBy?: number } | null;
+    studio?: string;
+    episodeList?: { number: number }[];
   };
+}
+
+interface Props {
+  mode?: 'card' | 'template';
+  anime?: CardAnime;
   featured?: boolean;
   relationBadge?: string;
   rich?: boolean;
 }
 
 const {
+  mode = 'card',
   anime,
   featured = false,
   relationBadge,
   rich = true,
 } = Astro.props;
 
-const { id, data } = anime;
+const isTemplate = mode === 'template';
 
-const variant = STATUS_VARIANT[data.status as Status] ?? 'default';
+if (!isTemplate && !anime) {
+  throw new Error('[AnimeCard] Prop "anime" wajib saat mode="card".');
+}
 
-const episodes = data.episodeList ?? [];
+const id = anime?.id ?? '';
+const data = anime?.data;
+
+const variant = data
+  ? STATUS_VARIANT[data.status as Status] ?? 'default'
+  : 'default';
+
+const episodes = data?.episodeList ?? [];
 const lastEpisode = episodes.length
   ? Math.max(...episodes.map((e) => e.number))
   : 0;
@@ -46,10 +59,10 @@ const firstEpisode = episodes.length
 const totalEpisodes = episodes.length;
 const hasEpisodes = totalEpisodes > 0;
 
-const score = data.score ?? null;
-const votedBy = data.stats?.scoredBy ?? 0;
+const score = data?.score ?? null;
+const votedBy = data?.stats?.scoredBy ?? 0;
 const studio =
-  data.studio && data.studio !== 'Unknown' ? data.studio : null;
+  data?.studio && data.studio !== 'Unknown' ? data.studio : null;
 
 function formatCount(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -70,110 +83,150 @@ function plainExcerpt(input: string | undefined, maxLen = 110): string {
     : cleaned.slice(0, maxLen).trimEnd() + '…';
 }
 
-const excerpt = plainExcerpt(anime.body);
+const excerpt = plainExcerpt(anime?.body);
 const scorePercent = score != null ? (score / 10) * 100 : 0;
 ---
 
-<article
-  class:list={[
-    'anime-card',
-    { 'anime-card-featured': featured, 'anime-card-rich': rich },
-  ]}
->
-  <a
-    href={URLS.anime(id)}
-    class="anime-card__link"
-    aria-label={data.title}
-  >
-    <div class="cover">
-      <div class="cover-placeholder is-loading" aria-hidden="true"></div>
-
-      <img
-        src={data.cover}
-        alt={`Cover ${data.title}`}
-        width="300"
-        height="450"
-        loading="lazy"
-        decoding="async"
-        data-cover-img
-      />
-
-      <span class="type-badge">{data.type}</span>
-
-      <div class="status-overlay">
-        <Badge variant={variant} size="sm">{data.status}</Badge>
-      </div>
-    </div>
-  </a>
-
-  {rich && (
-    <div class="preview" aria-hidden="true">
-      <div class="preview__inner">
-        <h4 class="preview__title">{data.title}</h4>
-
-        {score != null && (
-          <div class="preview__rating">
+{isTemplate ? (
+  <template id="anime-card-template">
+    <article class="anime-card anime-card-rich">
+      <a class="anime-card__link" data-card-link>
+        <div class="cover">
+          <div class="cover-placeholder is-loading" aria-hidden="true"></div>
+          <img width="300" height="450" loading="lazy" decoding="async" data-cover-img />
+          <span class="type-badge" data-card-type></span>
+          <div class="status-overlay">
+            <span class="card-status" data-card-status></span>
+          </div>
+        </div>
+      </a>
+      <div class="preview" aria-hidden="true">
+        <div class="preview__inner">
+          <h4 class="preview__title" data-card-title></h4>
+          <div class="preview__rating" data-card-rating hidden>
             <span class="preview__stars" aria-hidden="true">
               <span class="preview__stars-bg">★★★★★</span>
-              <span
-                class="preview__stars-fill"
-                style={`width:${scorePercent}%`}
-              >★★★★★</span>
+              <span class="preview__stars-fill" data-card-stars-fill>★★★★★</span>
             </span>
-            <span class="preview__score">{score.toFixed(1)}</span>
-            {votedBy > 0 && (
-              <span class="preview__votes">({formatCount(votedBy)})</span>
-            )}
+            <span class="preview__score" data-card-score></span>
+            <span class="preview__votes" data-card-votes></span>
           </div>
-        )}
-
-        <ul class="preview__meta">
-          {totalEpisodes > 0 && <li>{totalEpisodes} Episode</li>}
-          {studio && <li>{studio}</li>}
-        </ul>
-
-        {excerpt && <p class="preview__excerpt">{excerpt}</p>}
-
-        <div class="preview__actions">
-          {hasEpisodes ? (
-            <a
-              href={URLS.watch(id, firstEpisode)}
-              class="preview__btn preview__btn--play"
-              aria-label={`Mulai menonton episode ${firstEpisode}`}
-            >
+          <ul class="preview__meta" data-card-meta></ul>
+          <div class="preview__actions">
+            <a class="preview__btn preview__btn--play" data-card-play>
               <Icon name="play" size={16} />
             </a>
-          ) : (
-            <span
-              class="preview__btn preview__btn--play is-disabled"
-              aria-disabled="true"
-            >
-              <Icon name="play" size={16} />
-            </span>
-          )}
-
-          <BookmarkButton animeId={id} variant="plain" />
+          </div>
         </div>
       </div>
+      <div class="info">
+        <h3 data-card-title-info></h3>
+        <span class="episodes" data-card-episodes hidden></span>
+      </div>
+    </article>
+  </template>
+) : (
+  <article
+    class:list={[
+      'anime-card',
+      { 'anime-card-featured': featured, 'anime-card-rich': rich },
+    ]}
+  >
+    <a
+      href={URLS.anime(id)}
+      class="anime-card__link"
+      aria-label={data!.title}
+    >
+      <div class="cover">
+        <div class="cover-placeholder is-loading" aria-hidden="true"></div>
+
+        <img
+          src={data!.cover}
+          alt={`Cover ${data!.title}`}
+          width="300"
+          height="450"
+          loading="lazy"
+          decoding="async"
+          data-cover-img
+        />
+
+        <span class="type-badge">{data!.type}</span>
+
+        <div class="status-overlay">
+          <Badge variant={variant} size="sm">{data!.status}</Badge>
+        </div>
+      </div>
+    </a>
+
+    {rich && (
+      <div class="preview" aria-hidden="true">
+        <div class="preview__inner">
+          <h4 class="preview__title">{data!.title}</h4>
+
+          {score != null && (
+            <div class="preview__rating">
+              <span class="preview__stars" aria-hidden="true">
+                <span class="preview__stars-bg">★★★★★</span>
+                <span
+                  class="preview__stars-fill"
+                  style={`width:${scorePercent}%`}
+                >★★★★★</span>
+              </span>
+              <span class="preview__score">{score.toFixed(1)}</span>
+              {votedBy > 0 && (
+                <span class="preview__votes">({formatCount(votedBy)})</span>
+              )}
+            </div>
+          )}
+
+          <ul class="preview__meta">
+            {totalEpisodes > 0 && <li>{totalEpisodes} Episode</li>}
+            {studio && <li>{studio}</li>}
+          </ul>
+
+          {excerpt && <p class="preview__excerpt">{excerpt}</p>}
+
+          <div class="preview__actions">
+            {hasEpisodes ? (
+              <a
+                href={URLS.watch(id, firstEpisode)}
+                class="preview__btn preview__btn--play"
+                aria-label={`Mulai menonton episode ${firstEpisode}`}
+              >
+                <Icon name="play" size={16} />
+              </a>
+            ) : (
+              <span
+                class="preview__btn preview__btn--play is-disabled"
+                aria-disabled="true"
+              >
+                <Icon name="play" size={16} />
+              </span>
+            )}
+
+            <BookmarkButton animeId={id} variant="plain" />
+          </div>
+        </div>
+      </div>
+    )}
+
+    <div class="info">
+      <h3 set:html={data!.title} />
+
+      {relationBadge && <span class="relation-badge">{relationBadge}</span>}
+
+      {lastEpisode > 0 && !relationBadge && (
+        <span class="episodes">Ep {lastEpisode}</span>
+      )}
+
+      {lastEpisode > 0 && relationBadge && (
+        <span class="episodes">
+          {relationBadge} · Ep {lastEpisode}
+        </span>
+      )}
     </div>
-  )}
-
-  <div class="info">
-    <h3 set:html={data.title} />
-
-    {relationBadge && <span class="relation-badge">{relationBadge}</span>}
-
-    {lastEpisode > 0 && !relationBadge && (
-      <span class="episodes">Ep {lastEpisode}</span>
-    )}
-
-    {lastEpisode > 0 && relationBadge && (
-      <span class="episodes">
-        {relationBadge} · Ep {lastEpisode}
-      </span>
-    )}
-  </div>
-</article>
+  </article>
+)}
 
 <script>
   (function () {
@@ -339,6 +392,41 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     text-transform: uppercase;
   }
 
+  /* ==== Card status badge (untuk template mode) ==== */
+  .card-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+    padding: 0.1875rem var(--s-2);
+    font-size: 0.625rem;
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .card-status[data-variant='default'] {
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+  }
+
+  .card-status[data-variant='success'] {
+    background: var(--success-soft);
+    color: var(--success);
+  }
+
+  .card-status[data-variant='warning'] {
+    background: var(--warning-soft);
+    color: var(--warning);
+  }
+
+  .card-status[data-variant='accent'] {
+    background: var(--accent);
+    color: var(--accent-text);
+  }
+
   .info {
     padding: var(--s-3) 0 0;
     display: flex;
@@ -430,6 +518,10 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     flex-shrink: 0;
   }
 
+  .preview__rating[hidden] {
+    display: none;
+  }
+
   .preview__stars {
     position: relative;
     display: inline-block;
@@ -480,6 +572,10 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     flex-shrink: 0;
   }
 
+  .preview__meta:empty {
+    display: none;
+  }
+
   .preview__excerpt {
     margin: 0;
     font-size: var(--fs-xs);
@@ -491,6 +587,10 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     overflow: hidden;
     overflow-wrap: anywhere;
     text-overflow: ellipsis;
+  }
+
+  .preview__excerpt:empty {
+    display: none;
   }
 
   .preview__actions {
