@@ -22,7 +22,7 @@ function latestUpdateTime(a: HydratedAnime): number {
 
 const ongoingWithEpisodes = allAnime.filter(
   (a) =>
-    a.data.status === 'Ongoing' && (a.data.episodes?.length ?? 0) > 0
+    a.data.status === 'Ongoing' && (a.data.episodeList?.length ?? 0) > 0
 );
 
 const latest = [...ongoingWithEpisodes]
