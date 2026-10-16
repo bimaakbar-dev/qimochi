@@ -126,6 +126,7 @@ const nextDur = formatDur(nextEpisode?.duration);
       data-open-episodes-modal
       aria-haspopup="dialog"
     >
+      <Icon name="list" size={16} />
       <span>Lihat Semua Episode</span>
     </button>
   </div>
@@ -265,6 +266,7 @@ const nextDur = formatDur(nextEpisode?.duration);
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: var(--s-2);
     width: 100%;
     padding: var(--s-3) var(--s-4);
     border: 1px solid var(--border);
@@ -277,6 +279,12 @@ const nextDur = formatDur(nextEpisode?.duration);
     text-transform: uppercase;
     cursor: pointer;
     transition: all var(--t-fast);
+  }
+
+  .ep-nav__see-all svg {
+    width: 1.333em;
+    height: 1.333em;
+    flex-shrink: 0;
   }
 
   .ep-nav__see-all:hover {
