@@ -1,0 +1,491 @@
+---
+import Icon from '~/user-components/Icons.astro';
+
+interface Props {
+  slug: string;
+  episode: number;
+  server?: string;
+  quality?: string;
+  class?: string;
+}
+
+const {
+  slug,
+  episode,
+  server = '',
+  quality = '',
+  class: className,
+} = Astro.props;
+
+const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
+const dialogId = `report-dialog-${slug}-${episode}`;
+---
+
+<button
+  type="button"
+  class:list={['report-btn', className]}
+  data-report-btn
+  data-slug={slug}
+  data-episode={episode}
+  data-server={server}
+  data-quality={quality}
+  data-api={apiBase}
+  data-dialog-id={dialogId}
+  aria-label="Laporkan masalah"
+>
+  <Icon name="alert" size={16} />
+  <span>Lapor</span>
+</button>
+
+<dialog
+  class="report-dialog"
+  id={dialogId}
+  data-report-dialog
+  aria-labelledby={`${dialogId}-title`}
+>
+  <form class="report-dialog__inner" data-report-form>
+    <header class="report-dialog__header">
+      <h3 class="report-dialog__title" id={`${dialogId}-title`}>
+        Laporkan Masalah
+      </h3>
+      <button
+        type="button"
+        class="report-dialog__close"
+        data-report-close
+        aria-label="Tutup"
+      >
+        <Icon name="close" size={16} />
+      </button>
+    </header>
+
+    <div class="report-dialog__body">
+      <p class="report-dialog__sub">
+        <strong data-report-slug></strong> · Episode <span data-report-episode></span>
+      </p>
+
+      <fieldset class="report-dialog__reasons">
+        <legend class="sr-only">Alasan</legend>
+
+        <label class="report-reason">
+          <input type="radio" name="reason" value="embed_dead" required />
+          <span>Embed mati / tidak bisa diputar</span>
+        </label>
+        <label class="report-reason">
+          <input type="radio" name="reason" value="embed_slow" />
+          <span>Embed lambat / lag</span>
+        </label>
+        <label class="report-reason">
+          <input type="radio" name="reason" value="wrong_episode" />
+          <span>Episode salah</span>
+        </label>
+        <label class="report-reason">
+          <input type="radio" name="reason" value="subtitle_wrong" />
+          <span>Subtitle salah / tidak ada</span>
+        </label>
+        <label class="report-reason">
+          <input type="radio" name="reason" value="audio_issue" />
+          <span>Audio bermasalah</span>
+        </label>
+        <label class="report-reason">
+          <input type="radio" name="reason" value="other" />
+          <span>Lainnya</span>
+        </label>
+      </fieldset>
+
+      <label class="report-dialog__field">
+        <span>Catatan (opsional)</span>
+        <textarea
+          name="note"
+          rows="3"
+          maxlength="500"
+          placeholder="Detail masalah..."
+        ></textarea>
+      </label>
+
+      <p class="report-dialog__status" data-report-status hidden></p>
+    </div>
+
+    <footer class="report-dialog__footer">
+      <button type="button" class="report-dialog__btn" data-report-cancel>
+        Batal
+      </button>
+      <button
+        type="submit"
+        class="report-dialog__btn report-dialog__btn--primary"
+      >
+        Kirim Laporan
+      </button>
+    </footer>
+  </form>
+</dialog>
+
+<script>
+  (function () {
+    function initDialog(btn: HTMLButtonElement): void {
+      if (btn.dataset.bound === '1') return;
+      btn.dataset.bound = '1';
+
+      const dialogId = btn.dataset.dialogId ?? '';
+      if (!dialogId) return;
+
+      const dialog = document.getElementById(dialogId) as HTMLDialogElement | null;
+      if (!dialog) return;
+
+      const form = dialog.querySelector<HTMLFormElement>('[data-report-form]');
+      const closeBtn = dialog.querySelector<HTMLButtonElement>('[data-report-close]');
+      const cancelBtn = dialog.querySelector<HTMLButtonElement>('[data-report-cancel]');
+      const statusEl = dialog.querySelector<HTMLElement>('[data-report-status]');
+      const slugEl = dialog.querySelector<HTMLElement>('[data-report-slug]');
+      const episodeEl = dialog.querySelector<HTMLElement>('[data-report-episode]');
+
+      const slug = btn.dataset.slug ?? '';
+      const episode = btn.dataset.episode ?? '';
+      const server = btn.dataset.server ?? '';
+      const quality = btn.dataset.quality ?? '';
+      const api = (btn.dataset.api ?? '').replace(/\/$/, '');
+
+      if (slugEl) slugEl.textContent = slug.replace(/-/g, ' ');
+      if (episodeEl) episodeEl.textContent = episode;
+
+      function openDialog(): void {
+        dialog.showModal();
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeDialog(): void {
+        if (dialog.open) dialog.close();
+      }
+
+      dialog.addEventListener('close', () => {
+        document.body.style.overflow = '';
+        if (statusEl) statusEl.hidden = true;
+        form?.reset();
+      });
+
+      btn.addEventListener('click', openDialog);
+      closeBtn?.addEventListener('click', closeDialog);
+      cancelBtn?.addEventListener('click', closeDialog);
+
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) closeDialog();
+      });
+
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (statusEl) {
+          statusEl.hidden = true;
+          statusEl.classList.remove('is-error', 'is-success');
+        }
+
+        const submitBtn = form.querySelector<HTMLButtonElement>(
+          'button[type="submit"]'
+        );
+        if (submitBtn) submitBtn.disabled = true;
+
+        const fd = new FormData(form);
+        const reason = String(fd.get('reason') ?? '');
+        const note = String(fd.get('note') ?? '').trim();
+
+        try {
+          const res = await fetch(`${api}/api/v1/reports`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slug,
+              episode: Number(episode),
+              server,
+              quality,
+              reason,
+              note,
+            }),
+          });
+
+          const json = await res.json().catch(() => ({}));
+
+          if (res.status === 429) {
+            if (statusEl) {
+              statusEl.textContent =
+                json?.error?.message ?? 'Terlalu banyak laporan. Coba lagi nanti.';
+              statusEl.classList.add('is-error');
+              statusEl.hidden = false;
+            }
+            return;
+          }
+
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+          if (statusEl) {
+            statusEl.textContent = 'Laporan terkirim. Terima kasih!';
+            statusEl.classList.add('is-success');
+            statusEl.hidden = false;
+          }
+
+          window.setTimeout(() => closeDialog(), 1800);
+        } catch (err) {
+          console.error('[report] submit failed', err);
+          if (statusEl) {
+            statusEl.textContent = 'Gagal mengirim. Coba lagi.';
+            statusEl.classList.add('is-error');
+            statusEl.hidden = false;
+          }
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
+        }
+      });
+    }
+
+    function initAll(scope: ParentNode = document): void {
+      scope
+        .querySelectorAll<HTMLButtonElement>('[data-report-btn]')
+        .forEach(initDialog);
+    }
+
+    initAll();
+    document.addEventListener('astro:page-load', () => initAll());
+  })();
+</script>
+
+<style>
+  .report-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: var(--s-2) var(--s-4);
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--r-full);
+    font-family: inherit;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .report-btn:hover {
+    color: var(--warning);
+    border-color: var(--warning);
+  }
+
+  .report-btn svg {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+  }
+
+  .report-dialog {
+    width: 28rem;
+    max-width: calc(100vw - 2rem);
+    padding: 0;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lg);
+    margin: auto;
+  }
+
+  .report-dialog::backdrop {
+    background: hsla(0, 0%, 0%, 0.6);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .report-dialog[open] {
+    animation: report-in 0.18s ease-out;
+  }
+
+  @keyframes report-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .report-dialog__inner {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .report-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .report-dialog__title {
+    margin: 0;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .report-dialog__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+
+  .report-dialog__close:hover {
+    color: var(--text-primary);
+    background: var(--bg-surface);
+  }
+
+  .report-dialog__body {
+    padding: var(--s-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .report-dialog__sub {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  .report-dialog__sub strong {
+    color: var(--text-primary);
+  }
+
+  .report-dialog__reasons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    padding: 0;
+    margin: 0;
+    border: none;
+  }
+
+  .report-reason {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-size: var(--fs-sm);
+    cursor: pointer;
+    padding: var(--s-2) var(--s-3);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    transition: all var(--t-fast);
+  }
+
+  .report-reason:hover {
+    border-color: var(--border-hover);
+    background: var(--bg-surface);
+  }
+
+  .report-reason input {
+    accent-color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .report-reason input:checked ~ span {
+    color: var(--accent);
+    font-weight: var(--fw-semibold);
+  }
+
+  .report-dialog__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .report-dialog__field > span {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .report-dialog__field textarea {
+    width: 100%;
+    padding: var(--s-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    resize: vertical;
+    min-height: 4rem;
+  }
+
+  .report-dialog__field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .report-dialog__status {
+    margin: 0;
+    font-size: var(--fs-xs);
+    padding: var(--s-2) var(--s-3);
+    border-radius: var(--r-sm);
+  }
+
+  .report-dialog__status[hidden] { display: none; }
+  .report-dialog__status.is-success {
+    color: var(--success);
+    background: var(--success-soft);
+  }
+  .report-dialog__status.is-error {
+    color: var(--danger);
+    background: var(--danger-soft);
+  }
+
+  .report-dialog__footer {
+    display: flex;
+    gap: var(--s-2);
+    padding: var(--s-3) var(--s-4);
+    border-top: 1px solid var(--border);
+  }
+
+  .report-dialog__btn {
+    flex: 1;
+    padding: var(--s-2) var(--s-4);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--r-full);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .report-dialog__btn:hover {
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+  }
+
+  .report-dialog__btn--primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+
+  .report-dialog__btn--primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--accent-text);
+  }
+
+  .report-dialog__btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+</style>
