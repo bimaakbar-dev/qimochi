@@ -39,11 +39,12 @@ if (!entry) {
 
 const { Content } = await render(entry);
 
-const episodeItems = data.episodeList
+const episodeItems = episodes
   .map((e) => ({
     number: e.number,
     title: e.title ?? null,
     duration: e.duration ?? null,
+    aired: e.aired ?? null,
   }))
   .sort((a, b) => a.number - b.number);
 
@@ -180,8 +181,8 @@ const genreLinks = visibleGenres.map((g) => ({
         slug={anime.id}
         animeTitle={data.title}
         episodes={episodeItems}
-        currentEpisode={null}
-        mode="detail"
+        currentEpisode={defaultEpisode.number}
+        mode="watch"
         cover={data.cover}
         banner={data.banner}
         duration={data.duration}
