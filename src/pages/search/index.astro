@@ -261,6 +261,20 @@ import AnimeCard from '~/components/AnimeCard.astro';
         const votesEl = card.querySelector('[data-card-votes]') as HTMLElement | null;
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
+      
+	  const episodeText =
+  	item.episodes && item.episodes > 0 ? `${item.episodes} Episode` : '';
+
+	  const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
+	  if (episodesEl && episodeText) {
+  	  episodesEl.textContent = episodeText;
+  	  episodesEl.hidden = false;
+	  }
+
+	  const metaTextEl = card.querySelector('[data-card-meta-text]') as HTMLElement | null;
+	  if (metaTextEl && episodeText) {
+  	  metaTextEl.textContent = episodeText;
+	  }
 
       const playEl = card.querySelector('[data-card-play]') as HTMLAnchorElement | null;
       if (playEl) {
