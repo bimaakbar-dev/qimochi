@@ -281,14 +281,20 @@ const progressPayload = {
           const n2 = parseInt(m[1] ?? '', 10);
           if (!isNaN(n2) && getEpisode(n2)) return n2;
         }
-        return defaultNumber;
+        return readQueryParamEpisode() ?? defaultNumber;
+      }
+
+      function readQueryParamEpisode(): number | null {
+        const sp = new URLSearchParams(location.search);
+        const n = parseInt(sp.get('ep') ?? '', 10);
+        return !isNaN(n) ? n : null;
       }
 
       const modalEl = document.querySelector<HTMLDialogElement>('[data-episodes-modal]');
       const modalClose = modalEl?.querySelector<HTMLButtonElement>('[data-episodes-modal-close]') ?? null;
       const openModalBtn = document.querySelector<HTMLButtonElement>('[data-open-episodes-modal]');
 
-      let currentNumber = defaultNumber;
+      let currentNumber = readUrlEpisode();
 
       function openModal(): void {
         if (!modalEl) return;
@@ -458,6 +464,10 @@ const progressPayload = {
         history.replaceState({ ep: initial }, '', target);
       } else {
         writeProgress(defaultNumber);
+        const epListAPI = (window as any).__qimochiEpisodeList;
+        if (typeof epListAPI?.setActive === 'function') {
+           epListAPI.setActive(defaultNumber);
+        }
       }
     })();
   </script>
@@ -521,7 +531,7 @@ const progressPayload = {
 <style is:global>
   .ep-modal {
     width: 100%;
-    max-width: 52rem;
+    max-width: 58rem;
     max-height: calc(100vh - 2rem);
     max-height: calc(100dvh - 2rem);
     padding: 0;
@@ -636,9 +646,11 @@ const progressPayload = {
       margin: 0;
       border-radius: 0;
       border: none;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
-    .ep-modal__header { padding: var(--s-4); }
-    .ep-modal__body   { padding: var(--s-4); }
+    .ep-modal__header { padding-top: max(var(--s-4), env(safe-area-inset-top)); }
+    .ep-modal__body   { padding-bottom: max(var(--s-5), env(safe-area-inset-bottom)); }
   }
 </style>
