@@ -1,17 +1,22 @@
 ---
 import { URLS } from '~/constants';
 import LinkButton from '~/user-components/LinkButton.astro';
+import ReportButton from './ReportToggle.astro';
 
 interface Props {
   slug?: string;
   episodeNumber?: number;
   totalEpisodes?: number;
+  server?: string;
+  quality?: string;
 }
 
 const {
   slug = '',
   episodeNumber = 1,
   totalEpisodes = 0,
+  server = '',
+  quality = '',
 } = Astro.props;
 
 const hasPrev = episodeNumber > 1;
@@ -40,6 +45,13 @@ const nextEp = hasNext ? episodeNumber + 1 : null;
       Ep —
     </LinkButton>
   )}
+  
+  <ReportButton
+    slug={slug}
+    episode={episodeNumber}
+    server={server}
+    quality={quality}
+  />
 
   {hasNext ? (
     <LinkButton
