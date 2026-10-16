@@ -337,17 +337,16 @@ function formatEp(n: number): string {
     align-items: center;
     justify-content: center;
     padding: var(--s-3) var(--s-8);
-    background: var(--bg-elevated);
+    background: transparent;
     border: 1px solid var(--border);
     color: var(--text-primary);
     font-size: var(--fs-sm);
     font-weight: var(--fw-semibold);
     cursor: pointer;
-    border-radius: var(--r-sm);
+    border-radius: var(--r-full);
     transition: all var(--t-fast);
   }
   .episode-loadmore:hover {
-    background: var(--accent);
     border-color: var(--accent);
     color: var(--accent-text);
   }
