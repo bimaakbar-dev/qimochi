@@ -88,7 +88,7 @@ const sourceLabel = data.source
 
 const year = data.releaseDate?.getFullYear() ?? null;
 const pageDescription = [
-  `Nonton ${data.title} sub Indo.`,
+  `Nonton ${data.title} Sub Indo.`,
   studioName,
   year ? String(year) : null,
 ].filter(Boolean).join(' ');
@@ -117,7 +117,7 @@ const genreLinks = visibleGenres.map((g) => ({
 ---
 
 <BaseLayout
-  title={data.title}
+  title={`${data.title} Sub Indo`}
   description={pageDescription}
   image={heroImage}
   type="video.other"
