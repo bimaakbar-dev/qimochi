@@ -93,6 +93,21 @@ function normalizeDownloads(
   return result.length > 0 ? result : undefined;
 }
 
+/**
+ * Bersihkan stream dari server yang URL-nya kosong / whitespace.
+ * Return array kosong kalau setelah dibersihkan tidak ada server valid.
+ */
+function sanitizeStreams(streams: EpisodeStream[]): EpisodeStream[] {
+  return streams
+    .map((s) => ({
+      ...s,
+      servers: s.servers.filter(
+        (srv) => typeof srv.url === 'string' && srv.url.trim() !== ''
+      ),
+    }))
+    .filter((s) => s.servers.length > 0);
+}
+
 const episodeModules = import.meta.glob<{ default: RawEpisodeData[] }>(
   '../data/anime/*/episodes/*.json',
   { eager: true }
@@ -115,10 +130,15 @@ for (const [path, mod] of Object.entries(episodeModules)) {
   (chunksBySlug[slug] ??= []).push({ slug, start, end, path });
 }
 
+/**
+ * Episode yang dimuat ke sini HANYA yang punya minimal 1 server dengan URL valid.
+ * Ini satu-satunya sumber kebenaran untuk UI (card, list, watch page, dll).
+ */
 const episodesBySlug: Record<string, EpisodeData[]> = {};
 for (const [slug, chunks] of Object.entries(chunksBySlug)) {
   chunks.sort((a, b) => a.start - b.start);
   const merged: EpisodeData[] = [];
+
   for (const chunk of chunks) {
     const mod = episodeModules[chunk.path];
     if (!mod || !Array.isArray(mod.default)) continue;
@@ -126,17 +146,18 @@ for (const [slug, chunks] of Object.entries(chunksBySlug)) {
     for (const raw of mod.default) {
       if (!raw || typeof raw.number !== 'number') continue;
 
-  	const streams = normalizeStreams(raw.streams);
-  	if (streams.length === 0) continue;
+      const streams = sanitizeStreams(normalizeStreams(raw.streams));
+      if (streams.length === 0) continue;
 
-  	merged.push({
-    	number: raw.number,
-    	title: raw.title ?? undefined,
-    	streams,
-    	downloads: normalizeDownloads(raw.downloads),
-     });
-	}
+      merged.push({
+        number: raw.number,
+        title: raw.title ?? undefined,
+        streams,
+        downloads: normalizeDownloads(raw.downloads),
+      });
+    }
   }
+
   merged.sort((a, b) => a.number - b.number);
   episodesBySlug[slug] = merged;
 }
