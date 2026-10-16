@@ -18,10 +18,11 @@ jobs:
       - name: Checkout qimochi
         uses: actions/checkout@v7
 
-      - name: Checkout yukio-data
+      - name: Checkout qimochi-data
         uses: actions/checkout@v7
         with:
-          repository: bimaakbar-dev/yukio-data
+          repository: bimaakbar-dev/qimochi-data
+          token: ${{ secrets.QIMOCHI_DATA_PAT }}
           path: _data
 
       - name: Inject data
@@ -48,7 +49,7 @@ jobs:
           if [ -f _data/data/studios.json ]; then
             cp _data/data/studios.json src/data/studios.json
           fi
-          echo "=== src/content/anime ==="
+          echo "=== src/content/anime (from qimochi-data) ==="
           ls -1 src/content/anime/ | wc -l
           echo "=== src/data/anime ==="
           ls -1 src/data/anime/ 2>/dev/null | wc -l
