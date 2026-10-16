@@ -30,7 +30,7 @@ export type HydratedAnime = Omit<AnimeEntry, 'data'> & {
     genre: string[];
     releaseDate: Date | null;
     score: number | null;
-    /** Episode yang punya data stream/download. Jumlah total episode ada di `episodes` (skema bersama). */
+    /** Episode yang punya data stream/download. */
     episodeList: EpisodeData[];
     franchises: Franchise[];
   };
@@ -42,8 +42,70 @@ const HIDDEN_RELATIONS = new Set([
   'character', 'adaptation', 'contains', 'other',
 ]);
 
-const episodeModules = import.meta.glob<{ default: EpisodeData[] }>(
-  '../data/anime/*/episodes/streams/*.json',
+/* ── Raw format dari qimochi-data (format baru) ── */
+interface RawEpisodeStreamObject {
+  [quality: string]: string[];
+}
+
+interface RawEpisodeDownloadObject {
+  [quality: string]: { size?: string; urls?: string[] };
+}
+
+interface RawEpisodeData {
+  number: number;
+  title?: string | null;
+  aired?: string | null;
+  duration?: number | null;
+  streams?: RawEpisodeStreamObject | EpisodeStream[];
+  downloads?: RawEpisodeDownloadObject | EpisodeDownload[];
+}
+
+/* ── Normalizer: format baru → format lama (internal) ── */
+
+function normalizeStreams(raw: RawEpisodeData['streams']): EpisodeStream[] {
+  if (!raw) return [];
+
+  // Format lama (array): [{ quality, servers: [{name, url}] }]
+  if (Array.isArray(raw)) return raw as EpisodeStream[];
+
+  // Format baru (object): { "720p": ["url1", "url2"] }
+  return Object.entries(raw).map(([quality, urls]) => ({
+    quality,
+    servers: (Array.isArray(urls) ? urls : []).map((url, i) => ({
+      name: `Server ${i + 1}`,
+      url,
+    })),
+  }));
+}
+
+function normalizeDownloads(
+  raw: RawEpisodeData['downloads']
+): EpisodeDownload[] | undefined {
+  if (!raw) return undefined;
+
+  // Format lama (array)
+  if (Array.isArray(raw)) return raw as EpisodeDownload[];
+
+  // Format baru (object): { "720p": { size, urls } }
+  const result: EpisodeDownload[] = [];
+  for (const [quality, val] of Object.entries(raw)) {
+    if (!val || !Array.isArray(val.urls) || val.urls.length === 0) continue;
+    result.push({
+      quality,
+      size: val.size ?? '',
+      servers: val.urls.map((url, i) => ({
+        name: `Server ${i + 1}`,
+        url,
+      })),
+    });
+  }
+  return result.length > 0 ? result : undefined;
+}
+
+/* ── Glob: baca semua chunk ── */
+
+const episodeModules = import.meta.glob<{ default: RawEpisodeData[] }>(
+  '../data/anime/*/episodes/*.json',
   { eager: true }
 );
 
@@ -54,7 +116,7 @@ const franchiseModules = import.meta.glob<{ default: Franchise[] }>(
 
 const chunksBySlug: Record<string, ChunkRef[]> = {};
 for (const [path, mod] of Object.entries(episodeModules)) {
-  const match = path.match(/\/data\/anime\/([^/]+)\/episodes\/streams\/(\d+)-(\d+)\.json$/);
+  const match = path.match(/\/data\/anime\/([^/]+)\/episodes\/(\d+)-(\d+)\.json$/);
   if (!match) continue;
   const slug = match[1];
   const start = parseInt(match[2] ?? '0', 10);
@@ -71,7 +133,16 @@ for (const [slug, chunks] of Object.entries(chunksBySlug)) {
   for (const chunk of chunks) {
     const mod = episodeModules[chunk.path];
     if (!mod || !Array.isArray(mod.default)) continue;
-    merged.push(...mod.default);
+
+    for (const raw of mod.default) {
+      if (!raw || typeof raw.number !== 'number') continue;
+      merged.push({
+        number: raw.number,
+        title: raw.title ?? undefined,
+        streams: normalizeStreams(raw.streams),
+        downloads: normalizeDownloads(raw.downloads),
+      });
+    }
   }
   merged.sort((a, b) => a.number - b.number);
   episodesBySlug[slug] = merged;
@@ -198,9 +269,7 @@ export async function getAllEpisodePaths(): Promise<EpisodePathItem[]> {
   return paths;
 }
 
-export function findEpisode(anime: HydratedAnime, episodeNumber: number): EpisodeData | null {
-  return anime.data.episodeList.find((e) => e.number === episodeNumber) ?? null;
-}
+/* ── Watch path: 1 halaman per anime (SPA-lite) ── */
 
 export interface WatchPathItem {
   slug: string;
@@ -229,4 +298,8 @@ export async function getAllWatchPaths(): Promise<WatchPathItem[]> {
   }
 
   return paths;
+}
+
+export function findEpisode(anime: HydratedAnime, episodeNumber: number): EpisodeData | null {
+  return anime.data.episodeList.find((e) => e.number === episodeNumber) ?? null;
 }
