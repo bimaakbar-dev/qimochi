@@ -1,0 +1,435 @@
+---
+import {
+  getAllWatchPaths,
+  type HydratedAnime,
+  type EpisodeData,
+} from '~/lib/anime';
+
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Player from '~/components/Player.astro';
+import EpisodeHeader from '~/components/EpisodeHeader.astro';
+import StreamSelector from '~/components/StreamSelector.astro';
+import EpisodeActionBar from '~/components/EpisodeActionBar.astro';
+import DownloadPanel from '~/components/DownloadPanel.astro';
+import EpisodeList from '~/components/EpisodeList.astro';
+import Page from '~/components/Page.astro';
+
+export async function getStaticPaths() {
+  const paths = await getAllWatchPaths();
+
+  return paths.map((p) => ({
+    params: { slug: p.slug },
+    props: {
+      anime: p.anime,
+      episodes: p.episodes,
+      totalEpisodes: p.totalEpisodes,
+    },
+  }));
+}
+
+interface Props {
+  anime: HydratedAnime;
+  episodes: EpisodeData[];
+  totalEpisodes: number;
+}
+
+const { anime, episodes, totalEpisodes } = Astro.props as Props;
+const { data } = anime;
+
+const defaultEpisode = episodes[0]!;
+const defaultStream = defaultEpisode.streams?.[0];
+const defaultServer = defaultStream?.servers?.[0];
+const playerSrc = defaultServer?.url ?? '';
+
+const episodeItems = episodes
+  .map((e) => ({ number: e.number, title: e.title ?? null }))
+  .sort((a, b) => a.number - b.number);
+
+const pageTitle = `${data.title} Sub Indo`;
+const pageDesc = `Nonton ${data.title} subtitle Indonesia. Total ${totalEpisodes} episode.`;
+const canonical = `/anime/watch/${anime.id}/`;
+
+const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
+
+const watchData = {
+  slug: anime.id,
+  animeTitle: data.title,
+  cover: data.cover,
+  banner: data.banner ?? '',
+  ageRating: data.rating ?? null,
+  votesApiBase,
+  episodes: episodes.map((e) => ({
+    number: e.number,
+    title: e.title ?? null,
+    streams: e.streams,
+    downloads: e.downloads ?? [],
+  })),
+};
+
+const progressPayload = {
+  slug: anime.id,
+  title: data.title,
+  cover: data.cover,
+  episode: defaultEpisode.number,
+  total: totalEpisodes,
+};
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDesc}
+  image={data.cover}
+  type="video.other"
+  canonical={canonical}
+  noindex={true}
+>
+  <section class="player-bleed">
+    <Player
+      src={playerSrc}
+      title={`${data.title} Episode ${defaultEpisode.number}`}
+    />
+  </section>
+
+  <Page class="wrapper">
+    <div data-episode-action-bar>
+      <EpisodeActionBar
+        slug={anime.id}
+        episodeNumber={defaultEpisode.number}
+        totalEpisodes={totalEpisodes}
+        server={defaultServer ? (defaultStream?.quality ?? '') : ''}
+        quality={defaultStream?.quality ?? ''}
+      />
+    </div>
+
+    <div class="content-grid">
+      <div class="content-main">
+        <div data-episode-header>
+          <EpisodeHeader
+            animeSlug={anime.id}
+            animeTitle={data.title}
+            episodeNumber={defaultEpisode.number}
+            episodeTitle={defaultEpisode.title ?? null}
+            ageRating={data.rating ?? null}
+            votesApiBase={votesApiBase}
+          />
+        </div>
+        <div data-stream-selector>
+          <StreamSelector streams={defaultEpisode.streams} />
+        </div>
+        <div data-download-panel>
+          <DownloadPanel downloads={defaultEpisode.downloads ?? []} />
+        </div>
+      </div>
+      <aside class="content-aside">
+        <EpisodeList
+          slug={anime.id}
+          episodes={episodeItems}
+          currentEpisode={defaultEpisode.number}
+          mode="watch"
+          cover={data.cover}
+          banner={data.banner}
+        />
+      </aside>
+    </div>
+  </Page>
+
+  <script
+    type="application/json"
+    id="watch-data"
+    is:inline
+    set:html={JSON.stringify(watchData).replace(/</g, '\\u003c')}
+  />
+
+  <script
+    type="application/json"
+    id="progress-payload"
+    is:inline
+    set:html={JSON.stringify(progressPayload).replace(/</g, '\\u003c')}
+  />
+
+  <script>
+    (function () {
+      interface WatchEpisode {
+        number: number;
+        title: string | null;
+        streams: { quality: string; servers: { name: string; url: string }[] }[];
+        downloads: { quality: string; size: string; servers: { name: string; url: string }[] }[];
+      }
+
+      interface WatchData {
+        slug: string;
+        animeTitle: string;
+        cover: string;
+        banner: string;
+        ageRating: string | null;
+        votesApiBase: string;
+        episodes: WatchEpisode[];
+      }
+
+      const dataEl = document.getElementById('watch-data');
+      if (!dataEl) return;
+
+      let data: WatchData;
+      try {
+        data = JSON.parse(dataEl.textContent || '{}');
+      } catch {
+        return;
+      }
+
+      if (!data.slug || !data.episodes?.length) return;
+
+      const defaultNumber = data.episodes[0]!.number;
+
+      /* ---- Progress tracker (existing behavior) ---- */
+      function writeProgress(epNumber: number) {
+        const payload = {
+          slug: data.slug,
+          title: data.animeTitle,
+          cover: data.cover,
+          episode: epNumber,
+          total: data.episodes.length,
+        };
+        try {
+          const KEY = 'qimochi:continue';
+          const raw = localStorage.getItem(KEY);
+          let list: unknown[] = [];
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) list = parsed;
+          }
+          list = list.filter(
+            (x): x is Record<string, unknown> =>
+              !!x && typeof x === 'object' && (x as any).slug !== data.slug
+          );
+          list.unshift({ ...payload, ts: Date.now() });
+          localStorage.setItem(KEY, JSON.stringify(list.slice(0, 20)));
+        } catch {}
+      }
+
+      /* ---- Current episode ---- */
+      let currentNumber = defaultNumber;
+
+      /* ---- Helpers ---- */
+      function getEpisode(n: number): WatchEpisode | null {
+        return data.episodes.find((e) => e.number === n) ?? null;
+      }
+
+      function urlFor(n: number): string {
+        return n === defaultNumber
+          ? `/anime/watch/${data.slug}/`
+          : `/anime/watch/${data.slug}/?ep=${n}`;
+      }
+
+      function readUrlEpisode(): number {
+        const sp = new URLSearchParams(location.search);
+        const n = parseInt(sp.get('ep') ?? '', 10);
+        if (!isNaN(n) && getEpisode(n)) return n;
+
+        // Handle legacy path: /anime/watch/[slug]/episodes/N/
+        const m = location.pathname.match(/\/episodes\/(\d+)\/?$/);
+        if (m) {
+          const n2 = parseInt(m[1] ?? '', 10);
+          if (!isNaN(n2) && getEpisode(n2)) return n2;
+        }
+        return defaultNumber;
+      }
+
+      /* ---- Switch episode ---- */
+      function switchEpisode(n: number, push = true): void {
+        const ep = getEpisode(n);
+        if (!ep) return;
+        if (n === currentNumber && !push) return;
+
+        currentNumber = n;
+
+        const firstServer = ep.streams[0]?.servers[0];
+
+        // 1. Player
+        const player = (window as any).__qimochiPlayer;
+        if (player?.load && firstServer) {
+          const label = `Ep ${n}`;
+          player.load(firstServer.url, label);
+        } else if (firstServer) {
+          const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
+          if (iframe) iframe.src = firstServer.url;
+        }
+
+        // 2. Heading text (hanya update text node — struktur tetap)
+        const headingEl = document.querySelector<HTMLElement>('[data-episode-header] .ep-header__episode');
+        if (headingEl) {
+          headingEl.textContent = ep.title?.trim() ? ep.title : `Episode ${n}`;
+        }
+
+        // 3. Votes widget — reset
+        const votesRoot = document.querySelector<HTMLElement>('[data-episode-header] [data-votes]');
+        if (votesRoot) {
+          votesRoot.dataset.ep = String(n);
+          const reloadFn = (window as any).__qimochiVotes?.reload;
+          if (typeof reloadFn === 'function') {
+            reloadFn(votesRoot, data.slug, n, data.votesApiBase);
+          }
+        }
+
+        // 4. Stream selector — regen radio
+        const streamRoot = document.querySelector<HTMLElement>('[data-stream-selector]');
+        if (streamRoot) {
+          const mountFn = (window as any).__qimochiStream?.mount;
+          if (typeof mountFn === 'function') {
+            mountFn(streamRoot, ep.streams);
+          }
+        }
+
+        // 5. Download panel — regen
+        const dlRoot = document.querySelector<HTMLElement>('[data-download-panel]');
+        if (dlRoot) {
+          const mountDl = (window as any).__qimochiDownload?.mount;
+          if (typeof mountDl === 'function') {
+            mountDl(dlRoot, ep.downloads);
+          }
+        }
+
+        // 6. Action bar (prev/next)
+        const actionRoot = document.querySelector<HTMLElement>('[data-episode-action-bar]');
+        if (actionRoot) {
+          const mountAction = (window as any).__qimochiActionBar?.mount;
+          if (typeof mountAction === 'function') {
+            mountAction(actionRoot, data.slug, n, data.episodes.length);
+          }
+        }
+
+        // 7. Episode list — toggle active class
+        document.querySelectorAll<HTMLElement>('[data-episode-item]').forEach((el) => {
+          const num = Number(el.dataset.number);
+          const active = num === n;
+          el.classList.toggle('active', active);
+          if (active) el.setAttribute('aria-current', 'page');
+          else el.removeAttribute('aria-current');
+        });
+
+        // 8. URL
+        if (push) {
+          const target = urlFor(n);
+          history.pushState({ ep: n }, '', target);
+        }
+
+        // 9. Progress
+        writeProgress(n);
+
+        // 10. Update document title
+        document.title = `${data.animeTitle} Episode ${n} | Qimochi`;
+      }
+
+      /* ---- Intercept klik episode list & action bar ---- */
+      document.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement | null;
+        if (!target) return;
+
+        // Episode list link
+        const epLink = target.closest<HTMLAnchorElement>('[data-episode-item]');
+        if (epLink) {
+          const n = Number(epLink.dataset.number);
+          if (!isNaN(n) && getEpisode(n)) {
+            e.preventDefault();
+            switchEpisode(n);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+          }
+        }
+
+        // Action bar prev/next
+        const actionLink = target.closest<HTMLAnchorElement>('[data-episode-nav]');
+        if (actionLink) {
+          const n = Number(actionLink.dataset.episodeNav);
+          if (!isNaN(n) && getEpisode(n)) {
+            e.preventDefault();
+            switchEpisode(n);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+          }
+        }
+
+        // Next episode card
+        const nextCard = target.closest<HTMLAnchorElement>('[data-next-episode]');
+        if (nextCard) {
+          const n = Number(nextCard.dataset.nextEpisode);
+          if (!isNaN(n) && getEpisode(n)) {
+            e.preventDefault();
+            switchEpisode(n);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+          }
+        }
+      });
+
+      /* ---- Handle back/forward ---- */
+      window.addEventListener('popstate', () => {
+        const n = readUrlEpisode();
+        if (n !== currentNumber) switchEpisode(n, false);
+      });
+
+      /* ---- Init from URL ---- */
+      const initial = readUrlEpisode();
+      if (initial !== defaultNumber) {
+        // Switch ke episode sesuai URL (replace, jangan push lagi)
+        switchEpisode(initial, false);
+        // Pastikan URL sudah benar (kalau datang dari legacy /episodes/N/)
+        const target = urlFor(initial);
+        history.replaceState({ ep: initial }, '', target);
+      } else {
+        writeProgress(defaultNumber);
+      }
+    })();
+  </script>
+</BaseLayout>
+
+<style>
+  .player-bleed {
+    width: 100%;
+    background: #000;
+    display: flex;
+    justify-content: center;
+  }
+
+  .player-bleed :global(.player-wrapper) {
+    width: min(100%, calc(min(480px, 60vh) * 16 / 9));
+    aspect-ratio: 16 / 9;
+    margin-inline: auto;
+    border: none;
+  }
+
+  .wrapper {
+    padding-block: var(--s-4) var(--s-12);
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-4);
+    align-items: start;
+    margin-top: var(--s-5);
+  }
+
+  .content-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+  }
+
+  @media (min-width: 50rem) {
+    .content-grid {
+      grid-template-columns: 1fr var(--aside-width);
+      gap: var(--s-6);
+    }
+
+    .content-aside {
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: var(--sticky-top);
+      max-height: calc(100vh - var(--sticky-top) - var(--s-4));
+      overflow-y: auto;
+      gap: var(--s-4);
+    }
+  }
+</style>
