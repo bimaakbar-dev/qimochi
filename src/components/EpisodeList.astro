@@ -39,8 +39,6 @@ const total = sorted.length;
 
 if (total === 0) return null;
 
-const showFilter = total > 15;
-
 let initialLimit = PAGE_SIZE;
 if (currentEpisode != null) {
   const activeIdx = sorted.findIndex((e) => e.number === currentEpisode);
@@ -106,6 +104,10 @@ const nextEpisodeRow = nextEpisode
       title: cleanText(nextEpisode.title),
     }
   : null;
+
+function formatEp(n: number): string {
+  return String(n).padStart(2, '0');
+}
 ---
 
 <section
@@ -141,18 +143,6 @@ const nextEpisodeRow = nextEpisode
     </div>
   )}
 
-  {showFilter && (
-    <input
-      type="search"
-      class="episode-filter"
-      data-episode-filter
-      placeholder="Cari episode..."
-      inputmode="numeric"
-      autocomplete="off"
-      aria-label="Cari episode"
-    />
-  )}
-
   <ol class="ep-grid" data-episode-items>
     {episodeRows.map((row) => (
       <li
@@ -179,7 +169,7 @@ const nextEpisodeRow = nextEpisode
               />
             ) : (
               <div class="ep-card__thumb-fallback" aria-hidden="true">
-                E{row.number}
+                {formatEp(row.number)}
               </div>
             )}
             {row.durationLabel && (
@@ -201,22 +191,50 @@ const nextEpisodeRow = nextEpisode
             <p class="ep-card__meta">Sub Indo</p>
           </div>
         </a>
+
+        <div class="ep-card__hover" aria-hidden="true">
+          {cleanAnimeTitle && (
+            <p class="ep-card__hover-series">{cleanAnimeTitle}</p>
+          )}
+          <h4 class="ep-card__hover-title">
+            {row.title
+              ? `E${row.number} – ${row.title}`
+              : `Episode ${row.number}`}
+          </h4>
+          {row.airedLabel && (
+            <p class="ep-card__hover-aired">
+              <span class="ep-card__hover-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                  <path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/>
+                  <path d="M16 3l0 4"/>
+                  <path d="M8 3l0 4"/>
+                  <path d="M4 11l16 0"/>
+                </svg>
+              </span>
+              <span>{row.airedLabel}</span>
+            </p>
+          )}
+          <div class="ep-card__hover-actions">
+            <span class="ep-card__hover-play">
+              <Icon name="play" size={14} />
+              <span>PLAY E{row.number}</span>
+            </span>
+          </div>
+        </div>
       </li>
     ))}
   </ol>
 
-  <button
-    type="button"
-    class="episode-loadmore"
-    data-episode-loadmore
-    hidden={total <= initialLimit}
-  >
-    Muat Lebih Banyak
-  </button>
-
-  <p class="episode-empty" data-episode-empty hidden>
-    Tidak ada episode yang cocok.
-  </p>
+  <div class="episode-loadmore-wrap">
+    <button
+      type="button"
+      class="episode-loadmore"
+      data-episode-loadmore
+      hidden={total <= initialLimit}
+    >
+      Muat Lebih Banyak
+    </button>
+  </div>
 </section>
 
 <script>
@@ -225,10 +243,8 @@ const nextEpisodeRow = nextEpisode
     const root = document.querySelector('[data-episode-list]');
     if (!root) return;
 
-    const input = root.querySelector('[data-episode-filter]');
     const items = Array.from(root.querySelectorAll('[data-episode-item]'));
     const loadMoreBtn = root.querySelector('[data-episode-loadmore]');
-    const empty = root.querySelector('[data-episode-empty]');
     
     const pageSize = Number(root.dataset.pageSize || 15);
     const total = Number(root.dataset.total || items.length);
@@ -237,24 +253,6 @@ const nextEpisodeRow = nextEpisode
     if (currentVisibleLimit < pageSize) currentVisibleLimit = pageSize;
 
     function applyVisibility() {
-      const q = (input?.value ?? '').trim();
-      const filtering = q.length > 0;
-
-      if (filtering) {
-        if (loadMoreBtn) loadMoreBtn.hidden = true;
-        let visible = 0;
-        for (const el of items) {
-          const num = el.dataset.number ?? '';
-          const match = num.includes(q);
-          el.hidden = !match;
-          if (match) visible++;
-        }
-        if (empty) empty.hidden = visible > 0;
-        return;
-      }
-
-      if (empty) empty.hidden = true;
-
       let visibleCount = 0;
       for (let i = 0; i < items.length; i++) {
         const el = items[i];
@@ -266,10 +264,6 @@ const nextEpisodeRow = nextEpisode
       if (loadMoreBtn) {
         loadMoreBtn.hidden = currentVisibleLimit >= total;
       }
-    }
-
-    if (input) {
-      input.addEventListener('input', applyVisibility);
     }
 
     if (loadMoreBtn) {
@@ -331,25 +325,18 @@ const nextEpisodeRow = nextEpisode
     gap: var(--s-4);
   }
 
-  .episode-filter {
+  .episode-loadmore-wrap {
+    display: flex;
+    justify-content: center;
     width: 100%;
-    padding: var(--s-2) var(--s-3);
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    font-size: var(--fs-sm);
-    border-radius: var(--r-sm);
-    transition: border-color var(--t-fast);
-  }
-  .episode-filter::placeholder { color: var(--text-muted); }
-  .episode-filter:focus {
-    outline: none;
-    border-color: var(--accent);
+    margin-top: var(--s-2);
   }
 
   .episode-loadmore {
-    width: 100%;
-    padding: var(--s-3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--s-3) var(--s-8);
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     color: var(--text-primary);
@@ -358,7 +345,6 @@ const nextEpisodeRow = nextEpisode
     cursor: pointer;
     border-radius: var(--r-sm);
     transition: all var(--t-fast);
-    margin-top: var(--s-2);
   }
   .episode-loadmore:hover {
     background: var(--accent);
@@ -423,6 +409,11 @@ const nextEpisodeRow = nextEpisode
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: opacity var(--t-base);
+  }
+
+  .ep-card__link:hover .ep-card__thumb img {
+    opacity: 0.15;
   }
 
   .ep-card__thumb-fallback {
@@ -449,6 +440,7 @@ const nextEpisodeRow = nextEpisode
     font-variant-numeric: tabular-nums;
     line-height: 1.2;
     backdrop-filter: blur(6px);
+    transition: opacity var(--t-fast);
   }
 
   .ep-card__watching {
@@ -464,6 +456,12 @@ const nextEpisodeRow = nextEpisode
     letter-spacing: 0.08em;
     text-transform: uppercase;
     line-height: 1.2;
+    transition: opacity var(--t-fast);
+  }
+
+  .ep-card:hover .ep-card__dur,
+  .ep-card:hover .ep-card__watching {
+    opacity: 0;
   }
 
   .ep-card__body {
@@ -507,11 +505,84 @@ const nextEpisodeRow = nextEpisode
     color: var(--text-muted);
   }
 
-  .episode-empty {
-    margin: var(--s-3) 0 0;
-    font-size: var(--fs-sm);
-    color: var(--text-muted);
-    text-align: center;
+  .ep-card__hover {
+    position: absolute;
+    inset: 0;
+    padding: var(--s-3);
+    background: hsla(30, 3%, 5%, 0.94);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity var(--t-base), visibility var(--t-base);
+    z-index: 5;
+    overflow: hidden;
   }
-  .episode-empty[hidden] { display: none; }
+
+  .ep-card__hover-series {
+    margin: 0;
+    font-size: 0.625rem;
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ep-card__hover-title {
+    margin: 0;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+    line-height: var(--lh-tight);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .ep-card__hover-aired {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  .ep-card__hover-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: currentColor;
+  }
+
+  .ep-card__hover-actions {
+    margin-top: auto;
+  }
+
+  .ep-card__hover-play {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+    color: var(--accent);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ep-card:hover .ep-card__hover {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
 </style>
