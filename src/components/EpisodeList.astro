@@ -1,11 +1,13 @@
 ---
 import { URLS } from '~/constants';
+import Icon from '~/user-components/Icons.astro';
 import SectionLabel from './SectionLabel.astro';
 
 interface EpisodeItem {
   number: number;
   title?: string | null;
   duration?: number | null;
+  aired?: string | null;
 }
 
 interface Props {
@@ -79,25 +81,55 @@ if (mode === 'watch' && currentEpisode != null) {
 
 const nextThumb = banner || cover;
 const activeBatch = batches[activeBatchIdx]!;
-
-// Thumbnail untuk card grid — fallback banner > cover
 const cardThumb = banner || cover;
 
-// Durasi fallback — pakai ep.duration > props.duration > null
+function cleanText(s: string | null | undefined): string | null {
+  if (typeof s !== 'string') return null;
+  const t = s.trim();
+  return t.length > 0 ? t : null;
+}
+
 function resolveDuration(epDuration?: number | null): string | null {
   const d = epDuration ?? duration;
   if (typeof d !== 'number' || d <= 0) return null;
   return `${d}m`;
 }
 
+function formatAired(raw: string | null | undefined): string | null {
+  if (typeof raw !== 'string') return null;
+  const t = raw.trim();
+  if (!t) return null;
+  const d = new Date(t);
+  if (isNaN(d.getTime())) return null;
+  try {
+    return new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(d);
+  } catch {
+    return null;
+  }
+}
+
+const cleanAnimeTitle = cleanText(animeTitle);
+
 const episodeRows = sorted.map((ep) => ({
   number: ep.number,
-  title: ep.title ?? null,
+  title: cleanText(ep.title),
   durationLabel: resolveDuration(ep.duration),
+  airedLabel: formatAired(ep.aired),
   isActive: ep.number === currentEpisode,
   inActiveBatch:
     ep.number >= activeBatch.start && ep.number <= activeBatch.end,
 }));
+
+const nextEpisodeRow = nextEpisode
+  ? {
+      number: nextEpisode.number,
+      title: cleanText(nextEpisode.title),
+    }
+  : null;
 
 function formatEp(n: number): string {
   return String(n).padStart(2, '0');
@@ -105,12 +137,12 @@ function formatEp(n: number): string {
 ---
 
 <section class="section" data-episode-list data-mode={mode}>
-  <div class="next-block" data-next-block hidden={!nextEpisode}>
+  <div class="next-block" data-next-block hidden={!nextEpisodeRow}>
     <SectionLabel as="h2" size="md" underlined={false} class="next-block__label">Episode Selanjutnya</SectionLabel>
     <a
       class="next-card"
-      data-next-episode={nextEpisode?.number ?? ''}
-      href={nextEpisode ? URLS.watch(slug, nextEpisode.number) : '#'}
+      data-next-episode={nextEpisodeRow?.number ?? ''}
+      href={nextEpisodeRow ? URLS.watch(slug, nextEpisodeRow.number) : '#'}
     >
       <div class="next-card__thumb">
         {nextThumb ? (
@@ -121,8 +153,8 @@ function formatEp(n: number): string {
       </div>
       <div class="next-card__info">
         <p class="next-card__title" data-next-title>
-          {nextEpisode
-            ? `E${nextEpisode.number}${nextEpisode.title ? ` – ${nextEpisode.title}` : ''}`
+          {nextEpisodeRow
+            ? `E${nextEpisodeRow.number}${nextEpisodeRow.title ? ` – ${nextEpisodeRow.title}` : ''}`
             : ''}
         </p>
         <p class="next-card__meta">Sub Indo</p>
@@ -162,7 +194,7 @@ function formatEp(n: number): string {
     </div>
   )}
 
-  {/* ── Detail mode: card grid Crunchyroll-style ── */}
+  {/* ── DETAIL MODE: card grid dengan hover preview ── */}
   {mode === 'detail' && (
     <ol class="ep-grid" data-episode-items>
       {episodeRows.map((row) => (
@@ -201,8 +233,8 @@ function formatEp(n: number): string {
               )}
             </div>
             <div class="ep-card__body">
-              {animeTitle && (
-                <p class="ep-card__series">{animeTitle}</p>
+              {cleanAnimeTitle && (
+                <p class="ep-card__series">{cleanAnimeTitle}</p>
               )}
               <h4 class="ep-card__title">
                 {row.title
@@ -212,12 +244,43 @@ function formatEp(n: number): string {
               <p class="ep-card__meta">Sub Indo</p>
             </div>
           </a>
+
+          {/* Hover preview — overlay full card */}
+          <div class="ep-card__hover" aria-hidden="true">
+            {cleanAnimeTitle && (
+              <p class="ep-card__hover-series">{cleanAnimeTitle}</p>
+            )}
+            <h4 class="ep-card__hover-title">
+              {row.title
+                ? `E${row.number} – ${row.title}`
+                : `Episode ${row.number}`}
+            </h4>
+            {row.airedLabel && (
+              <p class="ep-card__hover-aired">
+                <span class="ep-card__hover-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/>
+                    <path d="M16 3l0 4"/>
+                    <path d="M8 3l0 4"/>
+                    <path d="M4 11l16 0"/>
+                  </svg>
+                </span>
+                <span>{row.airedLabel}</span>
+              </p>
+            )}
+            <div class="ep-card__hover-actions">
+              <span class="ep-card__hover-play">
+                <Icon name="play" size={14} />
+                <span>PLAY E{row.number}</span>
+              </span>
+            </div>
+          </div>
         </li>
       ))}
     </ol>
   )}
 
-  {/* ── Watch mode: compact grid untuk sidebar ── */}
+  {/* ── WATCH MODE: compact grid untuk sidebar ── */}
   {mode === 'watch' && (
     <div class="ep-compact-grid" data-episode-items>
       {episodeRows.map((row) => (
@@ -307,8 +370,6 @@ function formatEp(n: number): string {
         applyVisibility();
       });
     });
-
-    /* ==== Expose API untuk SPA-lite switch episode ==== */
 
     function setActive(n) {
       if (tabs.length > 0) {
@@ -493,7 +554,7 @@ function formatEp(n: number): string {
   }
 
   /* ══════════════════════════════════════════
-     DETAIL MODE — card grid Crunchyroll-style
+     DETAIL MODE — card grid + hover preview
      ══════════════════════════════════════════ */
 
   .ep-grid {
@@ -513,6 +574,7 @@ function formatEp(n: number): string {
   }
 
   .ep-card {
+    position: relative;
     min-width: 0;
   }
   .ep-card[hidden] { display: none; }
@@ -523,11 +585,6 @@ function formatEp(n: number): string {
     gap: var(--s-3);
     color: inherit;
     text-decoration: none;
-    transition: transform var(--t-fast);
-  }
-
-  .ep-card__link:hover {
-    transform: translateY(-2px);
   }
 
   .ep-card__thumb {
@@ -645,15 +702,130 @@ function formatEp(n: number): string {
     color: var(--accent);
   }
 
-  .ep-card__link:hover .ep-card__title {
-    color: var(--accent);
-  }
-
   .ep-card__meta {
     margin: 0;
     font-size: var(--fs-xs);
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Hover preview ── */
+
+  .ep-card__hover {
+    position: absolute;
+    inset: -0.75rem;
+    padding: var(--s-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 32px hsla(0, 0%, 0%, 0.65);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(4px) scale(0.98);
+    transition:
+      opacity var(--t-fast),
+      visibility var(--t-fast),
+      transform var(--t-fast);
+    z-index: 5;
+    overflow: hidden;
+  }
+
+  .ep-card__hover-series {
+    margin: 0;
+    font-size: 0.6875rem;
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ep-card__hover-title {
+    margin: 0;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+    line-height: var(--lh-tight);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+
+  .ep-card__hover-aired {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ep-card__hover-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: currentColor;
+  }
+
+  .ep-card__hover-icon svg {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .ep-card__hover-actions {
+    margin-top: auto;
+    padding-top: var(--s-2);
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+  }
+
+  .ep-card__hover-play {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    color: var(--accent);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1;
+    transition: color var(--t-fast);
+  }
+
+  .ep-card__hover-play :global(svg) {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ep-card:hover .ep-card__hover {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+
+    .ep-card:hover .ep-card__hover-play {
+      color: var(--accent-hover);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ep-card__hover {
+      transition: opacity var(--t-fast), visibility var(--t-fast);
+      transform: none;
+    }
   }
 
   /* ══════════════════════════════════════════
