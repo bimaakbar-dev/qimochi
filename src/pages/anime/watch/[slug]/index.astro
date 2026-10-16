@@ -46,6 +46,7 @@ const episodeItems = episodes
     number: e.number,
     title: e.title ?? null,
     duration: e.duration ?? null,
+    aired: e.aired ?? null,
   }))
   .sort((a, b) => a.number - b.number);
 
