@@ -65,7 +65,7 @@ const nextDur = formatDur(nextEpisode?.duration);
       data-nav-prev-wrap
       hidden={!prevEpisode}
     >
-      <span class="ep-nav__label">Previous Episode</span>
+      <span class="ep-nav__label">Episode Sebelumnya</span>
       <a
         class="ep-nav__card"
         href={prevEpisode ? URLS.watch(slug, prevEpisode.number) : undefined}
@@ -96,7 +96,7 @@ const nextDur = formatDur(nextEpisode?.duration);
       data-nav-next-wrap
       hidden={!nextEpisode}
     >
-      <span class="ep-nav__label">Next Episode</span>
+      <span class="ep-nav__label">Episode Berikutnya</span>
       <a
         class="ep-nav__card"
         href={nextEpisode ? URLS.watch(slug, nextEpisode.number) : undefined}
