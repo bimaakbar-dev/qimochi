@@ -287,7 +287,6 @@ const dialogId = `report-dialog-${slug}-${episode}`;
 </script>
 
 <style>
-  /* Base icon button styles (mirrored from BookmarkButton) */
   .icon-btn {
     display: inline-flex;
     align-items: center;
@@ -301,18 +300,17 @@ const dialogId = `report-dialog-${slug}-${episode}`;
     cursor: pointer;
     transition: color var(--t-fast), border-color var(--t-fast),
       background var(--t-fast);
+    & svg {
+      display: block;
+      width: 1.333em;
+      height: 1.333em;
+      flex-shrink: 0;
+    }
   }
 
   .icon-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  .icon-btn :global(svg) {
-    display: block;
-    width: 1.333em;
-    height: 1.333em;
-    flex-shrink: 0;
   }
 
   .icon-btn--default {
