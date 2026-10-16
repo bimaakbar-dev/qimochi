@@ -13,6 +13,7 @@ import EpisodeActionBar from '~/components/EpisodeActionBar.astro';
 import DownloadPanel from '~/components/DownloadPanel.astro';
 import EpisodeList from '~/components/EpisodeList.astro';
 import Page from '~/components/Page.astro';
+import Icon from '~/user-components/Icons.astro';
 
 export async function getStaticPaths() {
   const paths = await getAllWatchPaths();
@@ -56,16 +57,59 @@ const canonical = `/anime/watch/${anime.id}/`;
 
 const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
 
+/* ── Data untuk action bar (default SSR = episode pertama) ── */
+const nextEpForSsr = episodes.find((e) => e.number === defaultEpisode.number + 1) ?? null;
+const prevEpForSsr = episodes.find((e) => e.number === defaultEpisode.number - 1) ?? null;
+const thumbnail = data.banner ?? data.cover ?? '';
+
+/* ── Batching untuk modal episode ── */
+const BATCH_SIZE = 50;
+const showFilter = totalEpisodes > 30;
+const showBatches = totalEpisodes > BATCH_SIZE;
+
+interface Batch { start: number; end: number }
+const batches: Batch[] = [];
+if (showBatches) {
+  for (let i = 0; i < episodes.length; i += BATCH_SIZE) {
+    const chunk = episodes.slice(i, i + BATCH_SIZE);
+    batches.push({
+      start: chunk[0]!.number,
+      end: chunk[chunk.length - 1]!.number,
+    });
+  }
+} else {
+  batches.push({
+    start: episodes[0]!.number,
+    end: episodes[episodes.length - 1]!.number,
+  });
+}
+
+let activeBatchIdx = 0;
+{
+  const idx = batches.findIndex(
+    (b) => defaultEpisode.number >= b.start && defaultEpisode.number <= b.end
+  );
+  if (idx >= 0) activeBatchIdx = idx;
+}
+
+function isInBatch(n: number, batchIdx: number): boolean {
+  const b = batches[batchIdx];
+  if (!b) return true;
+  return n >= b.start && n <= b.end;
+}
+
 const watchData = {
   slug: anime.id,
   animeTitle: data.title,
   cover: data.cover,
   banner: data.banner ?? '',
+  thumbnail,
   ageRating: data.rating ?? null,
   votesApiBase,
   episodes: episodes.map((e) => ({
     number: e.number,
     title: e.title ?? null,
+    duration: e.duration ?? null,
     streams: e.streams,
     downloads: e.downloads ?? [],
   })),
@@ -99,9 +143,29 @@ const progressPayload = {
     <div data-episode-action-bar>
       <EpisodeActionBar
         slug={anime.id}
-        episodeNumber={defaultEpisode.number}
+        animeTitle={data.title}
+        currentEpisode={defaultEpisode.number}
         totalEpisodes={totalEpisodes}
-        server={defaultServer ? (defaultStream?.quality ?? '') : ''}
+        prevEpisode={
+          prevEpForSsr
+            ? {
+                number: prevEpForSsr.number,
+                title: prevEpForSsr.title ?? null,
+                duration: prevEpForSsr.duration ?? null,
+              }
+            : null
+        }
+        nextEpisode={
+          nextEpForSsr
+            ? {
+                number: nextEpForSsr.number,
+                title: nextEpForSsr.title ?? null,
+                duration: nextEpForSsr.duration ?? null,
+              }
+            : null
+        }
+        thumbnail={thumbnail}
+        server={defaultStream?.quality ?? ''}
         quality={defaultStream?.quality ?? ''}
       />
     </div>
@@ -140,6 +204,99 @@ const progressPayload = {
     </div>
   </Page>
 
+  {/* ══════════ Modal: Semua Episode ══════════ */}
+  <dialog
+    class="ep-modal"
+    data-episodes-modal
+    aria-labelledby="ep-modal-title"
+  >
+    <div class="ep-modal__inner">
+      <header class="ep-modal__header">
+        <div class="ep-modal__heading">
+          <h2 class="ep-modal__title" id="ep-modal-title">Episode</h2>
+          <p class="ep-modal__subtitle">
+            {data.title} · {totalEpisodes} episode
+          </p>
+        </div>
+        <button
+          type="button"
+          class="ep-modal__close"
+          data-episodes-modal-close
+          aria-label="Tutup"
+        >
+          <Icon name="close" size={20} />
+        </button>
+      </header>
+
+      <div class="ep-modal__body">
+        {(showFilter || showBatches) && (
+          <div class="ep-modal__controls">
+            {showFilter && (
+              <input
+                type="search"
+                class="ep-modal__filter"
+                data-episodes-filter
+                placeholder="Cari episode..."
+                inputmode="numeric"
+                autocomplete="off"
+                aria-label="Cari episode"
+              />
+            )}
+            {showBatches && (
+              <div class="ep-modal__batches" data-episodes-batches role="tablist">
+                {batches.map((b, i) => (
+                  <button
+                    type="button"
+                    class:list={[
+                      'ep-modal__batch',
+                      { 'is-active': i === activeBatchIdx },
+                    ]}
+                    data-batch-tab
+                    data-batch-start={b.start}
+                    data-batch-end={b.end}
+                    role="tab"
+                    aria-selected={i === activeBatchIdx ? 'true' : 'false'}
+                  >
+                    {b.start}–{b.end}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div class="ep-modal__grid" data-episodes-grid>
+          {episodes.map((ep) => (
+            <button
+              type="button"
+              class:list={[
+                'ep-modal__item',
+                { 'is-active': ep.number === defaultEpisode.number },
+              ]}
+              data-episode-modal-item
+              data-number={String(ep.number)}
+              aria-current={
+                ep.number === defaultEpisode.number ? 'page' : undefined
+              }
+              hidden={isInBatch(ep.number, activeBatchIdx) ? undefined : true}
+            >
+              <span class="ep-modal__num">
+                {String(ep.number).padStart(2, '0')}
+              </span>
+              {ep.title && (
+                <span class="ep-modal__label">{ep.title}</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <p class="ep-modal__empty" data-episodes-empty hidden>
+          Tidak ada episode yang cocok.
+        </p>
+      </div>
+    </div>
+  </dialog>
+
   <script
     type="application/json"
     id="watch-data"
@@ -159,6 +316,7 @@ const progressPayload = {
       interface WatchEpisode {
         number: number;
         title: string | null;
+        duration: number | null;
         streams: { quality: string; servers: { name: string; url: string }[] }[];
         downloads: { quality: string; size: string; servers: { name: string; url: string }[] }[];
       }
@@ -168,6 +326,7 @@ const progressPayload = {
         animeTitle: string;
         cover: string;
         banner: string;
+        thumbnail: string;
         ageRating: string | null;
         votesApiBase: string;
         episodes: WatchEpisode[];
@@ -186,8 +345,9 @@ const progressPayload = {
       if (!data.slug || !data.episodes?.length) return;
 
       const defaultNumber = data.episodes[0]!.number;
+      const modalThumb = data.thumbnail || data.banner || data.cover;
 
-      /* ---- Progress tracker ---- */
+      /* ══════ Progress tracker ══════ */
       function writeProgress(epNumber: number): void {
         const payload = {
           slug: data.slug,
@@ -213,7 +373,7 @@ const progressPayload = {
         } catch {}
       }
 
-      /* ---- Update next card di sidebar ---- */
+      /* ══════ Update next card di sidebar ══════ */
       function updateNextCard(currentN: number): void {
         const block = document.querySelector<HTMLElement>('[data-next-block]');
         if (!block) return;
@@ -238,10 +398,9 @@ const progressPayload = {
         titleEl.textContent = `E${nextEp.number}${nextEp.title ? ` – ${nextEp.title}` : ''}`;
       }
 
-      /* ---- Current episode ---- */
+      /* ══════ Current episode ══════ */
       let currentNumber = defaultNumber;
 
-      /* ---- Helpers ---- */
       function getEpisode(n: number): WatchEpisode | null {
         return data.episodes.find((e) => e.number === n) ?? null;
       }
@@ -257,7 +416,6 @@ const progressPayload = {
         const n = parseInt(sp.get('ep') ?? '', 10);
         if (!isNaN(n) && getEpisode(n)) return n;
 
-        // Handle legacy path: /anime/watch/[slug]/episodes/N/
         const m = location.pathname.match(/\/episodes\/(\d+)\/?$/);
         if (m) {
           const n2 = parseInt(m[1] ?? '', 10);
@@ -266,7 +424,146 @@ const progressPayload = {
         return defaultNumber;
       }
 
-      /* ---- Switch episode ---- */
+      /* ══════ Modal element refs ══════ */
+      const modalEl = document.querySelector<HTMLDialogElement>('[data-episodes-modal]');
+      const modalGrid = modalEl?.querySelector<HTMLElement>('[data-episodes-grid]') ?? null;
+      const modalClose = modalEl?.querySelector<HTMLButtonElement>('[data-episodes-modal-close]') ?? null;
+      const modalFilter = modalEl?.querySelector<HTMLInputElement>('[data-episodes-filter]') ?? null;
+      const modalBatches = modalEl?.querySelector<HTMLElement>('[data-episodes-batches]') ?? null;
+      const modalEmpty = modalEl?.querySelector<HTMLElement>('[data-episodes-empty]') ?? null;
+      const modalBatchTabs = Array.from(
+        modalEl?.querySelectorAll<HTMLButtonElement>('[data-batch-tab]') ?? []
+      );
+      const modalItems = Array.from(
+        modalEl?.querySelectorAll<HTMLElement>('[data-episode-modal-item]') ?? []
+      );
+      const openModalBtn = document.querySelector<HTMLButtonElement>('[data-open-episodes-modal]');
+
+      let modalBatchIdx = modalBatchTabs.findIndex((t) => t.classList.contains('is-active'));
+      if (modalBatchIdx < 0) modalBatchIdx = 0;
+
+      function applyModalVisibility(): void {
+        if (!modalEl) return;
+        const q = (modalFilter?.value ?? '').trim();
+        const filtering = q.length > 0;
+
+        if (modalBatches) modalBatches.hidden = filtering;
+
+        let visible = 0;
+        for (const el of modalItems) {
+          const num = el.dataset.number ?? '';
+          const n = Number(num);
+          const show = filtering
+            ? num.includes(q)
+            : isInModalBatch(n);
+          el.hidden = !show;
+          if (show) visible++;
+        }
+        if (modalEmpty) modalEmpty.hidden = visible > 0;
+      }
+
+      function isInModalBatch(n: number): boolean {
+        if (modalBatchTabs.length === 0) return true;
+        const tab = modalBatchTabs[modalBatchIdx];
+        if (!tab) return true;
+        const s = Number(tab.dataset.batchStart);
+        const e = Number(tab.dataset.batchEnd);
+        return n >= s && n <= e;
+      }
+
+      function syncModalActive(n: number): void {
+        for (const el of modalItems) {
+          const num = Number(el.dataset.number);
+          const active = num === n;
+          el.classList.toggle('is-active', active);
+          if (active) el.setAttribute('aria-current', 'page');
+          else el.removeAttribute('aria-current');
+        }
+      }
+
+      function openModal(): void {
+        if (!modalEl) return;
+
+        // Sync batch tab ke episode aktif
+        if (modalBatchTabs.length > 0) {
+          const idx = modalBatchTabs.findIndex((t) => {
+            const s = Number(t.dataset.batchStart);
+            const e = Number(t.dataset.batchEnd);
+            return currentNumber >= s && currentNumber <= e;
+          });
+          if (idx >= 0) {
+            modalBatchIdx = idx;
+            modalBatchTabs.forEach((t, j) => {
+              t.classList.toggle('is-active', j === idx);
+              t.setAttribute('aria-selected', j === idx ? 'true' : 'false');
+            });
+          }
+        }
+
+        // Reset filter
+        if (modalFilter) modalFilter.value = '';
+
+        // Sync active state ke episode sekarang
+        syncModalActive(currentNumber);
+        applyModalVisibility();
+
+        modalEl.showModal();
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal(): void {
+        if (!modalEl) return;
+        if (modalEl.open) modalEl.close();
+      }
+
+      if (modalEl) {
+        modalEl.addEventListener('close', () => {
+          document.body.style.overflow = '';
+        });
+
+        modalEl.addEventListener('click', (e) => {
+          if (e.target === modalEl) closeModal();
+        });
+      }
+
+      if (openModalBtn) {
+        openModalBtn.addEventListener('click', openModal);
+      }
+
+      if (modalClose) {
+        modalClose.addEventListener('click', closeModal);
+      }
+
+      if (modalFilter) {
+        modalFilter.addEventListener('input', applyModalVisibility);
+      }
+
+      modalBatchTabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => {
+          modalBatchIdx = i;
+          modalBatchTabs.forEach((t, j) => {
+            t.classList.toggle('is-active', j === i);
+            t.setAttribute('aria-selected', j === i ? 'true' : 'false');
+          });
+          applyModalVisibility();
+        });
+      });
+
+      if (modalGrid) {
+        modalGrid.addEventListener('click', (e) => {
+          const btn = (e.target as HTMLElement).closest<HTMLElement>(
+            '[data-episode-modal-item]'
+          );
+          if (!btn) return;
+          const n = Number(btn.dataset.number);
+          if (isNaN(n) || !getEpisode(n)) return;
+          switchEpisode(n);
+          closeModal();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+
+      /* ══════ Switch episode ══════ */
       function switchEpisode(n: number, push = true): void {
         const ep = getEpisode(n);
         if (!ep) return;
@@ -324,12 +621,34 @@ const progressPayload = {
           }
         }
 
-        // 6. Action bar
+        // 6. Action bar — redesign
         const actionRoot = document.querySelector<HTMLElement>('[data-episode-action-bar]');
         if (actionRoot) {
           const mountAction = (window as any).__qimochiActionBar?.mount;
           if (typeof mountAction === 'function') {
-            mountAction(actionRoot, data.slug, n, data.episodes.length);
+            const prevEp = data.episodes.find((e) => e.number === n - 1) ?? null;
+            const nextEp = data.episodes.find((e) => e.number === n + 1) ?? null;
+
+            mountAction(actionRoot, {
+              slug: data.slug,
+              current: n,
+              total: data.episodes.length,
+              thumbnail: modalThumb,
+              prev: prevEp
+                ? {
+                    number: prevEp.number,
+                    title: prevEp.title ?? null,
+                    duration: prevEp.duration ?? null,
+                  }
+                : null,
+              next: nextEp
+                ? {
+                    number: nextEp.number,
+                    title: nextEp.title ?? null,
+                    duration: nextEp.duration ?? null,
+                  }
+                : null,
+            });
           }
         }
 
@@ -347,7 +666,10 @@ const progressPayload = {
           });
         }
 
-        // 7b. Update next card
+        // 7b. Modal active state
+        syncModalActive(n);
+
+        // 7c. Update next card
         updateNextCard(n);
 
         // 8. URL
@@ -363,12 +685,11 @@ const progressPayload = {
         document.title = `${data.animeTitle} Episode ${n} | Qimochi`;
       }
 
-      /* ---- Intercept klik di episode list & action bar & next card ---- */
+      /* ══════ Intercept klik ══════ */
       document.addEventListener('click', (e) => {
         const target = e.target as HTMLElement | null;
         if (!target) return;
 
-        // Episode list link
         const epLink = target.closest<HTMLAnchorElement>('[data-episode-item]');
         if (epLink) {
           const n = Number(epLink.dataset.number);
@@ -380,7 +701,6 @@ const progressPayload = {
           }
         }
 
-        // Action bar prev/next
         const actionLink = target.closest<HTMLAnchorElement>('[data-episode-nav]');
         if (actionLink) {
           const n = Number(actionLink.dataset.episodeNav);
@@ -392,7 +712,6 @@ const progressPayload = {
           }
         }
 
-        // Next episode card
         const nextCard = target.closest<HTMLAnchorElement>('[data-next-episode]');
         if (nextCard) {
           const n = Number(nextCard.dataset.nextEpisode);
@@ -405,13 +724,13 @@ const progressPayload = {
         }
       });
 
-      /* ---- Handle back/forward ---- */
+      /* ══════ Back/forward ══════ */
       window.addEventListener('popstate', () => {
         const n = readUrlEpisode();
         if (n !== currentNumber) switchEpisode(n, false);
       });
 
-      /* ---- Init from URL ---- */
+      /* ══════ Init from URL ══════ */
       const initial = readUrlEpisode();
       if (initial !== defaultNumber) {
         switchEpisode(initial, false);
@@ -473,6 +792,285 @@ const progressPayload = {
       max-height: calc(100vh - var(--sticky-top) - var(--s-4));
       overflow-y: auto;
       gap: var(--s-4);
+    }
+  }
+</style>
+
+<style is:global>
+  /* ══════════ Modal: Semua Episode ══════════ */
+
+  .ep-modal {
+    width: 100%;
+    max-width: 52rem;
+    max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem);
+    padding: 0;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lg);
+    margin: auto;
+    overflow: hidden;
+  }
+
+  .ep-modal::backdrop {
+    background: hsla(0, 0%, 0%, 0.7);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+  }
+
+  .ep-modal[open] {
+    animation: ep-modal-in 0.18s ease-out;
+  }
+
+  @keyframes ep-modal-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ep-modal[open] { animation: none; }
+  }
+
+  .ep-modal__inner {
+    display: flex;
+    flex-direction: column;
+    max-height: inherit;
+    min-height: 0;
+  }
+
+  .ep-modal__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding: var(--s-4) var(--s-5);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .ep-modal__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .ep-modal__title {
+    margin: 0;
+    font-family: var(--font-montserrat);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+
+  .ep-modal__subtitle {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ep-modal__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+
+  .ep-modal__close:hover {
+    color: var(--text-primary);
+    background: var(--bg-surface);
+  }
+
+  .ep-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    padding: var(--s-4) var(--s-5) var(--s-5);
+    overflow-y: auto;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .ep-modal__controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    flex-shrink: 0;
+  }
+
+  .ep-modal__filter {
+    width: 100%;
+    padding: var(--s-2) var(--s-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: var(--fs-sm);
+    border-radius: var(--r-sm);
+    transition: border-color var(--t-fast);
+  }
+  .ep-modal__filter::placeholder { color: var(--text-muted); }
+  .ep-modal__filter:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .ep-modal__filter::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .ep-modal__batches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1);
+  }
+
+  .ep-modal__batches[hidden] { display: none; }
+
+  .ep-modal__batch {
+    padding: var(--s-1) var(--s-3);
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .ep-modal__batch:hover {
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+  }
+
+  .ep-modal__batch.is-active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+
+  .ep-modal__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-2);
+  }
+
+  @media (min-width: 32rem) {
+    .ep-modal__grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .ep-modal__grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+  }
+
+  .ep-modal__item {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+    padding: var(--s-2) var(--s-3);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    text-align: start;
+    cursor: pointer;
+    transition:
+      background var(--t-fast),
+      border-color var(--t-fast),
+      color var(--t-fast);
+  }
+
+  .ep-modal__item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+  }
+
+  .ep-modal__item.is-active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+
+  .ep-modal__item[hidden] { display: none; }
+
+  .ep-modal__num {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .ep-modal__label {
+    font-size: 0.6875rem;
+    font-weight: var(--fw-medium);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    opacity: 0.85;
+  }
+
+  .ep-modal__item.is-active .ep-modal__label {
+    opacity: 0.95;
+  }
+
+  .ep-modal__empty {
+    margin: 0;
+    padding: var(--s-8) var(--s-4);
+    text-align: center;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .ep-modal__empty[hidden] { display: none; }
+
+  /* Mobile: dialog full-screen */
+  @media (max-width: 50rem) {
+    .ep-modal {
+      width: 100%;
+      max-width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      margin: 0;
+      border-radius: 0;
+      border: none;
+    }
+
+    .ep-modal__header {
+      padding: var(--s-4);
+    }
+
+    .ep-modal__body {
+      padding: var(--s-4);
     }
   }
 </style>
