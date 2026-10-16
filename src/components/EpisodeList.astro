@@ -1,7 +1,6 @@
 ---
 import { URLS } from '~/constants';
 import Icon from '~/user-components/Icons.astro';
-import SectionLabel from './SectionLabel.astro';
 
 interface EpisodeItem {
   number: number;
@@ -18,7 +17,6 @@ interface Props {
   cover?: string;
   banner?: string;
   duration?: number | null;
-  showNext?: boolean;
 }
 
 const {
@@ -29,7 +27,6 @@ const {
   cover = '',
   banner = '',
   duration = null,
-  showNext = true,
 } = Astro.props;
 
 const PAGE_SIZE = 15;
@@ -47,15 +44,6 @@ if (currentEpisode != null) {
   }
 }
 
-let nextEpisode: EpisodeItem | null = null;
-if (currentEpisode != null) {
-  const idx = sorted.findIndex((e) => e.number === currentEpisode);
-  if (idx >= 0 && idx < sorted.length - 1) {
-    nextEpisode = sorted[idx + 1]!;
-  }
-}
-
-const nextThumb = banner || cover;
 const cardThumb = banner || cover;
 
 function cleanText(s: string | null | undefined): string | null {
@@ -98,13 +86,6 @@ const episodeRows = sorted.map((ep, index) => ({
   isHidden: index >= initialLimit,
 }));
 
-const nextEpisodeRow = nextEpisode
-  ? {
-      number: nextEpisode.number,
-      title: cleanText(nextEpisode.title),
-    }
-  : null;
-
 function formatEp(n: number): string {
   return String(n).padStart(2, '0');
 }
@@ -115,34 +96,8 @@ function formatEp(n: number): string {
   data-episode-list
   data-page-size={PAGE_SIZE}
   data-total={total}
+  data-initial-episode={currentEpisode ?? sorted[0]?.number ?? 1}
 >
-  {showNext && (
-    <div class="next-block" data-next-block hidden={!nextEpisodeRow}>
-      <SectionLabel as="h2" size="md" underlined={false} class="next-block__label">Episode Selanjutnya</SectionLabel>
-      <a
-        class="next-card"
-        data-next-episode={nextEpisodeRow?.number ?? ''}
-        href={nextEpisodeRow ? URLS.watch(slug, nextEpisodeRow.number) : '#'}
-      >
-        <div class="next-card__thumb">
-          {nextThumb ? (
-            <img src={nextThumb} alt="" loading="lazy" decoding="async" />
-          ) : (
-            <div class="next-card__thumb-placeholder" aria-hidden="true"></div>
-          )}
-        </div>
-        <div class="next-card__info">
-          <p class="next-card__title" data-next-title>
-            {nextEpisodeRow
-              ? `E${nextEpisodeRow.number}${nextEpisodeRow.title ? ` – ${nextEpisodeRow.title}` : ''}`
-              : ''}
-          </p>
-          <p class="next-card__meta">Sub Indo</p>
-        </div>
-      </a>
-    </div>
-  )}
-
   <ol class="ep-grid" data-episode-items>
     {episodeRows.map((row) => (
       <li
@@ -253,12 +208,10 @@ function formatEp(n: number): string {
     if (currentVisibleLimit < pageSize) currentVisibleLimit = pageSize;
 
     function applyVisibility() {
-      let visibleCount = 0;
       for (let i = 0; i < items.length; i++) {
         const el = items[i];
         const show = i < currentVisibleLimit;
         el.hidden = !show;
-        if (show) visibleCount++;
       }
 
       if (loadMoreBtn) {
@@ -314,7 +267,11 @@ function formatEp(n: number): string {
 
     window.__qimochiEpisodeList = { setActive };
 
-    applyVisibility();
+    const sp = new URLSearchParams(window.location.search);
+    const epParam = parseInt(sp.get('ep') ?? '', 10);
+    const initialEp = !isNaN(epParam) ? epParam : Number(root.dataset.initialEpisode || 1);
+    
+    setActive(initialEp);
   })();
 </script>
 
@@ -337,7 +294,6 @@ function formatEp(n: number): string {
     align-items: center;
     justify-content: center;
     padding: var(--s-3) var(--s-8);
-    background: transparent;
     border: 1px solid var(--border);
     color: var(--text-primary);
     font-size: var(--fs-sm);
