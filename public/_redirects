@@ -1,3 +1,5 @@
+/anime/watch/:slug/episodes/:n/  /anime/watch/:slug/?ep=:n  302
+
 https://qimochi.web.id/genres/*    https://qimochi.web.id/anime/genre/*    301
 https://qimochi.web.id/genres/    https://qimochi.web.id/anime/genre/    301
 https://qimochi.web.id/ongoing/    https://qimochi.web.id/anime/ongoing/    301
