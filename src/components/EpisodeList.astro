@@ -88,27 +88,30 @@ function formatEp(n: number): string {
 ---
 
 <section class="section" data-episode-list>
-  {nextEpisode && (
-    <div class="next-block">
-      <SectionLabel as="h2" size="md" underlined={false} class="next-block__label">Episode Selanjutnya</SectionLabel>
-      <a class="next-card" href={URLS.watch(slug, nextEpisode.number)} data-next-episode={nextEpisode.number}>
-        <div class="next-card__thumb">
-          {nextThumb ? (
-            <img src={nextThumb} alt="" loading="lazy" decoding="async" />
-          ) : (
-            <div class="next-card__thumb-placeholder" aria-hidden="true"></div>
-          )}
-        </div>
-        <div class="next-card__info">
-          <p class="next-card__title">
-            E{nextEpisode.number}
-            {nextEpisode.title ? ` – ${nextEpisode.title}` : ''}
-          </p>
-          <p class="next-card__meta">Sub Indo</p>
-        </div>
-      </a>
-    </div>
-  )}
+  <div class="next-block" data-next-block hidden={!nextEpisode}>
+    <SectionLabel as="h2" size="md" underlined={false} class="next-block__label">Episode Selanjutnya</SectionLabel>
+    <a
+      class="next-card"
+      data-next-episode={nextEpisode?.number ?? ''}
+      href={nextEpisode ? URLS.watch(slug, nextEpisode.number) : '#'}
+    >
+      <div class="next-card__thumb">
+        {nextThumb ? (
+          <img src={nextThumb} alt="" loading="lazy" decoding="async" />
+        ) : (
+          <div class="next-card__thumb-placeholder" aria-hidden="true"></div>
+        )}
+      </div>
+      <div class="next-card__info">
+        <p class="next-card__title" data-next-title>
+          {nextEpisode
+            ? `E${nextEpisode.number}${nextEpisode.title ? ` – ${nextEpisode.title}` : ''}`
+            : ''}
+        </p>
+        <p class="next-card__meta">Sub Indo</p>
+      </div>
+    </a>
+  </div>
 
   <SectionLabel as="h3" size="md">Episode</SectionLabel>
 
@@ -227,6 +230,48 @@ function formatEp(n: number): string {
       });
     });
 
+    /* ==== Expose API untuk SPA-lite switch episode ==== */
+
+    function setActive(n) {
+      // 1. Switch batch tab kalau perlu
+      if (tabs.length > 0) {
+        const idx = tabs.findIndex((t) => {
+          const s = Number(t.dataset.batchStart);
+          const e = Number(t.dataset.batchEnd);
+          return n >= s && n <= e;
+        });
+        if (idx >= 0 && idx !== activeBatchIdx) {
+          activeBatchIdx = idx;
+          tabs.forEach((t, j) => {
+            t.classList.toggle('is-active', j === idx);
+            t.setAttribute('aria-selected', j === idx ? 'true' : 'false');
+          });
+        }
+      }
+
+      // 2. Update active class + aria
+      for (const el of items) {
+        const num = Number(el.dataset.number);
+        const active = num === n;
+        el.classList.toggle('active', active);
+        if (active) el.setAttribute('aria-current', 'page');
+        else el.removeAttribute('aria-current');
+      }
+
+      // 3. Reapply visibility
+      applyVisibility();
+
+      // 4. Scroll ke active (kalau visible)
+      const activeEl = items.find(
+        (el) => Number(el.dataset.number) === n && !el.hidden
+      );
+      if (activeEl && typeof activeEl.scrollIntoView === 'function') {
+        activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+
+    window.__qimochiEpisodeList = { setActive };
+
     applyVisibility();
   })();
 </script>
@@ -244,6 +289,7 @@ function formatEp(n: number): string {
     gap: var(--s-2);
     margin-bottom: var(--s-2);
   }
+  .next-block[hidden] { display: none; }
 
   .next-block__label {
     margin: 0;
@@ -372,7 +418,6 @@ function formatEp(n: number): string {
     color: var(--accent-text);
   }
 
-  /* ==== Grid ==== */
   .episode-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
