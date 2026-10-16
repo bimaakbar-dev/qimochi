@@ -22,7 +22,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: bimaakbar-dev/qimochi-data
-          token: ${{ secrets.QIMOCHI_DATA_PAT }}
           path: _data
 
       - name: Inject data
