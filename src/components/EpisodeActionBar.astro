@@ -60,7 +60,6 @@ const nextDur = formatDur(nextEpisode?.duration);
   aria-label="Navigasi episode"
 >
   <div class="ep-nav__stack">
-    {/* ── Prev ── */}
     <div
       class="ep-nav__slot"
       data-nav-prev-wrap
@@ -92,8 +91,6 @@ const nextDur = formatDur(nextEpisode?.duration);
         </div>
       </a>
     </div>
-
-    {/* ── Next ── */}
     <div
       class="ep-nav__slot"
       data-nav-next-wrap
@@ -169,7 +166,7 @@ const nextDur = formatDur(nextEpisode?.duration);
 
   .ep-nav__label {
     font-size: 0.6875rem;
-    font-weight: var(--fw-bold);
+    font-weight: var(--fw-semibold);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-primary);
@@ -183,8 +180,7 @@ const nextDur = formatDur(nextEpisode?.duration);
     align-items: center;
     gap: var(--s-3);
     padding: var(--s-2);
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
+    background: transparent;
     color: inherit;
     text-decoration: none;
     transition:
@@ -194,16 +190,11 @@ const nextDur = formatDur(nextEpisode?.duration);
   }
 
   .ep-nav__card:hover {
-    border-color: var(--accent);
     background: var(--bg-surface);
   }
 
   .ep-nav__card:hover .ep-nav__title {
     color: var(--accent);
-  }
-
-  .ep-nav__card:hover .ep-nav__thumb img {
-    transform: scale(1.04);
   }
 
   .ep-nav__thumb {
@@ -220,7 +211,6 @@ const nextDur = formatDur(nextEpisode?.duration);
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform var(--t-base);
   }
 
   .ep-nav__thumb-fallback {
@@ -300,22 +290,20 @@ const nextDur = formatDur(nextEpisode?.duration);
     color: var(--text-primary);
     font-family: inherit;
     font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
+    font-weight: var(--fw-semibold);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     cursor: pointer;
     transition: all var(--t-fast);
+    & svg {
+      width: 1.333em;
+      height: 1.333em;
+      flex-shrink: 0;
   }
 
   .ep-nav__see-all:hover {
     border-color: var(--accent);
     color: var(--accent);
-  }
-
-  .ep-nav__see-all :global(svg) {
-    width: 1em;
-    height: 1em;
-    flex-shrink: 0;
   }
 </style>
 
