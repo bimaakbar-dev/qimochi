@@ -180,8 +180,8 @@ const progressPayload = {
 
       const defaultNumber = data.episodes[0]!.number;
 
-      /* ---- Progress tracker (existing behavior) ---- */
-      function writeProgress(epNumber: number) {
+      /* ---- Progress tracker ---- */
+      function writeProgress(epNumber: number): void {
         const payload = {
           slug: data.slug,
           title: data.animeTitle,
@@ -204,6 +204,31 @@ const progressPayload = {
           list.unshift({ ...payload, ts: Date.now() });
           localStorage.setItem(KEY, JSON.stringify(list.slice(0, 20)));
         } catch {}
+      }
+
+      /* ---- Update next card di sidebar ---- */
+      function updateNextCard(currentN: number): void {
+        const block = document.querySelector<HTMLElement>('[data-next-block]');
+        if (!block) return;
+
+        const anchor = block.querySelector<HTMLAnchorElement>('[data-next-episode]');
+        const titleEl = block.querySelector<HTMLElement>('[data-next-title]');
+        if (!anchor || !titleEl) return;
+
+        const nextEp = data.episodes.find((e) => e.number === currentN + 1);
+
+        if (!nextEp) {
+          block.hidden = true;
+          anchor.removeAttribute('data-next-episode');
+          anchor.setAttribute('href', '#');
+          titleEl.textContent = '';
+          return;
+        }
+
+        block.hidden = false;
+        anchor.href = urlFor(nextEp.number);
+        anchor.dataset.nextEpisode = String(nextEp.number);
+        titleEl.textContent = `E${nextEp.number}${nextEp.title ? ` – ${nextEp.title}` : ''}`;
       }
 
       /* ---- Current episode ---- */
@@ -254,14 +279,18 @@ const progressPayload = {
           if (iframe) iframe.src = firstServer.url;
         }
 
-        // 2. Heading text (hanya update text node — struktur tetap)
-        const headingEl = document.querySelector<HTMLElement>('[data-episode-header] .ep-header__episode');
+        // 2. Heading
+        const headingEl = document.querySelector<HTMLElement>(
+          '[data-episode-header] .ep-header__episode'
+        );
         if (headingEl) {
           headingEl.textContent = ep.title?.trim() ? ep.title : `Episode ${n}`;
         }
 
-        // 3. Votes widget — reset
-        const votesRoot = document.querySelector<HTMLElement>('[data-episode-header] [data-votes]');
+        // 3. Votes widget — debounced reload
+        const votesRoot = document.querySelector<HTMLElement>(
+          '[data-episode-header] [data-votes]'
+        );
         if (votesRoot) {
           votesRoot.dataset.ep = String(n);
           const reloadFn = (window as any).__qimochiVotes?.reload;
@@ -270,7 +299,7 @@ const progressPayload = {
           }
         }
 
-        // 4. Stream selector — regen radio
+        // 4. Stream selector
         const streamRoot = document.querySelector<HTMLElement>('[data-stream-selector]');
         if (streamRoot) {
           const mountFn = (window as any).__qimochiStream?.mount;
@@ -279,7 +308,7 @@ const progressPayload = {
           }
         }
 
-        // 5. Download panel — regen
+        // 5. Download panel
         const dlRoot = document.querySelector<HTMLElement>('[data-download-panel]');
         if (dlRoot) {
           const mountDl = (window as any).__qimochiDownload?.mount;
@@ -288,7 +317,7 @@ const progressPayload = {
           }
         }
 
-        // 6. Action bar (prev/next)
+        // 6. Action bar
         const actionRoot = document.querySelector<HTMLElement>('[data-episode-action-bar]');
         if (actionRoot) {
           const mountAction = (window as any).__qimochiActionBar?.mount;
@@ -297,14 +326,22 @@ const progressPayload = {
           }
         }
 
-        // 7. Episode list — toggle active class
-        document.querySelectorAll<HTMLElement>('[data-episode-item]').forEach((el) => {
-          const num = Number(el.dataset.number);
-          const active = num === n;
-          el.classList.toggle('active', active);
-          if (active) el.setAttribute('aria-current', 'page');
-          else el.removeAttribute('aria-current');
-        });
+        // 7. Episode list — active + batch switch
+        const episodeList = (window as any).__qimochiEpisodeList;
+        if (episodeList?.setActive) {
+          episodeList.setActive(n);
+        } else {
+          document.querySelectorAll<HTMLElement>('[data-episode-item]').forEach((el) => {
+            const num = Number(el.dataset.number);
+            const active = num === n;
+            el.classList.toggle('active', active);
+            if (active) el.setAttribute('aria-current', 'page');
+            else el.removeAttribute('aria-current');
+          });
+        }
+
+        // 7b. Update next card
+        updateNextCard(n);
 
         // 8. URL
         if (push) {
@@ -315,11 +352,11 @@ const progressPayload = {
         // 9. Progress
         writeProgress(n);
 
-        // 10. Update document title
+        // 10. Title
         document.title = `${data.animeTitle} Episode ${n} | Qimochi`;
       }
 
-      /* ---- Intercept klik episode list & action bar ---- */
+      /* ---- Intercept klik di episode list & action bar & next card ---- */
       document.addEventListener('click', (e) => {
         const target = e.target as HTMLElement | null;
         if (!target) return;
@@ -370,13 +407,12 @@ const progressPayload = {
       /* ---- Init from URL ---- */
       const initial = readUrlEpisode();
       if (initial !== defaultNumber) {
-        // Switch ke episode sesuai URL (replace, jangan push lagi)
         switchEpisode(initial, false);
-        // Pastikan URL sudah benar (kalau datang dari legacy /episodes/N/)
         const target = urlFor(initial);
         history.replaceState({ ep: initial }, '', target);
       } else {
         writeProgress(defaultNumber);
+        updateNextCard(defaultNumber);
       }
     })();
   </script>
