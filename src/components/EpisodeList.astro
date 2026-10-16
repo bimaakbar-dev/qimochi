@@ -90,7 +90,8 @@ function formatEp(n: number): string {
   return String(n).padStart(2, '0');
 }
 
-const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
+const initialEpisodeAttr =
+  currentEpisode != null ? String(currentEpisode) : '';
 ---
 
 <section
@@ -112,7 +113,9 @@ const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
           href={URLS.watch(slug, row.number)}
           class="ep-card__link"
           aria-current={row.isActive ? 'page' : undefined}
-          aria-label={`Episode ${row.number}${row.title ? ` – ${row.title}` : ''}`}
+          aria-label={`Episode ${row.number}${
+            row.title ? ` – ${row.title}` : ''
+          }`}
         >
           <div class="ep-card__thumb">
             {cardThumb ? (
@@ -158,11 +161,22 @@ const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
           {row.airedLabel && (
             <p class="ep-card__hover-aired">
               <span class="ep-card__hover-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
-                  <path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/>
-                  <path d="M16 3l0 4"/>
-                  <path d="M8 3l0 4"/>
-                  <path d="M4 11l16 0"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="square"
+                  stroke-linejoin="miter"
+                >
+                  <path
+                    d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"
+                  />
+                  <path d="M16 3l0 4" />
+                  <path d="M8 3l0 4" />
+                  <path d="M4 11l16 0" />
                 </svg>
               </span>
               <span>{row.airedLabel}</span>
@@ -203,44 +217,37 @@ const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
     const pageSize = Number(root.dataset.pageSize || 12);
     const total = Number(root.dataset.total || items.length);
 
-    let currentVisibleLimit = items.filter((el) => !el.hidden).length;
-    if (currentVisibleLimit < pageSize) currentVisibleLimit = pageSize;
+    let visible = items.filter((el) => !el.hidden).length;
+    if (visible < pageSize) visible = pageSize;
 
     function applyVisibility() {
       for (let i = 0; i < items.length; i++) {
-        const el = items[i];
-        const show = i < currentVisibleLimit;
-        el.hidden = !show;
+        items[i].hidden = i >= visible;
       }
-
       if (loadMoreBtn) {
-        loadMoreBtn.hidden = currentVisibleLimit >= total;
+        loadMoreBtn.hidden = visible >= total;
       }
     }
 
     if (loadMoreBtn) {
       loadMoreBtn.addEventListener('click', () => {
-        currentVisibleLimit += pageSize;
+        visible += pageSize;
         applyVisibility();
       });
     }
 
     function setActive(n) {
       for (const el of items) {
-        const num = Number(el.dataset.number);
-        const active = num === n;
+        const active = Number(el.dataset.number) === n;
         el.classList.toggle('is-active', active);
         if (active) el.setAttribute('aria-current', 'page');
         else el.removeAttribute('aria-current');
-
         if (active && el.hidden) {
           const idx = items.indexOf(el);
-          currentVisibleLimit = Math.ceil((idx + 1) / pageSize) * pageSize;
+          visible = Math.ceil((idx + 1) / pageSize) * pageSize;
         }
       }
-
       applyVisibility();
-
       const activeEl = items.find(
         (el) => Number(el.dataset.number) === n && !el.hidden
       );
@@ -255,12 +262,8 @@ const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
     const initialEp = attr ? parseInt(attr, 10) : NaN;
     const sp = new URLSearchParams(window.location.search);
     const epParam = parseInt(sp.get('ep') ?? '', 10);
-
     const target = !isNaN(epParam) ? epParam : initialEp;
-
-    if (!isNaN(target)) {
-      setActive(target);
-    }
+    if (!isNaN(target)) setActive(target);
   })();
 </script>
 
@@ -291,10 +294,12 @@ const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
     border-radius: var(--r-full);
     transition: all var(--t-fast);
   }
+
   .episode-loadmore:hover {
     border-color: var(--accent);
     color: var(--accent-text);
   }
+
   .episode-loadmore[hidden] {
     display: none;
   }
@@ -302,19 +307,13 @@ const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
   .ep-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--s-4);
+    gap: var(--s-3);
     list-style: none;
     padding: 0;
     margin: 0;
   }
 
-  @media (min-width: 30rem) {
-    .ep-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 48rem) {
+  @media (min-width: 50rem) {
     .ep-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: var(--s-5);
@@ -325,23 +324,54 @@ const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
     position: relative;
     min-width: 0;
   }
-  .ep-card[hidden] { display: none; }
+
+  .ep-card[hidden] {
+    display: none;
+  }
 
   .ep-card__link {
     display: flex;
-    flex-direction: column;
-    gap: var(--s-2);
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--s-3);
     color: inherit;
     text-decoration: none;
   }
 
   .ep-card__thumb {
     position: relative;
+    width: 7rem;
+    flex-shrink: 0;
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background: var(--bg-surface);
     border: 2px solid transparent;
     transition: border-color var(--t-fast);
+  }
+
+  .ep-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+    padding-top: 2px;
+  }
+
+  @media (min-width: 50rem) {
+    .ep-card__link {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--s-2);
+    }
+
+    .ep-card__thumb {
+      width: 100%;
+    }
+
+    .ep-card__body {
+      padding-top: 0;
+    }
   }
 
   .ep-card.is-active .ep-card__thumb {
@@ -389,13 +419,6 @@ const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
 
   .ep-card:hover .ep-card__dur {
     opacity: 0;
-  }
-
-  .ep-card__body {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
   }
 
   .ep-card__series {
