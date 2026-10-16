@@ -54,11 +54,6 @@ const variant = data
   ? STATUS_VARIANT[data.status as Status] ?? 'default'
   : 'default';
 
-/*
- * Sumber kebenaran tunggal: episodeList yang sudah difilter di lib/anime.ts
- * (hanya episode yang punya minimal 1 server dengan URL valid).
- * Field `data.episodes` dari frontmatter = metadata sumber, TIDAK dipakai untuk display.
- */
 const episodes = data?.episodeList ?? [];
 const totalEpisodes = episodes.length;
 const hasEpisodes = totalEpisodes > 0;
@@ -70,10 +65,7 @@ const lastEpisode = hasEpisodes
   ? Math.max(...episodes.map((e) => e.number))
   : 0;
 
-// Tampilkan jumlah episode yang benar-benar tersedia.
 const episodeLabel = hasEpisodes ? `${totalEpisodes} Episode` : null;
-
-// Nomor episode terakhir yang sudah rilis (untuk badge/meta).
 const latestEpisodeLabel = lastEpisode > 0 ? `Ep ${lastEpisode}` : null;
 
 const score = data?.score ?? null;
@@ -131,6 +123,10 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
               <span class="preview__score" data-card-score></span>
               <span class="preview__votes" data-card-votes></span>
             </div>
+            <ul class="preview__meta" data-card-studio hidden>
+              <li></li>
+            </ul>
+            <p class="preview__excerpt" data-card-excerpt hidden></p>
             <div class="preview__actions">
               <a class="preview__btn preview__btn--play" data-card-play>
                 <Icon name="play" size={16} />
@@ -173,6 +169,10 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
               <span class="preview__score" data-card-score></span>
               <span class="preview__votes" data-card-votes></span>
             </div>
+            <ul class="preview__meta" data-card-studio hidden>
+              <li></li>
+            </ul>
+            <p class="preview__excerpt" data-card-excerpt hidden></p>
             <div class="preview__actions">
               <a class="preview__btn preview__btn--play" data-card-play>
                 <Icon name="play" size={16} />
@@ -716,6 +716,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     line-height: 1.3;
     flex-shrink: 0;
   }
+  .preview__meta[hidden] { display: none; }
   .preview__meta:empty { display: none; }
 
   .preview__excerpt {
@@ -730,6 +731,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     overflow-wrap: anywhere;
     text-overflow: ellipsis;
   }
+  .preview__excerpt[hidden] { display: none; }
   .preview__excerpt:empty { display: none; }
 
   .preview__actions {
