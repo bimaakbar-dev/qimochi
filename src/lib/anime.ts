@@ -8,6 +8,7 @@ export interface EpisodeData {
   number: number;
   title?: string;
   duration?: number;
+  aired?: string;
   streams: EpisodeStream[];
   downloads?: EpisodeDownload[];
 }
@@ -142,13 +143,17 @@ for (const [slug, chunks] of Object.entries(chunksBySlug)) {
       const streams = sanitizeStreams(normalizeStreams(raw.streams));
       if (streams.length === 0) continue;
 
+      const trimmedTitle = raw.title?.trim();
+      const trimmedAired = raw.aired?.trim();
+
       merged.push({
         number: raw.number,
-        title: raw.title ?? undefined,
+        title: trimmedTitle ? trimmedTitle : undefined,
         duration:
           typeof raw.duration === 'number' && raw.duration > 0
             ? raw.duration
             : undefined,
+        aired: trimmedAired ? trimmedAired : undefined,
         streams,
         downloads: normalizeDownloads(raw.downloads),
       });
