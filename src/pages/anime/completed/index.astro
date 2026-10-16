@@ -48,16 +48,18 @@ import AnimeCard from '~/components/AnimeCard.astro';
   } from '~/constants';
 
   (function () {
-    const API = 'https://yukionime.pages.dev/api/v1/anime.json';
+    const API = 'https://api-qimochi.pages.dev/api/v1/anime.json';
+    const AVAILABLE_API = '/api/available-episodes.json';
     const BATCH = 24;
     const DEFAULT_SORT = 'popular';
 
-    type YukionimeItem = {
+    type ApiItem = {
       id: string;
       title: string;
       titleEnglish: string | null;
       titleNative: string | null;
       image: string | null;
+      banner?: string | null;
       type: string;
       status: string;
       season: string | null;
@@ -67,7 +69,8 @@ import AnimeCard from '~/components/AnimeCard.astro';
       rating: string | null;
       genres: string[];
       studios: string[];
-      stats: { score?: number; scoredBy?: number } | null;
+      score?: number | null;
+      stats?: { score?: number; scoredBy?: number } | null;
     };
 
     const grid = document.querySelector('[data-grid]') as HTMLElement | null;
@@ -79,9 +82,10 @@ import AnimeCard from '~/components/AnimeCard.astro';
 
     if (!grid || !tpl || !sortEl) return;
 
-    let all: YukionimeItem[] = [];
-    let sorted: YukionimeItem[] = [];
+    let all: ApiItem[] = [];
+    let sorted: ApiItem[] = [];
     let visibleCount = 0;
+    let availableMap = new Map<string, number[]>();
 
     function formatCount(n: number): string {
       if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -99,10 +103,23 @@ import AnimeCard from '~/components/AnimeCard.astro';
       return TYPE_LABEL[raw as RawType] ?? raw;
     }
 
-    function buildCard(item: YukionimeItem): HTMLElement | null {
+    function getScore(item: ApiItem): number | null {
+      if (typeof item.score === 'number') return item.score;
+      if (typeof item.stats?.score === 'number') return item.stats.score;
+      return null;
+    }
+
+    function getVotes(item: ApiItem): number {
+      return item.stats?.scoredBy ?? 0;
+    }
+
+    function buildCard(item: ApiItem): HTMLElement | null {
       const frag = tpl!.content.cloneNode(true) as DocumentFragment;
       const card = frag.firstElementChild as HTMLElement | null;
       if (!card) return null;
+
+      const available = availableMap.get(item.id) ?? [];
+      const firstEp = available[0] ?? 1;
 
       const link = card.querySelector('[data-card-link]') as HTMLAnchorElement | null;
       if (link) {
@@ -110,7 +127,6 @@ import AnimeCard from '~/components/AnimeCard.astro';
         link.setAttribute('aria-label', item.title);
       }
 
-      // Cover
       const img = card.querySelector('[data-cover-img]') as HTMLImageElement | null;
       const placeholder = card.querySelector('.cover-placeholder') as HTMLElement | null;
 
@@ -136,11 +152,9 @@ import AnimeCard from '~/components/AnimeCard.astro';
         placeholder.classList.remove('is-loading');
       }
 
-      // Type
       const typeEl = card.querySelector('[data-card-type]') as HTMLElement | null;
       if (typeEl) typeEl.textContent = mapType(item.type);
 
-      // Status
       const statusEl = card.querySelector('[data-card-status]') as HTMLElement | null;
       if (statusEl) {
         const { label, variant: v } = mapStatus(item.status);
@@ -148,16 +162,14 @@ import AnimeCard from '~/components/AnimeCard.astro';
         statusEl.dataset.variant = v;
       }
 
-      // Title
       const titleEl = card.querySelector('[data-card-title]') as HTMLElement | null;
       if (titleEl) titleEl.textContent = item.title;
 
       const titleInfoEl = card.querySelector('[data-card-title-info]') as HTMLElement | null;
       if (titleInfoEl) titleInfoEl.textContent = item.title;
 
-      // Rating
-      const score = item.stats?.score ?? null;
-      const votes = item.stats?.scoredBy ?? 0;
+      const score = getScore(item);
+      const votes = getVotes(item);
       const ratingEl = card.querySelector('[data-card-rating]') as HTMLElement | null;
       if (ratingEl && score != null) {
         ratingEl.hidden = false;
@@ -169,36 +181,35 @@ import AnimeCard from '~/components/AnimeCard.astro';
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
 
-      // Meta list
-      const metaEl = card.querySelector('[data-card-meta]') as HTMLElement | null;
-      if (metaEl && item.episodes && item.episodes > 0) {
-        const li = document.createElement('li');
-        li.textContent = `${item.episodes} Episode`;
-        metaEl.appendChild(li);
+      // Episode text dari available count (bukan dari metadata API)
+      const episodeText = available.length > 0 ? `${available.length} Episode` : '';
+
+      const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
+      if (episodesEl && episodeText) {
+        episodesEl.textContent = episodeText;
+        episodesEl.hidden = false;
       }
 
-      // Play
+      const metaTextEl = card.querySelector('[data-card-meta-text]') as HTMLElement | null;
+      if (metaTextEl && episodeText) {
+        metaTextEl.textContent = episodeText;
+      }
+
       const playEl = card.querySelector('[data-card-play]') as HTMLAnchorElement | null;
       if (playEl) {
-        playEl.href = `/anime/watch/${item.id}/episodes/1/`;
+        playEl.href = firstEp > 1
+          ? `/anime/watch/${item.id}/?ep=${firstEp}`
+          : `/anime/watch/${item.id}/`;
         playEl.setAttribute('aria-label', `Mulai menonton ${item.title}`);
       }
 
-      // Bookmark
       const bookmarkEl = card.querySelector('[data-bookmark-btn]') as HTMLButtonElement | null;
       if (bookmarkEl) bookmarkEl.dataset.anime = item.id;
-
-      // Episodes in info
-      const epEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
-      if (epEl && item.episodes && item.episodes > 0) {
-        epEl.textContent = `Ep ${item.episodes}`;
-        epEl.hidden = false;
-      }
 
       return card;
     }
 
-    function sortList(list: YukionimeItem[], sort: string): YukionimeItem[] {
+    function sortList(list: ApiItem[], sort: string): ApiItem[] {
       const copy = [...list];
       if (sort === 'newest') {
         return copy.sort((a, b) => {
@@ -212,11 +223,11 @@ import AnimeCard from '~/components/AnimeCard.astro';
         return copy.sort((a, b) => a.title.localeCompare(b.title));
       }
       return copy.sort((a, b) => {
-        const sa = a.stats?.score ?? 0;
-        const sb = b.stats?.score ?? 0;
+        const sa = getScore(a) ?? 0;
+        const sb = getScore(b) ?? 0;
         if (sb !== sa) return sb - sa;
-        const va = a.stats?.scoredBy ?? 0;
-        const vb = b.stats?.scoredBy ?? 0;
+        const va = getVotes(a);
+        const vb = getVotes(b);
         return vb - va;
       });
     }
@@ -273,18 +284,35 @@ import AnimeCard from '~/components/AnimeCard.astro';
       loadMoreBtn.addEventListener('click', () => renderNext());
     }
 
-    fetch(API, { headers: { Accept: 'application/json' } })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<{ data: YukionimeItem[] }>;
-      })
-      .then((json) => {
+    Promise.all([
+      fetch(API, { headers: { Accept: 'application/json' } }).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json() as Promise<{ data: ApiItem[] }>;
+      }),
+      fetch(AVAILABLE_API, { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({})) as Promise<Record<string, number[]>>,
+    ])
+      .then(([json, availableRaw]) => {
         const list = json?.data;
-        if (!Array.isArray(list)) {
-          return;
+        if (!Array.isArray(list)) return;
+
+        availableMap = new Map<string, number[]>();
+        if (availableRaw && typeof availableRaw === 'object') {
+          for (const [slug, eps] of Object.entries(availableRaw)) {
+            if (Array.isArray(eps)) {
+              availableMap.set(slug, eps.filter((n): n is number => typeof n === 'number'));
+            }
+          }
         }
 
-        all = list.filter((item) => item.status === 'finished');
+        // Filter: status finished DAN punya minimal 1 episode valid
+        all = list.filter(
+          (item) =>
+            item.status === 'finished' &&
+            (availableMap.get(item.id)?.length ?? 0) > 0
+        );
+
         sortEl.value = DEFAULT_SORT;
         applySort(DEFAULT_SORT);
       })

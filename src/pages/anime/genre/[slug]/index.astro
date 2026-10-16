@@ -44,13 +44,11 @@ const canonical = `/anime/genre/${genreId}/`;
       </Fragment>
     </Hero>
 
-    <!-- Section: Populer -->
     <section class="section" data-popular-section hidden>
       <SectionLabel>Populer</SectionLabel>
       <div class="anime-grid" data-popular-grid></div>
     </section>
 
-    <!-- Section: Anime Genre {genreName} -->
     <section class="section" data-list-section hidden>
       <SectionLabel>Anime Genre {genreName}</SectionLabel>
       <div class="anime-grid" data-grid hidden></div>
@@ -62,7 +60,6 @@ const canonical = `/anime/genre/${genreId}/`;
       </div>
     </section>
 
-    <!-- Fallback -->
     <div class="empty" data-empty hidden>
       <p>Belum ada anime untuk genre ini.</p>
       <p class="empty-hint">
@@ -90,17 +87,19 @@ const canonical = `/anime/genre/${genreId}/`;
     const SLUG = pathMatch ? decodeURIComponent(pathMatch[1]) : '';
     if (!SLUG) return;
 
-    const API = 'https://yukionime.pages.dev/api/v1/anime.json';
+    const API = 'https://api-qimochi.pages.dev/api/v1/anime.json';
+    const AVAILABLE_API = '/api/available-episodes.json';
     const BATCH = 24;
     const POPULAR_LIMIT = 6;
     const DEFAULT_SORT = 'popular';
 
-    type YukionimeItem = {
+    type ApiItem = {
       id: string;
       title: string;
       titleEnglish: string | null;
       titleNative: string | null;
       image: string | null;
+      banner?: string | null;
       type: string;
       status: string;
       season: string | null;
@@ -110,7 +109,8 @@ const canonical = `/anime/genre/${genreId}/`;
       rating: string | null;
       genres: string[];
       studios: string[];
-      stats: { score?: number; scoredBy?: number } | null;
+      score?: number | null;
+      stats?: { score?: number; scoredBy?: number } | null;
     };
 
     const grid = document.querySelector('[data-grid]');
@@ -126,9 +126,10 @@ const canonical = `/anime/genre/${genreId}/`;
 
     if (!grid || !tpl || !sortEl) return;
 
-    let all: YukionimeItem[] = [];
-    let sorted: YukionimeItem[] = [];
+    let all: ApiItem[] = [];
+    let sorted: ApiItem[] = [];
     let visibleCount = 0;
+    let availableMap = new Map<string, number[]>();
 
     function formatCount(n: number): string {
       if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -146,10 +147,23 @@ const canonical = `/anime/genre/${genreId}/`;
       return TYPE_LABEL[raw as RawType] ?? raw;
     }
 
-    function buildCard(item: YukionimeItem): HTMLElement | null {
+    function getScore(item: ApiItem): number | null {
+      if (typeof item.score === 'number') return item.score;
+      if (typeof item.stats?.score === 'number') return item.stats.score;
+      return null;
+    }
+
+    function getVotes(item: ApiItem): number {
+      return item.stats?.scoredBy ?? 0;
+    }
+
+    function buildCard(item: ApiItem): HTMLElement | null {
       const frag = tpl!.content.cloneNode(true);
       const card = frag.firstElementChild;
       if (!card) return null;
+
+      const available = availableMap.get(item.id) ?? [];
+      const firstEp = available[0] ?? 1;
 
       const link = card.querySelector('[data-card-link]');
       if (link) {
@@ -198,8 +212,8 @@ const canonical = `/anime/genre/${genreId}/`;
       const titleInfoEl = card.querySelector('[data-card-title-info]');
       if (titleInfoEl) titleInfoEl.textContent = item.title;
 
-      const score = item.stats?.score ?? null;
-      const votes = item.stats?.scoredBy ?? 0;
+      const score = getScore(item);
+      const votes = getVotes(item);
       const ratingEl = card.querySelector('[data-card-rating]');
       if (ratingEl && score != null) {
         ratingEl.hidden = false;
@@ -211,9 +225,25 @@ const canonical = `/anime/genre/${genreId}/`;
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
 
+      // Episode text dari available count
+      const episodeText = available.length > 0 ? `${available.length} Episode` : '';
+
+      const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
+      if (episodesEl && episodeText) {
+        episodesEl.textContent = episodeText;
+        episodesEl.hidden = false;
+      }
+
+      const metaTextEl = card.querySelector('[data-card-meta-text]') as HTMLElement | null;
+      if (metaTextEl && episodeText) {
+        metaTextEl.textContent = episodeText;
+      }
+
       const playEl = card.querySelector('[data-card-play]');
       if (playEl) {
-        playEl.href = `/anime/watch/${item.id}/episodes/1/`;
+        playEl.href = firstEp > 1
+          ? `/anime/watch/${item.id}/?ep=${firstEp}`
+          : `/anime/watch/${item.id}/`;
         playEl.setAttribute('aria-label', `Mulai menonton ${item.title}`);
       }
 
@@ -223,7 +253,7 @@ const canonical = `/anime/genre/${genreId}/`;
       return card;
     }
 
-    function sortList(list: YukionimeItem[], sort: string): YukionimeItem[] {
+    function sortList(list: ApiItem[], sort: string): ApiItem[] {
       const copy = [...list];
       if (sort === 'newest') {
         return copy.sort((a, b) => {
@@ -237,11 +267,11 @@ const canonical = `/anime/genre/${genreId}/`;
         return copy.sort((a, b) => a.title.localeCompare(b.title));
       }
       return copy.sort((a, b) => {
-        const sa = a.stats?.score ?? 0;
-        const sb = b.stats?.score ?? 0;
+        const sa = getScore(a) ?? 0;
+        const sb = getScore(b) ?? 0;
         if (sb !== sa) return sb - sa;
-        const va = a.stats?.scoredBy ?? 0;
-        const vb = b.stats?.scoredBy ?? 0;
+        const va = getVotes(a);
+        const vb = getVotes(b);
         return vb - va;
       });
     }
@@ -249,7 +279,6 @@ const canonical = `/anime/genre/${genreId}/`;
     function renderPopular(): void {
       if (!popularGrid || !popularSection) return;
 
-      // Popular = 6 teratas dari hasil yang sudah di-sort
       const top = sorted.slice(0, POPULAR_LIMIT);
 
       if (top.length === 0) {
@@ -302,13 +331,11 @@ const canonical = `/anime/genre/${genreId}/`;
 
       const hasItems = sorted.length > 0;
 
-      // Section kedua
       if (listSection) listSection.hidden = !hasItems;
       if (emptyState) emptyState.hidden = hasItems;
 
       grid.hidden = !hasItems;
 
-      // Popular selalu dirender ulang (ikut sort + filter)
       renderPopular();
 
       if (hasItems) {
@@ -329,21 +356,35 @@ const canonical = `/anime/genre/${genreId}/`;
       loadMoreBtn.addEventListener('click', () => renderNext());
     }
 
-    fetch(API, { headers: { Accept: 'application/json' } })
-      .then((res) => {
+    Promise.all([
+      fetch(API, { headers: { Accept: 'application/json' } }).then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
-      })
-      .then((json) => {
+      }),
+      fetch(AVAILABLE_API, { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({})),
+    ])
+      .then(([json, availableRaw]) => {
         const list = json?.data;
         if (!Array.isArray(list)) return;
 
+        availableMap = new Map();
+        if (availableRaw && typeof availableRaw === 'object') {
+          for (const [slug, eps] of Object.entries(availableRaw)) {
+            if (Array.isArray(eps)) {
+              availableMap.set(slug, eps.filter((n) => typeof n === 'number'));
+            }
+          }
+        }
+
+        // Filter: genre cocok DAN punya minimal 1 episode valid
         all = list.filter((item) => {
           if (!Array.isArray(item.genres)) return false;
-          return item.genres.includes(SLUG);
+          if (!item.genres.includes(SLUG)) return false;
+          return (availableMap.get(item.id)?.length ?? 0) > 0;
         });
 
-        // Kalau tidak ada item, tampilkan fallback
         if (all.length === 0) {
           if (popularSection) popularSection.hidden = true;
           if (listSection) listSection.hidden = true;

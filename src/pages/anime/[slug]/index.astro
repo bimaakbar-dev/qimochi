@@ -39,6 +39,12 @@ if (!entry) {
 
 const { Content } = await render(entry);
 
+/*
+ * episodeList sudah difilter di lib/anime.ts — hanya episode yang punya
+ * minimal 1 server dengan URL valid. Ini satu-satunya sumber kebenaran
+ * untuk semua tampilan terkait episode di halaman ini.
+ * Field `data.episodes` (frontmatter) = metadata sumber, TIDAK dipakai.
+ */
 const episodeItems = data.episodeList
   .map((e) => ({ number: e.number, title: e.title ?? null }))
   .sort((a, b) => a.number - b.number);

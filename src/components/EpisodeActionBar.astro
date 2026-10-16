@@ -23,9 +23,16 @@ const hasPrev = episodeNumber > 1;
 const hasNext = episodeNumber < totalEpisodes;
 const prevEp = hasPrev ? episodeNumber - 1 : null;
 const nextEp = hasNext ? episodeNumber + 1 : null;
+
+const watchBase = URLS.watch(slug, 1);
 ---
 
-<nav class="action-bar" data-action-bar aria-label="Navigasi episode">
+<nav
+  class="action-bar"
+  data-action-bar
+  data-watch-base={watchBase}
+  aria-label="Navigasi episode"
+>
   <a
     class:list={['action-btn', { 'is-disabled': !hasPrev }]}
     href={hasPrev ? URLS.watch(slug, prevEp!) : undefined}
@@ -116,11 +123,35 @@ const nextEp = hasNext ? episodeNumber + 1 : null;
     mount(root: HTMLElement, slug: string, current: number, total: number): void;
   }
 
-  function mount(root: HTMLElement, _slug: string, current: number, total: number): void {
-    const prevLink = root.querySelector<HTMLAnchorElement>('[data-nav-prev]');
-    const nextLink = root.querySelector<HTMLAnchorElement>('[data-nav-next]');
-    const prevLabel = root.querySelector<HTMLElement>('[data-nav-prev-label]');
-    const nextLabel = root.querySelector<HTMLElement>('[data-nav-next-label]');
+  /** Cari <nav data-action-bar> — bisa jadi `root` sendiri atau nested di dalamnya. */
+  function resolveNav(root: HTMLElement): HTMLElement | null {
+    if (root.dataset.actionBar !== undefined && root.hasAttribute('data-action-bar')) {
+      return root;
+    }
+    return root.querySelector<HTMLElement>('[data-action-bar]');
+  }
+
+  function urlFor(watchBase: string, ep: number): string {
+    if (!watchBase) return '#';
+    return ep <= 1 ? watchBase : `${watchBase}?ep=${ep}`;
+  }
+
+  function mount(
+    root: HTMLElement,
+    _slug: string,
+    current: number,
+    total: number
+  ): void {
+    const nav = resolveNav(root);
+    if (!nav) return;
+
+    const watchBase = nav.dataset.watchBase ?? '';
+    if (!watchBase) return;
+
+    const prevLink = nav.querySelector<HTMLAnchorElement>('[data-nav-prev]');
+    const nextLink = nav.querySelector<HTMLAnchorElement>('[data-nav-next]');
+    const prevLabel = nav.querySelector<HTMLElement>('[data-nav-prev-label]');
+    const nextLabel = nav.querySelector<HTMLElement>('[data-nav-next-label]');
 
     if (!prevLink || !nextLink || !prevLabel || !nextLabel) return;
 
@@ -129,14 +160,16 @@ const nextEp = hasNext ? episodeNumber + 1 : null;
     const prevEp = hasPrev ? current - 1 : null;
     const nextEp = hasNext ? current + 1 : null;
 
-    // Prev
+    // ── Prev ──
     if (hasPrev && prevEp !== null) {
+      prevLink.href = urlFor(watchBase, prevEp);
       prevLink.dataset.episodeNav = String(prevEp);
       prevLink.removeAttribute('aria-disabled');
       prevLink.setAttribute('aria-label', `Episode sebelumnya, Ep ${prevEp}`);
       prevLink.classList.remove('is-disabled');
       prevLabel.textContent = `Ep ${prevEp}`;
     } else {
+      prevLink.removeAttribute('href');
       prevLink.removeAttribute('data-episode-nav');
       prevLink.setAttribute('aria-disabled', 'true');
       prevLink.setAttribute('aria-label', 'Tidak ada episode sebelumnya');
@@ -144,14 +177,16 @@ const nextEp = hasNext ? episodeNumber + 1 : null;
       prevLabel.textContent = 'Ep —';
     }
 
-    // Next
+    // ── Next ──
     if (hasNext && nextEp !== null) {
+      nextLink.href = urlFor(watchBase, nextEp);
       nextLink.dataset.episodeNav = String(nextEp);
       nextLink.removeAttribute('aria-disabled');
       nextLink.setAttribute('aria-label', `Episode berikutnya, Ep ${nextEp}`);
       nextLink.classList.remove('is-disabled');
       nextLabel.textContent = `Ep ${nextEp}`;
     } else {
+      nextLink.removeAttribute('href');
       nextLink.removeAttribute('data-episode-nav');
       nextLink.setAttribute('aria-disabled', 'true');
       nextLink.setAttribute('aria-label', 'Tidak ada episode berikutnya');

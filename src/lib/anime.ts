@@ -30,7 +30,6 @@ export type HydratedAnime = Omit<AnimeEntry, 'data'> & {
     genre: string[];
     releaseDate: Date | null;
     score: number | null;
-    /** Episode yang punya data stream/download. Jumlah total episode ada di `episodes` (skema bersama). */
     episodeList: EpisodeData[];
     franchises: Franchise[];
   };
@@ -42,8 +41,75 @@ const HIDDEN_RELATIONS = new Set([
   'character', 'adaptation', 'contains', 'other',
 ]);
 
-const episodeModules = import.meta.glob<{ default: EpisodeData[] }>(
-  '../data/anime/*/episodes/streams/*.json',
+interface RawEpisodeStreamObject {
+  [quality: string]: string[];
+}
+
+interface RawEpisodeDownloadObject {
+  [quality: string]: { size?: string; urls?: string[] };
+}
+
+interface RawEpisodeData {
+  number: number;
+  title?: string | null;
+  aired?: string | null;
+  duration?: number | null;
+  streams?: RawEpisodeStreamObject | EpisodeStream[];
+  downloads?: RawEpisodeDownloadObject | EpisodeDownload[];
+}
+
+function normalizeStreams(raw: RawEpisodeData['streams']): EpisodeStream[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw as EpisodeStream[];
+
+  return Object.entries(raw).map(([quality, urls]) => ({
+    quality,
+    servers: (Array.isArray(urls) ? urls : []).map((url, i) => ({
+      name: `Server ${i + 1}`,
+      url,
+    })),
+  }));
+}
+
+function normalizeDownloads(
+  raw: RawEpisodeData['downloads']
+): EpisodeDownload[] | undefined {
+  if (!raw) return undefined;
+
+  if (Array.isArray(raw)) return raw as EpisodeDownload[];
+
+  const result: EpisodeDownload[] = [];
+  for (const [quality, val] of Object.entries(raw)) {
+    if (!val || !Array.isArray(val.urls) || val.urls.length === 0) continue;
+    result.push({
+      quality,
+      size: val.size ?? '',
+      servers: val.urls.map((url, i) => ({
+        name: `Server ${i + 1}`,
+        url,
+      })),
+    });
+  }
+  return result.length > 0 ? result : undefined;
+}
+
+/**
+ * Bersihkan stream dari server yang URL-nya kosong / whitespace.
+ * Return array kosong kalau setelah dibersihkan tidak ada server valid.
+ */
+function sanitizeStreams(streams: EpisodeStream[]): EpisodeStream[] {
+  return streams
+    .map((s) => ({
+      ...s,
+      servers: s.servers.filter(
+        (srv) => typeof srv.url === 'string' && srv.url.trim() !== ''
+      ),
+    }))
+    .filter((s) => s.servers.length > 0);
+}
+
+const episodeModules = import.meta.glob<{ default: RawEpisodeData[] }>(
+  '../data/anime/*/episodes/*.json',
   { eager: true }
 );
 
@@ -54,7 +120,7 @@ const franchiseModules = import.meta.glob<{ default: Franchise[] }>(
 
 const chunksBySlug: Record<string, ChunkRef[]> = {};
 for (const [path, mod] of Object.entries(episodeModules)) {
-  const match = path.match(/\/data\/anime\/([^/]+)\/episodes\/streams\/(\d+)-(\d+)\.json$/);
+  const match = path.match(/\/data\/anime\/([^/]+)\/episodes\/(\d+)-(\d+)\.json$/);
   if (!match) continue;
   const slug = match[1];
   const start = parseInt(match[2] ?? '0', 10);
@@ -64,15 +130,34 @@ for (const [path, mod] of Object.entries(episodeModules)) {
   (chunksBySlug[slug] ??= []).push({ slug, start, end, path });
 }
 
+/**
+ * Episode yang dimuat ke sini HANYA yang punya minimal 1 server dengan URL valid.
+ * Ini satu-satunya sumber kebenaran untuk UI (card, list, watch page, dll).
+ */
 const episodesBySlug: Record<string, EpisodeData[]> = {};
 for (const [slug, chunks] of Object.entries(chunksBySlug)) {
   chunks.sort((a, b) => a.start - b.start);
   const merged: EpisodeData[] = [];
+
   for (const chunk of chunks) {
     const mod = episodeModules[chunk.path];
     if (!mod || !Array.isArray(mod.default)) continue;
-    merged.push(...mod.default);
+
+    for (const raw of mod.default) {
+      if (!raw || typeof raw.number !== 'number') continue;
+
+      const streams = sanitizeStreams(normalizeStreams(raw.streams));
+      if (streams.length === 0) continue;
+
+      merged.push({
+        number: raw.number,
+        title: raw.title ?? undefined,
+        streams,
+        downloads: normalizeDownloads(raw.downloads),
+      });
+    }
   }
+
   merged.sort((a, b) => a.number - b.number);
   episodesBySlug[slug] = merged;
 }
@@ -198,10 +283,6 @@ export async function getAllEpisodePaths(): Promise<EpisodePathItem[]> {
   return paths;
 }
 
-export function findEpisode(anime: HydratedAnime, episodeNumber: number): EpisodeData | null {
-  return anime.data.episodeList.find((e) => e.number === episodeNumber) ?? null;
-}
-
 export interface WatchPathItem {
   slug: string;
   anime: HydratedAnime;
@@ -229,4 +310,8 @@ export async function getAllWatchPaths(): Promise<WatchPathItem[]> {
   }
 
   return paths;
+}
+
+export function findEpisode(anime: HydratedAnime, episodeNumber: number): EpisodeData | null {
+  return anime.data.episodeList.find((e) => e.number === episodeNumber) ?? null;
 }

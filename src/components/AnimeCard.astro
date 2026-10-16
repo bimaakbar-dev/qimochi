@@ -17,6 +17,7 @@ interface CardAnime {
     score?: number | null;
     stats?: { scoredBy?: number } | null;
     studio?: string;
+    episodes?: number | null;
     episodeList?: { number: number }[];
   };
 }
@@ -53,15 +54,27 @@ const variant = data
   ? STATUS_VARIANT[data.status as Status] ?? 'default'
   : 'default';
 
+/*
+ * Sumber kebenaran tunggal: episodeList yang sudah difilter di lib/anime.ts
+ * (hanya episode yang punya minimal 1 server dengan URL valid).
+ * Field `data.episodes` dari frontmatter = metadata sumber, TIDAK dipakai untuk display.
+ */
 const episodes = data?.episodeList ?? [];
-const lastEpisode = episodes.length
-  ? Math.max(...episodes.map((e) => e.number))
-  : 0;
-const firstEpisode = episodes.length
-  ? Math.min(...episodes.map((e) => e.number))
-  : 1;
 const totalEpisodes = episodes.length;
 const hasEpisodes = totalEpisodes > 0;
+
+const firstEpisode = hasEpisodes
+  ? Math.min(...episodes.map((e) => e.number))
+  : 1;
+const lastEpisode = hasEpisodes
+  ? Math.max(...episodes.map((e) => e.number))
+  : 0;
+
+// Tampilkan jumlah episode yang benar-benar tersedia.
+const episodeLabel = hasEpisodes ? `${totalEpisodes} Episode` : null;
+
+// Nomor episode terakhir yang sudah rilis (untuk badge/meta).
+const latestEpisodeLabel = lastEpisode > 0 ? `Ep ${lastEpisode}` : null;
 
 const score = data?.score ?? null;
 const votedBy = data?.stats?.scoredBy ?? 0;
@@ -128,6 +141,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
         </div>
         <div class="info">
           <h3 data-card-title-info></h3>
+          <p class="episodes" data-card-episodes hidden></p>
         </div>
       </article>
     </template>
@@ -241,10 +255,11 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
               {votedBy > 0 && <span class="preview__votes">({formatCount(votedBy)})</span>}
             </div>
           )}
-          <ul class="preview__meta">
-            {totalEpisodes > 0 && <li>{totalEpisodes} Episode</li>}
-            {studio && <li>{studio}</li>}
-          </ul>
+          {studio && (
+            <ul class="preview__meta">
+              <li>{studio}</li>
+            </ul>
+          )}
           {excerpt && <p class="preview__excerpt">{excerpt}</p>}
           <div class="preview__actions">
             {hasEpisodes ? (
@@ -265,8 +280,11 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     <div class="info">
       <h3 set:html={data!.title} />
       {relationBadge && <span class="relation-badge">{relationBadge}</span>}
-      {lastEpisode > 0 && !relationBadge && <span class="episodes">Ep {lastEpisode}</span>}
-      {lastEpisode > 0 && relationBadge && <span class="episodes">{relationBadge} · Ep {lastEpisode}</span>}
+      {episodeLabel && (
+        <span class="episodes">
+          {relationBadge ? `${relationBadge} · ${episodeLabel}` : episodeLabel}
+        </span>
+      )}
     </div>
   </article>
 )}
@@ -288,8 +306,8 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
       </div>
       <div class="compact__body">
         <h3 class="compact__title" set:html={data!.title} />
-        {totalEpisodes > 0 && (
-          <p class="compact__meta">{totalEpisodes} Episode</p>
+        {episodeLabel && (
+          <p class="compact__meta">{episodeLabel}</p>
         )}
         {score != null && (
           <div class="compact__rating">
@@ -340,9 +358,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
       <div class="featured__info">
         <h3 class="featured__title" set:html={data!.title} />
         <p class="featured__meta">
-          {[data!.type, lastEpisode > 0 ? `${lastEpisode} Episode` : null]
-            .filter(Boolean)
-            .join(' · ')}
+          {[data!.type, episodeLabel].filter(Boolean).join(' · ')}
         </p>
       </div>
     </a>
@@ -361,10 +377,11 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
               {votedBy > 0 && <span class="preview__votes">({formatCount(votedBy)})</span>}
             </div>
           )}
-          <ul class="preview__meta">
-            {totalEpisodes > 0 && <li>{totalEpisodes} Episode</li>}
-            {studio && <li>{studio}</li>}
-          </ul>
+          {studio && (
+            <ul class="preview__meta">
+              <li>{studio}</li>
+            </ul>
+          )}
           {excerpt && <p class="preview__excerpt">{excerpt}</p>}
           <div class="preview__actions">
             {hasEpisodes ? (
@@ -560,7 +577,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     padding: var(--s-3) 0 0;
     display: flex;
     flex-direction: column;
-    gap: var(--s-2);
+    gap: var(--s-1);
     min-width: 0;
   }
 
@@ -592,11 +609,15 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
   }
 
   .episodes {
+    display: block;
+    margin: 0;
     font-size: var(--fs-xs);
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
     font-weight: var(--fw-medium);
+    line-height: 1.3;
   }
+  .episodes[hidden] { display: none; }
 
   .anime-card-featured {
     background: transparent;
@@ -816,6 +837,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
   }
+  .compact__meta:empty { display: none; }
 
   .compact__rating {
     display: flex;
@@ -955,6 +977,7 @@ const scorePercent = score != null ? (score / 10) * 100 : 0;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
   }
+  .featured__meta:empty { display: none; }
 
   .preview__bookmark {
     width: 2rem !important;
