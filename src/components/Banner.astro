@@ -106,7 +106,6 @@ if (banners.length === 0) return null;
         const id = el.dataset.bannerId ?? '';
         const dismissible = el.dataset.dismissible === '1';
 
-        // Sembunyikan kalau sudah pernah ditutup
         if (id && dismissed.has(id)) {
           el.remove();
           return;
@@ -122,7 +121,6 @@ if (banners.length === 0) return null;
           saveDismissed(dismissed);
           el.remove();
 
-          // Hapus container kalau semua banner sudah hilang
           if (stack.querySelectorAll('[data-site-banner]').length === 0) {
             stack.remove();
           }
@@ -158,11 +156,12 @@ if (banners.length === 0) return null;
     isolation: isolate;
   }
   .site-banner__inner {
+    position: relative;
     display: flex;
     align-items: center;
+    justify-content: center;
     text-align: center;
     text-wrap: balance;
-    gap: var(--s-3);
     max-width: var(--content-max-mobile);
     margin-inline: auto;
     line-height: 1.4;
@@ -173,10 +172,11 @@ if (banners.length === 0) return null;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: var(--s-1);
     margin: 0;
     min-width: 0;
-    flex: 1 1 auto;
+    padding-inline: calc(1.333em + var(--s-2));
   }
 
   .site-banner__message > span {
@@ -191,16 +191,19 @@ if (banners.length === 0) return null;
     white-space: nowrap;
     transition: opacity var(--t-fast);
   }
-
+  
   .site-banner__link:hover {
     opacity: 0.75;
   }
 
-  .site-banner__close {
+ .site-banner__close {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
     width: 1.333em;
     height: 1.333em;
     background: transparent;
