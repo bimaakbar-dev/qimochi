@@ -176,12 +176,19 @@ import AnimeCard from '~/components/AnimeCard.astro';
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
 
-      const metaEl = card.querySelector('[data-card-meta]') as HTMLElement | null;
-      if (metaEl && item.episodes && item.episodes > 0) {
-        const li = document.createElement('li');
-        li.textContent = `${item.episodes} Episode`;
-        metaEl.appendChild(li);
-      }
+	  const episodeText =
+  	item.episodes && item.episodes > 0 ? `${item.episodes} Episode` : '';
+
+	  const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
+	  if (episodesEl && episodeText) {
+  	  episodesEl.textContent = episodeText;
+  	  episodesEl.hidden = false;
+	  }
+
+	  const metaTextEl = card.querySelector('[data-card-meta-text]') as HTMLElement | null;
+	  if (metaTextEl && episodeText) {
+  	  metaTextEl.textContent = episodeText;
+	  }
 
       const playEl = card.querySelector('[data-card-play]') as HTMLAnchorElement | null;
       if (playEl) {
