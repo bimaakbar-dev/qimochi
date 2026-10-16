@@ -183,7 +183,6 @@ const progressPayload = {
     </div>
   </Page>
 
-  {/* ══════════ Modal: Semua Episode ══════════ */}
   <dialog
     class="ep-modal"
     data-episodes-modal
@@ -374,7 +373,6 @@ const progressPayload = {
         return defaultNumber;
       }
 
-      /* ══════ Modal ══════ */
       const modalEl = document.querySelector<HTMLDialogElement>('[data-episodes-modal]');
       const modalGrid = modalEl?.querySelector<HTMLElement>('[data-episodes-grid]') ?? null;
       const modalClose = modalEl?.querySelector<HTMLButtonElement>('[data-episodes-modal-close]') ?? null;
@@ -499,7 +497,6 @@ const progressPayload = {
         });
       }
 
-      /* ══════ Switch episode ══════ */
       function switchEpisode(n: number, push = true): void {
         const ep = getEpisode(n);
         if (!ep) return;
@@ -681,8 +678,6 @@ const progressPayload = {
 </style>
 
 <style is:global>
-  /* ══════════ Modal: Semua Episode ══════════ */
-
   .ep-modal {
     width: 100%;
     max-width: 52rem;
