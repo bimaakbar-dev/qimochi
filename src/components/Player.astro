@@ -18,105 +18,36 @@ const encodedSrc = encodeSrc(src);
 ---
 
 <div class="player-wrapper" data-player>
-  <iframe
-    id="player-iframe"
-    data-enc={encodedSrc || undefined}
-    title={title}
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-    allowfullscreen
-    loading="eager"
-    referrerpolicy="no-referrer"
-  ></iframe>
+  <div class="player-frame">
+    <iframe
+      id="player-iframe"
+      data-enc={encodedSrc || undefined}
+      title={title}
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+      allowfullscreen
+      loading="eager"
+      referrerpolicy="no-referrer"
+    ></iframe>
 
-  <div class="player-error" data-player-error hidden>
-    <p class="player-error-msg">Player gagal dimuat.</p>
-    <button type="button" class="player-retry" data-player-retry>
-      Coba Lagi
-    </button>
+    <div class="player-loading" data-player-loading hidden>
+      <div class="player-spinner" aria-hidden="true"></div>
+      <p class="player-loading-text">Memuat<span data-loading-label></span>…</p>
+    </div>
+
+    <div class="player-error" data-player-error hidden>
+      <p class="player-error-msg" data-error-msg>Player gagal dimuat.</p>
+      <div class="player-error-actions">
+        <button type="button" class="player-btn player-btn--primary" data-player-retry>
+          Coba Lagi
+        </button>
+      </div>
+    </div>
+
+    <noscript>
+      <p class="player-noscript">Aktifkan JavaScript untuk memuat player.</p>
+    </noscript>
   </div>
-
-  <noscript>
-    <p class="player-noscript">
-      Aktifkan JavaScript untuk memuat player.
-    </p>
-  </noscript>
 </div>
-
-<script>
-  (function () {
-    const wrapper = document.querySelector<HTMLElement>('[data-player]');
-    const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
-    const errorBox = wrapper?.querySelector<HTMLElement>('[data-player-error]') ?? null;
-    const retryBtn = wrapper?.querySelector<HTMLButtonElement>('[data-player-retry]') ?? null;
-
-    if (!iframe || !errorBox || !retryBtn) return;
-
-    const enc = iframe.dataset.enc;
-    if (!enc) return;
-
-    let realSrc = '';
-    try {
-      const bin = atob(enc);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      realSrc = new TextDecoder().decode(bytes);
-    } catch (err) {
-      console.error('[Player] decode failed:', err);
-      return;
-    }
-
-    if (!realSrc) return;
-
-    const LOAD_TIMEOUT = 12000;
-
-    let timeoutId: number | null = null;
-    let loaded = false;
-
-    function clearTimer() {
-      if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-    }
-
-    function showError() {
-      clearTimer();
-      if (errorBox) errorBox.hidden = false;
-    }
-
-    function hideError() {
-      if (errorBox) errorBox.hidden = true;
-    }
-
-    function armTimer() {
-      loaded = false;
-      clearTimer();
-      timeoutId = window.setTimeout(() => {
-        if (!loaded) showError();
-      }, LOAD_TIMEOUT);
-    }
-
-    iframe.addEventListener('load', () => {
-      loaded = true;
-      clearTimer();
-      hideError();
-    });
-
-    iframe.addEventListener('error', showError);
-
-    retryBtn.addEventListener('click', () => {
-      hideError();
-      iframe.src = 'about:blank';
-      window.setTimeout(() => {
-        armTimer();
-        iframe.src = realSrc;
-      }, 100);
-    });
-
-    armTimer();
-    iframe.src = realSrc;
-  })();
-</script>
 
 <style>
   .player-wrapper {
@@ -127,11 +58,58 @@ const encodedSrc = encodeSrc(src);
     overflow: hidden;
   }
 
-  .player-wrapper iframe {
+  .player-frame {
+    position: absolute;
+    inset: 0;
+  }
+
+  .player-frame iframe {
     width: 100%;
     height: 100%;
     border: none;
     display: block;
+    opacity: 0;
+    transition: opacity var(--t-base);
+  }
+
+  .player-frame iframe.is-loaded {
+    opacity: 1;
+  }
+
+  .player-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-3);
+    background: #000;
+    color: #ccc;
+    z-index: 2;
+  }
+  .player-loading[hidden] { display: none; }
+
+  .player-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid hsla(0, 0%, 100%, 0.15);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: player-spin 0.8s linear infinite;
+  }
+  @keyframes player-spin { to { transform: rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .player-spinner { animation-duration: 2.5s; }
+  }
+
+  .player-loading-text {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: #aaa;
+    letter-spacing: 0.04em;
+    padding-inline: var(--s-4);
   }
 
   .player-error {
@@ -141,41 +119,50 @@ const encodedSrc = encodeSrc(src);
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--s-3);
-    background: rgba(0, 0, 0, 0.85);
+    gap: var(--s-4);
+    background: hsla(0, 0%, 0%, 0.92);
     color: #fff;
     padding: var(--s-4);
     text-align: center;
+    z-index: 3;
   }
-
-  .player-error[hidden] {
-    display: none;
-  }
+  .player-error[hidden] { display: none; }
 
   .player-error-msg {
     margin: 0;
     font-size: var(--fs-sm);
     color: #ddd;
+    max-width: 34ch;
+    line-height: var(--lh-relaxed);
   }
 
-  .player-retry {
+  .player-error-actions {
+    display: flex;
+    gap: var(--s-2);
+  }
+
+  .player-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: var(--s-2) var(--s-5);
-    background: var(--accent);
-    color: var(--accent-text);
     border-radius: var(--r-full);
     font-size: var(--fs-xs);
     font-weight: var(--fw-semibold);
     letter-spacing: 0.05em;
     text-transform: uppercase;
     cursor: pointer;
-    transition: background var(--t-fast);
+    transition: all var(--t-fast);
+    border: 1px solid transparent;
   }
-
-  .player-retry:hover {
+  .player-btn--primary {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
+  }
+  .player-btn--primary:hover {
     background: var(--accent-hover);
+    border-color: var(--accent-hover);
   }
 
   .player-noscript {
@@ -190,3 +177,117 @@ const encodedSrc = encodeSrc(src);
     margin: 0;
   }
 </style>
+
+<script>
+  interface PlayerAPI {
+    load(url: string, label?: string): void;
+    reload(): void;
+    getCurrent(): string;
+  }
+
+  (function () {
+    const wrapper = document.querySelector<HTMLElement>('[data-player]');
+    const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
+    if (!wrapper || !iframe) return;
+
+    const loadingBox = wrapper.querySelector<HTMLElement>('[data-player-loading]');
+    const loadingLabel = wrapper.querySelector<HTMLElement>('[data-loading-label]');
+    const errorBox = wrapper.querySelector<HTMLElement>('[data-player-error]');
+    const errorMsg = wrapper.querySelector<HTMLElement>('[data-error-msg]');
+    const retryBtn = wrapper.querySelector<HTMLButtonElement>('[data-player-retry]');
+
+    if (!loadingBox || !errorBox || !errorMsg || !retryBtn) return;
+
+    const LOAD_TIMEOUT_MS = 15000;
+    let currentUrl = '';
+    let currentLabel = '';
+    let timeoutId: number | null = null;
+    let loadId = 0;
+
+    function showLoading(label: string): void {
+      loadingLabel!.textContent = label ? ` (${label})` : '';
+      loadingBox!.hidden = false;
+      errorBox!.hidden = true;
+      iframe!.classList.remove('is-loaded');
+    }
+
+    function showError(msg: string): void {
+      loadingBox!.hidden = true;
+      errorBox!.hidden = false;
+      errorMsg!.textContent = msg;
+      iframe!.classList.remove('is-loaded');
+    }
+
+    function showLoaded(): void {
+      loadingBox!.hidden = true;
+      errorBox!.hidden = true;
+      iframe!.classList.add('is-loaded');
+    }
+
+    function clearTimer(): void {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    }
+
+    function load(url: string, label = ''): void {
+      if (!url) {
+        showError('URL player tidak valid.');
+        return;
+      }
+
+      const id = ++loadId;
+      currentUrl = url;
+      currentLabel = label;
+
+      clearTimer();
+      showLoading(label);
+
+      iframe!.src = url;
+
+      timeoutId = window.setTimeout(() => {
+        if (id !== loadId) return;
+        const elapsed = Math.round(LOAD_TIMEOUT_MS / 1000);
+        showError(`Server tidak selesai memuat setelah ${elapsed} detik. Coba server lain.`);
+      }, LOAD_TIMEOUT_MS);
+    }
+
+    function reload(): void {
+      if (currentUrl) load(currentUrl, currentLabel);
+    }
+
+    iframe.addEventListener('load', () => {
+      clearTimer();
+      if (!errorBox!.hidden) return;
+      showLoaded();
+    });
+
+    iframe.addEventListener('error', () => {
+      clearTimer();
+      showError('Gagal memuat player. Coba server lain atau klik Coba Lagi.');
+    });
+
+    retryBtn.addEventListener('click', reload);
+
+    (window as any).__qimochiPlayer = {
+      load,
+      reload,
+      getCurrent: () => currentUrl,
+    } satisfies PlayerAPI;
+
+    const enc = iframe.dataset.enc;
+    if (enc) {
+      try {
+        const bin = atob(enc);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const realSrc = new TextDecoder().decode(bytes);
+        if (realSrc) load(realSrc, '');
+      } catch (err) {
+        console.error('[Player] decode failed:', err);
+        showError('URL player tidak valid.');
+      }
+    }
+  })();
+</script>
