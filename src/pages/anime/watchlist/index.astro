@@ -2,6 +2,7 @@
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Page from '~/components/Page.astro';
 import Icons from '~/user-components/Icons.astro';
+import AnimeCard from '~/components/AnimeCard.astro';
 ---
 
 <BaseLayout
@@ -9,32 +10,6 @@ import Icons from '~/user-components/Icons.astro';
   description="Daftar tonton dan riwayat nonton kamu."
   noindex={true}
 >
-  <template id="bookmark-card-template">
-    <article class="bookmark-card" data-card>
-      <a class="bookmark-card__link" data-link>
-        <div class="bookmark-card__cover">
-          <div class="cover-placeholder is-loading" aria-hidden="true" data-placeholder></div>
-          <img width="300" height="450" loading="lazy" decoding="async" data-img />
-          <span class="type-badge" data-type></span>
-        </div>
-        <div class="bookmark-card__info">
-          <h3 data-title></h3>
-        </div>
-      </a>
-      <button
-        type="button"
-        class="bookmark-card__remove"
-        data-remove
-        aria-label="Hapus dari daftar"
-        title="Hapus dari daftar"
-      >
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M6 6l12 12M18 6L6 18"/>
-        </svg>
-      </button>
-    </article>
-  </template>
-
   <template id="history-item-template">
     <li class="history-item">
       <a class="history-item__link" data-history-link>
@@ -132,6 +107,8 @@ import Icons from '~/user-components/Icons.astro';
       </div>
     </section>
   </Page>
+
+  <AnimeCard mode="template" />
 </BaseLayout>
 
 <script>
@@ -139,6 +116,7 @@ import Icons from '~/user-components/Icons.astro';
   const API = 'https://api.qimochi.web.id';
   const ANIME_API = 'https://api-qimochi.pages.dev/api/v1/anime.json';
   const AVAILABLE_API = '/api/available-episodes.json';
+  const SYNOPSIS_API = '/api/anime-synopsis.json';
   const CACHE_KEY = 'qimochi:user-cache';
   const HISTORY_KEY = 'qimochi:continue';
 
@@ -161,12 +139,13 @@ import Icons from '~/user-components/Icons.astro';
 
   const loginLinks = Array.from(document.querySelectorAll('[data-login]'));
 
-  const bookmarkTpl = document.getElementById('bookmark-card-template');
   const historyTpl = document.getElementById('history-item-template');
+  const featuredTpl = document.getElementById('anime-card-featured-template');
 
   let bookmarks = [];
   let animeMap = new Map();
   let availableMap = new Map();
+  let synopsisMap = new Map();
   let listSortKey = 'recent';
 
   function getUser() {
@@ -205,13 +184,9 @@ import Icons from '~/user-components/Icons.astro';
       const url = new URL(location.href);
       if (name === 'history') url.searchParams.set('tab', 'history');
       else url.searchParams.delete('tab');
-      history_pushState(url);
+      window.history.pushState({}, '', url.toString());
     }
     if (name === 'history') renderHistory();
-  }
-
-  function history_pushState(url) {
-    window.history.pushState({}, '', url.toString());
   }
 
   for (const t of tabs) {
@@ -239,8 +214,19 @@ import Icons from '~/user-components/Icons.astro';
     listEmpty.hidden = state !== 'empty';
   }
 
+  function titleCase(s) {
+    if (!s) return '';
+    return s
+      .split(/[-_\s]+/)
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
+  }
+
   function formatCount(n) {
-    return n.toLocaleString('id-ID');
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return String(n);
   }
 
   async function loadBookmarks() {
@@ -252,7 +238,7 @@ import Icons from '~/user-components/Icons.astro';
   }
 
   async function loadAnimeIndex() {
-    const [animeRes, availRes] = await Promise.all([
+    const [animeRes, availRes, synRes] = await Promise.all([
       fetch(ANIME_API, { headers: { Accept: 'application/json' } }).then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -260,11 +246,13 @@ import Icons from '~/user-components/Icons.astro';
       fetch(AVAILABLE_API, { headers: { Accept: 'application/json' } })
         .then((r) => (r.ok ? r.json() : {}))
         .catch(() => ({})),
+      fetch(SYNOPSIS_API, { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({})),
     ]);
 
     const list = Array.isArray(animeRes?.data) ? animeRes.data : [];
 
-    // Bangun map available
     availableMap = new Map();
     if (availRes && typeof availRes === 'object') {
       for (const [slug, eps] of Object.entries(availRes)) {
@@ -274,7 +262,15 @@ import Icons from '~/user-components/Icons.astro';
       }
     }
 
-    // Bangun map anime HANYA untuk yang punya minimal 1 episode valid
+    synopsisMap = new Map();
+    if (synRes && typeof synRes === 'object') {
+      for (const [slug, text] of Object.entries(synRes)) {
+        if (typeof text === 'string' && text.length > 0) {
+          synopsisMap.set(slug, text);
+        }
+      }
+    }
+
     const map = new Map();
     for (const a of list) {
       if ((availableMap.get(a.id)?.length ?? 0) === 0) continue;
@@ -300,81 +296,154 @@ import Icons from '~/user-components/Icons.astro';
   }
 
   function createBookmarkCard(item) {
-    if (!bookmarkTpl) return null;
+    if (!featuredTpl) return null;
     const anime = animeMap.get(item.animeId);
     if (!anime) return null;
 
     const available = availableMap.get(anime.id) ?? [];
     const firstEp = available[0] ?? 1;
 
-    const frag = bookmarkTpl.content.cloneNode(true);
+    const frag = featuredTpl.content.cloneNode(true);
     const card = frag.firstElementChild;
-    const link = frag.querySelector('[data-link]');
-    const img = frag.querySelector('[data-img]');
-    const placeholder = frag.querySelector('[data-placeholder]');
-    const title = frag.querySelector('[data-title]');
-    const type = frag.querySelector('[data-type]');
-    const removeBtn = frag.querySelector('[data-remove]');
+    if (!card) return null;
 
-    link.href = `/anime/${anime.id}/`;
-    link.setAttribute('aria-label', anime.title);
-    title.textContent = anime.title;
-    if (type) type.textContent = anime.type ?? '';
+    // ── Link
+    const link = card.querySelector('[data-card-link]');
+    if (link) {
+      link.href = `/anime/${anime.id}/`;
+      link.setAttribute('aria-label', anime.title);
+    }
 
-    if (anime.image) {
-      img.src = anime.image;
+    // ── Cover (banner utama, fallback ke cover)
+    const img = card.querySelector('[data-cover-img]');
+    const placeholder = card.querySelector('.cover-placeholder');
+    const landscape = anime.banner || anime.image;
+
+    if (img && landscape) {
+      img.src = landscape;
       img.alt = `Cover ${anime.title}`;
-      img.hidden = false;
-      placeholder.hidden = true;
 
-      const onLoad = () => {
-        img.classList.add('is-loaded');
-        placeholder.classList.remove('is-loading');
-      };
-      const onError = () => {
+      const stopShimmer = () => placeholder?.classList.remove('is-loading');
+      const fail = () => {
         img.hidden = true;
-        placeholder.classList.remove('is-loading');
+        stopShimmer();
       };
 
-      if (img.complete && img.naturalWidth > 0) onLoad();
+      if (img.complete && img.naturalWidth > 0) stopShimmer();
       else {
-        img.addEventListener('load', onLoad, { once: true });
-        img.addEventListener('error', onError, { once: true });
+        img.addEventListener('load', stopShimmer, { once: true });
+        img.addEventListener('error', fail, { once: true });
       }
-    } else {
-      img.hidden = true;
-      placeholder.hidden = false;
+
+      img.dataset.ready = '1';
+    } else if (placeholder) {
       placeholder.classList.remove('is-loading');
     }
 
-    if (removeBtn) {
-      removeBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        removeBtn.disabled = true;
-        try {
-          const res = await fetch(
-            `${API}/api/v1/bookmarks/${encodeURIComponent(anime.id)}`,
-            { method: 'DELETE', credentials: 'include' }
-          );
-          if (!res.ok && res.status !== 404) throw new Error(`HTTP ${res.status}`);
-          bookmarks = bookmarks.filter((b) => b.animeId !== anime.id);
-          card.remove();
-          updateListCount();
-          if (bookmarks.length === 0) showListState('empty');
-        } catch (err) {
-          console.error('[bookmark] remove failed', err);
-          removeBtn.disabled = false;
-        }
-      });
+    // ── Info bawah cover
+    const titleInfoEl = card.querySelector('[data-card-title-info]');
+    if (titleInfoEl) titleInfoEl.textContent = anime.title;
+
+    const metaTextEl = card.querySelector('[data-card-meta-text]');
+    if (metaTextEl) {
+      const parts = [
+        anime.type,
+        available.length > 0 ? `${available.length} Episode` : null,
+      ].filter(Boolean);
+      metaTextEl.textContent = parts.join(' · ');
     }
+
+    // ── Preview: title
+    const titleEl = card.querySelector('[data-card-title]');
+    if (titleEl) titleEl.textContent = anime.title;
+
+    // ── Preview: rating
+    const score = typeof anime.score === 'number'
+      ? anime.score
+      : (typeof anime.stats?.score === 'number' ? anime.stats.score : null);
+    const votes = anime.stats?.scoredBy ?? 0;
+
+    const ratingEl = card.querySelector('[data-card-rating]');
+    if (ratingEl && score != null) {
+      ratingEl.hidden = false;
+      const fill = card.querySelector('[data-card-stars-fill]');
+      if (fill) fill.style.width = `${(score / 10) * 100}%`;
+      const scoreEl = card.querySelector('[data-card-score]');
+      if (scoreEl) scoreEl.textContent = score.toFixed(1);
+      const votesEl = card.querySelector('[data-card-votes]');
+      if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
+    }
+
+    // ── Preview: studio
+    const studioEl = card.querySelector('[data-card-studio]');
+    if (studioEl && Array.isArray(anime.studios) && anime.studios.length > 0) {
+      const name = titleCase(anime.studios[0]);
+      if (name && name.toLowerCase() !== 'unknown') {
+        const li = studioEl.querySelector('li');
+        if (li) li.textContent = name;
+        studioEl.hidden = false;
+      }
+    }
+
+    // ── Preview: sinopsis
+    const excerptEl = card.querySelector('[data-card-excerpt]');
+    if (excerptEl) {
+      const text = synopsisMap.get(anime.id);
+      if (text) {
+        excerptEl.textContent = text;
+        excerptEl.hidden = false;
+      }
+    }
+
+    // ── Preview: play + bookmark
+    const playEl = card.querySelector('[data-card-play]');
+    if (playEl) {
+      playEl.href = firstEp > 1
+        ? `/anime/watch/${anime.id}/?ep=${firstEp}`
+        : `/anime/watch/${anime.id}/`;
+      playEl.setAttribute('aria-label', `Mulai menonton ${anime.title}`);
+    }
+
+    const bookmarkEl = card.querySelector('[data-bookmark-btn]');
+    if (bookmarkEl) bookmarkEl.dataset.anime = anime.id;
+
+    // ── Tombol hapus (inject runtime)
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'bookmark-remove';
+    removeBtn.setAttribute('aria-label', 'Hapus dari daftar');
+    removeBtn.title = 'Hapus dari daftar';
+    removeBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18"/>
+      </svg>
+    `;
+    removeBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      removeBtn.disabled = true;
+      try {
+        const res = await fetch(
+          `${API}/api/v1/bookmarks/${encodeURIComponent(anime.id)}`,
+          { method: 'DELETE', credentials: 'include' }
+        );
+        if (!res.ok && res.status !== 404) throw new Error(`HTTP ${res.status}`);
+        bookmarks = bookmarks.filter((b) => b.animeId !== anime.id);
+        card.remove();
+        updateListCount();
+        if (bookmarks.length === 0) showListState('empty');
+      } catch (err) {
+        console.error('[bookmark] remove failed', err);
+        removeBtn.disabled = false;
+      }
+    });
+    card.appendChild(removeBtn);
 
     return card;
   }
 
   function updateListCount() {
     if (!listCount) return;
-    // Hitung hanya yang punya episode valid (konsisten dengan yang dirender)
     const playable = bookmarks.filter((b) => animeMap.has(b.animeId));
     listCount.textContent = `${playable.length} anime`;
   }
@@ -391,6 +460,7 @@ import Icons from '~/user-components/Icons.astro';
     listGrid.appendChild(frag);
     updateListCount();
     showListState('grid');
+    window.dispatchEvent(new CustomEvent('qimochi:bookmarks', { detail: listGrid }));
   }
 
   async function loadList() {
@@ -410,8 +480,6 @@ import Icons from '~/user-components/Icons.astro';
       bookmarks = bm;
       animeMap = index;
 
-      // Kalau semua bookmark tersaring (tidak ada yang punya episode valid),
-      // tampilkan empty state, bukan grid kosong.
       const playable = bookmarks.filter((b) => animeMap.has(b.animeId));
 
       if (playable.length === 0) {
@@ -469,619 +537,6 @@ import Icons from '~/user-components/Icons.astro';
     const progress = frag.querySelector('[data-history-progress]');
     const progressFill = frag.querySelector('[data-history-progress-fill]');
 
-    // URL watch canonical: /anime/watch/{slug}/?ep=N (bukan legacy /episodes/N/)
     link.href = item.episode > 1
       ? `/anime/watch/${item.slug}/?ep=${item.episode}`
-      : `/anime/watch/${item.slug}/`;
-    ep.textContent = String(item.episode).padStart(2, '0');
-    title.textContent = item.title;
-
-    if (item.total > 0) {
-      meta.textContent = `Episode ${item.episode} dari ${item.total}`;
-    } else {
-      meta.textContent = `Episode ${item.episode}`;
-    }
-
-    if (progress && progressFill && item.total > 0 && item.episode > 0) {
-      const pct = Math.min(100, Math.round((item.episode / item.total) * 100));
-      progressFill.style.width = `${pct}%`;
-      progress.hidden = false;
-      if (item.episode >= item.total) {
-        progressFill.classList.add('is-complete');
-      }
-    }
-
-    return node;
-  }
-
-  function renderHistory() {
-    const items = readHistory();
-
-    if (items.length === 0) {
-      historyToolbar.hidden = true;
-      historyList.innerHTML = '';
-      historyEmpty.hidden = false;
-      return;
-    }
-
-    historyEmpty.hidden = true;
-    historyToolbar.hidden = false;
-    historyCount.textContent = `${items.length} riwayat`;
-
-    historyList.innerHTML = '';
-    const frag = document.createDocumentFragment();
-    for (const item of items) {
-      const node = createHistoryItem(item);
-      if (node) frag.appendChild(node);
-    }
-    historyList.appendChild(frag);
-  }
-
-  if (historyClear) {
-    historyClear.addEventListener('click', () => {
-      if (!window.confirm('Hapus semua riwayat tonton?')) return;
-      saveHistory([]);
-      renderHistory();
-    });
-  }
-
-  document.addEventListener('qimochi:auth-changed', () => {
-    loadList();
-  });
-
-  const initialTab = readTab();
-  setActiveTab(initialTab);
-  if (initialTab === 'history') {
-    renderHistory();
-  }
-  loadList();
-</script>
-
-<style>
-  .wrapper {
-    padding-block: var(--s-6) var(--s-12);
-    gap: var(--s-6);
-  }
-
-  .page-hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .page-hero__inner {
-    display: flex;
-    align-items: center;
-    gap: var(--s-2);
-  }
-
-  .page-hero__icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    color: var(--text-primary);
-    flex-shrink: 0;
-    & svg {
-      flex-shrink: 0;
-    }
-  }
-
-  .page-hero__title {
-    margin: 0;
-    font-family: var(--font-montserrat);
-    font-size: var(--fs-2xl);
-    font-weight: var(--fw-semibold);
-    line-height: var(--lh-tight);
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
-  }
-
-  @media (min-width: 50rem) {
-    .page-hero__title {
-      font-size: var(--fs-3xl);
-    }
-  }
-
-  .tabs {
-    display: flex;
-    gap: var(--s-1);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .tab {
-    position: relative;
-    padding: var(--s-3) var(--s-4);
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    font-family: inherit;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-semibold);
-    letter-spacing: 0.02em;
-    cursor: pointer;
-    transition: color var(--t-fast);
-    white-space: nowrap;
-  }
-
-  .tab:hover {
-    color: var(--text-primary);
-  }
-
-  .tab::after {
-    content: '';
-    position: absolute;
-    left: var(--s-4);
-    right: var(--s-4);
-    bottom: -1px;
-    height: 2px;
-    background: var(--accent);
-    opacity: 0;
-    transition: opacity var(--t-fast);
-  }
-
-  .tab.is-active {
-    color: var(--accent);
-  }
-
-  .tab.is-active::after {
-    opacity: 1;
-  }
-
-  .panel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-4);
-  }
-
-  .panel[hidden] {
-    display: none;
-  }
-
-  .loading {
-    padding: var(--s-10) var(--s-4);
-    text-align: center;
-    color: var(--text-muted);
-    font-size: var(--fs-sm);
-  }
-
-  .loading[hidden] {
-    display: none;
-  }
-  .placeholder {
-    padding: var(--s-10) var(--s-4);
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: var(--fs-sm);
-  }
-
-  .placeholder[hidden] {
-    display: none;
-  }
-
-  .placeholder p {
-    margin: 0;
-  }
-
-  .placeholder a {
-    color: var(--accent);
-    font-weight: var(--fw-medium);
-  }
-
-  .placeholder a:hover {
-    color: var(--accent-hover);
-  }
-
-  .toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--s-3);
-  }
-
-  .toolbar[hidden] {
-    display: none;
-  }
-
-  .toolbar__sort {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-2);
-  }
-
-  .toolbar__label {
-    font-size: var(--fs-sm);
-    color: var(--text-muted);
-    white-space: nowrap;
-  }
-
-  .toolbar__select {
-    padding: var(--s-1) var(--s-8) var(--s-1) var(--s-3);
-    font: inherit;
-    font-size: var(--fs-sm);
-    color: var(--text-primary);
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--r-full);
-    text-transform: uppercase;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    cursor: pointer;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right var(--s-3) center;
-  }
-
-  .toolbar__select:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-
-  .toolbar__count {
-    font-size: var(--fs-sm);
-    color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .toolbar__clear {
-    padding: var(--s-1) var(--s-3);
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    font-family: inherit;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-medium);
-    cursor: pointer;
-    transition: all var(--t-fast);
-  }
-
-  .toolbar__clear:hover {
-    border-color: var(--danger);
-    color: var(--danger);
-  }
-
-  .anime-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--s-3);
-  }
-
-  .anime-grid[hidden] {
-    display: none;
-  }
-
-  @media (min-width: 50rem) {
-    .anime-grid {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: var(--s-4);
-    }
-  }
-
-  .empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--s-3);
-    padding: var(--s-12) var(--s-4);
-    text-align: center;
-  }
-
-  .empty[hidden] {
-    display: none;
-  }
-
-  .empty__title {
-    margin: 0;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-semibold);
-    color: var(--text-primary);
-  }
-
-  .empty__hint {
-    margin: 0;
-    font-size: var(--fs-sm);
-    color: var(--text-muted);
-  }
-
-  .empty__btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: var(--s-1);
-    padding: var(--s-3) var(--s-6);
-    background: var(--accent);
-    color: var(--accent-text);
-    border: 1px solid var(--accent);
-    border-radius: var(--r-full);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-semibold);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    text-decoration: none;
-    transition: background var(--t-fast), border-color var(--t-fast);
-  }
-
-  .empty__btn:hover {
-    background: var(--accent-hover);
-    border-color: var(--accent-hover);
-  }
-
-  .history-list {
-    display: flex;
-    flex-direction: column;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    border-top: 1px solid var(--border);
-  }
-
-  .history-list:empty {
-    border-top: none;
-  }
-
-  .history-item {
-    border-bottom: 1px solid var(--border);
-  }
-
-  .history-item__link {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: var(--s-4);
-    padding-block: var(--s-4);
-    text-decoration: none;
-    color: inherit;
-    transition: color var(--t-fast);
-  }
-
-  .history-item__ep {
-    font-family: var(--font-mono);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-semibold);
-    color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.05em;
-    min-width: 1.5rem;
-    transition: color var(--t-fast);
-  }
-
-  .history-item__body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-1);
-    min-width: 0;
-  }
-
-  .history-item__title {
-    font-size: var(--fs-base);
-    font-weight: var(--fw-semibold);
-    color: var(--text-primary);
-    line-height: var(--lh-tight);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    transition: color var(--t-fast);
-  }
-
-  .history-item__meta {
-    font-size: var(--fs-xs);
-    color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .history-item__progress {
-    display: block;
-    width: 100%;
-    max-width: 12rem;
-    height: 2px;
-    background: var(--bg-surface);
-    margin-top: var(--s-1);
-    overflow: hidden;
-  }
-
-  .history-item__progress[hidden] {
-    display: none;
-  }
-
-  .history-item__progress-fill {
-    display: block;
-    height: 100%;
-    width: 0;
-    background: var(--accent);
-    transition: width var(--t-base);
-  }
-
-  .history-item__progress-fill.is-complete {
-    background: var(--success);
-  }
-
-  .history-item__arrow {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    transition: color var(--t-fast), transform var(--t-fast);
-  }
-
-  .history-item__link:hover .history-item__ep,
-  .history-item__link:hover .history-item__title {
-    color: var(--accent);
-  }
-
-  .history-item__link:hover .history-item__arrow {
-    color: var(--accent);
-    transform: translateX(2px);
-  }
-
-  @media (min-width: 50rem) {
-    .history-item__link {
-      gap: var(--s-6);
-    }
-
-    .history-item__title {
-      font-size: var(--fs-lg);
-    }
-  }
-</style>
-
-<style is:global>
-  .bookmark-card {
-    position: relative;
-    display: block;
-    min-width: 0;
-  }
-
-  .bookmark-card__link {
-    display: block;
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .bookmark-card__cover {
-    position: relative;
-    aspect-ratio: 2 / 3;
-    overflow: hidden;
-    background: var(--bg-surface);
-  }
-
-  .bookmark-card__cover .cover-placeholder {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    background: var(--bg-surface);
-    pointer-events: none;
-  }
-
-  .bookmark-card__cover .cover-placeholder.is-loading::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(100deg, transparent 20%, var(--bg-hover) 50%, transparent 80%);
-    transform: translateX(-100%);
-    animation: cover-shimmer 1.6s infinite;
-  }
-
-  @keyframes cover-shimmer {
-    100% { transform: translateX(100%); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .bookmark-card__cover .cover-placeholder.is-loading::before {
-      animation: none;
-      opacity: 0;
-    }
-  }
-
-  .bookmark-card__cover img {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    opacity: 0;
-    transition: opacity var(--t-base);
-  }
-
-  .bookmark-card__cover img.is-loaded { opacity: 1; }
-  .bookmark-card__cover img[hidden] { display: none; }
-
-  .bookmark-card__cover::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.6) 100%);
-    pointer-events: none;
-  }
-
-  .bookmark-card__cover .type-badge {
-    position: absolute;
-    top: var(--s-2);
-    left: var(--s-2);
-    z-index: 3;
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 6px;
-    background: rgba(0, 0, 0, 0.7);
-    color: var(--text-inverted);
-    font-size: 0.625rem;
-    font-weight: var(--fw-semibold);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    backdrop-filter: blur(8px);
-  }
-
-  .bookmark-card__remove {
-    position: absolute;
-    top: var(--s-2);
-    right: var(--s-2);
-    z-index: 4;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    padding: 0;
-    background: rgba(0, 0, 0, 0.75);
-    color: var(--text-inverted);
-    border: none;
-    border-radius: var(--r-full);
-    cursor: pointer;
-    transition: background var(--t-fast), transform var(--t-fast);
-  }
-  .bookmark-card__remove:hover {
-    background: var(--danger);
-    transform: scale(1.08);
-  }
-  .bookmark-card__remove:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .bookmark-card__info {
-    padding: var(--s-3) 0 0;
-    min-width: 0;
-  }
-
-  .bookmark-card__info h3 {
-    position: relative;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-semibold);
-    color: var(--text-primary);
-    line-height: var(--lh-tight);
-    margin: 0;
-    min-width: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-  }
-
-  .bookmark-card__info h3::after {
-    content: '';
-    position: absolute;
-    left: -3%;
-    right: -3%;
-    bottom: -0.1em;
-    height: 0.45em;
-    background-color: var(--text-primary);
-    -webkit-mask-image: var(--underline);
-    mask-image: var(--underline);
-    -webkit-mask-size: 100% 100%;
-    mask-size: 100% 100%;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity var(--t-fast);
-  }
-
-  .bookmark-card__link:hover .bookmark-card__info h3::after {
-    opacity: 1;
-  }
-</style>
+      : `/anime/watch/${item.slug
