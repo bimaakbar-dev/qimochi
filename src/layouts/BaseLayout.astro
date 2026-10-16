@@ -1,4 +1,5 @@
 ---
+import { SITE } from '~/constants';
 import '../styles/global.css';
 import Head from '~/components/Head.astro';
 import Header from '~/components/Header.astro';
@@ -17,7 +18,7 @@ interface Props {
 }
 
 const {
-  title = 'Qimochi',
+  title = SITE.name,
   description,
   image,
   canonical,
@@ -27,7 +28,7 @@ const {
 } = Astro.props;
 ---
 <!DOCTYPE html>
-<html lang="id">
+<html lang={SITE.lang}>
 <head>
   <Head
     title={title}
