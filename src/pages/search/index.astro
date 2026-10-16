@@ -65,15 +65,14 @@ import AnimeCard from '~/components/AnimeCard.astro';
   } from '~/constants';
 
   (function () {
-    const API = 'https://yukionime.pages.dev/api/v1/anime.json';
+    const API = 'https://api-qimochi.pages.dev/api/v1/anime.json';
 
-    // ==== Performance tuning ====
-    const DEBOUNCE_MS = 300;        // dulu 120 — dinaikkan biar typing responsif
+    const DEBOUNCE_MS = 300;
     const MIN_QUERY = 2;
-    const FUZZY_MIN_QUERY = 3;      // fuzzy baru jalan kalau query ≥ 3 huruf
+    const FUZZY_MIN_QUERY = 3;
     const FUZZY_THRESHOLD = 0.55;
-    const FUZZY_LIMIT = 50;         // batasi hasil fuzzy
-    const SUBSTRING_MIN = 20;       // kalau substring ≥ 20, skip fuzzy
+    const FUZZY_LIMIT = 50;
+    const SUBSTRING_MIN = 20;
     const TOP_RESULTS = 3;
     const SECTION_LIMIT = 6;
     const SECTION_ORDER = ['TV', 'Movie', 'OVA', 'ONA', 'Special', 'Music', 'Unknown'];
@@ -84,6 +83,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
       titleEnglish: string | null;
       titleNative: string | null;
       image: string | null;
+      banner?: string | null;
       type: string;
       status: string;
       season: string | null;
@@ -93,7 +93,8 @@ import AnimeCard from '~/components/AnimeCard.astro';
       rating: string | null;
       genres: string[];
       studios: string[];
-      stats: { score?: number; scoredBy?: number } | null;
+      score?: number | null;
+      stats?: { score?: number; scoredBy?: number } | null;
     };
 
     type Entry = {
@@ -116,7 +117,6 @@ import AnimeCard from '~/components/AnimeCard.astro';
     let index: Entry[] = [];
     let ready = false;
 
-    // Cache hasil filter
     const resultCache = new Map<string, YukionimeItem[]>();
     const CACHE_LIMIT = 50;
 
@@ -149,7 +149,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
       const words = t.split(' ');
       let best = 0;
       for (const w of words) {
-        if (Math.abs(w.length - q.length) > 3) continue;  // skip word jauh beda
+        if (Math.abs(w.length - q.length) > 3) continue;
         const dist = levenshtein(q, w);
         const max = Math.max(q.length, w.length);
         const sim = 1 - dist / max;
@@ -180,6 +180,17 @@ import AnimeCard from '~/components/AnimeCard.astro';
       if (mapped === 'Special' && raw === 'Music') return 'Musik';
       if (mapped === 'TV' && raw === 'Unknown') return 'Lainnya';
       return mapped;
+    }
+
+    function getScore(item: YukionimeItem): number | null {
+      // API qimochi pakai `score`, yukionime pakai `stats.score`
+      if (typeof item.score === 'number') return item.score;
+      if (typeof item.stats?.score === 'number') return item.stats.score;
+      return null;
+    }
+
+    function getVotes(item: YukionimeItem): number {
+      return item.stats?.scoredBy ?? 0;
     }
 
     function buildCard(
@@ -238,8 +249,8 @@ import AnimeCard from '~/components/AnimeCard.astro';
       const titleInfoEl = card.querySelector('[data-card-title-info]') as HTMLElement | null;
       if (titleInfoEl) titleInfoEl.textContent = item.title;
 
-      const score = item.stats?.score ?? null;
-      const votes = item.stats?.scoredBy ?? 0;
+      const score = getScore(item);
+      const votes = getVotes(item);
       const ratingEl = card.querySelector('[data-card-rating]') as HTMLElement | null;
       if (ratingEl && score != null) {
         ratingEl.hidden = false;
@@ -253,7 +264,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
 
       const playEl = card.querySelector('[data-card-play]') as HTMLAnchorElement | null;
       if (playEl) {
-        playEl.href = `/anime/watch/${item.id}/episodes/1/`;
+        playEl.href = `/anime/watch/${item.id}/`;
         playEl.setAttribute('aria-label', `Mulai menonton ${item.title}`);
       }
 
@@ -269,7 +280,6 @@ import AnimeCard from '~/components/AnimeCard.astro';
       const q = qRaw.toLowerCase().trim();
       if (!q) return [];
 
-      // Cek cache
       if (resultCache.has(q)) {
         return resultCache.get(q)!;
       }
@@ -279,34 +289,29 @@ import AnimeCard from '~/components/AnimeCard.astro';
         if (entry.search.includes(q)) substring.push(entry.item);
       }
 
+      const sortSubstring = (arr: YukionimeItem[]) => {
+        arr.sort((a, b) => {
+          const at = a.title.toLowerCase();
+          const bt = b.title.toLowerCase();
+          const ai = at.indexOf(q);
+          const bi = bt.indexOf(q);
+          if (ai !== bi) return ai - bi;
+          return at.length - bt.length;
+        });
+      };
+
       if (substring.length >= SUBSTRING_MIN) {
-        substring.sort((a, b) => {
-          const at = a.title.toLowerCase();
-          const bt = b.title.toLowerCase();
-          const ai = at.indexOf(q);
-          const bi = bt.indexOf(q);
-          if (ai !== bi) return ai - bi;
-          return at.length - bt.length;
-        });
+        sortSubstring(substring);
         cacheSet(q, substring);
         return substring;
       }
 
-      // Kalau query pendek, jangan fuzzy (mahal)
       if (q.length < FUZZY_MIN_QUERY) {
-        substring.sort((a, b) => {
-          const at = a.title.toLowerCase();
-          const bt = b.title.toLowerCase();
-          const ai = at.indexOf(q);
-          const bi = bt.indexOf(q);
-          if (ai !== bi) return ai - bi;
-          return at.length - bt.length;
-        });
+        sortSubstring(substring);
         cacheSet(q, substring);
         return substring;
       }
 
-      // Fuzzy — batasi hasil
       const fuzzy = index
         .map((e) => ({ item: e.item, score: fuzzyScore(q, e.search) }))
         .filter(({ score }) => score >= FUZZY_THRESHOLD)
@@ -314,19 +319,10 @@ import AnimeCard from '~/components/AnimeCard.astro';
         .slice(0, FUZZY_LIMIT)
         .map((s) => s.item);
 
-      // Gabung: substring dulu, baru fuzzy (dedupe)
       const seen = new Set<string>();
       const merged: YukionimeItem[] = [];
 
-      substring.sort((a, b) => {
-        const at = a.title.toLowerCase();
-        const bt = b.title.toLowerCase();
-        const ai = at.indexOf(q);
-        const bi = bt.indexOf(q);
-        if (ai !== bi) return ai - bi;
-        return at.length - bt.length;
-      });
-
+      sortSubstring(substring);
       for (const item of substring) {
         if (seen.has(item.id)) continue;
         seen.add(item.id);
