@@ -82,6 +82,8 @@ const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
       slug={anime.id}
       episodeNumber={episode.number}
       totalEpisodes={totalEpisodes}
+      server={defaultServer ? (defaultStream?.quality ?? '') : ''}
+      quality={defaultStream?.quality ?? ''}
     />
 
     <div class="content-grid">
