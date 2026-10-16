@@ -5,24 +5,29 @@ import SectionLabel from './SectionLabel.astro';
 interface EpisodeItem {
   number: number;
   title?: string | null;
+  duration?: number | null;
 }
 
 interface Props {
   slug?: string;
+  animeTitle?: string;
   episodes?: EpisodeItem[];
   currentEpisode?: number | null;
   mode?: 'watch' | 'detail';
   cover?: string;
   banner?: string;
+  duration?: number | null;
 }
 
 const {
   slug = '',
+  animeTitle = '',
   episodes = [],
   currentEpisode = null,
   mode = 'detail',
   cover = '',
   banner = '',
+  duration = null,
 } = Astro.props;
 
 const BATCH_SIZE = 50;
@@ -75,8 +80,20 @@ if (mode === 'watch' && currentEpisode != null) {
 const nextThumb = banner || cover;
 const activeBatch = batches[activeBatchIdx]!;
 
+// Thumbnail untuk card grid — fallback banner > cover
+const cardThumb = banner || cover;
+
+// Durasi fallback — pakai ep.duration > props.duration > null
+function resolveDuration(epDuration?: number | null): string | null {
+  const d = epDuration ?? duration;
+  if (typeof d !== 'number' || d <= 0) return null;
+  return `${d}m`;
+}
+
 const episodeRows = sorted.map((ep) => ({
   number: ep.number,
+  title: ep.title ?? null,
+  durationLabel: resolveDuration(ep.duration),
   isActive: ep.number === currentEpisode,
   inActiveBatch:
     ep.number >= activeBatch.start && ep.number <= activeBatch.end,
@@ -87,7 +104,7 @@ function formatEp(n: number): string {
 }
 ---
 
-<section class="section" data-episode-list>
+<section class="section" data-episode-list data-mode={mode}>
   <div class="next-block" data-next-block hidden={!nextEpisode}>
     <SectionLabel as="h2" size="md" underlined={false} class="next-block__label">Episode Selanjutnya</SectionLabel>
     <a
@@ -145,20 +162,81 @@ function formatEp(n: number): string {
     </div>
   )}
 
-  <div class="episode-grid" data-episode-items>
-    {episodeRows.map((row) => (
-      <a
-        href={URLS.watch(slug, row.number)}
-        class:list={['episode-btn', { active: row.isActive }]}
-        aria-current={row.isActive ? 'page' : undefined}
-        data-episode-item
-        data-number={String(row.number)}
-        hidden={row.inActiveBatch ? undefined : true}
-      >
-        {formatEp(row.number)}
-      </a>
-    ))}
-  </div>
+  {/* ── Detail mode: card grid Crunchyroll-style ── */}
+  {mode === 'detail' && (
+    <ol class="ep-grid" data-episode-items>
+      {episodeRows.map((row) => (
+        <li
+          class:list={['ep-card', { 'is-active': row.isActive }]}
+          data-episode-item
+          data-number={String(row.number)}
+          hidden={row.inActiveBatch ? undefined : true}
+        >
+          <a
+            href={URLS.watch(slug, row.number)}
+            class="ep-card__link"
+            aria-current={row.isActive ? 'page' : undefined}
+            aria-label={`Episode ${row.number}${row.title ? ` – ${row.title}` : ''}`}
+          >
+            <div class="ep-card__thumb">
+              {cardThumb ? (
+                <img
+                  src={cardThumb}
+                  alt=""
+                  width="320"
+                  height="180"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <div class="ep-card__thumb-fallback" aria-hidden="true">
+                  {formatEp(row.number)}
+                </div>
+              )}
+              {row.durationLabel && (
+                <span class="ep-card__dur">{row.durationLabel}</span>
+              )}
+              {row.isActive && (
+                <span class="ep-card__watching">Sedang ditonton</span>
+              )}
+            </div>
+            <div class="ep-card__body">
+              {animeTitle && (
+                <p class="ep-card__series">{animeTitle}</p>
+              )}
+              <h4 class="ep-card__title">
+                {row.title
+                  ? `E${row.number} – ${row.title}`
+                  : `Episode ${row.number}`}
+              </h4>
+              <p class="ep-card__meta">Sub Indo</p>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ol>
+  )}
+
+  {/* ── Watch mode: compact grid untuk sidebar ── */}
+  {mode === 'watch' && (
+    <div class="ep-compact-grid" data-episode-items>
+      {episodeRows.map((row) => (
+        <a
+          href={URLS.watch(slug, row.number)}
+          class:list={['ep-compact', { 'is-active': row.isActive }]}
+          aria-current={row.isActive ? 'page' : undefined}
+          data-episode-item
+          data-number={String(row.number)}
+          hidden={row.inActiveBatch ? undefined : true}
+        >
+          <span class="ep-compact__num">{formatEp(row.number)}</span>
+          <span class="ep-compact__title">
+            {row.title || `Episode ${row.number}`}
+          </span>
+        </a>
+      ))}
+    </div>
+  )}
 
   <p class="episode-empty" data-episode-empty hidden>
     Tidak ada episode yang cocok.
@@ -233,7 +311,6 @@ function formatEp(n: number): string {
     /* ==== Expose API untuk SPA-lite switch episode ==== */
 
     function setActive(n) {
-      // 1. Switch batch tab kalau perlu
       if (tabs.length > 0) {
         const idx = tabs.findIndex((t) => {
           const s = Number(t.dataset.batchStart);
@@ -249,19 +326,16 @@ function formatEp(n: number): string {
         }
       }
 
-      // 2. Update active class + aria
       for (const el of items) {
         const num = Number(el.dataset.number);
         const active = num === n;
-        el.classList.toggle('active', active);
+        el.classList.toggle('is-active', active);
         if (active) el.setAttribute('aria-current', 'page');
         else el.removeAttribute('aria-current');
       }
 
-      // 3. Reapply visibility
       applyVisibility();
 
-      // 4. Scroll ke active (kalau visible)
       const activeEl = items.find(
         (el) => Number(el.dataset.number) === n && !el.hidden
       );
@@ -418,13 +492,187 @@ function formatEp(n: number): string {
     color: var(--accent-text);
   }
 
-  .episode-grid {
+  /* ══════════════════════════════════════════
+     DETAIL MODE — card grid Crunchyroll-style
+     ══════════════════════════════════════════ */
+
+  .ep-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-4);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  @media (min-width: 50rem) {
+    .ep-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--s-5);
+    }
+  }
+
+  .ep-card {
+    min-width: 0;
+  }
+  .ep-card[hidden] { display: none; }
+
+  .ep-card__link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    color: inherit;
+    text-decoration: none;
+    transition: transform var(--t-fast);
+  }
+
+  .ep-card__link:hover {
+    transform: translateY(-2px);
+  }
+
+  .ep-card__thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--bg-surface);
+    border: 2px solid transparent;
+    transition: border-color var(--t-fast);
+  }
+
+  .ep-card.is-active .ep-card__thumb {
+    border-color: var(--accent);
+  }
+
+  .ep-card__thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--t-base), opacity var(--t-base);
+  }
+
+  .ep-card__link:hover .ep-card__thumb img {
+    transform: scale(1.04);
+    opacity: 0.9;
+  }
+
+  .ep-card__thumb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .ep-card__thumb-fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-montserrat);
+    font-size: var(--fs-3xl);
+    font-weight: var(--fw-bold);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ep-card__dur {
+    position: absolute;
+    right: var(--s-2);
+    bottom: var(--s-2);
+    z-index: 2;
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.78);
+    color: var(--text-inverted);
+    font-size: 0.6875rem;
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .ep-card__watching {
+    position: absolute;
+    left: var(--s-2);
+    bottom: var(--s-2);
+    z-index: 2;
+    padding: 2px 6px;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: 0.625rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+
+  .ep-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    min-width: 0;
+  }
+
+  .ep-card__series {
+    margin: 0;
+    font-size: 0.6875rem;
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ep-card__title {
+    margin: 0;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    line-height: var(--lh-tight);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+
+  .ep-card.is-active .ep-card__title {
+    color: var(--accent);
+  }
+
+  .ep-card__link:hover .ep-card__title {
+    color: var(--accent);
+  }
+
+  .ep-card__meta {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ══════════════════════════════════════════
+     WATCH MODE — compact grid untuk sidebar
+     ══════════════════════════════════════════ */
+
+  .ep-compact-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--s-2);
   }
 
-  .episode-btn {
+  @media (min-width: 50rem) {
+    .ep-compact-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .ep-compact {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -439,18 +687,28 @@ function formatEp(n: number): string {
     text-decoration: none;
     transition: all var(--t-fast);
   }
-  .episode-btn:hover {
+  .ep-compact:hover {
     background: var(--bg-hover);
     border-color: var(--border-hover);
     color: var(--text-primary);
   }
-  .episode-btn.active {
+  .ep-compact.is-active {
     background: var(--accent);
     border-color: var(--accent);
     color: var(--accent-text);
     pointer-events: none;
   }
-  .episode-btn[hidden] { display: none; }
+  .ep-compact[hidden] { display: none; }
+
+  .ep-compact__num {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+  }
+
+  .ep-compact__title {
+    display: none;
+  }
 
   .episode-empty {
     margin: var(--s-3) 0 0;
