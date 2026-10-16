@@ -91,7 +91,7 @@ function formatEp(n: number): string {
   {nextEpisode && (
     <div class="next-block">
       <SectionLabel as="h2" size="md" underlined={false} class="next-block__label">Episode Selanjutnya</SectionLabel>
-      <a class="next-card" href={URLS.watch(slug, nextEpisode.number)}>
+      <a class="next-card" href={URLS.watch(slug, nextEpisode.number)} data-next-episode={nextEpisode.number}>
         <div class="next-card__thumb">
           {nextThumb ? (
             <img src={nextThumb} alt="" loading="lazy" decoding="async" />

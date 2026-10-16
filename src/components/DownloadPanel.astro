@@ -1,29 +1,25 @@
 ---
 import Icon from '~/user-components/Icons.astro';
 
-interface Server {
-  name: string;
-  url: string;
-}
-interface Download {
-  quality: string;
-  size: string;
-  servers: Server[];
-}
+interface Server { name: string; url: string; }
+interface Download { quality: string; size: string; servers: Server[]; }
 
-interface Props {
-  downloads?: Download[];
-}
+interface Props { downloads?: Download[]; }
 
 const { downloads = [] } = Astro.props;
 const hasDownloads = downloads.length > 0;
 ---
 
-{hasDownloads && (
-  <section class="download-panel">
-    <h3 class="panel-title">Download</h3>
+<div class="download-panel" data-download-panel hidden={!hasDownloads}>
+  <details class="download-outer" data-download-outer>
+    <summary>
+      <span class="label">Download</span>
+      <span class="chevron" aria-hidden="true">
+        <Icon name="chevron-down" size={16} />
+      </span>
+    </summary>
 
-    <div>
+    <div class="download-body" data-download-list>
       {downloads.map((d) => (
         <details class="quality-item">
           <summary>
@@ -41,7 +37,7 @@ const hasDownloads = downloads.length > 0;
                 rel="noopener noreferrer nofollow"
                 class="dl-link"
               >
-                <Icon name="download" />
+                <Icon name="download" size={14} />
                 <span>{srv.name}</span>
               </a>
             ))}
@@ -49,30 +45,56 @@ const hasDownloads = downloads.length > 0;
         </details>
       ))}
     </div>
-  </section>
-)}
+  </details>
+</div>
 
-<style>
+<style is:global>
   .download-panel {
     background: var(--bg-elevated);
     border: 1px solid var(--border);
-    padding: var(--s-4);
+  }
+  .download-panel[hidden] { display: none; }
+
+  .download-outer summary {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: var(--s-3) var(--s-4);
+    cursor: pointer;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    list-style: none;
+    user-select: none;
+    min-width: 0;
+  }
+  .download-outer summary::-webkit-details-marker { display: none; }
+
+  .download-outer summary .label {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    color: var(--text-primary);
+    font-weight: var(--fw-medium);
   }
 
-  .panel-title {
-    font-size: var(--fs-base);
-    font-weight: var(--fw-semibold);
-    margin: 0 0 var(--s-3);
-    color: var(--text-primary);
+  .download-outer summary .chevron {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-muted);
+    transition: transform var(--t-base);
+    flex-shrink: 0;
+  }
+
+  .download-outer[open] summary .chevron { transform: rotate(180deg); }
+
+  .download-body {
+    padding: 0 var(--s-4) var(--s-4);
   }
 
   .quality-item {
     border-top: 1px solid var(--border);
   }
-
-  .quality-item:first-of-type {
-    border-top: none;
-  }
+  .quality-item:first-of-type { border-top: none; }
 
   .quality-item summary {
     display: flex;
@@ -84,31 +106,25 @@ const hasDownloads = downloads.length > 0;
     font-size: var(--fs-sm);
     user-select: none;
   }
-
-  .quality-item summary::-webkit-details-marker {
-    display: none;
-  }
+  .quality-item summary::-webkit-details-marker { display: none; }
 
   .quality {
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
   }
 
-  .size {
-    color: var(--text-muted);
-  }
+  .size { color: var(--text-muted); }
 
-  .chevron {
+  .quality-item summary .chevron {
     display: inline-flex;
     align-items: center;
     margin-left: auto;
     color: var(--text-muted);
     transition: transform var(--t-base);
+    flex-shrink: 0;
   }
 
-  .quality-item[open] .chevron {
-    transform: rotate(180deg);
-  }
+  .quality-item[open] summary .chevron { transform: rotate(180deg); }
 
   .servers {
     display: flex;
@@ -128,15 +144,64 @@ const hasDownloads = downloads.length > 0;
     font-weight: var(--fw-medium);
     color: var(--text-secondary);
     transition: all var(--t-fast);
+    text-decoration: none;
+    & svg {
+      width: 0.9em;
+      height: 0.9em;
+      flex-shrink: 0;
+    }
   }
 
   .dl-link:hover {
     border-color: var(--accent);
     color: var(--accent);
   }
-
-  .dl-link :global(svg) {
-    width: 0.9em;
-    height: 0.9em;
-  }
 </style>
+
+<script>
+  interface Server { name: string; url: string; }
+  interface Download { quality: string; size: string; servers: Server[]; }
+
+  function esc(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  const CHEVRON_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg>';
+  const DL_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M8 2v8M4 7l4 4 4-4M3 14h10"/></svg>';
+
+  function buildHtml(downloads: Download[]): string {
+    if (!downloads || downloads.length === 0) return '';
+
+    return downloads
+      .map((d) => {
+        const servers = d.servers
+          .map(
+            (srv) =>
+              `<a href="${esc(srv.url)}" target="_blank" rel="noopener noreferrer nofollow" class="dl-link">${DL_SVG}<span>${esc(srv.name)}</span></a>`
+          )
+          .join('');
+        return `<details class="quality-item"><summary><span class="quality">${esc(d.quality)}</span><span class="size">· ${esc(d.size)}</span><span class="chevron" aria-hidden="true">${CHEVRON_SVG}</span></summary><div class="servers">${servers}</div></details>`;
+      })
+      .join('');
+  }
+
+  function mount(root: HTMLElement, downloads: Download[]): void {
+    const outer = root.querySelector<HTMLDetailsElement>('[data-download-outer]');
+    const list = root.querySelector<HTMLElement>('[data-download-list]');
+    if (!outer || !list) return;
+
+    const has = Array.isArray(downloads) && downloads.length > 0;
+    root.hidden = !has;
+
+    if (!has) {
+      list.innerHTML = '';
+      outer.open = false;
+      return;
+    }
+
+    list.innerHTML = buildHtml(downloads);
+    outer.open = false;
+  }
+
+  (window as any).__qimochiDownload = { mount };
+</script>

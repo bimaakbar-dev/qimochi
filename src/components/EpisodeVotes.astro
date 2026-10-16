@@ -114,6 +114,8 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
     canVote: boolean;
   }
 
+  const DEBOUNCE_MS = 250;
+
   function formatCount(n: number): string {
     if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
     if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
@@ -238,10 +240,12 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
     const api = root.dataset.api ?? '';
     if (!slug || !ep) return;
 
-    const likeBtn = root.querySelector<HTMLButtonElement>('[data-vote="1"]')!;
-    const dislikeBtn = root.querySelector<HTMLButtonElement>('[data-vote="-1"]')!;
-    const likeCount = root.querySelector<HTMLElement>('[data-count="like"]')!;
-    const dislikeCount = root.querySelector<HTMLElement>('[data-count="dislike"]')!;
+    const likeBtn = root.querySelector<HTMLButtonElement>('[data-vote="1"]');
+    const dislikeBtn = root.querySelector<HTMLButtonElement>('[data-vote="-1"]');
+    const likeCount = root.querySelector<HTMLElement>('[data-count="like"]');
+    const dislikeCount = root.querySelector<HTMLElement>('[data-count="dislike"]');
+
+    if (!likeBtn || !dislikeBtn || !likeCount || !dislikeCount) return;
 
     let state: VoteState = loadLocal(slug, ep) ?? {
       likes: 0,
@@ -263,9 +267,7 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
       likeBtn.disabled = busy;
       dislikeBtn.disabled = busy;
 
-      const label = state.canVote
-        ? null
-        : 'Login untuk vote';
+      const label = state.canVote ? null : 'Login untuk vote';
       likeBtn.title = label ?? 'Suka episode ini';
       dislikeBtn.title = label ?? 'Tidak suka episode ini';
     }
@@ -345,6 +347,49 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
   function initAll(scope: ParentNode = document): void {
     scope.querySelectorAll<HTMLElement>('[data-votes]').forEach(init);
   }
+
+  /* ============================================================
+     Debounced reset — cegah spam request saat user skip episode
+     ============================================================ */
+
+  let debounceTimer: number | null = null;
+
+  function reset(root: HTMLElement, slug: string, ep: number, api: string): void {
+    // 1. Reset visual langsung biar user tahu state berpindah
+    const likeBtn = root.querySelector<HTMLButtonElement>('[data-vote="1"]');
+    const dislikeBtn = root.querySelector<HTMLButtonElement>('[data-vote="-1"]');
+    const likeCount = root.querySelector<HTMLElement>('[data-count="like"]');
+    const dislikeCount = root.querySelector<HTMLElement>('[data-count="dislike"]');
+
+    if (likeBtn) {
+      likeBtn.classList.remove('is-active');
+      likeBtn.setAttribute('aria-pressed', 'false');
+    }
+    if (dislikeBtn) {
+      dislikeBtn.classList.remove('is-active');
+      dislikeBtn.setAttribute('aria-pressed', 'false');
+    }
+    if (likeCount) likeCount.textContent = '…';
+    if (dislikeCount) dislikeCount.textContent = '…';
+
+    // 2. Update dataset (biar request baru pakai ep yang benar)
+    root.dataset.slug = slug;
+    root.dataset.ep = String(ep);
+    root.dataset.api = api;
+
+    // 3. Debounce fetch — cancel timer lama, jadwalkan baru
+    if (debounceTimer !== null) {
+      window.clearTimeout(debounceTimer);
+    }
+
+    debounceTimer = window.setTimeout(() => {
+      debounceTimer = null;
+      delete root.dataset.bound;
+      init(root);
+    }, DEBOUNCE_MS);
+  }
+
+  (window as any).__qimochiVotes = { reset, reload: reset };
 
   initAll();
   document.addEventListener('astro:page-load', () => initAll());

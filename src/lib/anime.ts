@@ -201,3 +201,32 @@ export async function getAllEpisodePaths(): Promise<EpisodePathItem[]> {
 export function findEpisode(anime: HydratedAnime, episodeNumber: number): EpisodeData | null {
   return anime.data.episodeList.find((e) => e.number === episodeNumber) ?? null;
 }
+
+export interface WatchPathItem {
+  slug: string;
+  anime: HydratedAnime;
+  episodes: EpisodeData[];
+  firstEpisode: number;
+  totalEpisodes: number;
+}
+
+export async function getAllWatchPaths(): Promise<WatchPathItem[]> {
+  const all = await getAllAnime();
+  const paths: WatchPathItem[] = [];
+
+  for (const anime of all) {
+    const eps = anime.data.episodeList;
+    if (eps.length === 0) continue;
+
+    const sorted = [...eps].sort((a, b) => a.number - b.number);
+    paths.push({
+      slug: anime.id,
+      anime,
+      episodes: sorted,
+      firstEpisode: sorted[0]!.number,
+      totalEpisodes: sorted.length,
+    });
+  }
+
+  return paths;
+}
