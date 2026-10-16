@@ -346,6 +346,16 @@ const { slug, episode, apiBase = '', class: className } = Astro.props;
     scope.querySelectorAll<HTMLElement>('[data-votes]').forEach(init);
   }
 
-  initAll();
-  document.addEventListener('astro:page-load', () => initAll());
+  function reset(root: HTMLElement, slug: string, ep: number, api: string): void {
+  root.dataset.slug = slug;
+  root.dataset.ep = String(ep);
+  root.dataset.api = api;
+  delete root.dataset.bound;
+  init(root);
+}
+
+(window as any).__qimochiVotes = { reset, reload: reset };
+
+initAll();
+document.addEventListener('astro:page-load', () => initAll());
 </script>
