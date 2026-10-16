@@ -11,6 +11,7 @@ import EpisodeHeader from '~/components/EpisodeHeader.astro';
 import StreamSelector from '~/components/StreamSelector.astro';
 import EpisodeActionBar from '~/components/EpisodeActionBar.astro';
 import DownloadPanel from '~/components/DownloadPanel.astro';
+import EpisodeList from '~/components/EpisodeList.astro';
 import Page from '~/components/Page.astro';
 import Icon from '~/user-components/Icons.astro';
 
@@ -50,41 +51,6 @@ const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
 const nextEpForSsr = episodes.find((e) => e.number === defaultEpisode.number + 1) ?? null;
 const prevEpForSsr = episodes.find((e) => e.number === defaultEpisode.number - 1) ?? null;
 const thumbnail = data.banner ?? data.cover ?? '';
-
-const BATCH_SIZE = 50;
-const showFilter = totalEpisodes > 30;
-const showBatches = totalEpisodes > BATCH_SIZE;
-
-interface Batch { start: number; end: number }
-const batches: Batch[] = [];
-if (showBatches) {
-  for (let i = 0; i < episodes.length; i += BATCH_SIZE) {
-    const chunk = episodes.slice(i, i + BATCH_SIZE);
-    batches.push({
-      start: chunk[0]!.number,
-      end: chunk[chunk.length - 1]!.number,
-    });
-  }
-} else {
-  batches.push({
-    start: episodes[0]!.number,
-    end: episodes[episodes.length - 1]!.number,
-  });
-}
-
-let activeBatchIdx = 0;
-{
-  const idx = batches.findIndex(
-    (b) => defaultEpisode.number >= b.start && defaultEpisode.number <= b.end
-  );
-  if (idx >= 0) activeBatchIdx = idx;
-}
-
-function isInBatch(n: number, batchIdx: number): boolean {
-  const b = batches[batchIdx];
-  if (!b) return true;
-  return n >= b.start && n <= b.end;
-}
 
 const watchData = {
   slug: anime.id,
@@ -207,70 +173,13 @@ const progressPayload = {
       </header>
 
       <div class="ep-modal__body">
-        {(showFilter || showBatches) && (
-          <div class="ep-modal__controls">
-            {showFilter && (
-              <input
-                type="search"
-                class="ep-modal__filter"
-                data-episodes-filter
-                placeholder="Cari episode..."
-                inputmode="numeric"
-                autocomplete="off"
-                aria-label="Cari episode"
-              />
-            )}
-            {showBatches && (
-              <div class="ep-modal__batches" data-episodes-batches role="tablist">
-                {batches.map((b, i) => (
-                  <button
-                    type="button"
-                    class:list={[
-                      'ep-modal__batch',
-                      { 'is-active': i === activeBatchIdx },
-                    ]}
-                    data-batch-tab
-                    data-batch-start={b.start}
-                    data-batch-end={b.end}
-                    role="tab"
-                    aria-selected={i === activeBatchIdx ? 'true' : 'false'}
-                  >
-                    {b.start}–{b.end}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        <div class="ep-modal__grid" data-episodes-grid>
-          {episodes.map((ep) => (
-            <button
-              type="button"
-              class:list={[
-                'ep-modal__item',
-                { 'is-active': ep.number === defaultEpisode.number },
-              ]}
-              data-episode-modal-item
-              data-number={String(ep.number)}
-              aria-current={
-                ep.number === defaultEpisode.number ? 'page' : undefined
-              }
-              hidden={isInBatch(ep.number, activeBatchIdx) ? undefined : true}
-            >
-              <span class="ep-modal__num">
-                {String(ep.number).padStart(2, '0')}
-              </span>
-              {ep.title && (
-                <span class="ep-modal__label">{ep.title}</span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        <p class="ep-modal__empty" data-episodes-empty hidden>
-          Tidak ada episode yang cocok.
-        </p>
+        <EpisodeList
+          slug={anime.id}
+          animeTitle={data.title}
+          episodes={episodes}
+          currentEpisode={defaultEpisode.number}
+          mode="watch"
+        />
       </div>
     </div>
   </dialog>
@@ -374,81 +283,18 @@ const progressPayload = {
       }
 
       const modalEl = document.querySelector<HTMLDialogElement>('[data-episodes-modal]');
-      const modalGrid = modalEl?.querySelector<HTMLElement>('[data-episodes-grid]') ?? null;
       const modalClose = modalEl?.querySelector<HTMLButtonElement>('[data-episodes-modal-close]') ?? null;
-      const modalFilter = modalEl?.querySelector<HTMLInputElement>('[data-episodes-filter]') ?? null;
-      const modalBatches = modalEl?.querySelector<HTMLElement>('[data-episodes-batches]') ?? null;
-      const modalEmpty = modalEl?.querySelector<HTMLElement>('[data-episodes-empty]') ?? null;
-      const modalBatchTabs = Array.from(
-        modalEl?.querySelectorAll<HTMLButtonElement>('[data-batch-tab]') ?? []
-      );
-      const modalItems = Array.from(
-        modalEl?.querySelectorAll<HTMLElement>('[data-episode-modal-item]') ?? []
-      );
       const openModalBtn = document.querySelector<HTMLButtonElement>('[data-open-episodes-modal]');
-
-      let modalBatchIdx = modalBatchTabs.findIndex((t) => t.classList.contains('is-active'));
-      if (modalBatchIdx < 0) modalBatchIdx = 0;
-
-      function isInModalBatch(n: number): boolean {
-        if (modalBatchTabs.length === 0) return true;
-        const tab = modalBatchTabs[modalBatchIdx];
-        if (!tab) return true;
-        const s = Number(tab.dataset.batchStart);
-        const e = Number(tab.dataset.batchEnd);
-        return n >= s && n <= e;
-      }
-
-      function applyModalVisibility(): void {
-        if (!modalEl) return;
-        const q = (modalFilter?.value ?? '').trim();
-        const filtering = q.length > 0;
-        if (modalBatches) modalBatches.hidden = filtering;
-
-        let visible = 0;
-        for (const el of modalItems) {
-          const num = el.dataset.number ?? '';
-          const n = Number(num);
-          const show = filtering ? num.includes(q) : isInModalBatch(n);
-          el.hidden = !show;
-          if (show) visible++;
-        }
-        if (modalEmpty) modalEmpty.hidden = visible > 0;
-      }
-
-      function syncModalActive(n: number): void {
-        for (const el of modalItems) {
-          const num = Number(el.dataset.number);
-          const active = num === n;
-          el.classList.toggle('is-active', active);
-          if (active) el.setAttribute('aria-current', 'page');
-          else el.removeAttribute('aria-current');
-        }
-      }
 
       let currentNumber = defaultNumber;
 
       function openModal(): void {
         if (!modalEl) return;
-
-        if (modalBatchTabs.length > 0) {
-          const idx = modalBatchTabs.findIndex((t) => {
-            const s = Number(t.dataset.batchStart);
-            const e = Number(t.dataset.batchEnd);
-            return currentNumber >= s && currentNumber <= e;
-          });
-          if (idx >= 0) {
-            modalBatchIdx = idx;
-            modalBatchTabs.forEach((t, j) => {
-              t.classList.toggle('is-active', j === idx);
-              t.setAttribute('aria-selected', j === idx ? 'true' : 'false');
-            });
-          }
+        
+        const epListAPI = (window as any).__qimochiEpisodeList;
+        if (typeof epListAPI?.setActive === 'function') {
+           epListAPI.setActive(currentNumber);
         }
-
-        if (modalFilter) modalFilter.value = '';
-        syncModalActive(currentNumber);
-        applyModalVisibility();
 
         modalEl.showModal();
         document.body.style.overflow = 'hidden';
@@ -463,39 +309,29 @@ const progressPayload = {
         modalEl.addEventListener('close', () => {
           document.body.style.overflow = '';
         });
+        
         modalEl.addEventListener('click', (e) => {
-          if (e.target === modalEl) closeModal();
+          const target = e.target as HTMLElement;
+          if (target === modalEl) {
+            closeModal();
+            return;
+          }
+
+          const btn = target.closest<HTMLElement>('[data-episode-item]');
+          if (btn && modalEl.contains(btn)) {
+            e.preventDefault();
+            const n = Number(btn.dataset.number);
+            if (!isNaN(n) && getEpisode(n)) {
+              switchEpisode(n);
+              closeModal();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }
         });
       }
 
       if (openModalBtn) openModalBtn.addEventListener('click', openModal);
       if (modalClose) modalClose.addEventListener('click', closeModal);
-      if (modalFilter) modalFilter.addEventListener('input', applyModalVisibility);
-
-      modalBatchTabs.forEach((tab, i) => {
-        tab.addEventListener('click', () => {
-          modalBatchIdx = i;
-          modalBatchTabs.forEach((t, j) => {
-            t.classList.toggle('is-active', j === i);
-            t.setAttribute('aria-selected', j === i ? 'true' : 'false');
-          });
-          applyModalVisibility();
-        });
-      });
-
-      if (modalGrid) {
-        modalGrid.addEventListener('click', (e) => {
-          const btn = (e.target as HTMLElement).closest<HTMLElement>(
-            '[data-episode-modal-item]'
-          );
-          if (!btn) return;
-          const n = Number(btn.dataset.number);
-          if (isNaN(n) || !getEpisode(n)) return;
-          switchEpisode(n);
-          closeModal();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-      }
 
       function switchEpisode(n: number, push = true): void {
         const ep = getEpisode(n);
@@ -578,7 +414,10 @@ const progressPayload = {
           }
         }
 
-        syncModalActive(n);
+        const epListAPI = (window as any).__qimochiEpisodeList;
+        if (typeof epListAPI?.setActive === 'function') {
+           epListAPI.setActive(n);
+        }
 
         if (push) {
           const target = urlFor(n);
@@ -594,7 +433,7 @@ const progressPayload = {
         if (!target) return;
 
         const actionLink = target.closest<HTMLAnchorElement>('[data-episode-nav]');
-        if (actionLink) {
+        if (actionLink && !modalEl?.contains(actionLink)) {
           const n = Number(actionLink.dataset.episodeNav);
           if (!isNaN(n) && getEpisode(n)) {
             e.preventDefault();
@@ -783,152 +622,6 @@ const progressPayload = {
     min-height: 0;
     flex: 1 1 auto;
   }
-
-  .ep-modal__controls {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-3);
-    flex-shrink: 0;
-  }
-
-  .ep-modal__filter {
-    width: 100%;
-    padding: var(--s-2) var(--s-3);
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    font-size: var(--fs-sm);
-    border-radius: var(--r-sm);
-    transition: border-color var(--t-fast);
-  }
-  .ep-modal__filter::placeholder { color: var(--text-muted); }
-  .ep-modal__filter:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-  .ep-modal__filter::-webkit-search-cancel-button {
-    -webkit-appearance: none;
-    appearance: none;
-  }
-
-  .ep-modal__batches {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-1);
-  }
-
-  .ep-modal__batches[hidden] { display: none; }
-
-  .ep-modal__batch {
-    padding: var(--s-1) var(--s-3);
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    font-family: inherit;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-medium);
-    font-variant-numeric: tabular-nums;
-    cursor: pointer;
-    transition: all var(--t-fast);
-  }
-
-  .ep-modal__batch:hover {
-    border-color: var(--border-hover);
-    color: var(--text-primary);
-  }
-
-  .ep-modal__batch.is-active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-text);
-  }
-
-  .ep-modal__grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--s-2);
-  }
-
-  @media (min-width: 32rem) {
-    .ep-modal__grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 48rem) {
-    .ep-modal__grid {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-    }
-  }
-
-  .ep-modal__item {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 2px;
-    min-width: 0;
-    padding: var(--s-2) var(--s-3);
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--r-sm);
-    color: var(--text-secondary);
-    font-family: inherit;
-    font-size: var(--fs-sm);
-    text-align: start;
-    cursor: pointer;
-    transition:
-      background var(--t-fast),
-      border-color var(--t-fast),
-      color var(--t-fast);
-  }
-
-  .ep-modal__item:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-hover);
-    color: var(--text-primary);
-  }
-
-  .ep-modal__item.is-active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-text);
-  }
-
-  .ep-modal__item[hidden] { display: none; }
-
-  .ep-modal__num {
-    font-family: var(--font-mono);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-semibold);
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-  }
-
-  .ep-modal__label {
-    font-size: 0.6875rem;
-    font-weight: var(--fw-medium);
-    line-height: 1.2;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 100%;
-    opacity: 0.85;
-  }
-
-  .ep-modal__item.is-active .ep-modal__label {
-    opacity: 0.95;
-  }
-
-  .ep-modal__empty {
-    margin: 0;
-    padding: var(--s-8) var(--s-4);
-    text-align: center;
-    font-size: var(--fs-sm);
-    color: var(--text-muted);
-  }
-
-  .ep-modal__empty[hidden] { display: none; }
 
   @media (max-width: 50rem) {
     .ep-modal {
