@@ -49,6 +49,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
 
   (function () {
     const API = 'https://api-qimochi.pages.dev/api/v1/anime.json';
+    const AVAILABLE_API = '/api/available-episodes.json';
     const BATCH = 24;
     const DEFAULT_SORT = 'popular';
 
@@ -84,6 +85,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
     let all: ApiItem[] = [];
     let sorted: ApiItem[] = [];
     let visibleCount = 0;
+    let availableMap = new Map<string, number[]>();
 
     function formatCount(n: number): string {
       if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -115,6 +117,9 @@ import AnimeCard from '~/components/AnimeCard.astro';
       const frag = tpl!.content.cloneNode(true) as DocumentFragment;
       const card = frag.firstElementChild as HTMLElement | null;
       if (!card) return null;
+
+      const available = availableMap.get(item.id) ?? [];
+      const firstEp = available[0] ?? 1;
 
       const link = card.querySelector('[data-card-link]') as HTMLAnchorElement | null;
       if (link) {
@@ -175,36 +180,31 @@ import AnimeCard from '~/components/AnimeCard.astro';
         const votesEl = card.querySelector('[data-card-votes]') as HTMLElement | null;
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
-      
-      
-	  const episodeText =
-  	item.episodes && item.episodes > 0 ? `${item.episodes} Episode` : '';
 
-	  const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
-	  if (episodesEl && episodeText) {
-  	  episodesEl.textContent = episodeText;
-  	  episodesEl.hidden = false;
-	  }
-	
-	  const metaTextEl = card.querySelector('[data-card-meta-text]') as HTMLElement | null;
-	  if (metaTextEl && episodeText) {
-  	  metaTextEl.textContent = episodeText;
-	  }
+      // Episode text dari available count (bukan dari metadata API)
+      const episodeText = available.length > 0 ? `${available.length} Episode` : '';
+
+      const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
+      if (episodesEl && episodeText) {
+        episodesEl.textContent = episodeText;
+        episodesEl.hidden = false;
+      }
+
+      const metaTextEl = card.querySelector('[data-card-meta-text]') as HTMLElement | null;
+      if (metaTextEl && episodeText) {
+        metaTextEl.textContent = episodeText;
+      }
 
       const playEl = card.querySelector('[data-card-play]') as HTMLAnchorElement | null;
       if (playEl) {
-        playEl.href = `/anime/watch/${item.id}/`;
+        playEl.href = firstEp > 1
+          ? `/anime/watch/${item.id}/?ep=${firstEp}`
+          : `/anime/watch/${item.id}/`;
         playEl.setAttribute('aria-label', `Mulai menonton ${item.title}`);
       }
 
       const bookmarkEl = card.querySelector('[data-bookmark-btn]') as HTMLButtonElement | null;
       if (bookmarkEl) bookmarkEl.dataset.anime = item.id;
-
-      const epEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
-      if (epEl && item.episodes && item.episodes > 0) {
-        epEl.textContent = `Ep ${item.episodes}`;
-        epEl.hidden = false;
-      }
 
       return card;
     }
@@ -284,18 +284,36 @@ import AnimeCard from '~/components/AnimeCard.astro';
       loadMoreBtn.addEventListener('click', () => renderNext());
     }
 
-    fetch(API, { headers: { Accept: 'application/json' } })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<{ data: ApiItem[] }>;
-      })
-      .then((json) => {
+    Promise.all([
+      fetch(API, { headers: { Accept: 'application/json' } }).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json() as Promise<{ data: ApiItem[] }>;
+      }),
+      fetch(AVAILABLE_API, { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({})) as Promise<Record<string, number[]>>,
+    ])
+      .then(([json, availableRaw]) => {
         const list = json?.data;
-        if (!Array.isArray(list)) {
-          return;
+        if (!Array.isArray(list)) return;
+
+        // Bangun map slug → array nomor episode valid
+        availableMap = new Map<string, number[]>();
+        if (availableRaw && typeof availableRaw === 'object') {
+          for (const [slug, eps] of Object.entries(availableRaw)) {
+            if (Array.isArray(eps)) {
+              availableMap.set(slug, eps.filter((n): n is number => typeof n === 'number'));
+            }
+          }
         }
 
-        all = list.filter((item) => item.status === 'airing');
+        // Filter: status airing DAN punya minimal 1 episode valid
+        all = list.filter(
+          (item) =>
+            item.status === 'airing' &&
+            (availableMap.get(item.id)?.length ?? 0) > 0
+        );
+
         sortEl.value = DEFAULT_SORT;
         applySort(DEFAULT_SORT);
       })
