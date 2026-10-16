@@ -11,7 +11,6 @@ import EpisodeHeader from '~/components/EpisodeHeader.astro';
 import StreamSelector from '~/components/StreamSelector.astro';
 import EpisodeActionBar from '~/components/EpisodeActionBar.astro';
 import DownloadPanel from '~/components/DownloadPanel.astro';
-import EpisodeList from '~/components/EpisodeList.astro';
 import Page from '~/components/Page.astro';
 import Icon from '~/user-components/Icons.astro';
 
@@ -42,27 +41,16 @@ const defaultStream = defaultEpisode.streams?.[0];
 const defaultServer = defaultStream?.servers?.[0];
 const playerSrc = defaultServer?.url ?? '';
 
-const episodeItems = episodes
-  .map((e) => ({
-    number: e.number,
-    title: e.title ?? null,
-    duration: e.duration ?? null,
-    aired: e.aired ?? null,
-  }))
-  .sort((a, b) => a.number - b.number);
-
 const pageTitle = `${data.title} Sub Indo`;
 const pageDesc = `Nonton ${data.title} subtitle Indonesia. Total ${totalEpisodes} episode.`;
 const canonical = `/anime/watch/${anime.id}/`;
 
 const votesApiBase = import.meta.env.PUBLIC_API_BASE ?? '';
 
-/* ── Data untuk action bar (default SSR = episode pertama) ── */
 const nextEpForSsr = episodes.find((e) => e.number === defaultEpisode.number + 1) ?? null;
 const prevEpForSsr = episodes.find((e) => e.number === defaultEpisode.number - 1) ?? null;
 const thumbnail = data.banner ?? data.cover ?? '';
 
-/* ── Batching untuk modal episode ── */
 const BATCH_SIZE = 50;
 const showFilter = totalEpisodes > 30;
 const showBatches = totalEpisodes > BATCH_SIZE;
@@ -140,36 +128,6 @@ const progressPayload = {
   </section>
 
   <Page class="wrapper">
-    <div data-episode-action-bar>
-      <EpisodeActionBar
-        slug={anime.id}
-        animeTitle={data.title}
-        currentEpisode={defaultEpisode.number}
-        totalEpisodes={totalEpisodes}
-        prevEpisode={
-          prevEpForSsr
-            ? {
-                number: prevEpForSsr.number,
-                title: prevEpForSsr.title ?? null,
-                duration: prevEpForSsr.duration ?? null,
-              }
-            : null
-        }
-        nextEpisode={
-          nextEpForSsr
-            ? {
-                number: nextEpForSsr.number,
-                title: nextEpForSsr.title ?? null,
-                duration: nextEpForSsr.duration ?? null,
-              }
-            : null
-        }
-        thumbnail={thumbnail}
-        server={defaultStream?.quality ?? ''}
-        quality={defaultStream?.quality ?? ''}
-      />
-    </div>
-
     <div class="content-grid">
       <div class="content-main">
         <div data-episode-header>
@@ -189,17 +147,37 @@ const progressPayload = {
           <DownloadPanel downloads={defaultEpisode.downloads ?? []} />
         </div>
       </div>
+
       <aside class="content-aside">
-        <EpisodeList
-          slug={anime.id}
-          animeTitle={data.title}
-          episodes={episodeItems}
-          currentEpisode={defaultEpisode.number}
-          mode="watch"
-          cover={data.cover}
-          banner={data.banner}
-          duration={data.duration}
-        />
+        <div data-episode-action-bar>
+          <EpisodeActionBar
+            slug={anime.id}
+            animeTitle={data.title}
+            currentEpisode={defaultEpisode.number}
+            totalEpisodes={totalEpisodes}
+            prevEpisode={
+              prevEpForSsr
+                ? {
+                    number: prevEpForSsr.number,
+                    title: prevEpForSsr.title ?? null,
+                    duration: prevEpForSsr.duration ?? null,
+                  }
+                : null
+            }
+            nextEpisode={
+              nextEpForSsr
+                ? {
+                    number: nextEpForSsr.number,
+                    title: nextEpForSsr.title ?? null,
+                    duration: nextEpForSsr.duration ?? null,
+                  }
+                : null
+            }
+            thumbnail={thumbnail}
+            server={defaultStream?.quality ?? ''}
+            quality={defaultStream?.quality ?? ''}
+          />
+        </div>
       </aside>
     </div>
   </Page>
@@ -347,7 +325,6 @@ const progressPayload = {
       const defaultNumber = data.episodes[0]!.number;
       const modalThumb = data.thumbnail || data.banner || data.cover;
 
-      /* ══════ Progress tracker ══════ */
       function writeProgress(epNumber: number): void {
         const payload = {
           slug: data.slug,
@@ -373,34 +350,6 @@ const progressPayload = {
         } catch {}
       }
 
-      /* ══════ Update next card di sidebar ══════ */
-      function updateNextCard(currentN: number): void {
-        const block = document.querySelector<HTMLElement>('[data-next-block]');
-        if (!block) return;
-
-        const anchor = block.querySelector<HTMLAnchorElement>('[data-next-episode]');
-        const titleEl = block.querySelector<HTMLElement>('[data-next-title]');
-        if (!anchor || !titleEl) return;
-
-        const nextEp = data.episodes.find((e) => e.number === currentN + 1);
-
-        if (!nextEp) {
-          block.hidden = true;
-          anchor.removeAttribute('data-next-episode');
-          anchor.setAttribute('href', '#');
-          titleEl.textContent = '';
-          return;
-        }
-
-        block.hidden = false;
-        anchor.href = urlFor(nextEp.number);
-        anchor.dataset.nextEpisode = String(nextEp.number);
-        titleEl.textContent = `E${nextEp.number}${nextEp.title ? ` – ${nextEp.title}` : ''}`;
-      }
-
-      /* ══════ Current episode ══════ */
-      let currentNumber = defaultNumber;
-
       function getEpisode(n: number): WatchEpisode | null {
         return data.episodes.find((e) => e.number === n) ?? null;
       }
@@ -424,7 +373,7 @@ const progressPayload = {
         return defaultNumber;
       }
 
-      /* ══════ Modal element refs ══════ */
+      /* ══════ Modal ══════ */
       const modalEl = document.querySelector<HTMLDialogElement>('[data-episodes-modal]');
       const modalGrid = modalEl?.querySelector<HTMLElement>('[data-episodes-grid]') ?? null;
       const modalClose = modalEl?.querySelector<HTMLButtonElement>('[data-episodes-modal-close]') ?? null;
@@ -442,26 +391,6 @@ const progressPayload = {
       let modalBatchIdx = modalBatchTabs.findIndex((t) => t.classList.contains('is-active'));
       if (modalBatchIdx < 0) modalBatchIdx = 0;
 
-      function applyModalVisibility(): void {
-        if (!modalEl) return;
-        const q = (modalFilter?.value ?? '').trim();
-        const filtering = q.length > 0;
-
-        if (modalBatches) modalBatches.hidden = filtering;
-
-        let visible = 0;
-        for (const el of modalItems) {
-          const num = el.dataset.number ?? '';
-          const n = Number(num);
-          const show = filtering
-            ? num.includes(q)
-            : isInModalBatch(n);
-          el.hidden = !show;
-          if (show) visible++;
-        }
-        if (modalEmpty) modalEmpty.hidden = visible > 0;
-      }
-
       function isInModalBatch(n: number): boolean {
         if (modalBatchTabs.length === 0) return true;
         const tab = modalBatchTabs[modalBatchIdx];
@@ -469,6 +398,23 @@ const progressPayload = {
         const s = Number(tab.dataset.batchStart);
         const e = Number(tab.dataset.batchEnd);
         return n >= s && n <= e;
+      }
+
+      function applyModalVisibility(): void {
+        if (!modalEl) return;
+        const q = (modalFilter?.value ?? '').trim();
+        const filtering = q.length > 0;
+        if (modalBatches) modalBatches.hidden = filtering;
+
+        let visible = 0;
+        for (const el of modalItems) {
+          const num = el.dataset.number ?? '';
+          const n = Number(num);
+          const show = filtering ? num.includes(q) : isInModalBatch(n);
+          el.hidden = !show;
+          if (show) visible++;
+        }
+        if (modalEmpty) modalEmpty.hidden = visible > 0;
       }
 
       function syncModalActive(n: number): void {
@@ -481,10 +427,11 @@ const progressPayload = {
         }
       }
 
+      let currentNumber = defaultNumber;
+
       function openModal(): void {
         if (!modalEl) return;
 
-        // Sync batch tab ke episode aktif
         if (modalBatchTabs.length > 0) {
           const idx = modalBatchTabs.findIndex((t) => {
             const s = Number(t.dataset.batchStart);
@@ -500,10 +447,7 @@ const progressPayload = {
           }
         }
 
-        // Reset filter
         if (modalFilter) modalFilter.value = '';
-
-        // Sync active state ke episode sekarang
         syncModalActive(currentNumber);
         applyModalVisibility();
 
@@ -520,23 +464,14 @@ const progressPayload = {
         modalEl.addEventListener('close', () => {
           document.body.style.overflow = '';
         });
-
         modalEl.addEventListener('click', (e) => {
           if (e.target === modalEl) closeModal();
         });
       }
 
-      if (openModalBtn) {
-        openModalBtn.addEventListener('click', openModal);
-      }
-
-      if (modalClose) {
-        modalClose.addEventListener('click', closeModal);
-      }
-
-      if (modalFilter) {
-        modalFilter.addEventListener('input', applyModalVisibility);
-      }
+      if (openModalBtn) openModalBtn.addEventListener('click', openModal);
+      if (modalClose) modalClose.addEventListener('click', closeModal);
+      if (modalFilter) modalFilter.addEventListener('input', applyModalVisibility);
 
       modalBatchTabs.forEach((tab, i) => {
         tab.addEventListener('click', () => {
@@ -573,17 +508,14 @@ const progressPayload = {
 
         const firstServer = ep.streams[0]?.servers[0];
 
-        // 1. Player
         const player = (window as any).__qimochiPlayer;
         if (player?.load && firstServer) {
-          const label = `Ep ${n}`;
-          player.load(firstServer.url, label);
+          player.load(firstServer.url, `Ep ${n}`);
         } else if (firstServer) {
           const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
           if (iframe) iframe.src = firstServer.url;
         }
 
-        // 2. Heading
         const headingEl = document.querySelector<HTMLElement>(
           '[data-episode-header] .ep-header__episode'
         );
@@ -591,7 +523,6 @@ const progressPayload = {
           headingEl.textContent = ep.title?.trim() ? ep.title : `Episode ${n}`;
         }
 
-        // 3. Votes widget — debounced reload
         const votesRoot = document.querySelector<HTMLElement>(
           '[data-episode-header] [data-votes]'
         );
@@ -603,7 +534,6 @@ const progressPayload = {
           }
         }
 
-        // 4. Stream selector
         const streamRoot = document.querySelector<HTMLElement>('[data-stream-selector]');
         if (streamRoot) {
           const mountFn = (window as any).__qimochiStream?.mount;
@@ -612,7 +542,6 @@ const progressPayload = {
           }
         }
 
-        // 5. Download panel
         const dlRoot = document.querySelector<HTMLElement>('[data-download-panel]');
         if (dlRoot) {
           const mountDl = (window as any).__qimochiDownload?.mount;
@@ -621,7 +550,6 @@ const progressPayload = {
           }
         }
 
-        // 6. Action bar — redesign
         const actionRoot = document.querySelector<HTMLElement>('[data-episode-action-bar]');
         if (actionRoot) {
           const mountAction = (window as any).__qimochiActionBar?.mount;
@@ -652,54 +580,20 @@ const progressPayload = {
           }
         }
 
-        // 7. Episode list — active + batch switch
-        const episodeList = (window as any).__qimochiEpisodeList;
-        if (episodeList?.setActive) {
-          episodeList.setActive(n);
-        } else {
-          document.querySelectorAll<HTMLElement>('[data-episode-item]').forEach((el) => {
-            const num = Number(el.dataset.number);
-            const active = num === n;
-            el.classList.toggle('active', active);
-            if (active) el.setAttribute('aria-current', 'page');
-            else el.removeAttribute('aria-current');
-          });
-        }
-
-        // 7b. Modal active state
         syncModalActive(n);
 
-        // 7c. Update next card
-        updateNextCard(n);
-
-        // 8. URL
         if (push) {
           const target = urlFor(n);
           history.pushState({ ep: n }, '', target);
         }
 
-        // 9. Progress
         writeProgress(n);
-
-        // 10. Title
         document.title = `${data.animeTitle} Episode ${n} | Qimochi`;
       }
 
-      /* ══════ Intercept klik ══════ */
       document.addEventListener('click', (e) => {
         const target = e.target as HTMLElement | null;
         if (!target) return;
-
-        const epLink = target.closest<HTMLAnchorElement>('[data-episode-item]');
-        if (epLink) {
-          const n = Number(epLink.dataset.number);
-          if (!isNaN(n) && getEpisode(n)) {
-            e.preventDefault();
-            switchEpisode(n);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-          }
-        }
 
         const actionLink = target.closest<HTMLAnchorElement>('[data-episode-nav]');
         if (actionLink) {
@@ -711,26 +605,13 @@ const progressPayload = {
             return;
           }
         }
-
-        const nextCard = target.closest<HTMLAnchorElement>('[data-next-episode]');
-        if (nextCard) {
-          const n = Number(nextCard.dataset.nextEpisode);
-          if (!isNaN(n) && getEpisode(n)) {
-            e.preventDefault();
-            switchEpisode(n);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-          }
-        }
       });
 
-      /* ══════ Back/forward ══════ */
       window.addEventListener('popstate', () => {
         const n = readUrlEpisode();
         if (n !== currentNumber) switchEpisode(n, false);
       });
 
-      /* ══════ Init from URL ══════ */
       const initial = readUrlEpisode();
       if (initial !== defaultNumber) {
         switchEpisode(initial, false);
@@ -738,7 +619,6 @@ const progressPayload = {
         history.replaceState({ ep: initial }, '', target);
       } else {
         writeProgress(defaultNumber);
-        updateNextCard(defaultNumber);
       }
     })();
   </script>
@@ -766,9 +646,8 @@ const progressPayload = {
   .content-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--s-4);
+    gap: var(--s-5);
     align-items: start;
-    margin-top: var(--s-5);
   }
 
   .content-main {
@@ -778,6 +657,13 @@ const progressPayload = {
     gap: var(--s-5);
   }
 
+  .content-aside {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
   @media (min-width: 50rem) {
     .content-grid {
       grid-template-columns: 1fr var(--aside-width);
@@ -785,13 +671,10 @@ const progressPayload = {
     }
 
     .content-aside {
-      display: flex;
-      flex-direction: column;
       position: sticky;
       top: var(--sticky-top);
       max-height: calc(100vh - var(--sticky-top) - var(--s-4));
       overflow-y: auto;
-      gap: var(--s-4);
     }
   }
 </style>
@@ -1051,7 +934,6 @@ const progressPayload = {
 
   .ep-modal__empty[hidden] { display: none; }
 
-  /* Mobile: dialog full-screen */
   @media (max-width: 50rem) {
     .ep-modal {
       width: 100%;
@@ -1065,12 +947,7 @@ const progressPayload = {
       border: none;
     }
 
-    .ep-modal__header {
-      padding: var(--s-4);
-    }
-
-    .ep-modal__body {
-      padding: var(--s-4);
-    }
+    .ep-modal__header { padding: var(--s-4); }
+    .ep-modal__body   { padding: var(--s-4); }
   }
 </style>
