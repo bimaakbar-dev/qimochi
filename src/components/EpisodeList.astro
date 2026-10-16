@@ -1,7 +1,6 @@
 ---
 import { URLS } from '~/constants';
 import Icon from '~/user-components/Icons.astro';
-import SectionLabel from './SectionLabel.astro';
 
 interface EpisodeItem {
   number: number;
@@ -18,7 +17,6 @@ interface Props {
   cover?: string;
   banner?: string;
   duration?: number | null;
-  showNext?: boolean;
 }
 
 const {
@@ -29,10 +27,9 @@ const {
   cover = '',
   banner = '',
   duration = null,
-  showNext = true,
 } = Astro.props;
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 12;
 
 const sorted = [...episodes].sort((a, b) => a.number - b.number);
 const total = sorted.length;
@@ -47,15 +44,6 @@ if (currentEpisode != null) {
   }
 }
 
-let nextEpisode: EpisodeItem | null = null;
-if (currentEpisode != null) {
-  const idx = sorted.findIndex((e) => e.number === currentEpisode);
-  if (idx >= 0 && idx < sorted.length - 1) {
-    nextEpisode = sorted[idx + 1]!;
-  }
-}
-
-const nextThumb = banner || cover;
 const cardThumb = banner || cover;
 
 function cleanText(s: string | null | undefined): string | null {
@@ -94,20 +82,15 @@ const episodeRows = sorted.map((ep, index) => ({
   title: cleanText(ep.title),
   durationLabel: resolveDuration(ep.duration),
   airedLabel: formatAired(ep.aired),
-  isActive: ep.number === currentEpisode,
+  isActive: currentEpisode != null && ep.number === currentEpisode,
   isHidden: index >= initialLimit,
 }));
-
-const nextEpisodeRow = nextEpisode
-  ? {
-      number: nextEpisode.number,
-      title: cleanText(nextEpisode.title),
-    }
-  : null;
 
 function formatEp(n: number): string {
   return String(n).padStart(2, '0');
 }
+
+const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
 ---
 
 <section
@@ -115,34 +98,8 @@ function formatEp(n: number): string {
   data-episode-list
   data-page-size={PAGE_SIZE}
   data-total={total}
+  data-initial-episode={initialEpisodeAttr}
 >
-  {showNext && (
-    <div class="next-block" data-next-block hidden={!nextEpisodeRow}>
-      <SectionLabel as="h2" size="md" underlined={false} class="next-block__label">Episode Selanjutnya</SectionLabel>
-      <a
-        class="next-card"
-        data-next-episode={nextEpisodeRow?.number ?? ''}
-        href={nextEpisodeRow ? URLS.watch(slug, nextEpisodeRow.number) : '#'}
-      >
-        <div class="next-card__thumb">
-          {nextThumb ? (
-            <img src={nextThumb} alt="" loading="lazy" decoding="async" />
-          ) : (
-            <div class="next-card__thumb-placeholder" aria-hidden="true"></div>
-          )}
-        </div>
-        <div class="next-card__info">
-          <p class="next-card__title" data-next-title>
-            {nextEpisodeRow
-              ? `E${nextEpisodeRow.number}${nextEpisodeRow.title ? ` – ${nextEpisodeRow.title}` : ''}`
-              : ''}
-          </p>
-          <p class="next-card__meta">Sub Indo</p>
-        </div>
-      </a>
-    </div>
-  )}
-
   <ol class="ep-grid" data-episode-items>
     {episodeRows.map((row) => (
       <li
@@ -174,9 +131,6 @@ function formatEp(n: number): string {
             )}
             {row.durationLabel && (
               <span class="ep-card__dur">{row.durationLabel}</span>
-            )}
-            {row.isActive && (
-              <span class="ep-card__watching">NOW PLAYING</span>
             )}
           </div>
           <div class="ep-card__body">
@@ -217,7 +171,7 @@ function formatEp(n: number): string {
           <div class="ep-card__hover-actions">
             <span class="ep-card__hover-play">
               <Icon name="play" size={14} />
-              <span>PLAY E{row.number}</span>
+              <span>Putar E{row.number}</span>
             </span>
           </div>
         </div>
@@ -245,20 +199,18 @@ function formatEp(n: number): string {
 
     const items = Array.from(root.querySelectorAll('[data-episode-item]'));
     const loadMoreBtn = root.querySelector('[data-episode-loadmore]');
-    
-    const pageSize = Number(root.dataset.pageSize || 15);
+
+    const pageSize = Number(root.dataset.pageSize || 12);
     const total = Number(root.dataset.total || items.length);
 
-    let currentVisibleLimit = items.filter(el => !el.hidden).length;
+    let currentVisibleLimit = items.filter((el) => !el.hidden).length;
     if (currentVisibleLimit < pageSize) currentVisibleLimit = pageSize;
 
     function applyVisibility() {
-      let visibleCount = 0;
       for (let i = 0; i < items.length; i++) {
         const el = items[i];
         const show = i < currentVisibleLimit;
         el.hidden = !show;
-        if (show) visibleCount++;
       }
 
       if (loadMoreBtn) {
@@ -281,21 +233,6 @@ function formatEp(n: number): string {
         if (active) el.setAttribute('aria-current', 'page');
         else el.removeAttribute('aria-current');
 
-        const thumb = el.querySelector('.ep-card__thumb');
-        if (thumb) {
-          let badge = thumb.querySelector('.ep-card__watching');
-          if (active) {
-            if (!badge) {
-              badge = document.createElement('span');
-              badge.className = 'ep-card__watching';
-              badge.textContent = 'NOW PLAYING';
-              thumb.appendChild(badge);
-            }
-          } else {
-            if (badge) badge.remove();
-          }
-        }
-
         if (active && el.hidden) {
           const idx = items.indexOf(el);
           currentVisibleLimit = Math.ceil((idx + 1) / pageSize) * pageSize;
@@ -314,7 +251,16 @@ function formatEp(n: number): string {
 
     window.__qimochiEpisodeList = { setActive };
 
-    applyVisibility();
+    const attr = (root.dataset.initialEpisode || '').trim();
+    const initialEp = attr ? parseInt(attr, 10) : NaN;
+    const sp = new URLSearchParams(window.location.search);
+    const epParam = parseInt(sp.get('ep') ?? '', 10);
+
+    const target = !isNaN(epParam) ? epParam : initialEp;
+
+    if (!isNaN(target)) {
+      setActive(target);
+    }
   })();
 </script>
 
@@ -337,7 +283,6 @@ function formatEp(n: number): string {
     align-items: center;
     justify-content: center;
     padding: var(--s-3) var(--s-8);
-    background: transparent;
     border: 1px solid var(--border);
     color: var(--text-primary);
     font-size: var(--fs-sm);
@@ -442,24 +387,7 @@ function formatEp(n: number): string {
     transition: opacity var(--t-fast);
   }
 
-  .ep-card__watching {
-    position: absolute;
-    left: var(--s-2);
-    top: var(--s-2);
-    z-index: 2;
-    padding: 3px 8px;
-    background: var(--accent);
-    color: var(--accent-text);
-    font-size: 0.625rem;
-    font-weight: var(--fw-bold);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    line-height: 1.2;
-    transition: opacity var(--t-fast);
-  }
-
-  .ep-card:hover .ep-card__dur,
-  .ep-card:hover .ep-card__watching {
+  .ep-card:hover .ep-card__dur {
     opacity: 0;
   }
 
