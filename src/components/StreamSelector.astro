@@ -8,7 +8,6 @@ interface Props { streams?: Stream[]; }
 
 const { streams = [] } = Astro.props;
 const defaultStream = streams[0];
-const totalServers = streams.reduce((sum, s) => sum + s.servers.length, 0);
 
 function encodeUrl(s: string): string {
   if (!s) return '';
@@ -20,15 +19,14 @@ function encodeUrl(s: string): string {
 
 function formatCurrent(): string {
   if (!defaultStream) return '—';
-  const count = totalServers > 0 ? ` · ${totalServers} server` : '';
-  return `${defaultStream.quality} · Server 1${count}`;
+  return `${defaultStream.quality} · Server 1`;
 }
 ---
 
 <div class="stream-selector-root" data-stream-selector>
   <details class="stream-picker" data-stream-picker>
     <summary>
-      <span class="label">Server &amp; Kualitas</span>
+      <span class="label">Server</span>
       <span class="current" data-current>{formatCurrent()}</span>
       <span class="chevron" aria-hidden="true">
         <Icon name="chevron-down" size={16} />
@@ -85,8 +83,15 @@ function formatCurrent(): string {
     font-weight: var(--fw-medium);
     list-style: none;
     user-select: none;
+    min-width: 0;
   }
   .stream-picker summary::-webkit-details-marker { display: none; }
+
+  .stream-picker summary .label {
+    flex-shrink: 0;
+    white-space: nowrap;
+    color: var(--text-primary);
+  }
 
   .stream-picker summary .current {
     margin-left: auto;
@@ -95,9 +100,12 @@ function formatCurrent(): string {
     color: var(--accent);
     font-size: var(--fs-xs);
     font-weight: var(--fw-semibold);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
   }
 
   .stream-picker summary .chevron {
@@ -105,6 +113,7 @@ function formatCurrent(): string {
     align-items: center;
     color: var(--text-muted);
     transition: transform var(--t-base);
+    flex-shrink: 0;
   }
 
   .stream-picker[open] summary .chevron { transform: rotate(180deg); }
@@ -208,12 +217,12 @@ function formatCurrent(): string {
       .join('');
   }
 
-  function formatCurrentLabel(streams: Stream[]): string {
+  function formatCurrentLabel(streams: Stream[], quality?: string, serverNum?: number): string {
     const first = streams?.[0];
     if (!first) return '—';
-    const total = streams.reduce((sum, s) => sum + s.servers.length, 0);
-    const count = total > 0 ? ` · ${total} server` : '';
-    return `${first.quality} · Server 1${count}`;
+    const q = quality ?? first.quality;
+    const s = serverNum ?? 1;
+    return `${q} · Server ${s}`;
   }
 
   function mount(root: HTMLElement, streams: Stream[]): void {
@@ -228,7 +237,7 @@ function formatCurrent(): string {
     const firstRadio = body.querySelector<HTMLInputElement>('input[name="stream"]');
     if (firstRadio) firstRadio.checked = true;
 
-    // Tidak auto-open — default closed
+    // Default closed
     details.open = false;
   }
 
@@ -248,12 +257,12 @@ function formatCurrent(): string {
     } catch { return; }
 
     const quality = target.dataset.quality ?? '';
-    const server = target.dataset.server ?? '';
-    const label = quality && server ? `${quality} · ${server}` : '';
+    const serverLabel = target.dataset.server ?? '';
+    const playerLabel = quality && serverLabel ? `${quality} · ${serverLabel}` : '';
 
     const player = (window as any).__qimochiPlayer;
     if (player?.load) {
-      player.load(real, label);
+      player.load(real, playerLabel);
     } else {
       const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
       if (iframe) iframe.src = real;
@@ -262,11 +271,7 @@ function formatCurrent(): string {
     const root = target.closest('[data-stream-selector]');
     const current = root?.querySelector<HTMLElement>('[data-current]');
     if (current) {
-      // Hitung total server dari semua radio yang ada di root
-      const all = root?.querySelectorAll('input[name="stream"]');
-      const total = all ? all.length : 0;
-      const count = total > 0 ? ` · ${total} server` : '';
-      current.textContent = `${quality} · ${server}${count}`;
+      current.textContent = `${quality} · ${serverLabel}`;
     }
   });
 
