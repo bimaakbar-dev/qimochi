@@ -23,6 +23,7 @@ const hasPrev = episodeNumber > 1;
 const hasNext = episodeNumber < totalEpisodes;
 const prevEp = hasPrev ? episodeNumber - 1 : null;
 const nextEp = hasNext ? episodeNumber + 1 : null;
+
 const watchBase = URLS.watch(slug, 1);
 ---
 
@@ -122,8 +123,12 @@ const watchBase = URLS.watch(slug, 1);
     mount(root: HTMLElement, slug: string, current: number, total: number): void;
   }
 
-  function getWatchBase(root: HTMLElement): string {
-    return root.dataset.watchBase ?? '';
+  /** Cari <nav data-action-bar> — bisa jadi `root` sendiri atau nested di dalamnya. */
+  function resolveNav(root: HTMLElement): HTMLElement | null {
+    if (root.dataset.actionBar !== undefined && root.hasAttribute('data-action-bar')) {
+      return root;
+    }
+    return root.querySelector<HTMLElement>('[data-action-bar]');
   }
 
   function urlFor(watchBase: string, ep: number): string {
@@ -137,13 +142,16 @@ const watchBase = URLS.watch(slug, 1);
     current: number,
     total: number
   ): void {
-    const watchBase = getWatchBase(root);
+    const nav = resolveNav(root);
+    if (!nav) return;
+
+    const watchBase = nav.dataset.watchBase ?? '';
     if (!watchBase) return;
 
-    const prevLink = root.querySelector<HTMLAnchorElement>('[data-nav-prev]');
-    const nextLink = root.querySelector<HTMLAnchorElement>('[data-nav-next]');
-    const prevLabel = root.querySelector<HTMLElement>('[data-nav-prev-label]');
-    const nextLabel = root.querySelector<HTMLElement>('[data-nav-next-label]');
+    const prevLink = nav.querySelector<HTMLAnchorElement>('[data-nav-prev]');
+    const nextLink = nav.querySelector<HTMLAnchorElement>('[data-nav-next]');
+    const prevLabel = nav.querySelector<HTMLElement>('[data-nav-prev-label]');
+    const nextLabel = nav.querySelector<HTMLElement>('[data-nav-next-label]');
 
     if (!prevLink || !nextLink || !prevLabel || !nextLabel) return;
 
@@ -152,6 +160,7 @@ const watchBase = URLS.watch(slug, 1);
     const prevEp = hasPrev ? current - 1 : null;
     const nextEp = hasNext ? current + 1 : null;
 
+    // ── Prev ──
     if (hasPrev && prevEp !== null) {
       prevLink.href = urlFor(watchBase, prevEp);
       prevLink.dataset.episodeNav = String(prevEp);
@@ -168,6 +177,7 @@ const watchBase = URLS.watch(slug, 1);
       prevLabel.textContent = 'Ep —';
     }
 
+    // ── Next ──
     if (hasNext && nextEp !== null) {
       nextLink.href = urlFor(watchBase, nextEp);
       nextLink.dataset.episodeNav = String(nextEp);
