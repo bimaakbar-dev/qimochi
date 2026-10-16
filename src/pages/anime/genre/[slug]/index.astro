@@ -5,6 +5,7 @@ import Page from '~/components/Page.astro';
 import Hero from '~/components/Hero.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
 import SectionLabel from '~/components/SectionLabel.astro';
+import SkeletonGrid from '~/components/SkeletonGrid.astro';
 
 export async function getStaticPaths() {
   const genres = await getCollection('genres');
@@ -43,6 +44,8 @@ const canonical = `/anime/genre/${genreId}/`;
         </label>
       </Fragment>
     </Hero>
+
+    <SkeletonGrid />
 
     <section class="section" data-popular-section hidden>
       <SectionLabel>Populer</SectionLabel>
@@ -114,6 +117,7 @@ const canonical = `/anime/genre/${genreId}/`;
     };
 
     const grid = document.querySelector('[data-grid]');
+    const skeleton = document.querySelector('[data-skeleton]');
     const popularSection = document.querySelector('[data-popular-section]');
     const popularGrid = document.querySelector('[data-popular-grid]');
     const listSection = document.querySelector('[data-list-section]');
@@ -130,6 +134,10 @@ const canonical = `/anime/genre/${genreId}/`;
     let sorted: ApiItem[] = [];
     let visibleCount = 0;
     let availableMap = new Map<string, number[]>();
+
+    function hideSkeleton(): void {
+      if (skeleton) skeleton.hidden = true;
+    }
 
     function formatCount(n: number): string {
       if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -225,7 +233,6 @@ const canonical = `/anime/genre/${genreId}/`;
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
 
-      // Episode text dari available count
       const episodeText = available.length > 0 ? `${available.length} Episode` : '';
 
       const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
@@ -378,7 +385,6 @@ const canonical = `/anime/genre/${genreId}/`;
           }
         }
 
-        // Filter: genre cocok DAN punya minimal 1 episode valid
         all = list.filter((item) => {
           if (!Array.isArray(item.genres)) return false;
           if (!item.genres.includes(SLUG)) return false;
@@ -397,7 +403,8 @@ const canonical = `/anime/genre/${genreId}/`;
       })
       .catch((err) => {
         console.error('[genre] fetch failed:', err);
-      });
+      })
+      .finally(hideSkeleton);
   })();
 </script>
 
