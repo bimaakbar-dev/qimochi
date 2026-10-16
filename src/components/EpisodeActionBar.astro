@@ -42,6 +42,12 @@ function formatDur(d?: number | null): string | null {
   return `${d}m`;
 }
 
+function epLabel(item: NavItem): string {
+  return item.title
+    ? `E${item.number} – ${item.title}`
+    : `Episode ${item.number}`;
+}
+
 const prevDur = formatDur(prevEpisode?.duration);
 const nextDur = formatDur(nextEpisode?.duration);
 ---
@@ -53,88 +59,72 @@ const nextDur = formatDur(nextEpisode?.duration);
   data-slug={slug}
   aria-label="Navigasi episode"
 >
-  <div class="ep-nav__grid">
-    {prevEpisode ? (
+  <div class="ep-nav__stack">
+    {/* ── Prev ── */}
+    <div
+      class="ep-nav__slot"
+      data-nav-prev-wrap
+      hidden={!prevEpisode}
+    >
+      <span class="ep-nav__label">Previous Episode</span>
       <a
         class="ep-nav__card"
-        href={URLS.watch(slug, prevEpisode.number)}
+        href={prevEpisode ? URLS.watch(slug, prevEpisode.number) : undefined}
         data-nav-prev
-        data-episode-nav={prevEpisode.number}
-        aria-label={`Episode sebelumnya, Ep ${prevEpisode.number}`}
+        data-episode-nav={prevEpisode ? String(prevEpisode.number) : undefined}
+        aria-label={prevEpisode ? `Episode sebelumnya, Ep ${prevEpisode.number}` : undefined}
       >
         <div class="ep-nav__thumb">
           {thumbnail ? (
             <img src={thumbnail} alt="" loading="lazy" decoding="async" />
           ) : (
             <div class="ep-nav__thumb-fallback" aria-hidden="true">
-              {String(prevEpisode.number).padStart(2, '0')}
+              {prevEpisode ? String(prevEpisode.number).padStart(2, '0') : ''}
             </div>
           )}
           {prevDur && <span class="ep-nav__dur">{prevDur}</span>}
         </div>
         <div class="ep-nav__body">
-          <span class="ep-nav__eyebrow">Episode Sebelumnya</span>
           <span class="ep-nav__title" data-nav-prev-label>
-            {prevEpisode.title
-              ? `E${prevEpisode.number} – ${prevEpisode.title}`
-              : `Episode ${prevEpisode.number}`}
+            {prevEpisode ? epLabel(prevEpisode) : ''}
           </span>
           <span class="ep-nav__meta">Sub Indo</span>
         </div>
       </a>
-    ) : (
-      <div class="ep-nav__card ep-nav__card--disabled" aria-hidden="true">
-        <div class="ep-nav__thumb">
-          <div class="ep-nav__thumb-fallback">—</div>
-        </div>
-        <div class="ep-nav__body">
-          <span class="ep-nav__eyebrow">Episode Sebelumnya</span>
-          <span class="ep-nav__title ep-nav__title--muted">Tidak ada</span>
-          <span class="ep-nav__meta ep-nav__meta--muted">—</span>
-        </div>
-      </div>
-    )}
+    </div>
 
-    {nextEpisode ? (
+    {/* ── Next ── */}
+    <div
+      class="ep-nav__slot"
+      data-nav-next-wrap
+      hidden={!nextEpisode}
+    >
+      <span class="ep-nav__label">Next Episode</span>
       <a
         class="ep-nav__card"
-        href={URLS.watch(slug, nextEpisode.number)}
+        href={nextEpisode ? URLS.watch(slug, nextEpisode.number) : undefined}
         data-nav-next
-        data-episode-nav={nextEpisode.number}
-        aria-label={`Episode berikutnya, Ep ${nextEpisode.number}`}
+        data-episode-nav={nextEpisode ? String(nextEpisode.number) : undefined}
+        aria-label={nextEpisode ? `Episode berikutnya, Ep ${nextEpisode.number}` : undefined}
       >
         <div class="ep-nav__thumb">
           {thumbnail ? (
             <img src={thumbnail} alt="" loading="lazy" decoding="async" />
           ) : (
             <div class="ep-nav__thumb-fallback" aria-hidden="true">
-              {String(nextEpisode.number).padStart(2, '0')}
+              {nextEpisode ? String(nextEpisode.number).padStart(2, '0') : ''}
             </div>
           )}
           {nextDur && <span class="ep-nav__dur">{nextDur}</span>}
         </div>
         <div class="ep-nav__body">
-          <span class="ep-nav__eyebrow">Episode Berikutnya</span>
           <span class="ep-nav__title" data-nav-next-label>
-            {nextEpisode.title
-              ? `E${nextEpisode.number} – ${nextEpisode.title}`
-              : `Episode ${nextEpisode.number}`}
+            {nextEpisode ? epLabel(nextEpisode) : ''}
           </span>
           <span class="ep-nav__meta">Sub Indo</span>
         </div>
       </a>
-    ) : (
-      <div class="ep-nav__card ep-nav__card--disabled" aria-hidden="true">
-        <div class="ep-nav__thumb">
-          <div class="ep-nav__thumb-fallback">—</div>
-        </div>
-        <div class="ep-nav__body">
-          <span class="ep-nav__eyebrow">Episode Berikutnya</span>
-          <span class="ep-nav__title ep-nav__title--muted">Tidak ada</span>
-          <span class="ep-nav__meta ep-nav__meta--muted">—</span>
-        </div>
-      </div>
-    )}
+    </div>
   </div>
 
   <div class="ep-nav__tools">
@@ -160,21 +150,31 @@ const nextDur = formatDur(nextEpisode?.duration);
   .ep-nav {
     display: flex;
     flex-direction: column;
-    gap: var(--s-4);
+    gap: var(--s-5);
     width: 100%;
   }
 
-  .ep-nav__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s-3);
+  .ep-nav__stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
   }
 
-  @media (min-width: 50rem) {
-    .ep-nav__grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--s-4);
-    }
+  .ep-nav__slot {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+  .ep-nav__slot[hidden] { display: none; }
+
+  .ep-nav__label {
+    font-size: 0.6875rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    line-height: 1.2;
+    padding-left: 2px;
   }
 
   .ep-nav__card {
@@ -182,50 +182,37 @@ const nextDur = formatDur(nextEpisode?.duration);
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
     gap: var(--s-3);
-    padding: var(--s-3);
+    padding: var(--s-2);
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     color: inherit;
     text-decoration: none;
     transition:
       background var(--t-fast),
-      border-color var(--t-fast),
-      transform var(--t-fast);
+      border-color var(--t-fast);
     min-width: 0;
   }
 
-  a.ep-nav__card:hover {
+  .ep-nav__card:hover {
     border-color: var(--accent);
     background: var(--bg-surface);
   }
 
-  a.ep-nav__card:hover .ep-nav__title {
+  .ep-nav__card:hover .ep-nav__title {
     color: var(--accent);
   }
 
-  a.ep-nav__card:hover .ep-nav__thumb img {
+  .ep-nav__card:hover .ep-nav__thumb img {
     transform: scale(1.04);
-  }
-
-  .ep-nav__card--disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: var(--bg-base);
   }
 
   .ep-nav__thumb {
     position: relative;
-    width: 6.5rem;
+    width: 7rem;
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background: var(--bg-surface);
     flex-shrink: 0;
-  }
-
-  @media (min-width: 50rem) {
-    .ep-nav__thumb {
-      width: 7.5rem;
-    }
   }
 
   .ep-nav__thumb img {
@@ -271,15 +258,6 @@ const nextDur = formatDur(nextEpisode?.duration);
     min-width: 0;
   }
 
-  .ep-nav__eyebrow {
-    font-size: 0.625rem;
-    font-weight: var(--fw-bold);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    line-height: 1.2;
-  }
-
   .ep-nav__title {
     font-size: var(--fs-sm);
     font-weight: var(--fw-semibold);
@@ -293,45 +271,40 @@ const nextDur = formatDur(nextEpisode?.duration);
     transition: color var(--t-fast);
   }
 
-  .ep-nav__title--muted {
-    color: var(--text-disabled);
-  }
-
   .ep-nav__meta {
     font-size: var(--fs-xs);
     color: var(--text-muted);
     line-height: 1.2;
   }
 
-  .ep-nav__meta--muted {
-    color: var(--text-disabled);
-  }
-
   .ep-nav__tools {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--s-3);
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .ep-nav__tools > :global(.report-btn) {
+    width: 100%;
+    justify-content: center;
   }
 
   .ep-nav__see-all {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: var(--s-2);
-    padding: var(--s-2) var(--s-4);
+    width: 100%;
+    padding: var(--s-3) var(--s-4);
     border: 1px solid var(--border);
-    border-radius: var(--r-full);
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-family: inherit;
     font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    letter-spacing: 0.05em;
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     cursor: pointer;
     transition: all var(--t-fast);
-    white-space: nowrap;
   }
 
   .ep-nav__see-all:hover {
@@ -387,13 +360,23 @@ const nextDur = formatDur(nextEpisode?.duration);
     return `${item.duration}m`;
   }
 
-  function renderCard(
-    card: HTMLElement | null,
+  function renderSlot(
+    slot: HTMLElement | null,
     item: NavItem | null,
     watchBase: string,
     kind: 'prev' | 'next',
     thumbnail: string
   ): void {
+    if (!slot) return;
+
+    if (!item) {
+      slot.hidden = true;
+      return;
+    }
+
+    slot.hidden = false;
+
+    const card = slot.querySelector<HTMLAnchorElement>('.ep-nav__card');
     if (!card) return;
 
     const img = card.querySelector<HTMLImageElement>('.ep-nav__thumb img');
@@ -404,73 +387,39 @@ const nextDur = formatDur(nextEpisode?.duration);
     );
     const metaEl = card.querySelector<HTMLElement>('.ep-nav__meta');
 
-    if (item) {
-      card.classList.remove('ep-nav__card--disabled');
-      card.removeAttribute('aria-hidden');
-      if (card.tagName === 'A') {
-        (card as HTMLAnchorElement).href = urlFor(watchBase, item.number);
-      }
-      card.setAttribute('data-episode-nav', String(item.number));
-      card.setAttribute(
-        'aria-label',
-        kind === 'prev'
-          ? `Episode sebelumnya, Ep ${item.number}`
-          : `Episode berikutnya, Ep ${item.number}`
-      );
+    card.href = urlFor(watchBase, item.number);
+    card.setAttribute('data-episode-nav', String(item.number));
+    card.setAttribute(
+      'aria-label',
+      kind === 'prev'
+        ? `Episode sebelumnya, Ep ${item.number}`
+        : `Episode berikutnya, Ep ${item.number}`
+    );
 
-      if (img && thumbnail) {
-        img.src = thumbnail;
-        img.hidden = false;
-        if (fallbackEl) fallbackEl.hidden = true;
-      } else if (img) {
-        img.hidden = true;
-        if (fallbackEl) {
-          fallbackEl.hidden = false;
-          fallbackEl.textContent = String(item.number).padStart(2, '0');
-        }
-      }
-
-      const d = durText(item);
-      if (durEl) {
-        if (d) {
-          durEl.textContent = d;
-          durEl.hidden = false;
-        } else {
-          durEl.hidden = true;
-        }
-      }
-
-      if (titleEl) {
-        titleEl.textContent = titleText(item);
-        titleEl.classList.remove('ep-nav__title--muted');
-      }
-      if (metaEl) {
-        metaEl.textContent = 'Sub Indo';
-        metaEl.classList.remove('ep-nav__meta--muted');
-      }
-    } else {
-      card.classList.add('ep-nav__card--disabled');
-      card.setAttribute('aria-hidden', 'true');
-      if (card.tagName === 'A') {
-        (card as HTMLAnchorElement).removeAttribute('href');
-      }
-      card.removeAttribute('data-episode-nav');
-
-      if (img) img.hidden = true;
+    if (img && thumbnail) {
+      img.src = thumbnail;
+      img.hidden = false;
+      if (fallbackEl) fallbackEl.hidden = true;
+    } else if (img) {
+      img.hidden = true;
       if (fallbackEl) {
         fallbackEl.hidden = false;
-        fallbackEl.textContent = '—';
-      }
-      if (durEl) durEl.hidden = true;
-      if (titleEl) {
-        titleEl.textContent = 'Tidak ada';
-        titleEl.classList.add('ep-nav__title--muted');
-      }
-      if (metaEl) {
-        metaEl.textContent = '—';
-        metaEl.classList.add('ep-nav__meta--muted');
+        fallbackEl.textContent = String(item.number).padStart(2, '0');
       }
     }
+
+    const d = durText(item);
+    if (durEl) {
+      if (d) {
+        durEl.textContent = d;
+        durEl.hidden = false;
+      } else {
+        durEl.hidden = true;
+      }
+    }
+
+    if (titleEl) titleEl.textContent = titleText(item);
+    if (metaEl) metaEl.textContent = 'Sub Indo';
   }
 
   function mount(root: HTMLElement, data: MountData): void {
@@ -480,14 +429,11 @@ const nextDur = formatDur(nextEpisode?.duration);
     const watchBase = nav.dataset.watchBase ?? '';
     if (!watchBase) return;
 
-    const allCards = Array.from(
-      nav.querySelectorAll<HTMLElement>('.ep-nav__card')
-    );
-    const prevEl = allCards[0] ?? null;
-    const nextEl = allCards[1] ?? null;
+    const prevWrap = nav.querySelector<HTMLElement>('[data-nav-prev-wrap]');
+    const nextWrap = nav.querySelector<HTMLElement>('[data-nav-next-wrap]');
 
-    renderCard(prevEl, data.prev, watchBase, 'prev', data.thumbnail);
-    renderCard(nextEl, data.next, watchBase, 'next', data.thumbnail);
+    renderSlot(prevWrap, data.prev, watchBase, 'prev', data.thumbnail);
+    renderSlot(nextWrap, data.next, watchBase, 'next', data.thumbnail);
   }
 
   (window as any).__qimochiActionBar = { mount } satisfies ActionBarAPI;
