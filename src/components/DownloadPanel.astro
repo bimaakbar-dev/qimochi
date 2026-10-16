@@ -91,7 +91,6 @@ const hasDownloads = downloads.length > 0;
     padding: 0 var(--s-4) var(--s-4);
   }
 
-  /* ==== Inner quality collapsible ==== */
   .quality-item {
     border-top: 1px solid var(--border);
   }
@@ -146,17 +145,16 @@ const hasDownloads = downloads.length > 0;
     color: var(--text-secondary);
     transition: all var(--t-fast);
     text-decoration: none;
+    & svg {
+      width: 0.9em;
+      height: 0.9em;
+      flex-shrink: 0;
+    }
   }
 
   .dl-link:hover {
     border-color: var(--accent);
     color: var(--accent);
-  }
-
-  .dl-link :global(svg) {
-    width: 0.9em;
-    height: 0.9em;
-    flex-shrink: 0;
   }
 </style>
 
