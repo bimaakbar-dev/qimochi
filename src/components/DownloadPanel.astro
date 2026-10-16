@@ -8,54 +8,107 @@ interface Props { downloads?: Download[]; }
 
 const { downloads = [] } = Astro.props;
 const hasDownloads = downloads.length > 0;
+const totalServers = downloads.reduce((sum, d) => sum + d.servers.length, 0);
+
+function formatSummary(): string {
+  if (downloads.length === 0) return '—';
+  return `${downloads.length} kualitas · ${totalServers} link`;
+}
 ---
 
 <div class="download-panel" data-download-panel hidden={!hasDownloads}>
-  <h3 class="panel-title">Download</h3>
-  <div data-download-list>
-    {downloads.map((d) => (
-      <details class="quality-item">
-        <summary>
-          <span class="quality">{d.quality}</span>
-          <span class="size">· {d.size}</span>
-          <span class="chevron" aria-hidden="true">
-            <Icon name="chevron-down" size={14} />
-          </span>
-        </summary>
-        <div class="servers">
-          {d.servers.map((srv) => (
-            <a
-              href={srv.url}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              class="dl-link"
-            >
-              <Icon name="download" size={14} />
-              <span>{srv.name}</span>
-            </a>
-          ))}
-        </div>
-      </details>
-    ))}
-  </div>
+  <details class="download-outer" data-download-outer>
+    <summary>
+      <span class="label">Download</span>
+      <span class="current" data-download-count>{formatSummary()}</span>
+      <span class="chevron" aria-hidden="true">
+        <Icon name="chevron-down" size={16} />
+      </span>
+    </summary>
+
+    <div class="download-body" data-download-list>
+      {downloads.map((d) => (
+        <details class="quality-item">
+          <summary>
+            <span class="quality">{d.quality}</span>
+            <span class="size">· {d.size}</span>
+            <span class="chevron" aria-hidden="true">
+              <Icon name="chevron-down" size={14} />
+            </span>
+          </summary>
+          <div class="servers">
+            {d.servers.map((srv) => (
+              <a
+                href={srv.url}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                class="dl-link"
+              >
+                <Icon name="download" size={14} />
+                <span>{srv.name}</span>
+              </a>
+            ))}
+          </div>
+        </details>
+      ))}
+    </div>
+  </details>
 </div>
 
 <style is:global>
   .download-panel {
     background: var(--bg-elevated);
     border: 1px solid var(--border);
-    padding: var(--s-4);
   }
   .download-panel[hidden] { display: none; }
 
-  .panel-title {
-    font-size: var(--fs-base);
-    font-weight: var(--fw-semibold);
-    margin: 0 0 var(--s-3);
+  .download-outer summary {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: var(--s-3) var(--s-4);
+    cursor: pointer;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    list-style: none;
+    user-select: none;
+  }
+  .download-outer summary::-webkit-details-marker { display: none; }
+
+  .download-outer summary .label {
+    font-weight: var(--fw-medium);
     color: var(--text-primary);
   }
 
-  .quality-item { border-top: 1px solid var(--border); }
+  .download-outer summary .current {
+    margin-left: auto;
+    padding: var(--s-1) var(--s-3);
+    background: var(--bg-surface);
+    color: var(--accent);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .download-outer summary .chevron {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-muted);
+    transition: transform var(--t-base);
+  }
+
+  .download-outer[open] summary .chevron { transform: rotate(180deg); }
+
+  .download-body {
+    padding: 0 var(--s-4) var(--s-4);
+  }
+
+  /* ==== Inner quality collapsible ==== */
+  .quality-item {
+    border-top: 1px solid var(--border);
+  }
   .quality-item:first-of-type { border-top: none; }
 
   .quality-item summary {
@@ -77,7 +130,7 @@ const hasDownloads = downloads.length > 0;
 
   .size { color: var(--text-muted); }
 
-  .chevron {
+  .quality-item summary .chevron {
     display: inline-flex;
     align-items: center;
     margin-left: auto;
@@ -85,7 +138,7 @@ const hasDownloads = downloads.length > 0;
     transition: transform var(--t-base);
   }
 
-  .quality-item[open] .chevron { transform: rotate(180deg); }
+  .quality-item[open] summary .chevron { transform: rotate(180deg); }
 
   .servers {
     display: flex;
@@ -147,15 +200,33 @@ const hasDownloads = downloads.length > 0;
       .join('');
   }
 
+  function formatSummary(downloads: Download[]): string {
+    if (!downloads || downloads.length === 0) return '—';
+    const total = downloads.reduce((sum, d) => sum + d.servers.length, 0);
+    return `${downloads.length} kualitas · ${total} link`;
+  }
+
   function mount(root: HTMLElement, downloads: Download[]): void {
+    const outer = root.querySelector<HTMLDetailsElement>('[data-download-outer]');
     const list = root.querySelector<HTMLElement>('[data-download-list]');
-    if (!list) return;
+    const countEl = root.querySelector<HTMLElement>('[data-download-count]');
+    if (!outer || !list || !countEl) return;
 
     const has = Array.isArray(downloads) && downloads.length > 0;
     root.hidden = !has;
 
-    if (has) list.innerHTML = buildHtml(downloads);
-    else list.innerHTML = '';
+    if (!has) {
+      list.innerHTML = '';
+      outer.open = false;
+      countEl.textContent = '—';
+      return;
+    }
+
+    countEl.textContent = formatSummary(downloads);
+    list.innerHTML = buildHtml(downloads);
+
+    // Default closed
+    outer.open = false;
   }
 
   (window as any).__qimochiDownload = { mount };
