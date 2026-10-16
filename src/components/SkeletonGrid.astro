@@ -2,15 +2,17 @@
 interface Props {
   count?: number;
   class?: string;
+  hidden?: boolean;
 }
 
-const { count = 12, class: className } = Astro.props;
+const { count = 12, class: className, hidden = false } = Astro.props;
 ---
 
 <div
   class:list={['anime-grid', 'skeleton-grid', className]}
   data-skeleton
   aria-hidden="true"
+  hidden={hidden}
 >
   {Array.from({ length: count }).map(() => (
     <div class="ghost-card">
