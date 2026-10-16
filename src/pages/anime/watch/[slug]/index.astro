@@ -178,7 +178,8 @@ const progressPayload = {
           animeTitle={data.title}
           episodes={episodes}
           currentEpisode={defaultEpisode.number}
-          mode="watch"
+          cover={data.cover}
+          banner={data.banner ?? ''}
           showNext={false}
         />
       </div>
