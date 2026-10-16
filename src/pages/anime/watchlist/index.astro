@@ -55,10 +55,12 @@ import Icons from '~/user-components/Icons.astro';
 
   <Page class="wrapper">
     <header class="page-hero">
-      <span class="page-hero__icon" aria-hidden="true">
-        <Icons name="bookmark" size={26} />
-      </span>
-      <h1 class="page-hero__title">Daftar Saya</h1>
+      <div class="page-hero__inner">
+        <span class="page-hero__icon" aria-hidden="true">
+          <Icons name="bookmark" size={26} />
+        </span>
+        <h1 class="page-hero__title">Daftar Saya</h1>
+      </div>
     </header>
 
     <nav class="tabs" role="tablist" aria-label="Tab daftar saya">
@@ -507,8 +509,14 @@ import Icons from '~/user-components/Icons.astro';
 
   .page-hero {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: var(--s-3);
+  }
+  
+  .page-hero__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
   }
 
   .page-hero__icon {
@@ -519,6 +527,9 @@ import Icons from '~/user-components/Icons.astro';
     height: 2.5rem;
     color: var(--text-primary);
     flex-shrink: 0;
+    & svg {
+      flex-shrink: 0;
+    }
   }
 
   .page-hero__title {
