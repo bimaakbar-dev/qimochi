@@ -132,9 +132,6 @@ const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
             {row.durationLabel && (
               <span class="ep-card__dur">{row.durationLabel}</span>
             )}
-            {row.isActive && (
-              <span class="ep-card__watching">Sedang Ditonton</span>
-            )}
           </div>
           <div class="ep-card__body">
             {cleanAnimeTitle && (
@@ -203,7 +200,7 @@ const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
     const items = Array.from(root.querySelectorAll('[data-episode-item]'));
     const loadMoreBtn = root.querySelector('[data-episode-loadmore]');
 
-    const pageSize = Number(root.dataset.pageSize || 15);
+    const pageSize = Number(root.dataset.pageSize || 12);
     const total = Number(root.dataset.total || items.length);
 
     let currentVisibleLimit = items.filter((el) => !el.hidden).length;
@@ -235,21 +232,6 @@ const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
         el.classList.toggle('is-active', active);
         if (active) el.setAttribute('aria-current', 'page');
         else el.removeAttribute('aria-current');
-
-        const thumb = el.querySelector('.ep-card__thumb');
-        if (thumb) {
-          let badge = thumb.querySelector('.ep-card__watching');
-          if (active) {
-            if (!badge) {
-              badge = document.createElement('span');
-              badge.className = 'ep-card__watching';
-              badge.textContent = 'Sedang Ditonton';
-              thumb.appendChild(badge);
-            }
-          } else {
-            if (badge) badge.remove();
-          }
-        }
 
         if (active && el.hidden) {
           const idx = items.indexOf(el);
@@ -405,24 +387,7 @@ const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
     transition: opacity var(--t-fast);
   }
 
-  .ep-card__watching {
-    position: absolute;
-    left: var(--s-2);
-    top: var(--s-2);
-    z-index: 2;
-    padding: 3px 8px;
-    background: var(--accent);
-    color: var(--accent-text);
-    font-size: 0.625rem;
-    font-weight: var(--fw-bold);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    line-height: 1.2;
-    transition: opacity var(--t-fast);
-  }
-
-  .ep-card:hover .ep-card__dur,
-  .ep-card:hover .ep-card__watching {
+  .ep-card:hover .ep-card__dur {
     opacity: 0;
   }
 
