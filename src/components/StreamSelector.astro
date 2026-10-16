@@ -8,6 +8,7 @@ interface Props { streams?: Stream[]; }
 
 const { streams = [] } = Astro.props;
 const defaultStream = streams[0];
+const totalServers = streams.reduce((sum, s) => sum + s.servers.length, 0);
 
 function encodeUrl(s: string): string {
   if (!s) return '';
@@ -16,15 +17,19 @@ function encodeUrl(s: string): string {
   for (const b of bytes) bin += String.fromCharCode(b);
   return btoa(bin);
 }
+
+function formatCurrent(): string {
+  if (!defaultStream) return '—';
+  const count = totalServers > 0 ? ` · ${totalServers} server` : '';
+  return `${defaultStream.quality} · Server 1${count}`;
+}
 ---
 
 <div class="stream-selector-root" data-stream-selector>
-  <details class="stream-picker" open data-stream-picker>
+  <details class="stream-picker" data-stream-picker>
     <summary>
       <span class="label">Server &amp; Kualitas</span>
-      <span class="current" data-current>
-        {defaultStream ? `${defaultStream.quality} · Server 1` : '—'}
-      </span>
+      <span class="current" data-current>{formatCurrent()}</span>
       <span class="chevron" aria-hidden="true">
         <Icon name="chevron-down" size={16} />
       </span>
@@ -92,6 +97,7 @@ function encodeUrl(s: string): string {
     font-weight: var(--fw-semibold);
     letter-spacing: 0.05em;
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .stream-picker summary .chevron {
@@ -202,21 +208,28 @@ function encodeUrl(s: string): string {
       .join('');
   }
 
+  function formatCurrentLabel(streams: Stream[]): string {
+    const first = streams?.[0];
+    if (!first) return '—';
+    const total = streams.reduce((sum, s) => sum + s.servers.length, 0);
+    const count = total > 0 ? ` · ${total} server` : '';
+    return `${first.quality} · Server 1${count}`;
+  }
+
   function mount(root: HTMLElement, streams: Stream[]): void {
     const details = root.querySelector<HTMLDetailsElement>('[data-stream-picker]');
     const body = root.querySelector<HTMLElement>('[data-stream-body]');
     const current = root.querySelector<HTMLElement>('[data-current]');
     if (!details || !body || !current) return;
 
-    const defaultStream = streams?.[0];
-    current.textContent = defaultStream ? `${defaultStream.quality} · Server 1` : '—';
+    current.textContent = formatCurrentLabel(streams ?? []);
     body.innerHTML = buildHtml(streams ?? []);
 
     const firstRadio = body.querySelector<HTMLInputElement>('input[name="stream"]');
-    if (firstRadio) {
-      firstRadio.checked = true;
-      details.open = true;
-    }
+    if (firstRadio) firstRadio.checked = true;
+
+    // Tidak auto-open — default closed
+    details.open = false;
   }
 
   document.addEventListener('change', (e) => {
@@ -246,9 +259,15 @@ function encodeUrl(s: string): string {
       if (iframe) iframe.src = real;
     }
 
-    const details = target.closest('[data-stream-selector]');
-    const current = details?.querySelector<HTMLElement>('[data-current]');
-    if (current) current.textContent = `${quality} · ${server}`;
+    const root = target.closest('[data-stream-selector]');
+    const current = root?.querySelector<HTMLElement>('[data-current]');
+    if (current) {
+      // Hitung total server dari semua radio yang ada di root
+      const all = root?.querySelectorAll('input[name="stream"]');
+      const total = all ? all.length : 0;
+      const count = total > 0 ? ` · ${total} server` : '';
+      current.textContent = `${quality} · ${server}${count}`;
+    }
   });
 
   (window as any).__qimochiStream = { mount };
