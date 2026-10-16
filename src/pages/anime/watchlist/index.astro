@@ -5,7 +5,7 @@ import Icons from '~/user-components/Icons.astro';
 ---
 
 <BaseLayout
-  title="Daftar Saya"
+  title="Watchlist"
   description="Daftar tonton dan riwayat nonton kamu."
   noindex={true}
 >
@@ -179,7 +179,6 @@ import Icons from '~/user-components/Icons.astro';
     }
   }
 
-  /* ==== Tabs ==== */
   function setActiveTab(name) {
     for (const t of tabs) {
       const isActive = t.dataset.tab === name;
@@ -220,7 +219,6 @@ import Icons from '~/user-components/Icons.astro';
     if (readTab() === 'history') renderHistory();
   });
 
-  /* ==== Login links ==== */
   for (const link of loginLinks) {
     link.addEventListener('click', (e) => {
       e.preventDefault();
@@ -229,9 +227,7 @@ import Icons from '~/user-components/Icons.astro';
     });
   }
 
-  /* ==== Bookmark list ==== */
   function showListState(state) {
-    // state: 'loading' | 'guest' | 'toolbar' | 'grid' | 'empty'
     listLoading.hidden = state !== 'loading';
     listGuest.hidden = state !== 'guest';
     listToolbar.hidden = state !== 'toolbar' && state !== 'grid';
@@ -401,7 +397,6 @@ import Icons from '~/user-components/Icons.astro';
     });
   }
 
-  /* ==== History ==== */
   function readHistory() {
     try {
       const raw = localStorage.getItem(HISTORY_KEY);
@@ -492,12 +487,10 @@ import Icons from '~/user-components/Icons.astro';
     });
   }
 
-  /* ==== Auth changed ==== */
   document.addEventListener('qimochi:auth-changed', () => {
     loadList();
   });
 
-  /* ==== Init ==== */
   const initialTab = readTab();
   setActiveTab(initialTab);
   if (initialTab === 'history') {
@@ -512,7 +505,6 @@ import Icons from '~/user-components/Icons.astro';
     gap: var(--s-6);
   }
 
-  /* ==== Hero ==== */
   .page-hero {
     display: flex;
     align-items: center;
@@ -525,7 +517,7 @@ import Icons from '~/user-components/Icons.astro';
     justify-content: center;
     width: 2.5rem;
     height: 2.5rem;
-    color: var(--accent);
+    color: var(--text-primary);
     flex-shrink: 0;
   }
 
@@ -533,7 +525,7 @@ import Icons from '~/user-components/Icons.astro';
     margin: 0;
     font-family: var(--font-montserrat);
     font-size: var(--fs-2xl);
-    font-weight: var(--fw-bold);
+    font-weight: var(--fw-semibold);
     line-height: var(--lh-tight);
     color: var(--text-primary);
     letter-spacing: -0.02em;
@@ -545,7 +537,6 @@ import Icons from '~/user-components/Icons.astro';
     }
   }
 
-  /* ==== Tabs ==== */
   .tabs {
     display: flex;
     gap: var(--s-1);
@@ -591,7 +582,6 @@ import Icons from '~/user-components/Icons.astro';
     opacity: 1;
   }
 
-  /* ==== Panel ==== */
   .panel {
     display: flex;
     flex-direction: column;
@@ -602,7 +592,6 @@ import Icons from '~/user-components/Icons.astro';
     display: none;
   }
 
-  /* ==== Loading ==== */
   .loading {
     padding: var(--s-10) var(--s-4);
     text-align: center;
@@ -613,8 +602,6 @@ import Icons from '~/user-components/Icons.astro';
   .loading[hidden] {
     display: none;
   }
-
-  /* ==== Placeholder ==== */
   .placeholder {
     padding: var(--s-10) var(--s-4);
     text-align: center;
@@ -632,16 +619,13 @@ import Icons from '~/user-components/Icons.astro';
 
   .placeholder a {
     color: var(--accent);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    font-weight: var(--fw-semibold);
+    font-weight: var(--fw-medium);
   }
 
   .placeholder a:hover {
     color: var(--accent-hover);
   }
 
-  /* ==== Toolbar ==== */
   .toolbar {
     display: flex;
     align-items: center;
@@ -712,7 +696,6 @@ import Icons from '~/user-components/Icons.astro';
     color: var(--danger);
   }
 
-  /* ==== Grid ==== */
   .anime-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -730,7 +713,6 @@ import Icons from '~/user-components/Icons.astro';
     }
   }
 
-  /* ==== Empty ==== */
   .empty {
     display: flex;
     flex-direction: column;
@@ -780,7 +762,6 @@ import Icons from '~/user-components/Icons.astro';
     border-color: var(--accent-hover);
   }
 
-  /* ==== History list ==== */
   .history-list {
     display: flex;
     flex-direction: column;
@@ -900,7 +881,6 @@ import Icons from '~/user-components/Icons.astro';
 </style>
 
 <style is:global>
-  /* ==== Bookmark card ==== */
   .bookmark-card {
     position: relative;
     display: block;
