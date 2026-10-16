@@ -38,7 +38,7 @@ import SkeletonGrid from '~/components/SkeletonGrid.astro';
       </div>
     </form>
 
-    <SkeletonGrid />
+    <SkeletonGrid hidden />
 
     <div id="search-empty" class="search-empty" hidden>
       <p>Mulai ketik untuk mencari anime.</p>
@@ -127,10 +127,6 @@ import SkeletonGrid from '~/components/SkeletonGrid.astro';
 
     const resultCache = new Map<string, YukionimeItem[]>();
     const CACHE_LIMIT = 50;
-
-    function hideSkeleton(): void {
-      if (skeleton) skeleton.hidden = true;
-    }
 
     function cacheSet(key: string, value: YukionimeItem[]) {
       if (resultCache.size >= CACHE_LIMIT) {
@@ -527,8 +523,33 @@ import SkeletonGrid from '~/components/SkeletonGrid.astro';
 
     function applyFilter(query: string): void {
       const q = query.trim();
-      if (!ready) return;
 
+      // Skeleton hanya muncul kalau index belum siap DAN user sudah
+      // mengetik query yang cukup panjang. Di state lain, skeleton hidden.
+      const shouldShowSkeleton = !ready && q.length >= MIN_QUERY;
+      if (skeleton) skeleton.hidden = !shouldShowSkeleton;
+
+      if (!ready) {
+        // Fetch belum selesai — reset sections
+        sections.innerHTML = '';
+        sections.hidden = true;
+
+        if (q.length === 0) {
+          emptyState.hidden = false;
+          status.hidden = true;
+        } else if (q.length < MIN_QUERY) {
+          emptyState.hidden = true;
+          status.textContent = `Ketik minimal ${MIN_QUERY} karakter.`;
+          status.hidden = false;
+        } else {
+          // Skeleton tampil; sembunyikan state lain
+          emptyState.hidden = true;
+          status.hidden = true;
+        }
+        return;
+      }
+
+      // Index sudah siap
       if (q.length === 0) {
         sections.innerHTML = '';
         emptyState.hidden = false;
@@ -614,6 +635,11 @@ import SkeletonGrid from '~/components/SkeletonGrid.astro';
     input.value = initialQuery;
     updateClearBtn();
 
+    // Bootstrap: set state awal berdasarkan query di URL.
+    // - No query → empty state (tanpa skeleton)
+    // - Query ≥ MIN_QUERY → skeleton (kalau fetch belum selesai)
+    applyFilter(initialQuery);
+
     Promise.all([
       fetch(API, { headers: { Accept: 'application/json' } }).then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -630,6 +656,11 @@ import SkeletonGrid from '~/components/SkeletonGrid.astro';
         const list = json?.data;
         if (!Array.isArray(list)) {
           console.error('[Search] Invalid payload');
+          if (skeleton) skeleton.hidden = true;
+          status.textContent = 'Data tidak valid. Coba refresh halaman.';
+          status.hidden = false;
+          emptyState.hidden = true;
+          sections.hidden = true;
           return;
         }
 
@@ -667,19 +698,18 @@ import SkeletonGrid from '~/components/SkeletonGrid.astro';
 
         ready = true;
 
-        if (initialQuery.trim().length >= MIN_QUERY) {
-          applyFilter(initialQuery);
-        } else {
-          applyFilter('');
-        }
+        // Re-apply filter dengan input value terkini — user mungkin sudah
+        // mengetik lebih lanjut saat fetch belum selesai.
+        applyFilter(input.value);
       })
       .catch((err) => {
         console.error('[Search] fetch failed:', err);
+        if (skeleton) skeleton.hidden = true;
         status.textContent = 'Gagal memuat data. Coba refresh halaman.';
         status.hidden = false;
         emptyState.hidden = true;
-      })
-      .finally(hideSkeleton);
+        sections.hidden = true;
+      });
   })();
 </script>
 
