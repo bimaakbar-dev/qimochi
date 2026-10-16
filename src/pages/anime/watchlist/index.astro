@@ -138,6 +138,7 @@ import Icons from '~/user-components/Icons.astro';
   // @ts-nocheck
   const API = 'https://api.qimochi.web.id';
   const ANIME_API = 'https://yukionime.pages.dev/api/v1/anime.json';
+  const AVAILABLE_API = '/api/available-episodes.json';
   const CACHE_KEY = 'qimochi:user-cache';
   const HISTORY_KEY = 'qimochi:continue';
 
@@ -165,6 +166,7 @@ import Icons from '~/user-components/Icons.astro';
 
   let bookmarks = [];
   let animeMap = new Map();
+  let availableMap = new Map();
   let listSortKey = 'recent';
 
   function getUser() {
@@ -250,12 +252,34 @@ import Icons from '~/user-components/Icons.astro';
   }
 
   async function loadAnimeIndex() {
-    const res = await fetch(ANIME_API, { headers: { Accept: 'application/json' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    const list = Array.isArray(json.data) ? json.data : [];
+    const [animeRes, availRes] = await Promise.all([
+      fetch(ANIME_API, { headers: { Accept: 'application/json' } }).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }),
+      fetch(AVAILABLE_API, { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({})),
+    ]);
+
+    const list = Array.isArray(animeRes?.data) ? animeRes.data : [];
+
+    // Bangun map available
+    availableMap = new Map();
+    if (availRes && typeof availRes === 'object') {
+      for (const [slug, eps] of Object.entries(availRes)) {
+        if (Array.isArray(eps)) {
+          availableMap.set(slug, eps.filter((n) => typeof n === 'number'));
+        }
+      }
+    }
+
+    // Bangun map anime HANYA untuk yang punya minimal 1 episode valid
     const map = new Map();
-    for (const a of list) map.set(a.id, a);
+    for (const a of list) {
+      if ((availableMap.get(a.id)?.length ?? 0) === 0) continue;
+      map.set(a.id, a);
+    }
     return map;
   }
 
@@ -279,6 +303,9 @@ import Icons from '~/user-components/Icons.astro';
     if (!bookmarkTpl) return null;
     const anime = animeMap.get(item.animeId);
     if (!anime) return null;
+
+    const available = availableMap.get(anime.id) ?? [];
+    const firstEp = available[0] ?? 1;
 
     const frag = bookmarkTpl.content.cloneNode(true);
     const card = frag.firstElementChild;
@@ -347,7 +374,9 @@ import Icons from '~/user-components/Icons.astro';
 
   function updateListCount() {
     if (!listCount) return;
-    listCount.textContent = `${bookmarks.length} anime`;
+    // Hitung hanya yang punya episode valid (konsisten dengan yang dirender)
+    const playable = bookmarks.filter((b) => animeMap.has(b.animeId));
+    listCount.textContent = `${playable.length} anime`;
   }
 
   function renderList() {
@@ -381,7 +410,11 @@ import Icons from '~/user-components/Icons.astro';
       bookmarks = bm;
       animeMap = index;
 
-      if (bookmarks.length === 0) {
+      // Kalau semua bookmark tersaring (tidak ada yang punya episode valid),
+      // tampilkan empty state, bukan grid kosong.
+      const playable = bookmarks.filter((b) => animeMap.has(b.animeId));
+
+      if (playable.length === 0) {
         showListState('empty');
         return;
       }
@@ -436,7 +469,10 @@ import Icons from '~/user-components/Icons.astro';
     const progress = frag.querySelector('[data-history-progress]');
     const progressFill = frag.querySelector('[data-history-progress-fill]');
 
-    link.href = `/anime/watch/${item.slug}/episodes/${item.episode}/`;
+    // URL watch canonical: /anime/watch/{slug}/?ep=N (bukan legacy /episodes/N/)
+    link.href = item.episode > 1
+      ? `/anime/watch/${item.slug}/?ep=${item.episode}`
+      : `/anime/watch/${item.slug}/`;
     ep.textContent = String(item.episode).padStart(2, '0');
     title.textContent = item.title;
 
@@ -512,7 +548,7 @@ import Icons from '~/user-components/Icons.astro';
     flex-direction: column;
     align-items: center;
   }
-  
+
   .page-hero__inner {
     display: flex;
     align-items: center;
