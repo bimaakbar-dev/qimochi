@@ -29,7 +29,7 @@ const {
   duration = null,
 } = Astro.props;
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 12;
 
 const sorted = [...episodes].sort((a, b) => a.number - b.number);
 const total = sorted.length;
@@ -82,13 +82,15 @@ const episodeRows = sorted.map((ep, index) => ({
   title: cleanText(ep.title),
   durationLabel: resolveDuration(ep.duration),
   airedLabel: formatAired(ep.aired),
-  isActive: ep.number === currentEpisode,
+  isActive: currentEpisode != null && ep.number === currentEpisode,
   isHidden: index >= initialLimit,
 }));
 
 function formatEp(n: number): string {
   return String(n).padStart(2, '0');
 }
+
+const initialEpisodeAttr = currentEpisode != null ? String(currentEpisode) : '';
 ---
 
 <section
@@ -96,7 +98,7 @@ function formatEp(n: number): string {
   data-episode-list
   data-page-size={PAGE_SIZE}
   data-total={total}
-  data-initial-episode={currentEpisode ?? sorted[0]?.number ?? 1}
+  data-initial-episode={initialEpisodeAttr}
 >
   <ol class="ep-grid" data-episode-items>
     {episodeRows.map((row) => (
@@ -131,7 +133,7 @@ function formatEp(n: number): string {
               <span class="ep-card__dur">{row.durationLabel}</span>
             )}
             {row.isActive && (
-              <span class="ep-card__watching">NOW PLAYING</span>
+              <span class="ep-card__watching">Sedang Ditonton</span>
             )}
           </div>
           <div class="ep-card__body">
@@ -172,7 +174,7 @@ function formatEp(n: number): string {
           <div class="ep-card__hover-actions">
             <span class="ep-card__hover-play">
               <Icon name="play" size={14} />
-              <span>PLAY E{row.number}</span>
+              <span>Putar E{row.number}</span>
             </span>
           </div>
         </div>
@@ -200,11 +202,11 @@ function formatEp(n: number): string {
 
     const items = Array.from(root.querySelectorAll('[data-episode-item]'));
     const loadMoreBtn = root.querySelector('[data-episode-loadmore]');
-    
+
     const pageSize = Number(root.dataset.pageSize || 15);
     const total = Number(root.dataset.total || items.length);
 
-    let currentVisibleLimit = items.filter(el => !el.hidden).length;
+    let currentVisibleLimit = items.filter((el) => !el.hidden).length;
     if (currentVisibleLimit < pageSize) currentVisibleLimit = pageSize;
 
     function applyVisibility() {
@@ -241,7 +243,7 @@ function formatEp(n: number): string {
             if (!badge) {
               badge = document.createElement('span');
               badge.className = 'ep-card__watching';
-              badge.textContent = 'NOW PLAYING';
+              badge.textContent = 'Sedang Ditonton';
               thumb.appendChild(badge);
             }
           } else {
@@ -267,11 +269,16 @@ function formatEp(n: number): string {
 
     window.__qimochiEpisodeList = { setActive };
 
+    const attr = (root.dataset.initialEpisode || '').trim();
+    const initialEp = attr ? parseInt(attr, 10) : NaN;
     const sp = new URLSearchParams(window.location.search);
     const epParam = parseInt(sp.get('ep') ?? '', 10);
-    const initialEp = !isNaN(epParam) ? epParam : Number(root.dataset.initialEpisode || 1);
-    
-    setActive(initialEp);
+
+    const target = !isNaN(epParam) ? epParam : initialEp;
+
+    if (!isNaN(target)) {
+      setActive(target);
+    }
   })();
 </script>
 
