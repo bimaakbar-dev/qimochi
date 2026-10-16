@@ -92,6 +92,7 @@ const canonical = `/anime/genre/${genreId}/`;
 
     const API = 'https://api-qimochi.pages.dev/api/v1/anime.json';
     const AVAILABLE_API = '/api/available-episodes.json';
+    const SYNOPSIS_API = '/api/anime-synopsis.json';
     const BATCH = 24;
     const POPULAR_LIMIT = 6;
     const DEFAULT_SORT = 'popular';
@@ -134,9 +135,19 @@ const canonical = `/anime/genre/${genreId}/`;
     let sorted: ApiItem[] = [];
     let visibleCount = 0;
     let availableMap = new Map<string, number[]>();
+    let synopsisMap = new Map<string, string>();
 
     function hideSkeleton(): void {
       if (skeleton) skeleton.hidden = true;
+    }
+
+    function titleCase(s: string): string {
+      if (!s) return '';
+      return s
+        .split(/[-_\s]+/)
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
     }
 
     function formatCount(n: number): string {
@@ -231,6 +242,25 @@ const canonical = `/anime/genre/${genreId}/`;
         if (scoreEl) scoreEl.textContent = score.toFixed(1);
         const votesEl = card.querySelector('[data-card-votes]');
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
+      }
+
+      const studioEl = card.querySelector('[data-card-studio]');
+      if (studioEl && Array.isArray(item.studios) && item.studios.length > 0) {
+        const name = titleCase(item.studios[0]);
+        if (name && name.toLowerCase() !== 'unknown') {
+          const li = studioEl.querySelector('li');
+          if (li) li.textContent = name;
+          studioEl.hidden = false;
+        }
+      }
+
+      const excerptEl = card.querySelector('[data-card-excerpt]');
+      if (excerptEl) {
+        const text = synopsisMap.get(item.id);
+        if (text) {
+          excerptEl.textContent = text;
+          excerptEl.hidden = false;
+        }
       }
 
       const episodeText = available.length > 0 ? `${available.length} Episode` : '';
@@ -371,8 +401,11 @@ const canonical = `/anime/genre/${genreId}/`;
       fetch(AVAILABLE_API, { headers: { Accept: 'application/json' } })
         .then((r) => (r.ok ? r.json() : {}))
         .catch(() => ({})),
+      fetch(SYNOPSIS_API, { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({})),
     ])
-      .then(([json, availableRaw]) => {
+      .then(([json, availableRaw, synRaw]) => {
         const list = json?.data;
         if (!Array.isArray(list)) return;
 
@@ -381,6 +414,15 @@ const canonical = `/anime/genre/${genreId}/`;
           for (const [slug, eps] of Object.entries(availableRaw)) {
             if (Array.isArray(eps)) {
               availableMap.set(slug, eps.filter((n) => typeof n === 'number'));
+            }
+          }
+        }
+
+        synopsisMap = new Map();
+        if (synRaw && typeof synRaw === 'object') {
+          for (const [slug, text] of Object.entries(synRaw)) {
+            if (typeof text === 'string' && text.length > 0) {
+              synopsisMap.set(slug, text);
             }
           }
         }
