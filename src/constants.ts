@@ -132,7 +132,10 @@ export const STORAGE_KEYS = {
 
 export const URLS = {
   anime:  (slug: string) => `/anime/${slug}/`,
-  watch:  (slug: string, episode: number) => `/anime/watch/${slug}/episodes/${episode}/`,
+  watch:  (slug: string, episode: number) =>
+    episode <= 1
+      ? `/anime/watch/${slug}/`
+      : `/anime/watch/${slug}/?ep=${episode}`,
   genre:  (slug: string) => `/anime/genre/${slug.toLowerCase().replace(/\s+/g, '-')}/`,
   status: (status: string) => `/anime/${status.toLowerCase()}/`,
 } as const;
