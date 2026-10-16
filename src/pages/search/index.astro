@@ -3,6 +3,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import Icon from '~/user-components/Icons.astro';
 import Page from '~/components/Page.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
+import SkeletonGrid from '~/components/SkeletonGrid.astro';
 ---
 
 <BaseLayout
@@ -37,7 +38,9 @@ import AnimeCard from '~/components/AnimeCard.astro';
       </div>
     </form>
 
-    <div id="search-empty" class="search-empty">
+    <SkeletonGrid />
+
+    <div id="search-empty" class="search-empty" hidden>
       <p>Mulai ketik untuk mencari anime.</p>
       <p class="search-empty-hint">
         Atau jelajahi <a href="/anime/">archive lengkap</a>.
@@ -109,6 +112,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
     const emptyState = document.getElementById('search-empty')!;
     const status = document.getElementById('search-status')!;
     const sections = document.getElementById('search-sections')!;
+    const skeleton = document.querySelector('[data-skeleton]') as HTMLElement | null;
     const gridTpl = document.getElementById('anime-card-template') as HTMLTemplateElement | null;
     const featuredTpl = document.getElementById('anime-card-featured-template') as HTMLTemplateElement | null;
     const compactTpl = document.getElementById('anime-card-compact-template') as HTMLTemplateElement | null;
@@ -121,6 +125,10 @@ import AnimeCard from '~/components/AnimeCard.astro';
 
     const resultCache = new Map<string, YukionimeItem[]>();
     const CACHE_LIMIT = 50;
+
+    function hideSkeleton(): void {
+      if (skeleton) skeleton.hidden = true;
+    }
 
     function cacheSet(key: string, value: YukionimeItem[]) {
       if (resultCache.size >= CACHE_LIMIT) {
@@ -266,7 +274,6 @@ import AnimeCard from '~/components/AnimeCard.astro';
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
 
-      // Episode text dari available count
       const episodeText = available.length > 0 ? `${available.length} Episode` : '';
 
       const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
@@ -591,7 +598,6 @@ import AnimeCard from '~/components/AnimeCard.astro';
           return;
         }
 
-        // Bangun map available
         availableMap = new Map<string, number[]>();
         if (availableRaw && typeof availableRaw === 'object') {
           for (const [slug, eps] of Object.entries(availableRaw)) {
@@ -604,7 +610,6 @@ import AnimeCard from '~/components/AnimeCard.astro';
           }
         }
 
-        // Hanya index anime yang punya minimal 1 episode valid
         const playable = list.filter(
           (item) => (availableMap.get(item.id)?.length ?? 0) > 0
         );
@@ -628,7 +633,9 @@ import AnimeCard from '~/components/AnimeCard.astro';
         console.error('[Search] fetch failed:', err);
         status.textContent = 'Gagal memuat data. Coba refresh halaman.';
         status.hidden = false;
-      });
+        emptyState.hidden = true;
+      })
+      .finally(hideSkeleton);
   })();
 </script>
 
