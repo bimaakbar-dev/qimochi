@@ -122,7 +122,6 @@ import AnimeCard from '~/components/AnimeCard.astro';
         link.setAttribute('aria-label', item.title);
       }
 
-      // Cover
       const img = card.querySelector('[data-cover-img]') as HTMLImageElement | null;
       const placeholder = card.querySelector('.cover-placeholder') as HTMLElement | null;
 
@@ -148,11 +147,9 @@ import AnimeCard from '~/components/AnimeCard.astro';
         placeholder.classList.remove('is-loading');
       }
 
-      // Type
       const typeEl = card.querySelector('[data-card-type]') as HTMLElement | null;
       if (typeEl) typeEl.textContent = mapType(item.type);
 
-      // Status
       const statusEl = card.querySelector('[data-card-status]') as HTMLElement | null;
       if (statusEl) {
         const { label, variant: v } = mapStatus(item.status);
@@ -160,14 +157,12 @@ import AnimeCard from '~/components/AnimeCard.astro';
         statusEl.dataset.variant = v;
       }
 
-      // Title
       const titleEl = card.querySelector('[data-card-title]') as HTMLElement | null;
       if (titleEl) titleEl.textContent = item.title;
 
       const titleInfoEl = card.querySelector('[data-card-title-info]') as HTMLElement | null;
       if (titleInfoEl) titleInfoEl.textContent = item.title;
 
-      // Rating
       const score = getScore(item);
       const votes = getVotes(item);
       const ratingEl = card.querySelector('[data-card-rating]') as HTMLElement | null;
@@ -180,27 +175,31 @@ import AnimeCard from '~/components/AnimeCard.astro';
         const votesEl = card.querySelector('[data-card-votes]') as HTMLElement | null;
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
+      
+      
+	  const episodeText =
+  	item.episodes && item.episodes > 0 ? `${item.episodes} Episode` : '';
 
-      // Meta list
-      const metaEl = card.querySelector('[data-card-meta]') as HTMLElement | null;
-      if (metaEl && item.episodes && item.episodes > 0) {
-        const li = document.createElement('li');
-        li.textContent = `${item.episodes} Episode`;
-        metaEl.appendChild(li);
-      }
+	  const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
+	  if (episodesEl && episodeText) {
+  	  episodesEl.textContent = episodeText;
+  	  episodesEl.hidden = false;
+	  }
+	
+	  const metaTextEl = card.querySelector('[data-card-meta-text]') as HTMLElement | null;
+	  if (metaTextEl && episodeText) {
+  	  metaTextEl.textContent = episodeText;
+	  }
 
-      // Play — SPA-lite path
       const playEl = card.querySelector('[data-card-play]') as HTMLAnchorElement | null;
       if (playEl) {
         playEl.href = `/anime/watch/${item.id}/`;
         playEl.setAttribute('aria-label', `Mulai menonton ${item.title}`);
       }
 
-      // Bookmark
       const bookmarkEl = card.querySelector('[data-bookmark-btn]') as HTMLButtonElement | null;
       if (bookmarkEl) bookmarkEl.dataset.anime = item.id;
 
-      // Episodes in info
       const epEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
       if (epEl && item.episodes && item.episodes > 0) {
         epEl.textContent = `Ep ${item.episodes}`;
