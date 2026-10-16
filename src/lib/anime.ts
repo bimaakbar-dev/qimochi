@@ -30,7 +30,6 @@ export type HydratedAnime = Omit<AnimeEntry, 'data'> & {
     genre: string[];
     releaseDate: Date | null;
     score: number | null;
-    /** Episode yang punya data stream/download. */
     episodeList: EpisodeData[];
     franchises: Franchise[];
   };
@@ -42,7 +41,6 @@ const HIDDEN_RELATIONS = new Set([
   'character', 'adaptation', 'contains', 'other',
 ]);
 
-/* ── Raw format dari qimochi-data (format baru) ── */
 interface RawEpisodeStreamObject {
   [quality: string]: string[];
 }
@@ -60,15 +58,10 @@ interface RawEpisodeData {
   downloads?: RawEpisodeDownloadObject | EpisodeDownload[];
 }
 
-/* ── Normalizer: format baru → format lama (internal) ── */
-
 function normalizeStreams(raw: RawEpisodeData['streams']): EpisodeStream[] {
   if (!raw) return [];
-
-  // Format lama (array): [{ quality, servers: [{name, url}] }]
   if (Array.isArray(raw)) return raw as EpisodeStream[];
 
-  // Format baru (object): { "720p": ["url1", "url2"] }
   return Object.entries(raw).map(([quality, urls]) => ({
     quality,
     servers: (Array.isArray(urls) ? urls : []).map((url, i) => ({
@@ -83,10 +76,8 @@ function normalizeDownloads(
 ): EpisodeDownload[] | undefined {
   if (!raw) return undefined;
 
-  // Format lama (array)
   if (Array.isArray(raw)) return raw as EpisodeDownload[];
 
-  // Format baru (object): { "720p": { size, urls } }
   const result: EpisodeDownload[] = [];
   for (const [quality, val] of Object.entries(raw)) {
     if (!val || !Array.isArray(val.urls) || val.urls.length === 0) continue;
@@ -101,8 +92,6 @@ function normalizeDownloads(
   }
   return result.length > 0 ? result : undefined;
 }
-
-/* ── Glob: baca semua chunk ── */
 
 const episodeModules = import.meta.glob<{ default: RawEpisodeData[] }>(
   '../data/anime/*/episodes/*.json',
@@ -136,13 +125,17 @@ for (const [slug, chunks] of Object.entries(chunksBySlug)) {
 
     for (const raw of mod.default) {
       if (!raw || typeof raw.number !== 'number') continue;
-      merged.push({
-        number: raw.number,
-        title: raw.title ?? undefined,
-        streams: normalizeStreams(raw.streams),
-        downloads: normalizeDownloads(raw.downloads),
-      });
-    }
+
+  	const streams = normalizeStreams(raw.streams);
+  	if (streams.length === 0) continue;
+
+  	merged.push({
+    	number: raw.number,
+    	title: raw.title ?? undefined,
+    	streams,
+    	downloads: normalizeDownloads(raw.downloads),
+     });
+	}
   }
   merged.sort((a, b) => a.number - b.number);
   episodesBySlug[slug] = merged;
@@ -268,8 +261,6 @@ export async function getAllEpisodePaths(): Promise<EpisodePathItem[]> {
   }
   return paths;
 }
-
-/* ── Watch path: 1 halaman per anime (SPA-lite) ── */
 
 export interface WatchPathItem {
   slug: string;
