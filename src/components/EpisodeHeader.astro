@@ -2,6 +2,7 @@
 import BookmarkButton from './BookmarkButton.astro';
 import ShareButton from './ShareButton.astro';
 import EpisodeVotes from './EpisodeVotes.astro';
+import ReportButton from './ReportToggle.astro';
 
 interface Props {
   animeSlug: string;
@@ -11,6 +12,7 @@ interface Props {
   ageRating?: string | null;
   votesApiBase?: string;
   showBookmark?: boolean;
+  showReport?: boolean;
   showShare?: boolean;
   showVotes?: boolean;
   class?: string;
@@ -24,6 +26,7 @@ const {
   ageRating,
   votesApiBase = '',
   showBookmark = true,
+  showReport = true,
   showShare = true,
   showVotes = true,
   class: className,
@@ -52,9 +55,14 @@ const animeUrl = `/anime/${animeSlug}/`;
       <h1 class="ep-header__episode">{heading}</h1>
     </div>
 
-    {showBookmark && (
-      <div class="ep-header__bookmark">
-        <BookmarkButton animeId={animeSlug} />
+    {(showBookmark || showReport) && (
+      <div class="ep-header__tools">
+        {showBookmark && (
+          <BookmarkButton animeId={animeSlug} />
+        )}
+        {showReport && (
+          <ReportButton slug={animeSlug} episode={episodeNumber} />
+        )}
       </div>
     )}
   </div>
@@ -139,11 +147,15 @@ const animeUrl = `/anime/${animeSlug}/`;
     overflow-wrap: anywhere;
   }
 
-  .ep-header__bookmark {
+  .ep-header__tools {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
     flex-shrink: 0;
   }
 
-  .ep-header__bookmark :global(.icon-btn) {
+  /* Reset icon button global styles untuk header tool */
+  .ep-header__tools :global(.icon-btn) {
     width: 2.25rem;
     height: 2.25rem;
     color: var(--text-secondary);
@@ -151,15 +163,21 @@ const animeUrl = `/anime/${animeSlug}/`;
     border-width: 1px;
   }
 
-  .ep-header__bookmark :global(.icon-btn:hover) {
+  /* Hover Bookmark */
+  .ep-header__tools :global([data-bookmark-btn]:hover) {
     color: var(--accent);
     border-color: var(--accent);
   }
-
-  .ep-header__bookmark :global(.icon-btn.is-active) {
+  .ep-header__tools :global([data-bookmark-btn].is-active) {
     background: var(--accent);
     border-color: var(--accent);
     color: var(--accent-text);
+  }
+
+  /* Hover Report */
+  .ep-header__tools :global([data-report-btn]:hover) {
+    color: var(--warning);
+    border-color: var(--warning);
   }
 
   .ep-header__meta {
