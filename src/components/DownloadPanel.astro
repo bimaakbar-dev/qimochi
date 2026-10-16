@@ -1,56 +1,44 @@
 ---
 import Icon from '~/user-components/Icons.astro';
 
-interface Server {
-  name: string;
-  url: string;
-}
-interface Download {
-  quality: string;
-  size: string;
-  servers: Server[];
-}
+interface Server { name: string; url: string; }
+interface Download { quality: string; size: string; servers: Server[]; }
 
-interface Props {
-  downloads?: Download[];
-}
+interface Props { downloads?: Download[]; }
 
 const { downloads = [] } = Astro.props;
 const hasDownloads = downloads.length > 0;
 ---
 
-{hasDownloads && (
-  <section class="download-panel">
-    <h3 class="panel-title">Download</h3>
-
-    <div>
-      {downloads.map((d) => (
-        <details class="quality-item">
-          <summary>
-            <span class="quality">{d.quality}</span>
-            <span class="size">· {d.size}</span>
-            <span class="chevron" aria-hidden="true">
-              <Icon name="chevron-down" size={14} />
-            </span>
-          </summary>
-          <div class="servers">
-            {d.servers.map((srv) => (
-              <a
-                href={srv.url}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                class="dl-link"
-              >
-                <Icon name="download" />
-                <span>{srv.name}</span>
-              </a>
-            ))}
-          </div>
-        </details>
-      ))}
-    </div>
-  </section>
-)}
+<div class="download-panel" data-download-panel hidden={!hasDownloads}>
+  <h3 class="panel-title">Download</h3>
+  <div data-download-list>
+    {downloads.map((d) => (
+      <details class="quality-item">
+        <summary>
+          <span class="quality">{d.quality}</span>
+          <span class="size">· {d.size}</span>
+          <span class="chevron" aria-hidden="true">
+            <Icon name="chevron-down" size={14} />
+          </span>
+        </summary>
+        <div class="servers">
+          {d.servers.map((srv) => (
+            <a
+              href={srv.url}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              class="dl-link"
+            >
+              <Icon name="download" size={14} />
+              <span>{srv.name}</span>
+            </a>
+          ))}
+        </div>
+      </details>
+    ))}
+  </div>
+</div>
 
 <style>
   .download-panel {
@@ -58,6 +46,7 @@ const hasDownloads = downloads.length > 0;
     border: 1px solid var(--border);
     padding: var(--s-4);
   }
+  .download-panel[hidden] { display: none; }
 
   .panel-title {
     font-size: var(--fs-base);
@@ -66,13 +55,8 @@ const hasDownloads = downloads.length > 0;
     color: var(--text-primary);
   }
 
-  .quality-item {
-    border-top: 1px solid var(--border);
-  }
-
-  .quality-item:first-of-type {
-    border-top: none;
-  }
+  .quality-item { border-top: 1px solid var(--border); }
+  .quality-item:first-of-type { border-top: none; }
 
   .quality-item summary {
     display: flex;
@@ -84,19 +68,14 @@ const hasDownloads = downloads.length > 0;
     font-size: var(--fs-sm);
     user-select: none;
   }
-
-  .quality-item summary::-webkit-details-marker {
-    display: none;
-  }
+  .quality-item summary::-webkit-details-marker { display: none; }
 
   .quality {
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
   }
 
-  .size {
-    color: var(--text-muted);
-  }
+  .size { color: var(--text-muted); }
 
   .chevron {
     display: inline-flex;
@@ -106,9 +85,7 @@ const hasDownloads = downloads.length > 0;
     transition: transform var(--t-base);
   }
 
-  .quality-item[open] .chevron {
-    transform: rotate(180deg);
-  }
+  .quality-item[open] .chevron { transform: rotate(180deg); }
 
   .servers {
     display: flex;
@@ -128,6 +105,7 @@ const hasDownloads = downloads.length > 0;
     font-weight: var(--fw-medium);
     color: var(--text-secondary);
     transition: all var(--t-fast);
+    text-decoration: none;
   }
 
   .dl-link:hover {
@@ -138,5 +116,47 @@ const hasDownloads = downloads.length > 0;
   .dl-link :global(svg) {
     width: 0.9em;
     height: 0.9em;
+    flex-shrink: 0;
   }
 </style>
+
+<script>
+  interface Server { name: string; url: string; }
+  interface Download { quality: string; size: string; servers: Server[]; }
+
+  function esc(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  const CHEVRON_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg>';
+  const DL_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M8 2v8M4 7l4 4 4-4M3 14h10"/></svg>';
+
+  function buildHtml(downloads: Download[]): string {
+    if (!downloads || downloads.length === 0) return '';
+
+    return downloads
+      .map((d) => {
+        const servers = d.servers
+          .map(
+            (srv) =>
+              `<a href="${esc(srv.url)}" target="_blank" rel="noopener noreferrer nofollow" class="dl-link">${DL_SVG}<span>${esc(srv.name)}</span></a>`
+          )
+          .join('');
+        return `<details class="quality-item"><summary><span class="quality">${esc(d.quality)}</span><span class="size">· ${esc(d.size)}</span><span class="chevron" aria-hidden="true">${CHEVRON_SVG}</span></summary><div class="servers">${servers}</div></details>`;
+      })
+      .join('');
+  }
+
+  function mount(root: HTMLElement, downloads: Download[]): void {
+    const list = root.querySelector<HTMLElement>('[data-download-list]');
+    if (!list) return;
+
+    const has = Array.isArray(downloads) && downloads.length > 0;
+    root.hidden = !has;
+
+    if (has) list.innerHTML = buildHtml(downloads);
+    else list.innerHTML = '';
+  }
+
+  (window as any).__qimochiDownload = { mount };
+</script>
