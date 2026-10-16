@@ -1,6 +1,6 @@
 ---
+import Icon from '~/user-components/Icons.astro';
 import { URLS } from '~/constants';
-import LinkButton from '~/user-components/LinkButton.astro';
 import ReportButton from './ReportToggle.astro';
 
 interface Props {
@@ -25,27 +25,21 @@ const prevEp = hasPrev ? episodeNumber - 1 : null;
 const nextEp = hasNext ? episodeNumber + 1 : null;
 ---
 
-<nav class="action-bar" aria-label="Navigasi episode">
-  {hasPrev ? (
-    <LinkButton
-      href={URLS.watch(slug, prevEp!)}
-      variant="outline"
-      size="md"
-      icon="prev"
-    >
-      Ep {prevEp}
-    </LinkButton>
-  ) : (
-    <LinkButton
-      variant="outline"
-      size="md"
-      icon="prev"
-      disabled
-    >
-      Ep —
-    </LinkButton>
-  )}
-  
+<nav class="action-bar" data-action-bar aria-label="Navigasi episode">
+  <a
+    class:list={['action-btn', { 'is-disabled': !hasPrev }]}
+    href={hasPrev ? URLS.watch(slug, prevEp!) : undefined}
+    data-nav-prev
+    data-episode-nav={hasPrev ? prevEp : undefined}
+    aria-disabled={hasPrev ? undefined : 'true'}
+    aria-label={hasPrev ? `Episode sebelumnya, Ep ${prevEp}` : 'Tidak ada episode sebelumnya'}
+  >
+    <Icon name="prev" size={16} />
+    <span class="action-btn__label" data-nav-prev-label>
+      {hasPrev ? `Ep ${prevEp}` : 'Ep —'}
+    </span>
+  </a>
+
   <ReportButton
     slug={slug}
     episode={episodeNumber}
@@ -53,27 +47,19 @@ const nextEp = hasNext ? episodeNumber + 1 : null;
     quality={quality}
   />
 
-  {hasNext ? (
-    <LinkButton
-      href={URLS.watch(slug, nextEp!)}
-      variant="outline"
-      size="md"
-      icon="next"
-      iconPos="suffix"
-    >
-      Ep {nextEp}
-    </LinkButton>
-  ) : (
-    <LinkButton
-      variant="outline"
-      size="md"
-      icon="next"
-      iconPos="suffix"
-      disabled
-    >
-      Ep —
-    </LinkButton>
-  )}
+  <a
+    class:list={['action-btn', { 'is-disabled': !hasNext }]}
+    href={hasNext ? URLS.watch(slug, nextEp!) : undefined}
+    data-nav-next
+    data-episode-nav={hasNext ? nextEp : undefined}
+    aria-disabled={hasNext ? undefined : 'true'}
+    aria-label={hasNext ? `Episode berikutnya, Ep ${nextEp}` : 'Tidak ada episode berikutnya'}
+  >
+    <span class="action-btn__label" data-nav-next-label>
+      {hasNext ? `Ep ${nextEp}` : 'Ep —'}
+    </span>
+    <Icon name="next" size={16} />
+  </a>
 </nav>
 
 <style>
@@ -83,4 +69,96 @@ const nextEp = hasNext ? episodeNumber + 1 : null;
     justify-content: space-between;
     gap: var(--s-2);
   }
+
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
+    padding: var(--s-2) var(--s-4);
+    min-height: 2.25rem;
+    border-radius: var(--r-full);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    transition: all var(--t-fast);
+  }
+
+  .action-btn:hover:not(.is-disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .action-btn.is-disabled {
+    color: var(--text-disabled);
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .action-btn__label { display: inline-flex; align-items: center; }
+
+  .action-btn :global(svg) {
+    width: 1.1em;
+    height: 1.1em;
+    flex-shrink: 0;
+  }
 </style>
+
+<script>
+  interface ActionBarAPI {
+    mount(root: HTMLElement, slug: string, current: number, total: number): void;
+  }
+
+  function mount(root: HTMLElement, _slug: string, current: number, total: number): void {
+    const prevLink = root.querySelector<HTMLAnchorElement>('[data-nav-prev]');
+    const nextLink = root.querySelector<HTMLAnchorElement>('[data-nav-next]');
+    const prevLabel = root.querySelector<HTMLElement>('[data-nav-prev-label]');
+    const nextLabel = root.querySelector<HTMLElement>('[data-nav-next-label]');
+
+    if (!prevLink || !nextLink || !prevLabel || !nextLabel) return;
+
+    const hasPrev = current > 1;
+    const hasNext = current < total;
+    const prevEp = hasPrev ? current - 1 : null;
+    const nextEp = hasNext ? current + 1 : null;
+
+    // Prev
+    if (hasPrev && prevEp !== null) {
+      prevLink.dataset.episodeNav = String(prevEp);
+      prevLink.removeAttribute('aria-disabled');
+      prevLink.setAttribute('aria-label', `Episode sebelumnya, Ep ${prevEp}`);
+      prevLink.classList.remove('is-disabled');
+      prevLabel.textContent = `Ep ${prevEp}`;
+    } else {
+      prevLink.removeAttribute('data-episode-nav');
+      prevLink.setAttribute('aria-disabled', 'true');
+      prevLink.setAttribute('aria-label', 'Tidak ada episode sebelumnya');
+      prevLink.classList.add('is-disabled');
+      prevLabel.textContent = 'Ep —';
+    }
+
+    // Next
+    if (hasNext && nextEp !== null) {
+      nextLink.dataset.episodeNav = String(nextEp);
+      nextLink.removeAttribute('aria-disabled');
+      nextLink.setAttribute('aria-label', `Episode berikutnya, Ep ${nextEp}`);
+      nextLink.classList.remove('is-disabled');
+      nextLabel.textContent = `Ep ${nextEp}`;
+    } else {
+      nextLink.removeAttribute('data-episode-nav');
+      nextLink.setAttribute('aria-disabled', 'true');
+      nextLink.setAttribute('aria-label', 'Tidak ada episode berikutnya');
+      nextLink.classList.add('is-disabled');
+      nextLabel.textContent = 'Ep —';
+    }
+  }
+
+  (window as any).__qimochiActionBar = { mount } satisfies ActionBarAPI;
+</script>
