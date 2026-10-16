@@ -7,6 +7,8 @@ export interface EpisodeDownload { quality: string; size: string; servers: Episo
 export interface EpisodeData {
   number: number;
   title?: string;
+  duration?: number;
+  aired?: string;
   streams: EpisodeStream[];
   downloads?: EpisodeDownload[];
 }
@@ -93,10 +95,6 @@ function normalizeDownloads(
   return result.length > 0 ? result : undefined;
 }
 
-/**
- * Bersihkan stream dari server yang URL-nya kosong / whitespace.
- * Return array kosong kalau setelah dibersihkan tidak ada server valid.
- */
 function sanitizeStreams(streams: EpisodeStream[]): EpisodeStream[] {
   return streams
     .map((s) => ({
@@ -130,10 +128,6 @@ for (const [path, mod] of Object.entries(episodeModules)) {
   (chunksBySlug[slug] ??= []).push({ slug, start, end, path });
 }
 
-/**
- * Episode yang dimuat ke sini HANYA yang punya minimal 1 server dengan URL valid.
- * Ini satu-satunya sumber kebenaran untuk UI (card, list, watch page, dll).
- */
 const episodesBySlug: Record<string, EpisodeData[]> = {};
 for (const [slug, chunks] of Object.entries(chunksBySlug)) {
   chunks.sort((a, b) => a.start - b.start);
@@ -149,9 +143,17 @@ for (const [slug, chunks] of Object.entries(chunksBySlug)) {
       const streams = sanitizeStreams(normalizeStreams(raw.streams));
       if (streams.length === 0) continue;
 
+      const trimmedTitle = raw.title?.trim();
+      const trimmedAired = raw.aired?.trim();
+
       merged.push({
         number: raw.number,
-        title: raw.title ?? undefined,
+        title: trimmedTitle ? trimmedTitle : undefined,
+        duration:
+          typeof raw.duration === 'number' && raw.duration > 0
+            ? raw.duration
+            : undefined,
+        aired: trimmedAired ? trimmedAired : undefined,
         streams,
         downloads: normalizeDownloads(raw.downloads),
       });

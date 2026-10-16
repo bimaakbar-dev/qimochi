@@ -7,6 +7,7 @@ interface Props {
   server?: string;
   quality?: string;
   class?: string;
+  variant?: 'default' | 'plain';
 }
 
 const {
@@ -15,6 +16,7 @@ const {
   server = '',
   quality = '',
   class: className,
+  variant = 'default',
 } = Astro.props;
 
 const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'https://api.qimochi.web.id';
@@ -23,7 +25,7 @@ const dialogId = `report-dialog-${slug}-${episode}`;
 
 <button
   type="button"
-  class:list={['report-btn', className]}
+  class:list={['icon-btn', `icon-btn--${variant}`, className]}
   data-report-btn
   data-slug={slug}
   data-episode={episode}
@@ -32,9 +34,9 @@ const dialogId = `report-dialog-${slug}-${episode}`;
   data-api={apiBase}
   data-dialog-id={dialogId}
   aria-label="Laporkan masalah"
+  title="Laporkan masalah"
 >
-  <Icon name="alert" size={16} />
-  <span>Lapor</span>
+  <Icon name="report" size={16} />
 </button>
 
 <dialog
@@ -285,33 +287,53 @@ const dialogId = `report-dialog-${slug}-${episode}`;
 </script>
 
 <style>
-  .report-btn {
+  .icon-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--s-2);
-    padding: var(--s-2) var(--s-4);
+    flex-shrink: 0;
+    padding: 0;
     background: transparent;
-    color: var(--text-secondary);
-    border: 1px solid var(--border);
+    color: var(--text-inverted);
+    border: 1.5px solid hsla(0, 0%, 100%, 0.35);
     border-radius: var(--r-full);
-    font-family: inherit;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-medium);
-    text-align: center;
     cursor: pointer;
-    transition: all var(--t-fast);
+    transition: color var(--t-fast), border-color var(--t-fast),
+      background var(--t-fast);
+    & svg {
+      display: block;
+      width: 1.333em;
+      height: 1.333em;
+      flex-shrink: 0;
+    }
   }
 
-  .report-btn:hover {
+  .icon-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .icon-btn--default {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .icon-btn--default:hover:not(:disabled) {
     color: var(--warning);
     border-color: var(--warning);
   }
 
-  .report-btn svg {
-    width: 1em;
-    height: 1em;
-    flex-shrink: 0;
+  .icon-btn--plain {
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: var(--r-sm);
+    color: var(--text-secondary);
+  }
+
+  .icon-btn--plain:hover:not(:disabled) {
+    color: var(--warning);
+    background: transparent;
   }
 
   .report-dialog {

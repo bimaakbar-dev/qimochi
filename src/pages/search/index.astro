@@ -3,6 +3,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import Icon from '~/user-components/Icons.astro';
 import Page from '~/components/Page.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
+import SkeletonGrid from '~/components/SkeletonGrid.astro';
 ---
 
 <BaseLayout
@@ -37,7 +38,9 @@ import AnimeCard from '~/components/AnimeCard.astro';
       </div>
     </form>
 
-    <div id="search-empty" class="search-empty">
+    <SkeletonGrid hidden />
+
+    <div id="search-empty" class="search-empty" hidden>
       <p>Mulai ketik untuk mencari anime.</p>
       <p class="search-empty-hint">
         Atau jelajahi <a href="/anime/">archive lengkap</a>.
@@ -67,6 +70,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
   (function () {
     const API = 'https://api-qimochi.pages.dev/api/v1/anime.json';
     const AVAILABLE_API = '/api/available-episodes.json';
+    const SYNOPSIS_API = '/api/anime-synopsis.json';
 
     const DEBOUNCE_MS = 300;
     const MIN_QUERY = 2;
@@ -109,6 +113,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
     const emptyState = document.getElementById('search-empty')!;
     const status = document.getElementById('search-status')!;
     const sections = document.getElementById('search-sections')!;
+    const skeleton = document.querySelector('[data-skeleton]') as HTMLElement | null;
     const gridTpl = document.getElementById('anime-card-template') as HTMLTemplateElement | null;
     const featuredTpl = document.getElementById('anime-card-featured-template') as HTMLTemplateElement | null;
     const compactTpl = document.getElementById('anime-card-compact-template') as HTMLTemplateElement | null;
@@ -118,6 +123,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
     let index: Entry[] = [];
     let ready = false;
     let availableMap = new Map<string, number[]>();
+    let synopsisMap = new Map<string, string>();
 
     const resultCache = new Map<string, YukionimeItem[]>();
     const CACHE_LIMIT = 50;
@@ -128,6 +134,15 @@ import AnimeCard from '~/components/AnimeCard.astro';
         if (firstKey !== undefined) resultCache.delete(firstKey);
       }
       resultCache.set(key, value);
+    }
+
+    function titleCase(s: string): string {
+      if (!s) return '';
+      return s
+        .split(/[-_\s]+/)
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
     }
 
     function levenshtein(a: string, b: string): number {
@@ -266,7 +281,27 @@ import AnimeCard from '~/components/AnimeCard.astro';
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
 
-      // Episode text dari available count
+      // Studio — hanya kalau template punya slotnya (grid & featured)
+      const studioEl = card.querySelector('[data-card-studio]') as HTMLElement | null;
+      if (studioEl && Array.isArray(item.studios) && item.studios.length > 0) {
+        const name = titleCase(item.studios[0]);
+        if (name && name.toLowerCase() !== 'unknown') {
+          const li = studioEl.querySelector('li');
+          if (li) li.textContent = name;
+          studioEl.hidden = false;
+        }
+      }
+
+      // Sinopsis — hanya kalau template punya slotnya
+      const excerptEl = card.querySelector('[data-card-excerpt]') as HTMLElement | null;
+      if (excerptEl) {
+        const text = synopsisMap.get(item.id);
+        if (text) {
+          excerptEl.textContent = text;
+          excerptEl.hidden = false;
+        }
+      }
+
       const episodeText = available.length > 0 ? `${available.length} Episode` : '';
 
       const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
@@ -488,8 +523,33 @@ import AnimeCard from '~/components/AnimeCard.astro';
 
     function applyFilter(query: string): void {
       const q = query.trim();
-      if (!ready) return;
 
+      // Skeleton hanya muncul kalau index belum siap DAN user sudah
+      // mengetik query yang cukup panjang. Di state lain, skeleton hidden.
+      const shouldShowSkeleton = !ready && q.length >= MIN_QUERY;
+      if (skeleton) skeleton.hidden = !shouldShowSkeleton;
+
+      if (!ready) {
+        // Fetch belum selesai — reset sections
+        sections.innerHTML = '';
+        sections.hidden = true;
+
+        if (q.length === 0) {
+          emptyState.hidden = false;
+          status.hidden = true;
+        } else if (q.length < MIN_QUERY) {
+          emptyState.hidden = true;
+          status.textContent = `Ketik minimal ${MIN_QUERY} karakter.`;
+          status.hidden = false;
+        } else {
+          // Skeleton tampil; sembunyikan state lain
+          emptyState.hidden = true;
+          status.hidden = true;
+        }
+        return;
+      }
+
+      // Index sudah siap
       if (q.length === 0) {
         sections.innerHTML = '';
         emptyState.hidden = false;
@@ -575,6 +635,11 @@ import AnimeCard from '~/components/AnimeCard.astro';
     input.value = initialQuery;
     updateClearBtn();
 
+    // Bootstrap: set state awal berdasarkan query di URL.
+    // - No query → empty state (tanpa skeleton)
+    // - Query ≥ MIN_QUERY → skeleton (kalau fetch belum selesai)
+    applyFilter(initialQuery);
+
     Promise.all([
       fetch(API, { headers: { Accept: 'application/json' } }).then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -583,15 +648,22 @@ import AnimeCard from '~/components/AnimeCard.astro';
       fetch(AVAILABLE_API, { headers: { Accept: 'application/json' } })
         .then((r) => (r.ok ? r.json() : {}))
         .catch(() => ({})) as Promise<Record<string, number[]>>,
+      fetch(SYNOPSIS_API, { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({})) as Promise<Record<string, string>>,
     ])
-      .then(([json, availableRaw]) => {
+      .then(([json, availableRaw, synRaw]) => {
         const list = json?.data;
         if (!Array.isArray(list)) {
           console.error('[Search] Invalid payload');
+          if (skeleton) skeleton.hidden = true;
+          status.textContent = 'Data tidak valid. Coba refresh halaman.';
+          status.hidden = false;
+          emptyState.hidden = true;
+          sections.hidden = true;
           return;
         }
 
-        // Bangun map available
         availableMap = new Map<string, number[]>();
         if (availableRaw && typeof availableRaw === 'object') {
           for (const [slug, eps] of Object.entries(availableRaw)) {
@@ -604,7 +676,15 @@ import AnimeCard from '~/components/AnimeCard.astro';
           }
         }
 
-        // Hanya index anime yang punya minimal 1 episode valid
+        synopsisMap = new Map<string, string>();
+        if (synRaw && typeof synRaw === 'object') {
+          for (const [slug, text] of Object.entries(synRaw)) {
+            if (typeof text === 'string' && text.length > 0) {
+              synopsisMap.set(slug, text);
+            }
+          }
+        }
+
         const playable = list.filter(
           (item) => (availableMap.get(item.id)?.length ?? 0) > 0
         );
@@ -618,16 +698,17 @@ import AnimeCard from '~/components/AnimeCard.astro';
 
         ready = true;
 
-        if (initialQuery.trim().length >= MIN_QUERY) {
-          applyFilter(initialQuery);
-        } else {
-          applyFilter('');
-        }
+        // Re-apply filter dengan input value terkini — user mungkin sudah
+        // mengetik lebih lanjut saat fetch belum selesai.
+        applyFilter(input.value);
       })
       .catch((err) => {
         console.error('[Search] fetch failed:', err);
+        if (skeleton) skeleton.hidden = true;
         status.textContent = 'Gagal memuat data. Coba refresh halaman.';
         status.hidden = false;
+        emptyState.hidden = true;
+        sections.hidden = true;
       });
   })();
 </script>

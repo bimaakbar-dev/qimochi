@@ -1,0 +1,82 @@
+---
+interface Props {
+  count?: number;
+  class?: string;
+  hidden?: boolean;
+}
+
+const { count = 12, class: className, hidden = false } = Astro.props;
+---
+
+<div
+  class:list={['anime-grid', 'skeleton-grid', className]}
+  data-skeleton
+  aria-hidden="true"
+  hidden={hidden}
+>
+  {Array.from({ length: count }).map(() => (
+    <div class="ghost-card">
+      <div class="ghost-card__cover" />
+      <div class="ghost-card__title" />
+      <div class="ghost-card__meta" />
+    </div>
+  ))}
+</div>
+
+<style is:global>
+  .skeleton-grid[hidden] { display: none; }
+
+  .ghost-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    min-width: 0;
+  }
+
+  .ghost-card__cover {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    background: var(--bg-surface);
+    overflow: hidden;
+  }
+
+  .ghost-card__title,
+  .ghost-card__meta {
+    position: relative;
+    background: var(--bg-surface);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+  }
+
+  .ghost-card__title { height: 0.9rem; width: 90%; }
+  .ghost-card__meta  { height: 0.7rem; width: 55%; }
+
+  .ghost-card__cover::after,
+  .ghost-card__title::after,
+  .ghost-card__meta::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      var(--bg-hover) 50%,
+      transparent 80%
+    );
+    transform: translateX(-100%);
+    animation: ghost-shimmer 1.6s infinite;
+  }
+
+  @keyframes ghost-shimmer {
+    100% { transform: translateX(100%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ghost-card__cover::after,
+    .ghost-card__title::after,
+    .ghost-card__meta::after {
+      animation: none;
+      opacity: 0;
+    }
+  }
+</style>

@@ -41,12 +41,15 @@ const { Content } = await render(entry);
 
 /*
  * episodeList sudah difilter di lib/anime.ts — hanya episode yang punya
- * minimal 1 server dengan URL valid. Ini satu-satunya sumber kebenaran
- * untuk semua tampilan terkait episode di halaman ini.
- * Field `data.episodes` (frontmatter) = metadata sumber, TIDAK dipakai.
+ * minimal 1 server dengan URL valid.
  */
 const episodeItems = data.episodeList
-  .map((e) => ({ number: e.number, title: e.title ?? null }))
+  .map((e) => ({
+    number: e.number,
+    title: e.title ?? null,
+    duration: e.duration ?? null,
+    aired: e.aired ?? null,
+  }))
   .sort((a, b) => a.number - b.number);
 
 const hasEpisodes = episodeItems.length > 0;
@@ -180,9 +183,13 @@ const genreLinks = visibleGenres.map((g) => ({
     <section class="more">
       <EpisodeList
         slug={anime.id}
+        animeTitle={data.title}
         episodes={episodeItems}
         currentEpisode={null}
         mode="detail"
+        cover={data.cover}
+        banner={data.banner}
+        duration={data.duration}
       />
 
       <Comments slug={anime.id} />

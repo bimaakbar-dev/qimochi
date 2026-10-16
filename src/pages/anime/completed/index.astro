@@ -3,6 +3,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import Page from '~/components/Page.astro';
 import Hero from '~/components/Hero.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
+import SkeletonGrid from '~/components/SkeletonGrid.astro';
 ---
 
 <BaseLayout
@@ -23,6 +24,8 @@ import AnimeCard from '~/components/AnimeCard.astro';
         </label>
       </Fragment>
     </Hero>
+
+    <SkeletonGrid />
 
     <div class="anime-grid" data-grid hidden></div>
 
@@ -50,6 +53,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
   (function () {
     const API = 'https://api-qimochi.pages.dev/api/v1/anime.json';
     const AVAILABLE_API = '/api/available-episodes.json';
+    const SYNOPSIS_API = '/api/anime-synopsis.json';
     const BATCH = 24;
     const DEFAULT_SORT = 'popular';
 
@@ -74,6 +78,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
     };
 
     const grid = document.querySelector('[data-grid]') as HTMLElement | null;
+    const skeleton = document.querySelector('[data-skeleton]') as HTMLElement | null;
     const loadMoreWrap = document.querySelector('[data-load-more-wrap]') as HTMLElement | null;
     const loadMoreBtn = document.querySelector('[data-load-more]') as HTMLButtonElement | null;
     const loadMoreText = document.querySelector('[data-load-more-text]') as HTMLElement | null;
@@ -86,6 +91,20 @@ import AnimeCard from '~/components/AnimeCard.astro';
     let sorted: ApiItem[] = [];
     let visibleCount = 0;
     let availableMap = new Map<string, number[]>();
+    let synopsisMap = new Map<string, string>();
+
+    function hideSkeleton(): void {
+      if (skeleton) skeleton.hidden = true;
+    }
+
+    function titleCase(s: string): string {
+      if (!s) return '';
+      return s
+        .split(/[-_\s]+/)
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
+    }
 
     function formatCount(n: number): string {
       if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -181,7 +200,25 @@ import AnimeCard from '~/components/AnimeCard.astro';
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
 
-      // Episode text dari available count (bukan dari metadata API)
+      const studioEl = card.querySelector('[data-card-studio]') as HTMLElement | null;
+      if (studioEl && Array.isArray(item.studios) && item.studios.length > 0) {
+        const name = titleCase(item.studios[0]);
+        if (name && name.toLowerCase() !== 'unknown') {
+          const li = studioEl.querySelector('li');
+          if (li) li.textContent = name;
+          studioEl.hidden = false;
+        }
+      }
+
+      const excerptEl = card.querySelector('[data-card-excerpt]') as HTMLElement | null;
+      if (excerptEl) {
+        const text = synopsisMap.get(item.id);
+        if (text) {
+          excerptEl.textContent = text;
+          excerptEl.hidden = false;
+        }
+      }
+
       const episodeText = available.length > 0 ? `${available.length} Episode` : '';
 
       const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
@@ -292,8 +329,11 @@ import AnimeCard from '~/components/AnimeCard.astro';
       fetch(AVAILABLE_API, { headers: { Accept: 'application/json' } })
         .then((r) => (r.ok ? r.json() : {}))
         .catch(() => ({})) as Promise<Record<string, number[]>>,
+      fetch(SYNOPSIS_API, { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({})) as Promise<Record<string, string>>,
     ])
-      .then(([json, availableRaw]) => {
+      .then(([json, availableRaw, synRaw]) => {
         const list = json?.data;
         if (!Array.isArray(list)) return;
 
@@ -306,7 +346,15 @@ import AnimeCard from '~/components/AnimeCard.astro';
           }
         }
 
-        // Filter: status finished DAN punya minimal 1 episode valid
+        synopsisMap = new Map<string, string>();
+        if (synRaw && typeof synRaw === 'object') {
+          for (const [slug, text] of Object.entries(synRaw)) {
+            if (typeof text === 'string' && text.length > 0) {
+              synopsisMap.set(slug, text);
+            }
+          }
+        }
+
         all = list.filter(
           (item) =>
             item.status === 'finished' &&
@@ -318,7 +366,8 @@ import AnimeCard from '~/components/AnimeCard.astro';
       })
       .catch((err) => {
         console.error('[completed] fetch failed:', err);
-      });
+      })
+      .finally(hideSkeleton);
   })();
 </script>
 

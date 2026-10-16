@@ -1,133 +1,312 @@
 ---
 import Icon from '~/user-components/Icons.astro';
 import { URLS } from '~/constants';
-import ReportButton from './ReportToggle.astro';
+
+interface NavItem {
+  number: number;
+  title?: string | null;
+  duration?: number | null;
+}
 
 interface Props {
   slug?: string;
-  episodeNumber?: number;
+  animeTitle?: string;
+  currentEpisode?: number;
   totalEpisodes?: number;
-  server?: string;
-  quality?: string;
+  prevEpisode?: NavItem | null;
+  nextEpisode?: NavItem | null;
+  thumbnail?: string;
+  class?: string;
 }
 
 const {
   slug = '',
-  episodeNumber = 1,
+  animeTitle = '',
+  currentEpisode = 1,
   totalEpisodes = 0,
-  server = '',
-  quality = '',
+  prevEpisode = null,
+  nextEpisode = null,
+  thumbnail = '',
+  class: className,
 } = Astro.props;
 
-const hasPrev = episodeNumber > 1;
-const hasNext = episodeNumber < totalEpisodes;
-const prevEp = hasPrev ? episodeNumber - 1 : null;
-const nextEp = hasNext ? episodeNumber + 1 : null;
-
 const watchBase = URLS.watch(slug, 1);
+
+function formatDur(d?: number | null): string | null {
+  if (typeof d !== 'number' || d <= 0) return null;
+  return `${d}m`;
+}
+
+function epLabel(item: NavItem): string {
+  return item.title
+    ? `E${item.number} – ${item.title}`
+    : `Episode ${item.number}`;
+}
+
+const prevDur = formatDur(prevEpisode?.duration);
+const nextDur = formatDur(nextEpisode?.duration);
 ---
 
 <nav
-  class="action-bar"
+  class:list={['ep-nav', className]}
   data-action-bar
   data-watch-base={watchBase}
+  data-slug={slug}
   aria-label="Navigasi episode"
 >
-  <a
-    class:list={['action-btn', { 'is-disabled': !hasPrev }]}
-    href={hasPrev ? URLS.watch(slug, prevEp!) : undefined}
-    data-nav-prev
-    data-episode-nav={hasPrev ? prevEp : undefined}
-    aria-disabled={hasPrev ? undefined : 'true'}
-    aria-label={hasPrev ? `Episode sebelumnya, Ep ${prevEp}` : 'Tidak ada episode sebelumnya'}
-  >
-    <Icon name="prev" size={16} />
-    <span class="action-btn__label" data-nav-prev-label>
-      {hasPrev ? `Ep ${prevEp}` : 'Ep —'}
-    </span>
-  </a>
+  <div class="ep-nav__stack">
+    <div
+      class="ep-nav__slot"
+      data-nav-prev-wrap
+      hidden={!prevEpisode}
+    >
+      <span class="ep-nav__label">Episode Sebelumnya</span>
+      <a
+        class="ep-nav__card"
+        href={prevEpisode ? URLS.watch(slug, prevEpisode.number) : undefined}
+        data-nav-prev
+        data-episode-nav={prevEpisode ? String(prevEpisode.number) : undefined}
+        aria-label={prevEpisode ? `Episode sebelumnya, Ep ${prevEpisode.number}` : undefined}
+      >
+        <div class="ep-nav__thumb">
+          {thumbnail ? (
+            <img src={thumbnail} alt="" loading="lazy" decoding="async" />
+          ) : (
+            <div class="ep-nav__thumb-fallback" aria-hidden="true">
+              {prevEpisode ? String(prevEpisode.number).padStart(2, '0') : ''}
+            </div>
+          )}
+          {prevDur && <span class="ep-nav__dur">{prevDur}</span>}
+        </div>
+        <div class="ep-nav__body">
+          <span class="ep-nav__title" data-nav-prev-label>
+            {prevEpisode ? epLabel(prevEpisode) : ''}
+          </span>
+          <span class="ep-nav__meta">Sub Indo</span>
+        </div>
+      </a>
+    </div>
+    <div
+      class="ep-nav__slot"
+      data-nav-next-wrap
+      hidden={!nextEpisode}
+    >
+      <span class="ep-nav__label">Episode Berikutnya</span>
+      <a
+        class="ep-nav__card"
+        href={nextEpisode ? URLS.watch(slug, nextEpisode.number) : undefined}
+        data-nav-next
+        data-episode-nav={nextEpisode ? String(nextEpisode.number) : undefined}
+        aria-label={nextEpisode ? `Episode berikutnya, Ep ${nextEpisode.number}` : undefined}
+      >
+        <div class="ep-nav__thumb">
+          {thumbnail ? (
+            <img src={thumbnail} alt="" loading="lazy" decoding="async" />
+          ) : (
+            <div class="ep-nav__thumb-fallback" aria-hidden="true">
+              {nextEpisode ? String(nextEpisode.number).padStart(2, '0') : ''}
+            </div>
+          )}
+          {nextDur && <span class="ep-nav__dur">{nextDur}</span>}
+        </div>
+        <div class="ep-nav__body">
+          <span class="ep-nav__title" data-nav-next-label>
+            {nextEpisode ? epLabel(nextEpisode) : ''}
+          </span>
+          <span class="ep-nav__meta">Sub Indo</span>
+        </div>
+      </a>
+    </div>
+  </div>
 
-  <ReportButton
-    slug={slug}
-    episode={episodeNumber}
-    server={server}
-    quality={quality}
-  />
-
-  <a
-    class:list={['action-btn', { 'is-disabled': !hasNext }]}
-    href={hasNext ? URLS.watch(slug, nextEp!) : undefined}
-    data-nav-next
-    data-episode-nav={hasNext ? nextEp : undefined}
-    aria-disabled={hasNext ? undefined : 'true'}
-    aria-label={hasNext ? `Episode berikutnya, Ep ${nextEp}` : 'Tidak ada episode berikutnya'}
-  >
-    <span class="action-btn__label" data-nav-next-label>
-      {hasNext ? `Ep ${nextEp}` : 'Ep —'}
-    </span>
-    <Icon name="next" size={16} />
-  </a>
+  <div class="ep-nav__tools">
+    <button
+      type="button"
+      class="ep-nav__see-all"
+      data-open-episodes-modal
+      aria-haspopup="dialog"
+    >
+      <span>Lihat Semua Episode</span>
+    </button>
+  </div>
 </nav>
 
 <style>
-  .action-bar {
+  .ep-nav {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--s-2);
+    flex-direction: column;
+    gap: var(--s-5);
+    width: 100%;
   }
 
-  .action-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  .ep-nav__stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+  }
+
+  .ep-nav__slot {
+    display: flex;
+    flex-direction: column;
     gap: var(--s-2);
-    padding: var(--s-2) var(--s-4);
-    min-height: 2.25rem;
-    border-radius: var(--r-full);
-    font-size: var(--fs-xs);
+  }
+  .ep-nav__slot[hidden] { display: none; }
+
+  .ep-nav__label {
+    font-size: 0.6875rem;
     font-weight: var(--fw-semibold);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    text-decoration: none;
-    white-space: nowrap;
-    background: transparent;
     color: var(--text-primary);
-    border: 1px solid var(--border);
-    transition: all var(--t-fast);
+    line-height: 1.2;
+    padding-left: 2px;
   }
 
-  .action-btn:hover:not(.is-disabled) {
-    border-color: var(--accent);
+  .ep-nav__card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-2);
+    background: transparent;
+    color: inherit;
+    text-decoration: none;
+    transition:
+      background var(--t-fast),
+      border-color var(--t-fast);
+    min-width: 0;
+  }
+
+  .ep-nav__card:hover {
+    background: var(--bg-surface);
+  }
+
+  .ep-nav__card:hover .ep-nav__title {
     color: var(--accent);
   }
 
-  .action-btn.is-disabled {
-    color: var(--text-disabled);
-    pointer-events: none;
-    cursor: not-allowed;
-    opacity: 0.6;
+  .ep-nav__thumb {
+    position: relative;
+    width: 7rem;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--bg-surface);
+    flex-shrink: 0;
   }
 
-  .action-btn__label { display: inline-flex; align-items: center; }
+  .ep-nav__thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-  .action-btn :global(svg) {
-    width: 1.1em;
-    height: 1.1em;
-    flex-shrink: 0;
+  .ep-nav__thumb-fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-montserrat);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ep-nav__dur {
+    position: absolute;
+    right: var(--s-2);
+    bottom: var(--s-2);
+    z-index: 2;
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.78);
+    color: var(--text-inverted);
+    font-size: 0.6875rem;
+    font-weight: var(--fw-semibold);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .ep-nav__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    min-width: 0;
+  }
+
+  .ep-nav__title {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    line-height: var(--lh-tight);
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    transition: color var(--t-fast);
+  }
+
+  .ep-nav__meta {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    line-height: 1.2;
+  }
+
+  .ep-nav__tools {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .ep-nav__see-all {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: var(--s-3) var(--s-4);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all var(--t-fast);
+  }
+
+  .ep-nav__see-all:hover {
+    border-color: var(--accent);
+    color: var(--accent);
   }
 </style>
 
 <script>
-  interface ActionBarAPI {
-    mount(root: HTMLElement, slug: string, current: number, total: number): void;
+  interface NavItem {
+    number: number;
+    title: string | null;
+    duration: number | null;
   }
 
-  /** Cari <nav data-action-bar> — bisa jadi `root` sendiri atau nested di dalamnya. */
+  interface MountData {
+    slug: string;
+    current: number;
+    total: number;
+    thumbnail: string;
+    prev: NavItem | null;
+    next: NavItem | null;
+  }
+
+  interface ActionBarAPI {
+    mount(root: HTMLElement, data: MountData): void;
+  }
+
   function resolveNav(root: HTMLElement): HTMLElement | null {
-    if (root.dataset.actionBar !== undefined && root.hasAttribute('data-action-bar')) {
-      return root;
-    }
+    if (root.hasAttribute('data-action-bar')) return root;
     return root.querySelector<HTMLElement>('[data-action-bar]');
   }
 
@@ -136,63 +315,91 @@ const watchBase = URLS.watch(slug, 1);
     return ep <= 1 ? watchBase : `${watchBase}?ep=${ep}`;
   }
 
-  function mount(
-    root: HTMLElement,
-    _slug: string,
-    current: number,
-    total: number
+  function titleText(item: NavItem): string {
+    return item.title
+      ? `E${item.number} – ${item.title}`
+      : `Episode ${item.number}`;
+  }
+
+  function durText(item: NavItem): string | null {
+    if (typeof item.duration !== 'number' || item.duration <= 0) return null;
+    return `${item.duration}m`;
+  }
+
+  function renderSlot(
+    slot: HTMLElement | null,
+    item: NavItem | null,
+    watchBase: string,
+    kind: 'prev' | 'next',
+    thumbnail: string
   ): void {
+    if (!slot) return;
+
+    if (!item) {
+      slot.hidden = true;
+      return;
+    }
+
+    slot.hidden = false;
+
+    const card = slot.querySelector<HTMLAnchorElement>('.ep-nav__card');
+    if (!card) return;
+
+    const img = card.querySelector<HTMLImageElement>('.ep-nav__thumb img');
+    const fallbackEl = card.querySelector<HTMLElement>('.ep-nav__thumb-fallback');
+    const durEl = card.querySelector<HTMLElement>('.ep-nav__dur');
+    const titleEl = card.querySelector<HTMLElement>(
+      '[data-nav-prev-label], [data-nav-next-label]'
+    );
+    const metaEl = card.querySelector<HTMLElement>('.ep-nav__meta');
+
+    card.href = urlFor(watchBase, item.number);
+    card.setAttribute('data-episode-nav', String(item.number));
+    card.setAttribute(
+      'aria-label',
+      kind === 'prev'
+        ? `Episode sebelumnya, Ep ${item.number}`
+        : `Episode berikutnya, Ep ${item.number}`
+    );
+
+    if (img && thumbnail) {
+      img.src = thumbnail;
+      img.hidden = false;
+      if (fallbackEl) fallbackEl.hidden = true;
+    } else if (img) {
+      img.hidden = true;
+      if (fallbackEl) {
+        fallbackEl.hidden = false;
+        fallbackEl.textContent = String(item.number).padStart(2, '0');
+      }
+    }
+
+    const d = durText(item);
+    if (durEl) {
+      if (d) {
+        durEl.textContent = d;
+        durEl.hidden = false;
+      } else {
+        durEl.hidden = true;
+      }
+    }
+
+    if (titleEl) titleEl.textContent = titleText(item);
+    if (metaEl) metaEl.textContent = 'Sub Indo';
+  }
+
+  function mount(root: HTMLElement, data: MountData): void {
     const nav = resolveNav(root);
     if (!nav) return;
 
     const watchBase = nav.dataset.watchBase ?? '';
     if (!watchBase) return;
 
-    const prevLink = nav.querySelector<HTMLAnchorElement>('[data-nav-prev]');
-    const nextLink = nav.querySelector<HTMLAnchorElement>('[data-nav-next]');
-    const prevLabel = nav.querySelector<HTMLElement>('[data-nav-prev-label]');
-    const nextLabel = nav.querySelector<HTMLElement>('[data-nav-next-label]');
+    const prevWrap = nav.querySelector<HTMLElement>('[data-nav-prev-wrap]');
+    const nextWrap = nav.querySelector<HTMLElement>('[data-nav-next-wrap]');
 
-    if (!prevLink || !nextLink || !prevLabel || !nextLabel) return;
-
-    const hasPrev = current > 1;
-    const hasNext = current < total;
-    const prevEp = hasPrev ? current - 1 : null;
-    const nextEp = hasNext ? current + 1 : null;
-
-    // ── Prev ──
-    if (hasPrev && prevEp !== null) {
-      prevLink.href = urlFor(watchBase, prevEp);
-      prevLink.dataset.episodeNav = String(prevEp);
-      prevLink.removeAttribute('aria-disabled');
-      prevLink.setAttribute('aria-label', `Episode sebelumnya, Ep ${prevEp}`);
-      prevLink.classList.remove('is-disabled');
-      prevLabel.textContent = `Ep ${prevEp}`;
-    } else {
-      prevLink.removeAttribute('href');
-      prevLink.removeAttribute('data-episode-nav');
-      prevLink.setAttribute('aria-disabled', 'true');
-      prevLink.setAttribute('aria-label', 'Tidak ada episode sebelumnya');
-      prevLink.classList.add('is-disabled');
-      prevLabel.textContent = 'Ep —';
-    }
-
-    // ── Next ──
-    if (hasNext && nextEp !== null) {
-      nextLink.href = urlFor(watchBase, nextEp);
-      nextLink.dataset.episodeNav = String(nextEp);
-      nextLink.removeAttribute('aria-disabled');
-      nextLink.setAttribute('aria-label', `Episode berikutnya, Ep ${nextEp}`);
-      nextLink.classList.remove('is-disabled');
-      nextLabel.textContent = `Ep ${nextEp}`;
-    } else {
-      nextLink.removeAttribute('href');
-      nextLink.removeAttribute('data-episode-nav');
-      nextLink.setAttribute('aria-disabled', 'true');
-      nextLink.setAttribute('aria-label', 'Tidak ada episode berikutnya');
-      nextLink.classList.add('is-disabled');
-      nextLabel.textContent = 'Ep —';
-    }
+    renderSlot(prevWrap, data.prev, watchBase, 'prev', data.thumbnail);
+    renderSlot(nextWrap, data.next, watchBase, 'next', data.thumbnail);
   }
 
   (window as any).__qimochiActionBar = { mount } satisfies ActionBarAPI;

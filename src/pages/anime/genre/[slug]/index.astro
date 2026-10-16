@@ -5,6 +5,7 @@ import Page from '~/components/Page.astro';
 import Hero from '~/components/Hero.astro';
 import AnimeCard from '~/components/AnimeCard.astro';
 import SectionLabel from '~/components/SectionLabel.astro';
+import SkeletonGrid from '~/components/SkeletonGrid.astro';
 
 export async function getStaticPaths() {
   const genres = await getCollection('genres');
@@ -43,6 +44,8 @@ const canonical = `/anime/genre/${genreId}/`;
         </label>
       </Fragment>
     </Hero>
+
+    <SkeletonGrid />
 
     <section class="section" data-popular-section hidden>
       <SectionLabel>Populer</SectionLabel>
@@ -89,6 +92,7 @@ const canonical = `/anime/genre/${genreId}/`;
 
     const API = 'https://api-qimochi.pages.dev/api/v1/anime.json';
     const AVAILABLE_API = '/api/available-episodes.json';
+    const SYNOPSIS_API = '/api/anime-synopsis.json';
     const BATCH = 24;
     const POPULAR_LIMIT = 6;
     const DEFAULT_SORT = 'popular';
@@ -114,6 +118,7 @@ const canonical = `/anime/genre/${genreId}/`;
     };
 
     const grid = document.querySelector('[data-grid]');
+    const skeleton = document.querySelector('[data-skeleton]');
     const popularSection = document.querySelector('[data-popular-section]');
     const popularGrid = document.querySelector('[data-popular-grid]');
     const listSection = document.querySelector('[data-list-section]');
@@ -130,6 +135,20 @@ const canonical = `/anime/genre/${genreId}/`;
     let sorted: ApiItem[] = [];
     let visibleCount = 0;
     let availableMap = new Map<string, number[]>();
+    let synopsisMap = new Map<string, string>();
+
+    function hideSkeleton(): void {
+      if (skeleton) skeleton.hidden = true;
+    }
+
+    function titleCase(s: string): string {
+      if (!s) return '';
+      return s
+        .split(/[-_\s]+/)
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
+    }
 
     function formatCount(n: number): string {
       if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -225,7 +244,25 @@ const canonical = `/anime/genre/${genreId}/`;
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
 
-      // Episode text dari available count
+      const studioEl = card.querySelector('[data-card-studio]');
+      if (studioEl && Array.isArray(item.studios) && item.studios.length > 0) {
+        const name = titleCase(item.studios[0]);
+        if (name && name.toLowerCase() !== 'unknown') {
+          const li = studioEl.querySelector('li');
+          if (li) li.textContent = name;
+          studioEl.hidden = false;
+        }
+      }
+
+      const excerptEl = card.querySelector('[data-card-excerpt]');
+      if (excerptEl) {
+        const text = synopsisMap.get(item.id);
+        if (text) {
+          excerptEl.textContent = text;
+          excerptEl.hidden = false;
+        }
+      }
+
       const episodeText = available.length > 0 ? `${available.length} Episode` : '';
 
       const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
@@ -364,8 +401,11 @@ const canonical = `/anime/genre/${genreId}/`;
       fetch(AVAILABLE_API, { headers: { Accept: 'application/json' } })
         .then((r) => (r.ok ? r.json() : {}))
         .catch(() => ({})),
+      fetch(SYNOPSIS_API, { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({})),
     ])
-      .then(([json, availableRaw]) => {
+      .then(([json, availableRaw, synRaw]) => {
         const list = json?.data;
         if (!Array.isArray(list)) return;
 
@@ -378,7 +418,15 @@ const canonical = `/anime/genre/${genreId}/`;
           }
         }
 
-        // Filter: genre cocok DAN punya minimal 1 episode valid
+        synopsisMap = new Map();
+        if (synRaw && typeof synRaw === 'object') {
+          for (const [slug, text] of Object.entries(synRaw)) {
+            if (typeof text === 'string' && text.length > 0) {
+              synopsisMap.set(slug, text);
+            }
+          }
+        }
+
         all = list.filter((item) => {
           if (!Array.isArray(item.genres)) return false;
           if (!item.genres.includes(SLUG)) return false;
@@ -397,7 +445,8 @@ const canonical = `/anime/genre/${genreId}/`;
       })
       .catch((err) => {
         console.error('[genre] fetch failed:', err);
-      });
+      })
+      .finally(hideSkeleton);
   })();
 </script>
 
