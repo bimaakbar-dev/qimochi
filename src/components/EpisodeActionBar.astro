@@ -36,7 +36,6 @@ const {
 } = Astro.props;
 
 const watchBase = URLS.watch(slug, 1);
-const detailUrl = slug ? URLS.anime(slug) : '/';
 
 function formatDur(d?: number | null): string | null {
   if (typeof d !== 'number' || d <= 0) return null;
@@ -55,7 +54,6 @@ const nextDur = formatDur(nextEpisode?.duration);
   aria-label="Navigasi episode"
 >
   <div class="ep-nav__grid">
-    {/* ── Prev ── */}
     {prevEpisode ? (
       <a
         class="ep-nav__card"
@@ -97,7 +95,6 @@ const nextDur = formatDur(nextEpisode?.duration);
       </div>
     )}
 
-    {/* ── Next ── */}
     {nextEpisode ? (
       <a
         class="ep-nav__card"
@@ -147,10 +144,15 @@ const nextDur = formatDur(nextEpisode?.duration);
       server={server}
       quality={quality}
     />
-    <a class="ep-nav__see-all" href={detailUrl}>
+    <button
+      type="button"
+      class="ep-nav__see-all"
+      data-open-episodes-modal
+      aria-haspopup="dialog"
+    >
       <Icon name="list" size={14} />
       <span>Lihat Semua Episode</span>
-    </a>
+    </button>
   </div>
 </nav>
 
@@ -320,12 +322,14 @@ const nextDur = formatDur(nextEpisode?.duration);
     padding: var(--s-2) var(--s-4);
     border: 1px solid var(--border);
     border-radius: var(--r-full);
+    background: transparent;
     color: var(--text-secondary);
+    font-family: inherit;
     font-size: var(--fs-xs);
     font-weight: var(--fw-semibold);
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    text-decoration: none;
+    cursor: pointer;
     transition: all var(--t-fast);
     white-space: nowrap;
   }
@@ -395,7 +399,9 @@ const nextDur = formatDur(nextEpisode?.duration);
     const img = card.querySelector<HTMLImageElement>('.ep-nav__thumb img');
     const fallbackEl = card.querySelector<HTMLElement>('.ep-nav__thumb-fallback');
     const durEl = card.querySelector<HTMLElement>('.ep-nav__dur');
-    const titleEl = card.querySelector<HTMLElement>('[data-nav-prev-label], [data-nav-next-label]');
+    const titleEl = card.querySelector<HTMLElement>(
+      '[data-nav-prev-label], [data-nav-next-label]'
+    );
     const metaEl = card.querySelector<HTMLElement>('.ep-nav__meta');
 
     if (item) {
@@ -434,8 +440,14 @@ const nextDur = formatDur(nextEpisode?.duration);
         }
       }
 
-      if (titleEl) titleEl.textContent = titleText(item);
-      if (metaEl) metaEl.textContent = 'Sub Indo';
+      if (titleEl) {
+        titleEl.textContent = titleText(item);
+        titleEl.classList.remove('ep-nav__title--muted');
+      }
+      if (metaEl) {
+        metaEl.textContent = 'Sub Indo';
+        metaEl.classList.remove('ep-nav__meta--muted');
+      }
     } else {
       card.classList.add('ep-nav__card--disabled');
       card.setAttribute('aria-hidden', 'true');
@@ -468,13 +480,9 @@ const nextDur = formatDur(nextEpisode?.duration);
     const watchBase = nav.dataset.watchBase ?? '';
     if (!watchBase) return;
 
-    const prevCard = nav.querySelector<HTMLElement>('[data-nav-prev], .ep-nav__card--disabled');
-    const nextCard = nav.querySelector<HTMLElement>('[data-nav-next]') ??
-      Array.from(nav.querySelectorAll<HTMLElement>('.ep-nav__card')).find(
-        (c) => !c.hasAttribute('data-nav-prev')
-      ) ?? null;
-
-    const allCards = Array.from(nav.querySelectorAll<HTMLElement>('.ep-nav__card'));
+    const allCards = Array.from(
+      nav.querySelectorAll<HTMLElement>('.ep-nav__card')
+    );
     const prevEl = allCards[0] ?? null;
     const nextEl = allCards[1] ?? null;
 
