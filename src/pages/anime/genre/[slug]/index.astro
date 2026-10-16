@@ -222,8 +222,21 @@ const canonical = `/anime/genre/${genreId}/`;
         const votesEl = card.querySelector('[data-card-votes]');
         if (votesEl) votesEl.textContent = votes > 0 ? `(${formatCount(votes)})` : '';
       }
+      
+	  const episodeText =
+  	item.episodes && item.episodes > 0 ? `${item.episodes} Episode` : '';
 
-      // Play — SPA-lite path
+	  const episodesEl = card.querySelector('[data-card-episodes]') as HTMLElement | null;
+	  if (episodesEl && episodeText) {
+  	  episodesEl.textContent = episodeText;
+  	  episodesEl.hidden = false;
+	  }
+
+	  const metaTextEl = card.querySelector('[data-card-meta-text]') as HTMLElement | null;
+	  if (metaTextEl && episodeText) {
+  	  metaTextEl.textContent = episodeText;
+	  }
+
       const playEl = card.querySelector('[data-card-play]');
       if (playEl) {
         playEl.href = `/anime/watch/${item.id}/`;
