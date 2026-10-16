@@ -16,6 +16,7 @@ html {
   -webkit-tap-highlight-color: auto;
   -webkit-text-size-adjust: 100%;
   accent-color: var(--accent);
+  scrollbar-gutter: stable;
 }
 
 body {
