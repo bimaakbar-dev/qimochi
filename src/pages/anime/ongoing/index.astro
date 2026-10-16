@@ -48,16 +48,17 @@ import AnimeCard from '~/components/AnimeCard.astro';
   } from '~/constants';
 
   (function () {
-    const API = 'https://yukionime.pages.dev/api/v1/anime.json';
+    const API = 'https://api-qimochi.pages.dev/api/v1/anime.json';
     const BATCH = 24;
     const DEFAULT_SORT = 'popular';
 
-    type YukionimeItem = {
+    type ApiItem = {
       id: string;
       title: string;
       titleEnglish: string | null;
       titleNative: string | null;
       image: string | null;
+      banner?: string | null;
       type: string;
       status: string;
       season: string | null;
@@ -67,7 +68,8 @@ import AnimeCard from '~/components/AnimeCard.astro';
       rating: string | null;
       genres: string[];
       studios: string[];
-      stats: { score?: number; scoredBy?: number } | null;
+      score?: number | null;
+      stats?: { score?: number; scoredBy?: number } | null;
     };
 
     const grid = document.querySelector('[data-grid]') as HTMLElement | null;
@@ -79,8 +81,8 @@ import AnimeCard from '~/components/AnimeCard.astro';
 
     if (!grid || !tpl || !sortEl) return;
 
-    let all: YukionimeItem[] = [];
-    let sorted: YukionimeItem[] = [];
+    let all: ApiItem[] = [];
+    let sorted: ApiItem[] = [];
     let visibleCount = 0;
 
     function formatCount(n: number): string {
@@ -99,7 +101,17 @@ import AnimeCard from '~/components/AnimeCard.astro';
       return TYPE_LABEL[raw as RawType] ?? raw;
     }
 
-    function buildCard(item: YukionimeItem): HTMLElement | null {
+    function getScore(item: ApiItem): number | null {
+      if (typeof item.score === 'number') return item.score;
+      if (typeof item.stats?.score === 'number') return item.stats.score;
+      return null;
+    }
+
+    function getVotes(item: ApiItem): number {
+      return item.stats?.scoredBy ?? 0;
+    }
+
+    function buildCard(item: ApiItem): HTMLElement | null {
       const frag = tpl!.content.cloneNode(true) as DocumentFragment;
       const card = frag.firstElementChild as HTMLElement | null;
       if (!card) return null;
@@ -156,8 +168,8 @@ import AnimeCard from '~/components/AnimeCard.astro';
       if (titleInfoEl) titleInfoEl.textContent = item.title;
 
       // Rating
-      const score = item.stats?.score ?? null;
-      const votes = item.stats?.scoredBy ?? 0;
+      const score = getScore(item);
+      const votes = getVotes(item);
       const ratingEl = card.querySelector('[data-card-rating]') as HTMLElement | null;
       if (ratingEl && score != null) {
         ratingEl.hidden = false;
@@ -177,10 +189,10 @@ import AnimeCard from '~/components/AnimeCard.astro';
         metaEl.appendChild(li);
       }
 
-      // Play
+      // Play — SPA-lite path
       const playEl = card.querySelector('[data-card-play]') as HTMLAnchorElement | null;
       if (playEl) {
-        playEl.href = `/anime/watch/${item.id}/episodes/1/`;
+        playEl.href = `/anime/watch/${item.id}/`;
         playEl.setAttribute('aria-label', `Mulai menonton ${item.title}`);
       }
 
@@ -198,7 +210,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
       return card;
     }
 
-    function sortList(list: YukionimeItem[], sort: string): YukionimeItem[] {
+    function sortList(list: ApiItem[], sort: string): ApiItem[] {
       const copy = [...list];
       if (sort === 'newest') {
         return copy.sort((a, b) => {
@@ -212,11 +224,11 @@ import AnimeCard from '~/components/AnimeCard.astro';
         return copy.sort((a, b) => a.title.localeCompare(b.title));
       }
       return copy.sort((a, b) => {
-        const sa = a.stats?.score ?? 0;
-        const sb = b.stats?.score ?? 0;
+        const sa = getScore(a) ?? 0;
+        const sb = getScore(b) ?? 0;
         if (sb !== sa) return sb - sa;
-        const va = a.stats?.scoredBy ?? 0;
-        const vb = b.stats?.scoredBy ?? 0;
+        const va = getVotes(a);
+        const vb = getVotes(b);
         return vb - va;
       });
     }
@@ -276,7 +288,7 @@ import AnimeCard from '~/components/AnimeCard.astro';
     fetch(API, { headers: { Accept: 'application/json' } })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<{ data: YukionimeItem[] }>;
+        return res.json() as Promise<{ data: ApiItem[] }>;
       })
       .then((json) => {
         const list = json?.data;
