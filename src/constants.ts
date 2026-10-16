@@ -14,7 +14,7 @@ export const NAV_LINKS = [
   { label: 'Completed', href: '/anime/completed/' },
   { label: 'Anime',     href: '/anime/' },
   { label: 'Genre',     href: '/anime/genre/' },
-  { label: 'Blog',      href: '/blog/' },
+  // { label: 'Blog',      href: '/blog/' },
 ] as const;
 
 export const RAW_STATUSES = [
