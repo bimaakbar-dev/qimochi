@@ -32,7 +32,7 @@ const {
   showNext = true,
 } = Astro.props;
 
-const PAGE_SIZE = 15; // Jumlah episode yang dimuat per klik load more di modal
+const PAGE_SIZE = 15;
 
 const sorted = [...episodes].sort((a, b) => a.number - b.number);
 const total = sorted.length;
@@ -41,7 +41,6 @@ if (total === 0) return null;
 
 const showFilter = total > 15;
 
-// Tentukan halaman awal berdasarkan episode aktif agar otomatis terlihat
 let initialLimit = PAGE_SIZE;
 if (currentEpisode != null) {
   const activeIdx = sorted.findIndex((e) => e.number === currentEpisode);
@@ -154,7 +153,6 @@ const nextEpisodeRow = nextEpisode
     />
   )}
 
-  {/* Grid Kartu Thumbnail ala Crunchyroll */}
   <ol class="ep-grid" data-episode-items>
     {episodeRows.map((row) => (
       <li
@@ -207,7 +205,6 @@ const nextEpisodeRow = nextEpisode
     ))}
   </ol>
 
-  {/* Tombol Load More */}
   <button
     type="button"
     class="episode-loadmore"
@@ -290,6 +287,21 @@ const nextEpisodeRow = nextEpisode
         if (active) el.setAttribute('aria-current', 'page');
         else el.removeAttribute('aria-current');
 
+        const thumb = el.querySelector('.ep-card__thumb');
+        if (thumb) {
+          let badge = thumb.querySelector('.ep-card__watching');
+          if (active) {
+            if (!badge) {
+              badge = document.createElement('span');
+              badge.className = 'ep-card__watching';
+              badge.textContent = 'NOW PLAYING';
+              thumb.appendChild(badge);
+            }
+          } else {
+            if (badge) badge.remove();
+          }
+        }
+
         if (active && el.hidden) {
           const idx = items.indexOf(el);
           currentVisibleLimit = Math.ceil((idx + 1) / pageSize) * pageSize;
@@ -357,7 +369,6 @@ const nextEpisodeRow = nextEpisode
     display: none;
   }
 
-  /* Grid Kartu Crunchyroll Style */
   .ep-grid {
     display: grid;
     grid-template-columns: 1fr;
