@@ -13,7 +13,6 @@ import SectionLabel from '~/components/SectionLabel.astro';
 import Page from '~/components/Page.astro';
 
 const allAnime = await getAllAnime();
-const allGenres = await getCollection('genres');
 
 function latestUpdateTime(a: HydratedAnime): number {
   return (a.data.updatedAt ?? a.data.addedAt)?.getTime() ?? 0;
@@ -37,23 +36,6 @@ const completed = [...allAnime]
   .filter((a) => a.data.status === 'Completed')
   .sort((a, b) => latestUpdateTime(b) - latestUpdateTime(a))
   .slice(0, PER_PAGE);
-
-const genreCounts = new Map<string, number>();
-allAnime.forEach(a => {
-  a.data.genres.forEach(slug => {
-    genreCounts.set(slug, (genreCounts.get(slug) ?? 0) + 1);
-  });
-});
-
-const genres = allGenres
-  .map(g => ({
-    id: g.data.id,
-    name: g.data.name,
-    count: genreCounts.get(g.data.id) ?? 0,
-  }))
-  .filter(g => g.count > 0)
-  .sort((a, b) => b.count - a.count)
-  .slice(0, 8);
 ---
 
 <BaseLayout title={SITE.title}>
@@ -101,34 +83,6 @@ const genres = allGenres
         </header>
         <div class="anime-grid">
           {completed.map(anime => <AnimeCard anime={anime} />)}
-        </div>
-      </section>
-    )}
-
-    {genres.length > 0 && (
-      <section class="landing-section">
-        <header class="section-header">
-          <SectionLabel>Genre</SectionLabel>
-          <LinkButton
-            href="/anime/genre/"
-            variant="ghost"
-            size="md"
-            icon="arrow-right"
-            iconPos="suffix"
-          >
-            Lihat Semua
-          </LinkButton>
-        </header>
-        <div class="genre-grid">
-          {genres.map(g => (
-            <LinkCard
-              href={URLS.genre(g.id)}
-              variant="outline"
-              padding="sm"
-            >
-              <span class="genre-name">{g.name}</span>
-            </LinkCard>
-          ))}
         </div>
       </section>
     )}
