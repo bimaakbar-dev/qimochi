@@ -19,6 +19,7 @@ interface Props {
   cover?: string;
   banner?: string;
   duration?: number | null;
+  showNext?: boolean;
 }
 
 const {
@@ -30,9 +31,10 @@ const {
   cover = '',
   banner = '',
   duration = null,
+  showNext = true,
 } = Astro.props;
 
-const BATCH_SIZE = 50;
+const PAGE_SIZE = 12;
 
 const sorted = [...episodes].sort((a, b) => a.number - b.number);
 const total = sorted.length;
@@ -40,35 +42,13 @@ const total = sorted.length;
 if (total === 0) return null;
 
 const showFilter = total > 30;
-const showBatches = total > BATCH_SIZE;
 
-interface Batch {
-  start: number;
-  end: number;
-}
-
-const batches: Batch[] = [];
-if (showBatches) {
-  for (let i = 0; i < sorted.length; i += BATCH_SIZE) {
-    const chunk = sorted.slice(i, i + BATCH_SIZE);
-    batches.push({
-      start: chunk[0]!.number,
-      end: chunk[chunk.length - 1]!.number,
-    });
-  }
-} else {
-  batches.push({
-    start: sorted[0]!.number,
-    end: sorted[sorted.length - 1]!.number,
-  });
-}
-
-let activeBatchIdx = 0;
+let initialLimit = PAGE_SIZE;
 if (currentEpisode != null) {
-  const idx = batches.findIndex(
-    (b) => currentEpisode >= b.start && currentEpisode <= b.end
-  );
-  if (idx >= 0) activeBatchIdx = idx;
+  const activeIdx = sorted.findIndex((e) => e.number === currentEpisode);
+  if (activeIdx >= 0) {
+    initialLimit = Math.ceil((activeIdx + 1) / PAGE_SIZE) * PAGE_SIZE;
+  }
 }
 
 let nextEpisode: EpisodeItem | null = null;
@@ -80,7 +60,6 @@ if (mode === 'watch' && currentEpisode != null) {
 }
 
 const nextThumb = banner || cover;
-const activeBatch = batches[activeBatchIdx]!;
 const cardThumb = banner || cover;
 
 function cleanText(s: string | null | undefined): string | null {
@@ -114,14 +93,14 @@ function formatAired(raw: string | null | undefined): string | null {
 
 const cleanAnimeTitle = cleanText(animeTitle);
 
-const episodeRows = sorted.map((ep) => ({
+const episodeRows = sorted.map((ep, index) => ({
   number: ep.number,
   title: cleanText(ep.title),
   durationLabel: resolveDuration(ep.duration),
   airedLabel: formatAired(ep.aired),
   isActive: ep.number === currentEpisode,
-  inActiveBatch:
-    ep.number >= activeBatch.start && ep.number <= activeBatch.end,
+  // Sembunyikan item yang melebihi initialLimit saat SSR
+  isHidden: index >= initialLimit,
 }));
 
 const nextEpisodeRow = nextEpisode
@@ -136,31 +115,39 @@ function formatEp(n: number): string {
 }
 ---
 
-<section class="section" data-episode-list data-mode={mode}>
-  <div class="next-block" data-next-block hidden={!nextEpisodeRow}>
-    <SectionLabel as="h2" size="md" underlined={false} class="next-block__label">Episode Selanjutnya</SectionLabel>
-    <a
-      class="next-card"
-      data-next-episode={nextEpisodeRow?.number ?? ''}
-      href={nextEpisodeRow ? URLS.watch(slug, nextEpisodeRow.number) : '#'}
-    >
-      <div class="next-card__thumb">
-        {nextThumb ? (
-          <img src={nextThumb} alt="" loading="lazy" decoding="async" />
-        ) : (
-          <div class="next-card__thumb-placeholder" aria-hidden="true"></div>
-        )}
-      </div>
-      <div class="next-card__info">
-        <p class="next-card__title" data-next-title>
-          {nextEpisodeRow
-            ? `E${nextEpisodeRow.number}${nextEpisodeRow.title ? ` – ${nextEpisodeRow.title}` : ''}`
-            : ''}
-        </p>
-        <p class="next-card__meta">Sub Indo</p>
-      </div>
-    </a>
-  </div>
+<section
+  class="section"
+  data-episode-list
+  data-mode={mode}
+  data-page-size={PAGE_SIZE}
+  data-total={total}
+>
+  {showNext && (
+    <div class="next-block" data-next-block hidden={!nextEpisodeRow}>
+      <SectionLabel as="h2" size="md" underlined={false} class="next-block__label">Episode Selanjutnya</SectionLabel>
+      <a
+        class="next-card"
+        data-next-episode={nextEpisodeRow?.number ?? ''}
+        href={nextEpisodeRow ? URLS.watch(slug, nextEpisodeRow.number) : '#'}
+      >
+        <div class="next-card__thumb">
+          {nextThumb ? (
+            <img src={nextThumb} alt="" loading="lazy" decoding="async" />
+          ) : (
+            <div class="next-card__thumb-placeholder" aria-hidden="true"></div>
+          )}
+        </div>
+        <div class="next-card__info">
+          <p class="next-card__title" data-next-title>
+            {nextEpisodeRow
+              ? `E${nextEpisodeRow.number}${nextEpisodeRow.title ? ` – ${nextEpisodeRow.title}` : ''}`
+              : ''}
+          </p>
+          <p class="next-card__meta">Sub Indo</p>
+        </div>
+      </a>
+    </div>
+  )}
 
   <SectionLabel as="h3" size="md">Episode</SectionLabel>
 
@@ -176,25 +163,6 @@ function formatEp(n: number): string {
     />
   )}
 
-  {showBatches && (
-    <div class="episode-batches" data-episode-batches role="tablist">
-      {batches.map((b, i) => (
-        <button
-          type="button"
-          class:list={['episode-batch', { 'is-active': i === activeBatchIdx }]}
-          data-batch-tab
-          data-batch-start={b.start}
-          data-batch-end={b.end}
-          role="tab"
-          aria-selected={i === activeBatchIdx ? 'true' : 'false'}
-        >
-          {b.start}–{b.end}
-        </button>
-      ))}
-    </div>
-  )}
-
-  {/* ── DETAIL MODE: card grid dengan hover preview ── */}
   {mode === 'detail' && (
     <ol class="ep-grid" data-episode-items>
       {episodeRows.map((row) => (
@@ -202,7 +170,7 @@ function formatEp(n: number): string {
           class:list={['ep-card', { 'is-active': row.isActive }]}
           data-episode-item
           data-number={String(row.number)}
-          hidden={row.inActiveBatch ? undefined : true}
+          hidden={row.isHidden ? true : undefined}
         >
           <a
             href={URLS.watch(slug, row.number)}
@@ -245,7 +213,6 @@ function formatEp(n: number): string {
             </div>
           </a>
 
-          {/* Hover preview — overlay full card */}
           <div class="ep-card__hover" aria-hidden="true">
             {cleanAnimeTitle && (
               <p class="ep-card__hover-series">{cleanAnimeTitle}</p>
@@ -280,7 +247,6 @@ function formatEp(n: number): string {
     </ol>
   )}
 
-  {/* ── WATCH MODE: compact grid untuk sidebar ── */}
   {mode === 'watch' && (
     <div class="ep-compact-grid" data-episode-items>
       {episodeRows.map((row) => (
@@ -290,7 +256,7 @@ function formatEp(n: number): string {
           aria-current={row.isActive ? 'page' : undefined}
           data-episode-item
           data-number={String(row.number)}
-          hidden={row.inActiveBatch ? undefined : true}
+          hidden={row.isHidden ? true : undefined}
         >
           <span class="ep-compact__num">{formatEp(row.number)}</span>
           <span class="ep-compact__title">
@@ -300,6 +266,15 @@ function formatEp(n: number): string {
       ))}
     </div>
   )}
+
+  <button
+    type="button"
+    class="episode-loadmore"
+    data-episode-loadmore
+    hidden={total <= initialLimit}
+  >
+    Muat Lebih Banyak
+  </button>
 
   <p class="episode-empty" data-episode-empty hidden>
     Tidak ada episode yang cocok.
@@ -313,21 +288,22 @@ function formatEp(n: number): string {
     if (!root) return;
 
     const input = root.querySelector('[data-episode-filter]');
-    const batches = root.querySelector('[data-episode-batches]');
-    const tabs = Array.from(root.querySelectorAll('[data-batch-tab]'));
     const items = Array.from(root.querySelectorAll('[data-episode-item]'));
+    const loadMoreBtn = root.querySelector('[data-episode-loadmore]');
     const empty = root.querySelector('[data-episode-empty]');
+    
+    const pageSize = Number(root.dataset.pageSize || 30);
+    const total = Number(root.dataset.total || items.length);
 
-    let activeBatchIdx = tabs.findIndex((t) => t.classList.contains('is-active'));
-    if (activeBatchIdx < 0) activeBatchIdx = 0;
+    let currentVisibleLimit = items.filter(el => !el.hidden).length;
+    if (currentVisibleLimit < pageSize) currentVisibleLimit = pageSize;
 
     function applyVisibility() {
       const q = (input?.value ?? '').trim();
       const filtering = q.length > 0;
 
-      if (batches) batches.hidden = filtering;
-
       if (filtering) {
+        if (loadMoreBtn) loadMoreBtn.hidden = true;
         let visible = 0;
         for (const el of items) {
           const num = el.dataset.number ?? '';
@@ -341,18 +317,16 @@ function formatEp(n: number): string {
 
       if (empty) empty.hidden = true;
 
-      const activeTab = tabs[activeBatchIdx];
-      if (!activeTab) {
-        for (const el of items) el.hidden = false;
-        return;
+      let visibleCount = 0;
+      for (let i = 0; i < items.length; i++) {
+        const el = items[i];
+        const show = i < currentVisibleLimit;
+        el.hidden = !show;
+        if (show) visibleCount++;
       }
 
-      const start = Number(activeTab.dataset.batchStart);
-      const end = Number(activeTab.dataset.batchEnd);
-
-      for (const el of items) {
-        const num = Number(el.dataset.number);
-        el.hidden = num < start || num > end;
+      if (loadMoreBtn) {
+        loadMoreBtn.hidden = currentVisibleLimit >= total;
       }
     }
 
@@ -360,39 +334,25 @@ function formatEp(n: number): string {
       input.addEventListener('input', applyVisibility);
     }
 
-    tabs.forEach((tab, i) => {
-      tab.addEventListener('click', () => {
-        activeBatchIdx = i;
-        tabs.forEach((t, j) => {
-          t.classList.toggle('is-active', j === i);
-          t.setAttribute('aria-selected', j === i ? 'true' : 'false');
-        });
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener('click', () => {
+        currentVisibleLimit += pageSize;
         applyVisibility();
       });
-    });
+    }
 
     function setActive(n) {
-      if (tabs.length > 0) {
-        const idx = tabs.findIndex((t) => {
-          const s = Number(t.dataset.batchStart);
-          const e = Number(t.dataset.batchEnd);
-          return n >= s && n <= e;
-        });
-        if (idx >= 0 && idx !== activeBatchIdx) {
-          activeBatchIdx = idx;
-          tabs.forEach((t, j) => {
-            t.classList.toggle('is-active', j === idx);
-            t.setAttribute('aria-selected', j === idx ? 'true' : 'false');
-          });
-        }
-      }
-
       for (const el of items) {
         const num = Number(el.dataset.number);
         const active = num === n;
         el.classList.toggle('is-active', active);
         if (active) el.setAttribute('aria-current', 'page');
         else el.removeAttribute('aria-current');
+
+        if (active && el.hidden) {
+          const idx = items.indexOf(el);
+          currentVisibleLimit = Math.ceil((idx + 1) / pageSize) * pageSize;
+        }
       }
 
       applyVisibility();
@@ -520,42 +480,27 @@ function formatEp(n: number): string {
     appearance: none;
   }
 
-  .episode-batches {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-1);
-  }
-
-  .episode-batches[hidden] {
-    display: none;
-  }
-
-  .episode-batch {
-    padding: var(--s-1) var(--s-3);
-    background: transparent;
+  .episode-loadmore {
+    width: 100%;
+    padding: var(--s-3);
+    background: var(--bg-elevated);
     border: 1px solid var(--border);
-    color: var(--text-secondary);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-medium);
-    font-variant-numeric: tabular-nums;
-    cursor: pointer;
-    transition: all var(--t-fast);
-  }
-
-  .episode-batch:hover {
-    border-color: var(--border-hover);
     color: var(--text-primary);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    cursor: pointer;
+    border-radius: var(--r-sm);
+    transition: all var(--t-fast);
+    margin-top: var(--s-2);
   }
-
-  .episode-batch.is-active {
+  .episode-loadmore:hover {
     background: var(--accent);
     border-color: var(--accent);
     color: var(--accent-text);
   }
-
-  /* ══════════════════════════════════════════
-     DETAIL MODE — card grid + hover preview
-     ══════════════════════════════════════════ */
+  .episode-loadmore[hidden] {
+    display: none;
+  }
 
   .ep-grid {
     display: grid;
@@ -715,8 +660,6 @@ function formatEp(n: number): string {
     font-variant-numeric: tabular-nums;
   }
 
-  /* ── Hover preview ── */
-
   .ep-card__hover {
     position: absolute;
     inset: 0;
@@ -829,10 +772,6 @@ function formatEp(n: number): string {
       transition: opacity var(--t-fast), visibility var(--t-fast);
     }
   }
-
-  /* ══════════════════════════════════════════
-     WATCH MODE — compact grid untuk sidebar
-     ══════════════════════════════════════════ */
 
   .ep-compact-grid {
     display: grid;
