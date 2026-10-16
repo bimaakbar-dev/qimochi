@@ -39,7 +39,11 @@ if (!entry) {
 
 const { Content } = await render(entry);
 
-const episodeItems = episodes
+/*
+ * episodeList sudah difilter di lib/anime.ts — hanya episode yang punya
+ * minimal 1 server dengan URL valid.
+ */
+const episodeItems = data.episodeList
   .map((e) => ({
     number: e.number,
     title: e.title ?? null,
