@@ -1,7 +1,6 @@
 ---
 import Icon from '~/user-components/Icons.astro';
 import { URLS } from '~/constants';
-import ReportButton from './ReportToggle.astro';
 
 interface NavItem {
   number: number;
@@ -17,8 +16,6 @@ interface Props {
   prevEpisode?: NavItem | null;
   nextEpisode?: NavItem | null;
   thumbnail?: string;
-  server?: string;
-  quality?: string;
   class?: string;
 }
 
@@ -30,8 +27,6 @@ const {
   prevEpisode = null,
   nextEpisode = null,
   thumbnail = '',
-  server = '',
-  quality = '',
   class: className,
 } = Astro.props;
 
@@ -125,12 +120,6 @@ const nextDur = formatDur(nextEpisode?.duration);
   </div>
 
   <div class="ep-nav__tools">
-    <ReportButton
-      slug={slug}
-      episode={currentEpisode}
-      server={server}
-      quality={quality}
-    />
     <button
       type="button"
       class="ep-nav__see-all"
@@ -273,11 +262,6 @@ const nextDur = formatDur(nextEpisode?.duration);
     gap: var(--s-2);
   }
 
-  .ep-nav__tools > :global(.report-btn) {
-    width: 100%;
-    justify-content: center;
-  }
-
   .ep-nav__see-all {
     display: inline-flex;
     align-items: center;
@@ -295,10 +279,12 @@ const nextDur = formatDur(nextEpisode?.duration);
     text-transform: uppercase;
     cursor: pointer;
     transition: all var(--t-fast);
-    & svg {
-      width: 1.333em;
-      height: 1.333em;
-      flex-shrink: 0;
+  }
+  
+  .ep-nav__see-all svg {
+    width: 1.333em;
+    height: 1.333em;
+    flex-shrink: 0;
   }
 
   .ep-nav__see-all:hover {
