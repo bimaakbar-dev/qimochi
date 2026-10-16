@@ -1,23 +1,13 @@
 ---
 import Icon from '~/user-components/Icons.astro';
 
-interface Server {
-  name: string;
-  url: string;
-}
-interface Stream {
-  quality: string;
-  servers: Server[];
-}
+interface Server { name: string; url: string; }
+interface Stream { quality: string; servers: Server[]; }
 
-interface Props {
-  streams?: Stream[];
-}
+interface Props { streams?: Stream[]; }
 
 const { streams = [] } = Astro.props;
 const defaultStream = streams[0];
-const defaultServerIndex = 0;
-const defaultServer = defaultStream?.servers?.[defaultServerIndex];
 
 function encodeUrl(s: string): string {
   if (!s) return '';
@@ -26,114 +16,55 @@ function encodeUrl(s: string): string {
   for (const b of bytes) bin += String.fromCharCode(b);
   return btoa(bin);
 }
-
-function serverLabel(index: number): string {
-  return `Server ${index + 1}`;
-}
 ---
 
-<details class="stream-picker" open>
-  <summary>
-    <span class="label">Server &amp; Kualitas</span>
-    <span class="current" data-current>
-      {defaultStream ? `${defaultStream.quality} · ${serverLabel(defaultServerIndex)}` : '—'}
-    </span>
-    <span class="chevron" aria-hidden="true">
-      <Icon name="chevron-down" size={16} />
-    </span>
-  </summary>
+<div class="stream-selector-root" data-stream-selector>
+  <details class="stream-picker" open data-stream-picker>
+    <summary>
+      <span class="label">Server &amp; Kualitas</span>
+      <span class="current" data-current>
+        {defaultStream ? `${defaultStream.quality} · Server 1` : '—'}
+      </span>
+      <span class="chevron" aria-hidden="true">
+        <Icon name="chevron-down" size={16} />
+      </span>
+    </summary>
 
-  <div class="stream-body">
-    {streams.map((s, i) => (
-      <div class="quality-group">
-        <span class="quality-label">{s.quality}</span>
-        <div class="chips">
-          {s.servers.map((srv, j) => {
-            const id = `s-${i}-${j}`;
-            const isDefault = i === 0 && j === 0;
-            const label = serverLabel(j);
-            return (
-              <>
-                <input
-                  type="radio"
-                  name="stream"
-                  id={id}
-                  data-enc={encodeUrl(srv.url)}
-                  data-quality={s.quality}
-                  data-server={label}
-                  checked={isDefault}
-                  hidden
-                />
-                <label for={id} class="chip">{label}</label>
-              </>
-            );
-          })}
+    <div class="stream-body" data-stream-body>
+      {streams.map((s, i) => (
+        <div class="quality-group">
+          <span class="quality-label">{s.quality}</span>
+          <div class="chips">
+            {s.servers.map((srv, j) => {
+              const id = `s-${i}-${j}`;
+              const isDefault = i === 0 && j === 0;
+              const label = `Server ${j + 1}`;
+              return (
+                <>
+                  <input
+                    type="radio"
+                    name="stream"
+                    id={id}
+                    data-enc={encodeUrl(srv.url)}
+                    data-quality={s.quality}
+                    data-server={label}
+                    checked={isDefault}
+                    hidden
+                  />
+                  <label for={id} class="chip">{label}</label>
+                </>
+              );
+            })}
+          </div>
         </div>
-      </div>
-    ))}
-  </div>
-</details>
-
-<script>
-  (function () {
-    const picker = document.querySelector<HTMLElement>('.stream-picker');
-    const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
-    const currentLabel = picker?.querySelector<HTMLElement>('[data-current]') ?? null;
-
-    if (!picker || !iframe) return;
-
-    function decode(b64: string): string {
-      try {
-        const bin = atob(b64);
-        const bytes = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        return new TextDecoder().decode(bytes);
-      } catch {
-        return '';
-      }
-    }
-
-    function applyInput(input: HTMLInputElement): void {
-      const enc = input.dataset.enc;
-      if (!enc) return;
-      const real = decode(enc);
-      if (!real) return;
-      if (iframe) iframe.src = real;
-    }
-
-    const savedId = localStorage.getItem('qimochi:stream');
-    if (savedId) {
-      const savedInput = document.getElementById(savedId) as HTMLInputElement | null;
-      if (savedInput && savedInput.name === 'stream') {
-        savedInput.checked = true;
-        applyInput(savedInput);
-        if (currentLabel) {
-          const q = savedInput.dataset.quality ?? '';
-          const s = savedInput.dataset.server ?? '';
-          currentLabel.textContent = `${q} · ${s}`;
-        }
-      }
-    }
-
-    picker.addEventListener('change', (e) => {
-      const target = e.target as HTMLInputElement;
-      if (!target.matches('input[name="stream"]')) return;
-      if (!target.checked) return;
-
-      applyInput(target);
-
-      if (currentLabel) {
-        const q = target.dataset.quality ?? '';
-        const s = target.dataset.server ?? '';
-        currentLabel.textContent = `${q} · ${s}`;
-      }
-
-      localStorage.setItem('qimochi:stream', target.id);
-    });
-  })();
-</script>
+      ))}
+    </div>
+  </details>
+</div>
 
 <style>
+  .stream-selector-root { display: block; }
+
   .stream-picker {
     background: var(--bg-elevated);
     border: 1px solid var(--border);
@@ -150,10 +81,7 @@ function serverLabel(index: number): string {
     list-style: none;
     user-select: none;
   }
-
-  .stream-picker summary::-webkit-details-marker {
-    display: none;
-  }
+  .stream-picker summary::-webkit-details-marker { display: none; }
 
   .stream-picker summary .current {
     margin-left: auto;
@@ -173,9 +101,7 @@ function serverLabel(index: number): string {
     transition: transform var(--t-base);
   }
 
-  .stream-picker[open] summary .chevron {
-    transform: rotate(180deg);
-  }
+  .stream-picker[open] summary .chevron { transform: rotate(180deg); }
 
   .stream-body {
     padding: 0 var(--s-4) var(--s-4);
@@ -215,7 +141,6 @@ function serverLabel(index: number): string {
     cursor: pointer;
     transition: all var(--t-fast);
   }
-
   .chip:hover {
     border-color: var(--border-hover);
     color: var(--text-primary);
@@ -226,4 +151,105 @@ function serverLabel(index: number): string {
     border-color: var(--accent);
     color: var(--accent-text);
   }
+
+  .stream-empty {
+    padding: var(--s-4);
+    text-align: center;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
 </style>
+
+<script>
+  interface Server { name: string; url: string; }
+  interface Stream { quality: string; servers: Server[]; }
+
+  function encodeUrl(s: string): string {
+    if (!s) return '';
+    const bytes = new TextEncoder().encode(s);
+    let bin = '';
+    for (const b of bytes) bin += String.fromCharCode(b);
+    return btoa(bin);
+  }
+
+  function escapeAttr(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+
+  function escapeHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function buildHtml(streams: Stream[]): string {
+    if (!streams || streams.length === 0) {
+      return '<div class="stream-empty">Belum ada server untuk episode ini.</div>';
+    }
+
+    return streams
+      .map((s, i) => {
+        const chips = s.servers
+          .map((srv, j) => {
+            const id = `s-${i}-${j}`;
+            const enc = escapeAttr(encodeUrl(srv.url));
+            const quality = escapeAttr(s.quality);
+            const server = `Server ${j + 1}`;
+            const checked = i === 0 && j === 0 ? 'checked' : '';
+            return `<input type="radio" name="stream" id="${id}" data-enc="${enc}" data-quality="${quality}" data-server="${server}" ${checked} hidden /><label for="${id}" class="chip">${server}</label>`;
+          })
+          .join('');
+        return `<div class="quality-group"><span class="quality-label">${escapeHtml(s.quality)}</span><div class="chips">${chips}</div></div>`;
+      })
+      .join('');
+  }
+
+  function mount(root: HTMLElement, streams: Stream[]): void {
+    const details = root.querySelector<HTMLDetailsElement>('[data-stream-picker]');
+    const body = root.querySelector<HTMLElement>('[data-stream-body]');
+    const current = root.querySelector<HTMLElement>('[data-current]');
+    if (!details || !body || !current) return;
+
+    const defaultStream = streams?.[0];
+    current.textContent = defaultStream ? `${defaultStream.quality} · Server 1` : '—';
+    body.innerHTML = buildHtml(streams ?? []);
+
+    const firstRadio = body.querySelector<HTMLInputElement>('input[name="stream"]');
+    if (firstRadio) {
+      firstRadio.checked = true;
+      details.open = true;
+    }
+  }
+
+  document.addEventListener('change', (e) => {
+    const target = e.target as HTMLInputElement | null;
+    if (!target || target.name !== 'stream' || !target.checked) return;
+
+    const enc = target.dataset.enc;
+    if (!enc) return;
+
+    let real = '';
+    try {
+      const bin = atob(enc);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      real = new TextDecoder().decode(bytes);
+    } catch { return; }
+
+    const quality = target.dataset.quality ?? '';
+    const server = target.dataset.server ?? '';
+    const label = quality && server ? `${quality} · ${server}` : '';
+
+    const player = (window as any).__qimochiPlayer;
+    if (player?.load) {
+      player.load(real, label);
+    } else {
+      const iframe = document.getElementById('player-iframe') as HTMLIFrameElement | null;
+      if (iframe) iframe.src = real;
+    }
+
+    const details = target.closest('[data-stream-selector]');
+    const current = details?.querySelector<HTMLElement>('[data-current]');
+    if (current) current.textContent = `${quality} · ${server}`;
+  });
+
+  (window as any).__qimochiStream = { mount };
+</script>
