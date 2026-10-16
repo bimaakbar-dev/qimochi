@@ -54,20 +54,27 @@ const variant = data
   ? STATUS_VARIANT[data.status as Status] ?? 'default'
   : 'default';
 
+/*
+ * Sumber kebenaran tunggal: episodeList yang sudah difilter di lib/anime.ts
+ * (hanya episode yang punya minimal 1 server dengan URL valid).
+ * Field `data.episodes` dari frontmatter = metadata sumber, TIDAK dipakai untuk display.
+ */
 const episodes = data?.episodeList ?? [];
-const lastEpisode = episodes.length
-  ? Math.max(...episodes.map((e) => e.number))
-  : 0;
-const firstEpisode = episodes.length
-  ? Math.min(...episodes.map((e) => e.number))
-  : 1;
 const totalEpisodes = episodes.length;
 const hasEpisodes = totalEpisodes > 0;
 
-/* Episode label — prioritas announced (frontmatter), fallback ke available (filtered stream) */
-const announcedEpisodes = data?.episodes ?? null;
-const episodeCount = announcedEpisodes ?? (totalEpisodes > 0 ? totalEpisodes : null);
-const episodeLabel = episodeCount ? `${episodeCount} Episode` : null;
+const firstEpisode = hasEpisodes
+  ? Math.min(...episodes.map((e) => e.number))
+  : 1;
+const lastEpisode = hasEpisodes
+  ? Math.max(...episodes.map((e) => e.number))
+  : 0;
+
+// Tampilkan jumlah episode yang benar-benar tersedia.
+const episodeLabel = hasEpisodes ? `${totalEpisodes} Episode` : null;
+
+// Nomor episode terakhir yang sudah rilis (untuk badge/meta).
+const latestEpisodeLabel = lastEpisode > 0 ? `Ep ${lastEpisode}` : null;
 
 const score = data?.score ?? null;
 const votedBy = data?.stats?.scoredBy ?? 0;
