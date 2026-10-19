@@ -3,8 +3,8 @@ name: Deploy to Cloudflare Pages
 on:
   push:
     branches: [main, dev]
-  repository_dispatch:
-    types: [data-updated]
+  #repository_dispatch:
+    #types: [data-updated]
   workflow_dispatch:
 
 jobs:
