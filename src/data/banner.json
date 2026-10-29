@@ -2,7 +2,7 @@
   "banners": [
     {
       "id": "sync-data-2026-10",
-      "active": true,
+      "active": false,
       "type": "info",
       "message": "Qimochi sedang proses Sync Data, Refresh halaman jika menemukan error.",
       "dismissible": false
